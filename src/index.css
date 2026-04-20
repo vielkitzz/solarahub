@@ -1,105 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Solara Hub Design System — sporty, dark, premium */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Solara palette: deep navy + bright gold */
+    --background: 207 67% 11%;          /* #0a1f33 deeper bg */
+    --foreground: 0 0% 100%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 207 53% 20%;                /* #174c76 */
+    --card-foreground: 0 0% 100%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 207 53% 17%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 44 100% 55%;             /* #ffbe1a gold */
+    --primary-foreground: 207 67% 11%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 207 49% 27%;           /* #113655 lifted */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 207 40% 22%;
+    --muted-foreground: 207 20% 75%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 44 100% 55%;
+    --accent-foreground: 207 67% 11%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --success: 145 65% 45%;
+    --success-foreground: 0 0% 100%;
 
-    --radius: 0.5rem;
+    --border: 207 40% 25%;
+    --input: 207 40% 22%;
+    --ring: 44 100% 55%;
 
-    --sidebar-background: 0 0% 98%;
+    --radius: 0.875rem;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Brand tokens */
+    --solara-navy: 207 49% 20%;         /* #174c76 */
+    --solara-navy-deep: 207 53% 14%;    /* #113655 */
+    --solara-gold: 44 100% 55%;         /* #ffbe1a */
+    --solara-gold-glow: 44 100% 65%;
 
-    --sidebar-primary: 240 5.9% 10%;
+    --gradient-hero: linear-gradient(135deg, hsl(207 67% 8%) 0%, hsl(207 53% 18%) 60%, hsl(207 49% 25%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(var(--solara-gold)) 0%, hsl(38 100% 50%) 100%);
+    --gradient-card: linear-gradient(160deg, hsl(207 53% 22%) 0%, hsl(207 60% 14%) 100%);
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    --shadow-gold: 0 10px 40px -10px hsl(var(--solara-gold) / 0.4);
+    --shadow-card: 0 8px 30px -10px hsl(207 80% 4% / 0.6);
+    --shadow-elevated: 0 20px 60px -20px hsl(207 80% 4% / 0.8);
 
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 207 60% 9%;
+    --sidebar-foreground: 0 0% 92%;
+    --sidebar-primary: 44 100% 55%;
+    --sidebar-primary-foreground: 207 67% 11%;
+    --sidebar-accent: 207 49% 18%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 207 40% 18%;
+    --sidebar-ring: 44 100% 55%;
   }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+  /* Force dark — Solara is dark by default */
+  .dark { color-scheme: dark; }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
+  * { @apply border-border; }
+  html { color-scheme: dark; }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-body antialiased;
+    font-feature-settings: "ss01", "cv11";
+    background-image:
+      radial-gradient(at 20% 0%, hsl(207 53% 20% / 0.5) 0px, transparent 50%),
+      radial-gradient(at 80% 100%, hsl(44 100% 55% / 0.08) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+  h1, h2, h3, h4, h5 { @apply font-display tracking-tight; }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card/60 backdrop-blur-xl border border-border/60 rounded-[var(--radius)];
+    box-shadow: var(--shadow-card);
+  }
+  .gold-text {
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .stat-grid {
+    @apply grid gap-4 md:grid-cols-2 lg:grid-cols-4;
+  }
+  .tiptap-editor .ProseMirror {
+    @apply min-h-[280px] outline-none prose prose-invert max-w-none;
+  }
+  .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    @apply text-muted-foreground float-left h-0 pointer-events-none;
+  }
+  .prose-solara {
+    @apply prose prose-invert max-w-none
+      prose-headings:font-display prose-headings:text-foreground
+      prose-a:text-primary prose-strong:text-foreground
+      prose-blockquote:border-primary prose-blockquote:text-muted-foreground
+      prose-code:text-primary prose-code:bg-muted/50 prose-code:px-1 prose-code:rounded;
   }
 }

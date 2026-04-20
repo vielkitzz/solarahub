@@ -14,16 +14,203 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_discord_ids: {
+        Row: {
+          created_at: string
+          discord_id: string
+          note: string | null
+        }
+        Insert: {
+          created_at?: string
+          discord_id: string
+          note?: string | null
+        }
+        Update: {
+          created_at?: string
+          discord_id?: string
+          note?: string | null
+        }
+        Relationships: []
+      }
+      clubs: {
+        Row: {
+          budget: number
+          city: string | null
+          created_at: string
+          crest_url: string | null
+          founded_year: number | null
+          id: string
+          name: string
+          owner_discord_id: string | null
+          owner_id: string | null
+          primary_color: string | null
+          stadium_capacity: number
+          stadium_name: string | null
+          updated_at: string
+          wiki: Json
+        }
+        Insert: {
+          budget?: number
+          city?: string | null
+          created_at?: string
+          crest_url?: string | null
+          founded_year?: number | null
+          id?: string
+          name: string
+          owner_discord_id?: string | null
+          owner_id?: string | null
+          primary_color?: string | null
+          stadium_capacity?: number
+          stadium_name?: string | null
+          updated_at?: string
+          wiki?: Json
+        }
+        Update: {
+          budget?: number
+          city?: string | null
+          created_at?: string
+          crest_url?: string | null
+          founded_year?: number | null
+          id?: string
+          name?: string
+          owner_discord_id?: string | null
+          owner_id?: string | null
+          primary_color?: string | null
+          stadium_capacity?: number
+          stadium_name?: string | null
+          updated_at?: string
+          wiki?: Json
+        }
+        Relationships: []
+      }
+      players: {
+        Row: {
+          age: number | null
+          attributes: Json
+          club_id: string | null
+          created_at: string
+          id: string
+          market_value: number
+          name: string
+          nationality: string | null
+          position: string
+          updated_at: string
+        }
+        Insert: {
+          age?: number | null
+          attributes?: Json
+          club_id?: string | null
+          created_at?: string
+          id?: string
+          market_value?: number
+          name: string
+          nationality?: string | null
+          position: string
+          updated_at?: string
+        }
+        Update: {
+          age?: number | null
+          attributes?: Json
+          club_id?: string | null
+          created_at?: string
+          id?: string
+          market_value?: number
+          name?: string
+          nationality?: string | null
+          position?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          category: string | null
+          club_id: string
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          type: string
+        }
+        Insert: {
+          amount: number
+          category?: string | null
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          type: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          discord_id: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          discord_id?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          discord_id?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      current_discord_id: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +337,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
