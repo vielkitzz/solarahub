@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Shield, MapPin, Users, Wallet, Building2, TrendingUp, TrendingDown, Save, Plus } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { RichEditor } from "@/components/RichEditor";
+import { ImageUpload } from "@/components/ImageUpload";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -93,8 +94,8 @@ const ClubDetail = () => {
       <Card className="p-6 md:p-8 bg-gradient-card border-border/50 overflow-hidden relative">
         <div className="absolute inset-0 opacity-20" style={club.primary_color ? { background: `radial-gradient(circle at top right, ${club.primary_color}, transparent 60%)` } : undefined} />
         <div className="relative flex flex-col md:flex-row gap-6 items-start md:items-center">
-          <div className="h-24 w-24 md:h-32 md:w-32 rounded-2xl bg-secondary flex items-center justify-center overflow-hidden ring-2 ring-primary/30 shadow-elevated shrink-0">
-            {club.crest_url ? <img src={club.crest_url} alt={club.name} className="h-full w-full object-cover" /> : <Shield className="h-14 w-14 text-muted-foreground" />}
+          <div className="h-24 w-24 md:h-32 md:w-32 flex items-center justify-center shrink-0">
+            {club.crest_url ? <img src={club.crest_url} alt={club.name} className="h-full w-full object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]" /> : <Shield className="h-14 w-14 text-muted-foreground" />}
           </div>
           <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
@@ -208,7 +209,7 @@ const ClubDetail = () => {
               <h3 className="font-display font-bold">Editar Informações</h3>
               <div className="grid md:grid-cols-2 gap-3">
                 <div><Label>Nome</Label><Input value={editingClub?.name || ""} onChange={(e) => setEditingClub({ ...editingClub, name: e.target.value })} /></div>
-                <div><Label>URL do escudo</Label><Input value={editingClub?.crest_url || ""} onChange={(e) => setEditingClub({ ...editingClub, crest_url: e.target.value })} /></div>
+                <div className="md:col-span-1"><Label>Escudo</Label><ImageUpload value={editingClub?.crest_url} onChange={(url) => setEditingClub({ ...editingClub, crest_url: url })} folder={id} /></div>
                 <div><Label>Cidade</Label><Input value={editingClub?.city || ""} onChange={(e) => setEditingClub({ ...editingClub, city: e.target.value })} /></div>
                 <div><Label>Estádio</Label><Input value={editingClub?.stadium_name || ""} onChange={(e) => setEditingClub({ ...editingClub, stadium_name: e.target.value })} /></div>
                 <div><Label>Capacidade</Label><Input type="number" value={editingClub?.stadium_capacity || 0} onChange={(e) => setEditingClub({ ...editingClub, stadium_capacity: e.target.value })} /></div>

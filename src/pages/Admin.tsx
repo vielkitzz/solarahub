@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, DragEvent, ChangeEvent } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,9 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Settings, Plus, ArrowRightLeft } from "lucide-react";
-import { POSITIONS, formatCurrency } from "@/lib/format";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Settings, Plus, ArrowRightLeft, Upload, FileJson, Pencil, Trash2, Shield } from "lucide-react";
+import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
+import { ImageUpload } from "@/components/ImageUpload";
+import { parseSquadJson, ImportedPlayer } from "@/lib/squad-import";
 
 const Admin = () => {
   const { user, isAdmin, loading } = useAuth();
@@ -19,7 +22,7 @@ const Admin = () => {
 
   // create club
   const [cName, setCName] = useState("");
-  const [cCrest, setCCrest] = useState("");
+  const [cCrest, setCCrest] = useState<string | null>(null);
   const [cDiscordId, setCDiscordId] = useState("");
   const [cCity, setCCity] = useState("");
   const [cStadium, setCStadium] = useState("");
@@ -27,13 +30,15 @@ const Admin = () => {
   const [cBudget, setCBudget] = useState("");
   const [cColor, setCColor] = useState("");
 
-  // create player
-  const [pName, setPName] = useState("");
-  const [pPos, setPPos] = useState("ATA");
-  const [pClub, setPClub] = useState<string>("none");
-  const [pValue, setPValue] = useState("");
-  const [pAge, setPAge] = useState("");
-  const [pNat, setPNat] = useState("");
+  // edit club dialog
+  const [editClub, setEditClub] = useState<any>(null);
+
+  // import squad
+  const [importClubId, setImportClubId] = useState<string>("");
+  const [importMode, setImportMode] = useState<"replace" | "append">("replace");
+  const [importPreview, setImportPreview] = useState<ImportedPlayer[] | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   // transfer
   const [tPlayer, setTPlayer] = useState<string>("");
@@ -63,29 +68,84 @@ const Admin = () => {
     if (cDiscordId) {
       const { data: roleRow } = await supabase.from("user_roles").select("user_id").eq("discord_id", cDiscordId).limit(1).maybeSingle();
       owner_id = roleRow?.user_id ?? null;
-      if (!owner_id) toast.warning("Esse Discord ID ainda não fez login. O dono será vinculado quando ele entrar — por enquanto salvamos só o discord_id.");
+      if (!owner_id) toast.warning("Esse Discord ID ainda não fez login. O dono será vinculado quando ele entrar.");
     }
     const { error } = await supabase.from("clubs").insert({
-      name: cName, crest_url: cCrest || null, owner_id, owner_discord_id: cDiscordId || null,
+      name: cName, crest_url: cCrest, owner_id, owner_discord_id: cDiscordId || null,
       city: cCity || null, stadium_name: cStadium || null,
       stadium_capacity: parseInt(cCapacity) || 0, budget: parseFloat(cBudget) || 0,
       primary_color: cColor || null,
     });
     if (error) return toast.error(error.message);
     toast.success("Clube criado!");
-    setCName(""); setCCrest(""); setCDiscordId(""); setCCity(""); setCStadium(""); setCCapacity(""); setCBudget(""); setCColor("");
+    setCName(""); setCCrest(null); setCDiscordId(""); setCCity(""); setCStadium(""); setCCapacity(""); setCBudget(""); setCColor("");
     load();
   };
 
-  const createPlayer = async () => {
-    if (!pName) return toast.error("Nome obrigatório");
-    const { error } = await supabase.from("players").insert({
-      name: pName, position: pPos, club_id: pClub === "none" ? null : pClub,
-      market_value: parseFloat(pValue) || 0, age: parseInt(pAge) || null, nationality: pNat || null,
-    });
+  const saveEditClub = async () => {
+    if (!editClub) return;
+    const { error } = await supabase.from("clubs").update({
+      name: editClub.name,
+      crest_url: editClub.crest_url,
+      owner_discord_id: editClub.owner_discord_id || null,
+      city: editClub.city || null,
+      stadium_name: editClub.stadium_name || null,
+      stadium_capacity: parseInt(editClub.stadium_capacity) || 0,
+      primary_color: editClub.primary_color || null,
+      founded_year: parseInt(editClub.founded_year) || null,
+    }).eq("id", editClub.id);
     if (error) return toast.error(error.message);
-    toast.success("Jogador criado!");
-    setPName(""); setPValue(""); setPAge(""); setPNat("");
+    toast.success("Clube atualizado!");
+    setEditClub(null);
+    load();
+  };
+
+  const deleteClub = async (id: string, name: string) => {
+    if (!confirm(`Apagar o clube "${name}"? Os jogadores ficarão sem clube.`)) return;
+    await supabase.from("players").update({ club_id: null }).eq("club_id", id);
+    const { error } = await supabase.from("clubs").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Clube removido");
+    load();
+  };
+
+  const handleFileSelected = async (file: File) => {
+    if (!importClubId) return toast.error("Selecione um clube primeiro");
+    if (!file.name.endsWith(".json")) return toast.error("Envie um arquivo .json");
+    try {
+      const text = await file.text();
+      const players = parseSquadJson(text);
+      setImportPreview(players);
+      toast.success(`${players.length} jogadores prontos para importar`);
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  const onDropJson = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault(); setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFileSelected(file);
+  };
+
+  const onPickJson = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFileSelected(file);
+    e.target.value = "";
+  };
+
+  const confirmImport = async () => {
+    if (!importPreview || !importClubId) return;
+    if (importMode === "replace") {
+      // Apaga elenco atual desse clube (não toca nos outros — separação por time)
+      const { error: delErr } = await supabase.from("players").delete().eq("club_id", importClubId);
+      if (delErr) return toast.error(delErr.message);
+    }
+    const rows = importPreview.map((p) => ({ ...p, club_id: importClubId }));
+    const { error } = await supabase.from("players").insert(rows);
+    if (error) return toast.error(error.message);
+    toast.success(`${rows.length} jogadores importados!`);
+    setImportPreview(null);
     load();
   };
 
@@ -94,7 +154,6 @@ const Admin = () => {
     const newClubId = tNewClub === "none" ? null : tNewClub;
     const { error } = await supabase.from("players").update({ club_id: newClubId }).eq("id", tPlayer);
     if (error) return toast.error(error.message);
-    // optional fee
     const fee = parseFloat(tFee);
     if (fee > 0 && newClubId) {
       const player = players.find((p) => p.id === tPlayer);
@@ -110,30 +169,38 @@ const Admin = () => {
     load();
   };
 
+  // Agrupa jogadores por clube para visualização
+  const playersByClub = players.reduce((acc: Record<string, any[]>, p: any) => {
+    const key = p.club_id || "__free__";
+    (acc[key] = acc[key] || []).push(p);
+    return acc;
+  }, {});
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <header className="flex items-center gap-3">
         <Settings className="h-8 w-8 text-primary" />
         <div>
           <h1 className="text-3xl font-bold">Painel do Administrador</h1>
-          <p className="text-sm text-muted-foreground">Crie clubes, jogadores e gerencie transferências.</p>
+          <p className="text-sm text-muted-foreground">Crie e edite clubes, importe elencos por JSON e gerencie transferências.</p>
         </div>
       </header>
 
       <Tabs defaultValue="clubs">
         <TabsList className="bg-secondary/50">
           <TabsTrigger value="clubs">Clubes</TabsTrigger>
-          <TabsTrigger value="players">Jogadores</TabsTrigger>
+          <TabsTrigger value="import">Importar Elenco</TabsTrigger>
           <TabsTrigger value="transfer">Transferências</TabsTrigger>
         </TabsList>
 
+        {/* CLUBES */}
         <TabsContent value="clubs" className="space-y-4 mt-4">
           <Card className="p-5 bg-gradient-card border-border/50 space-y-3">
             <h3 className="font-display font-bold flex items-center gap-2"><Plus className="h-4 w-4 text-primary" /> Novo Clube</h3>
             <div className="grid md:grid-cols-2 gap-3">
               <div><Label>Nome *</Label><Input value={cName} onChange={(e) => setCName(e.target.value)} /></div>
               <div><Label>Discord ID do dono</Label><Input value={cDiscordId} onChange={(e) => setCDiscordId(e.target.value)} placeholder="ex: 858559322370998343" /></div>
-              <div><Label>URL do escudo</Label><Input value={cCrest} onChange={(e) => setCCrest(e.target.value)} /></div>
+              <div className="md:col-span-2"><Label>Escudo</Label><ImageUpload value={cCrest} onChange={setCCrest} /></div>
               <div><Label>Cidade</Label><Input value={cCity} onChange={(e) => setCCity(e.target.value)} /></div>
               <div><Label>Estádio</Label><Input value={cStadium} onChange={(e) => setCStadium(e.target.value)} /></div>
               <div><Label>Capacidade</Label><Input type="number" value={cCapacity} onChange={(e) => setCCapacity(e.target.value)} /></div>
@@ -144,52 +211,93 @@ const Admin = () => {
           </Card>
 
           <div className="space-y-2">
+            <h3 className="font-display font-bold text-sm text-muted-foreground uppercase tracking-wider">Clubes existentes</h3>
             {clubs.map((c) => (
-              <Card key={c.id} className="p-3 bg-gradient-card border-border/50 flex items-center justify-between">
-                <div className="font-medium">{c.name} <span className="text-xs text-muted-foreground">· {c.owner_discord_id || "sem dono"}</span></div>
-                <div className="text-sm text-primary font-bold">{formatCurrency(Number(c.budget))}</div>
+              <Card key={c.id} className="p-3 bg-gradient-card border-border/50 flex items-center gap-3">
+                <div className="h-10 w-10 flex items-center justify-center shrink-0">
+                  {c.crest_url ? <img src={c.crest_url} alt={c.name} className="h-full w-full object-contain" /> : <Shield className="h-5 w-5 text-muted-foreground" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">{c.name}</div>
+                  <div className="text-xs text-muted-foreground truncate">{c.owner_discord_id || "sem dono"} · {playersByClub[c.id]?.length || 0} jogadores</div>
+                </div>
+                <div className="text-sm text-primary font-bold hidden sm:block">{formatCurrency(Number(c.budget))}</div>
+                <Button size="sm" variant="outline" onClick={() => setEditClub({ ...c })}><Pencil className="h-3.5 w-3.5" /></Button>
+                <Button size="sm" variant="outline" onClick={() => deleteClub(c.id, c.name)} className="text-destructive hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
               </Card>
             ))}
+            {clubs.length === 0 && <p className="text-sm text-muted-foreground text-center py-6">Nenhum clube ainda.</p>}
           </div>
         </TabsContent>
 
-        <TabsContent value="players" className="space-y-4 mt-4">
-          <Card className="p-5 bg-gradient-card border-border/50 space-y-3">
-            <h3 className="font-display font-bold flex items-center gap-2"><Plus className="h-4 w-4 text-primary" /> Novo Jogador</h3>
+        {/* IMPORTAR ELENCO */}
+        <TabsContent value="import" className="space-y-4 mt-4">
+          <Card className="p-5 bg-gradient-card border-border/50 space-y-4">
+            <h3 className="font-display font-bold flex items-center gap-2"><FileJson className="h-4 w-4 text-primary" /> Importar elenco via JSON</h3>
+            <p className="text-xs text-muted-foreground">
+              Envie o arquivo .json exportado. Os jogadores serão associados <strong>somente</strong> ao clube selecionado — elencos de outros times não são afetados.
+            </p>
+
             <div className="grid md:grid-cols-2 gap-3">
-              <div><Label>Nome *</Label><Input value={pName} onChange={(e) => setPName(e.target.value)} /></div>
-              <div><Label>Posição</Label>
-                <Select value={pPos} onValueChange={setPPos}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{POSITIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div><Label>Clube</Label>
-                <Select value={pClub} onValueChange={setPClub}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+              <div>
+                <Label>Clube destino *</Label>
+                <Select value={importClubId} onValueChange={setImportClubId}>
+                  <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Sem clube</SelectItem>
                     {clubs.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>Valor de mercado</Label><Input type="number" value={pValue} onChange={(e) => setPValue(e.target.value)} /></div>
-              <div><Label>Idade</Label><Input type="number" value={pAge} onChange={(e) => setPAge(e.target.value)} /></div>
-              <div><Label>Nacionalidade</Label><Input value={pNat} onChange={(e) => setPNat(e.target.value)} /></div>
+              <div>
+                <Label>Modo</Label>
+                <Select value={importMode} onValueChange={(v) => setImportMode(v as any)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="replace">Substituir elenco atual</SelectItem>
+                    <SelectItem value="append">Adicionar ao elenco existente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <Button onClick={createPlayer} className="bg-gradient-gold text-primary-foreground hover:opacity-90">Criar Jogador</Button>
-          </Card>
 
-          <div className="space-y-1 max-h-96 overflow-auto">
-            {players.map((p: any) => (
-              <Card key={p.id} className="p-2 px-3 bg-gradient-card border-border/50 flex items-center justify-between text-sm">
-                <span><span className="text-primary font-bold mr-2">{p.position}</span>{p.name}</span>
-                <span className="text-xs text-muted-foreground">{p.clubs?.name || "Sem clube"}</span>
-              </Card>
-            ))}
-          </div>
+            <div
+              onClick={() => fileRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={onDropJson}
+              className={`rounded-xl border-2 border-dashed cursor-pointer p-8 text-center transition-all ${dragOver ? "border-primary bg-primary/10" : "border-border hover:border-primary/50 bg-secondary/30"}`}
+            >
+              <Upload className="h-8 w-8 text-primary mx-auto mb-2" />
+              <p className="font-medium">Arraste o .json ou clique para selecionar</p>
+              <p className="text-xs text-muted-foreground mt-1">Formato esperado: export padrão com array <code>players[]</code></p>
+              <input ref={fileRef} type="file" accept=".json,application/json" onChange={onPickJson} className="hidden" />
+            </div>
+
+            {importPreview && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm"><strong>{importPreview.length}</strong> jogadores no preview</p>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setImportPreview(null)}>Cancelar</Button>
+                    <Button size="sm" onClick={confirmImport} className="bg-gradient-gold text-primary-foreground hover:opacity-90">Confirmar importação</Button>
+                  </div>
+                </div>
+                <div className="max-h-64 overflow-auto space-y-1">
+                  {importPreview.map((p, i) => (
+                    <div key={i} className="flex items-center gap-3 text-sm bg-secondary/30 rounded px-3 py-1.5">
+                      <span className="text-primary font-bold w-12">{p.position}</span>
+                      <span className="flex-1 truncate">{p.name}</span>
+                      <span className="text-xs text-muted-foreground">{p.age}a · {p.nationality}</span>
+                      <span className="text-xs font-bold text-primary">{formatCurrency(p.market_value)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Card>
         </TabsContent>
 
+        {/* TRANSFERÊNCIAS */}
         <TabsContent value="transfer" className="space-y-4 mt-4">
           <Card className="p-5 bg-gradient-card border-border/50 space-y-3">
             <h3 className="font-display font-bold flex items-center gap-2"><ArrowRightLeft className="h-4 w-4 text-primary" /> Transferir Jogador</h3>
@@ -219,6 +327,29 @@ const Admin = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialog de edição de clube */}
+      <Dialog open={!!editClub} onOpenChange={(o) => !o && setEditClub(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Editar Clube</DialogTitle></DialogHeader>
+          {editClub && (
+            <div className="grid md:grid-cols-2 gap-3">
+              <div><Label>Nome</Label><Input value={editClub.name || ""} onChange={(e) => setEditClub({ ...editClub, name: e.target.value })} /></div>
+              <div><Label>Discord ID do dono</Label><Input value={editClub.owner_discord_id || ""} onChange={(e) => setEditClub({ ...editClub, owner_discord_id: e.target.value })} /></div>
+              <div className="md:col-span-2"><Label>Escudo</Label><ImageUpload value={editClub.crest_url} onChange={(url) => setEditClub({ ...editClub, crest_url: url })} folder={editClub.id} /></div>
+              <div><Label>Cidade</Label><Input value={editClub.city || ""} onChange={(e) => setEditClub({ ...editClub, city: e.target.value })} /></div>
+              <div><Label>Estádio</Label><Input value={editClub.stadium_name || ""} onChange={(e) => setEditClub({ ...editClub, stadium_name: e.target.value })} /></div>
+              <div><Label>Capacidade</Label><Input type="number" value={editClub.stadium_capacity || 0} onChange={(e) => setEditClub({ ...editClub, stadium_capacity: e.target.value })} /></div>
+              <div><Label>Cor primária</Label><Input value={editClub.primary_color || ""} onChange={(e) => setEditClub({ ...editClub, primary_color: e.target.value })} placeholder="#ffbe1a" /></div>
+              <div><Label>Ano de fundação</Label><Input type="number" value={editClub.founded_year || ""} onChange={(e) => setEditClub({ ...editClub, founded_year: e.target.value })} /></div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditClub(null)}>Cancelar</Button>
+            <Button onClick={saveEditClub} className="bg-gradient-gold text-primary-foreground hover:opacity-90">Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
