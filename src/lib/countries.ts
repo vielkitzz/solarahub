@@ -1,0 +1,86 @@
+// Mapeia nomes de países (PT-BR e EN) para códigos ISO 3166-1 alpha-2 (lowercase)
+// usados pelo flagcdn.com para servir bandeiras webp.
+const COUNTRY_MAP: Record<string, string> = {
+  "brasil": "br", "brazil": "br",
+  "argentina": "ar",
+  "uruguai": "uy", "uruguay": "uy",
+  "paraguai": "py", "paraguay": "py",
+  "chile": "cl",
+  "colombia": "co", "colômbia": "co",
+  "peru": "pe", "perú": "pe",
+  "equador": "ec", "ecuador": "ec",
+  "venezuela": "ve",
+  "bolivia": "bo", "bolívia": "bo",
+  "mexico": "mx", "méxico": "mx",
+  "estados unidos": "us", "eua": "us", "usa": "us", "united states": "us",
+  "canada": "ca", "canadá": "ca",
+  "portugal": "pt",
+  "espanha": "es", "spain": "es",
+  "franca": "fr", "frança": "fr", "france": "fr",
+  "alemanha": "de", "germany": "de",
+  "italia": "it", "itália": "it", "italy": "it",
+  "inglaterra": "gb-eng", "england": "gb-eng",
+  "escocia": "gb-sct", "escócia": "gb-sct", "scotland": "gb-sct",
+  "pais de gales": "gb-wls", "país de gales": "gb-wls", "wales": "gb-wls",
+  "irlanda do norte": "gb-nir", "northern ireland": "gb-nir",
+  "reino unido": "gb", "united kingdom": "gb", "uk": "gb",
+  "irlanda": "ie", "ireland": "ie",
+  "holanda": "nl", "paises baixos": "nl", "países baixos": "nl", "netherlands": "nl",
+  "belgica": "be", "bélgica": "be", "belgium": "be",
+  "suica": "ch", "suíça": "ch", "switzerland": "ch",
+  "austria": "at", "áustria": "at",
+  "polonia": "pl", "polônia": "pl", "poland": "pl",
+  "russia": "ru", "rússia": "ru",
+  "ucrania": "ua", "ucrânia": "ua", "ukraine": "ua",
+  "croacia": "hr", "croácia": "hr", "croatia": "hr",
+  "servia": "rs", "sérvia": "rs", "serbia": "rs",
+  "dinamarca": "dk", "denmark": "dk",
+  "suecia": "se", "suécia": "se", "sweden": "se",
+  "noruega": "no", "norway": "no",
+  "finlandia": "fi", "finlândia": "fi", "finland": "fi",
+  "islandia": "is", "islândia": "is", "iceland": "is",
+  "grecia": "gr", "grécia": "gr", "greece": "gr",
+  "turquia": "tr", "turkey": "tr",
+  "republica tcheca": "cz", "república tcheca": "cz", "czech republic": "cz", "tchequia": "cz",
+  "hungria": "hu", "hungary": "hu",
+  "romenia": "ro", "romênia": "ro", "romania": "ro",
+  "bulgaria": "bg", "bulgária": "bg",
+  "japao": "jp", "japão": "jp", "japan": "jp",
+  "coreia do sul": "kr", "coréia do sul": "kr", "south korea": "kr",
+  "china": "cn",
+  "australia": "au", "austrália": "au",
+  "nova zelandia": "nz", "nova zelândia": "nz", "new zealand": "nz",
+  "marrocos": "ma", "morocco": "ma",
+  "egito": "eg", "egypt": "eg",
+  "nigeria": "ng", "nigéria": "ng",
+  "senegal": "sn",
+  "ganha": "gh", "gana": "gh", "ghana": "gh",
+  "camaroes": "cm", "camarões": "cm", "cameroon": "cm",
+  "costa do marfim": "ci", "ivory coast": "ci",
+  "africa do sul": "za", "áfrica do sul": "za", "south africa": "za",
+  "argelia": "dz", "argélia": "dz", "algeria": "dz",
+  "tunisia": "tn", "tunísia": "tn",
+  "arabia saudita": "sa", "arábia saudita": "sa", "saudi arabia": "sa",
+  "qatar": "qa", "catar": "qa",
+  "ira": "ir", "irã": "ir", "iran": "ir",
+  "iraque": "iq", "iraq": "iq",
+  "israel": "il",
+  "india": "in", "índia": "in",
+  "costa rica": "cr",
+  "honduras": "hn",
+  "panama": "pa", "panamá": "pa",
+  "jamaica": "jm",
+  "cuba": "cu",
+};
+
+export const countryCode = (name?: string | null): string | null => {
+  if (!name) return null;
+  const key = name.trim().toLowerCase();
+  return COUNTRY_MAP[key] || null;
+};
+
+export const flagUrl = (name?: string | null, width: 40 | 80 | 160 = 40): string | null => {
+  const code = countryCode(name);
+  if (!code) return null;
+  return `https://flagcdn.com/w${width}/${code}.webp`;
+};
