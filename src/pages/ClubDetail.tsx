@@ -41,7 +41,7 @@ const ClubDetail = () => {
     if (!id) return;
     const [{ data: c }, { data: p }, { data: t }] = await Promise.all([
       supabase.from("clubs").select("*").eq("id", id).maybeSingle(),
-      supabase.from("players").select("*").eq("club_id", id).order("market_value", { ascending: false }),
+      supabase.from("players").select("*").eq("club_id", id),
       supabase.from("transactions").select("*").eq("club_id", id).order("created_at", { ascending: false }).limit(50),
     ]);
     setClub(c);
