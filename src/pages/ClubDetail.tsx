@@ -93,8 +93,8 @@ const ClubDetail = () => {
       <Card className="p-6 md:p-8 bg-gradient-card border-border/50 overflow-hidden relative">
         <div className="absolute inset-0 opacity-20" style={club.primary_color ? { background: `radial-gradient(circle at top right, ${club.primary_color}, transparent 60%)` } : undefined} />
         <div className="relative flex flex-col md:flex-row gap-6 items-start md:items-center">
-          <div className="h-24 w-24 md:h-32 md:w-32 rounded-2xl bg-secondary flex items-center justify-center overflow-hidden ring-2 ring-primary/30 shadow-elevated shrink-0">
-            {club.crest_url ? <img src={club.crest_url} alt={club.name} className="h-full w-full object-cover" /> : <Shield className="h-14 w-14 text-muted-foreground" />}
+          <div className="h-24 w-24 md:h-32 md:w-32 flex items-center justify-center shrink-0">
+            {club.crest_url ? <img src={club.crest_url} alt={club.name} className="h-full w-full object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]" /> : <Shield className="h-14 w-14 text-muted-foreground" />}
           </div>
           <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2 flex-wrap">

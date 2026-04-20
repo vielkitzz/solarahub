@@ -34,8 +34,8 @@ const ClubsList = () => {
           <Link key={club.id} to={`/clubes/${club.id}`}>
             <Card className="p-5 bg-gradient-card border-border/50 hover:border-primary/50 hover:shadow-gold transition-all h-full group">
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-14 w-14 rounded-lg bg-secondary flex items-center justify-center overflow-hidden ring-1 ring-border">
-                  {club.crest_url ? <img src={club.crest_url} alt={club.name} className="h-full w-full object-cover" /> : <Shield className="h-7 w-7 text-muted-foreground" />}
+                <div className="h-14 w-14 flex items-center justify-center shrink-0">
+                  {club.crest_url ? <img src={club.crest_url} alt={club.name} className="h-full w-full object-contain" /> : <Shield className="h-7 w-7 text-muted-foreground" />}
                 </div>
                 <div className="min-w-0">
                   <div className="font-display font-bold text-lg truncate group-hover:text-primary transition-colors">{club.name}</div>

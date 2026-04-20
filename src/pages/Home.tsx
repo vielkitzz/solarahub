@@ -77,12 +77,9 @@ const Home = () => {
                     <div className={`text-2xl font-display font-bold w-10 text-center ${idx < 3 ? "gold-text" : "text-muted-foreground"}`}>
                       {String(idx + 1).padStart(2, "0")}
                     </div>
-                    <div
-                      className="h-14 w-14 rounded-lg bg-secondary flex items-center justify-center overflow-hidden ring-1 ring-border shrink-0"
-                      style={club.primary_color ? { boxShadow: `0 0 0 2px ${club.primary_color}40` } : undefined}
-                    >
+                    <div className="h-14 w-14 flex items-center justify-center shrink-0">
                       {club.crest_url ? (
-                        <img src={club.crest_url} alt={club.name} className="h-full w-full object-cover" />
+                        <img src={club.crest_url} alt={club.name} className="h-full w-full object-contain" />
                       ) : (
                         <Shield className="h-6 w-6 text-muted-foreground" />
                       )}
