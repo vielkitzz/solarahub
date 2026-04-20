@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Shield, MapPin, Users, Wallet, Building2, TrendingUp, TrendingDown, Save, Plus } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { RichEditor } from "@/components/RichEditor";
+import { ImageUpload } from "@/components/ImageUpload";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -208,7 +209,7 @@ const ClubDetail = () => {
               <h3 className="font-display font-bold">Editar Informações</h3>
               <div className="grid md:grid-cols-2 gap-3">
                 <div><Label>Nome</Label><Input value={editingClub?.name || ""} onChange={(e) => setEditingClub({ ...editingClub, name: e.target.value })} /></div>
-                <div><Label>URL do escudo</Label><Input value={editingClub?.crest_url || ""} onChange={(e) => setEditingClub({ ...editingClub, crest_url: e.target.value })} /></div>
+                <div className="md:col-span-1"><Label>Escudo</Label><ImageUpload value={editingClub?.crest_url} onChange={(url) => setEditingClub({ ...editingClub, crest_url: url })} folder={id} /></div>
                 <div><Label>Cidade</Label><Input value={editingClub?.city || ""} onChange={(e) => setEditingClub({ ...editingClub, city: e.target.value })} /></div>
                 <div><Label>Estádio</Label><Input value={editingClub?.stadium_name || ""} onChange={(e) => setEditingClub({ ...editingClub, stadium_name: e.target.value })} /></div>
                 <div><Label>Capacidade</Label><Input type="number" value={editingClub?.stadium_capacity || 0} onChange={(e) => setEditingClub({ ...editingClub, stadium_capacity: e.target.value })} /></div>
