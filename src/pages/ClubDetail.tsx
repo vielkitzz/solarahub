@@ -136,19 +136,55 @@ const ClubDetail = () => {
         <TabsContent value="elenco" className="space-y-3 mt-4">
           {players.length === 0 ? (
             <Card className="p-8 text-center bg-gradient-card border-border/50 text-muted-foreground">Sem jogadores no elenco.</Card>
-          ) : players.map((p) => (
-            <Card key={p.id} className="p-4 bg-gradient-card border-border/50 flex items-center gap-4">
-              <Badge variant="outline" className="font-bold w-14 justify-center border-primary/40 text-primary">{p.position}</Badge>
-              <div className="flex-1">
-                <div className="font-bold">{p.name}</div>
-                <div className="text-xs text-muted-foreground">{p.age ? `${p.age} anos` : ""} {p.nationality && `· ${p.nationality}`}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-xs text-muted-foreground">Valor</div>
-                <div className="font-display font-bold text-primary">{formatCurrency(Number(p.market_value))}</div>
-              </div>
+          ) : (
+            <Card className="bg-gradient-card border-border/50 overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent border-border/50">
+                    <TableHead className="w-16">#</TableHead>
+                    <TableHead className="w-20">Pos.</TableHead>
+                    <TableHead>Nome</TableHead>
+                    <TableHead className="w-20">Idade</TableHead>
+                    <TableHead>Nacionalidade</TableHead>
+                    <TableHead className="w-20 text-center">Rating</TableHead>
+                    <TableHead className="text-right">Valor</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {[...players].sort((a, b) => {
+                    const ai = POSITIONS.indexOf(a.position); const bi = POSITIONS.indexOf(b.position);
+                    const av = ai === -1 ? 999 : ai; const bv = bi === -1 ? 999 : bi;
+                    if (av !== bv) return av - bv;
+                    return Number(b.market_value) - Number(a.market_value);
+                  }).map((p) => {
+                    const flag = flagUrl(p.nationality);
+                    const shirt = p.attributes?.shirtNumber;
+                    const rating = p.attributes?.rating;
+                    return (
+                      <TableRow key={p.id} className="border-border/50">
+                        <TableCell className="font-mono text-muted-foreground">{shirt ?? "—"}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="font-bold border-primary/40 text-primary">{p.position}</Badge>
+                        </TableCell>
+                        <TableCell className="font-bold">{p.name}</TableCell>
+                        <TableCell className="text-muted-foreground">{p.age ?? "—"}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {flag && <img src={flag} alt={p.nationality} className="h-3.5 w-auto rounded-sm shadow-sm" loading="lazy" />}
+                            <span className="text-sm">{p.nationality || "—"}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {rating ? <span className="font-display font-bold text-primary">{rating}</span> : <span className="text-muted-foreground">—</span>}
+                        </TableCell>
+                        <TableCell className="text-right font-display font-bold text-primary">{formatCurrency(Number(p.market_value))}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </Card>
-          ))}
+          )}
         </TabsContent>
 
         <TabsContent value="financas" className="space-y-4 mt-4">
