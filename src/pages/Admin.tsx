@@ -350,7 +350,64 @@ const Admin = () => {
             <Button onClick={transferPlayer} className="bg-gradient-gold text-primary-foreground hover:opacity-90">Confirmar Transferência</Button>
           </Card>
         </TabsContent>
+
+        {/* TEMPORADA */}
+        <TabsContent value="season" className="space-y-4 mt-4">
+          <Card className="p-5 bg-gradient-card border-border/50 space-y-4">
+            <div className="flex items-start gap-3">
+              <CalendarClock className="h-6 w-6 text-primary mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <h3 className="font-display font-bold">Virada de Temporada</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Aplica a todos os clubes <strong>ativos</strong> a soma de receitas (reputação + bilheteria) e o desconto de manutenção da base + folha salarial. Esta ação não pode ser desfeita.
+                </p>
+              </div>
+            </div>
+            <div className="rounded-lg border border-border/50 p-3 bg-secondary/20 text-xs space-y-1">
+              <div>• Receita base: Estadual € 4.300.000 · Nacional € 11.500.000 · Continental € 23.000.000 · Mundial € 45.000.000</div>
+              <div>• Bilheteria: (Nível Estádio × 500.000) × (Rate ÷ 3,0)</div>
+              <div>• Manutenção: Nível Base × 300.000</div>
+              <div>• Folha salarial: soma dos salários atuais do elenco</div>
+            </div>
+            <Button onClick={() => setConfirmSeason(true)} variant="destructive" disabled={seasonRunning}>
+              <CalendarClock className="h-4 w-4" /> {seasonRunning ? "Processando..." : "Processar Virada de Temporada"}
+            </Button>
+
+            {seasonResult && (
+              <div className="space-y-1">
+                <h4 className="font-bold text-sm">Resultado ({seasonResult.length} clubes)</h4>
+                <div className="max-h-80 overflow-auto space-y-1">
+                  {seasonResult.map((r) => (
+                    <div key={r.club_id} className="flex items-center gap-3 text-sm bg-secondary/30 rounded px-3 py-1.5">
+                      <span className="flex-1 truncate font-medium">{r.club_name}</span>
+                      <span className={`font-bold ${Number(r.delta) >= 0 ? "text-primary" : "text-destructive"}`}>
+                        {Number(r.delta) >= 0 ? "+" : ""}{formatCurrency(Number(r.delta))}
+                      </span>
+                      <span className="text-xs text-muted-foreground">→ {formatCurrency(Number(r.novo_caixa))}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      {/* Confirmação virada */}
+      <Dialog open={confirmSeason} onOpenChange={setConfirmSeason}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-destructive" /> Confirmar virada de temporada</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Esta ação atualizará o caixa de <strong>todos os clubes ativos</strong> de uma vez. Não há rollback automático.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmSeason(false)}>Cancelar</Button>
+            <Button variant="destructive" onClick={runSeason} disabled={seasonRunning}>Sim, processar agora</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog de edição de clube */}
       <Dialog open={!!editClub} onOpenChange={(o) => !o && setEditClub(null)}>
