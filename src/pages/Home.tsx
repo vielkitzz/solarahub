@@ -23,7 +23,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.title = "Solara Hub — Ranking dos Clubes";
+    document.title = "Ranking — Solara Hub";
     const load = async () => {
       const { data: clubsData } = await supabase.from("clubs").select("*").order("budget", { ascending: false });
       const { data: playersData } = await supabase.from("players").select("club_id");
