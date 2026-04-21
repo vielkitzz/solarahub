@@ -45,6 +45,11 @@ const Admin = () => {
   const [tNewClub, setTNewClub] = useState<string>("none");
   const [tFee, setTFee] = useState("");
 
+  // season turnover state (must be before any early return)
+  const [seasonRunning, setSeasonRunning] = useState(false);
+  const [seasonResult, setSeasonResult] = useState<any[] | null>(null);
+  const [confirmSeason, setConfirmSeason] = useState(false);
+
   const load = async () => {
     const [{ data: cs }, { data: ps }] = await Promise.all([
       supabase.from("clubs").select("*").order("name"),
