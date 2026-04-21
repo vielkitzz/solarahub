@@ -111,9 +111,6 @@ const Admin = () => {
     load();
   };
 
-  const [seasonRunning, setSeasonRunning] = useState(false);
-  const [seasonResult, setSeasonResult] = useState<any[] | null>(null);
-  const [confirmSeason, setConfirmSeason] = useState(false);
 
   const runSeason = async () => {
     setSeasonRunning(true);
