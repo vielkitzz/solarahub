@@ -1,6 +1,6 @@
 export const formatCurrency = (value: number | string) => {
   const n = typeof value === "string" ? parseFloat(value) : value;
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(n || 0);
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n || 0);
 };
 
 export const formatNumber = (value: number) =>

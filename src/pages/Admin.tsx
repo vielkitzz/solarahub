@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Settings, Plus, ArrowRightLeft, Upload, FileJson, Pencil, Trash2, Shield } from "lucide-react";
+import { Settings, Plus, ArrowRightLeft, Upload, FileJson, Pencil, Trash2, Shield, CalendarClock, AlertTriangle } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ImageUpload";
@@ -44,6 +44,11 @@ const Admin = () => {
   const [tPlayer, setTPlayer] = useState<string>("");
   const [tNewClub, setTNewClub] = useState<string>("none");
   const [tFee, setTFee] = useState("");
+
+  // season turnover state (must be before any early return)
+  const [seasonRunning, setSeasonRunning] = useState(false);
+  const [seasonResult, setSeasonResult] = useState<any[] | null>(null);
+  const [confirmSeason, setConfirmSeason] = useState(false);
 
   const load = async () => {
     const [{ data: cs }, { data: ps }] = await Promise.all([
@@ -93,10 +98,28 @@ const Admin = () => {
       stadium_capacity: parseInt(editClub.stadium_capacity) || 0,
       primary_color: editClub.primary_color || null,
       founded_year: parseInt(editClub.founded_year) || null,
+      budget: editClub.budget !== undefined && editClub.budget !== "" ? parseFloat(editClub.budget) : 0,
+      status: editClub.status || "ativo",
+      rate: parseFloat(editClub.rate) || 2.80,
+      reputacao: editClub.reputacao || null,
+      nivel_estadio: parseInt(editClub.nivel_estadio) || 1,
+      nivel_base: parseInt(editClub.nivel_base) || 1,
     }).eq("id", editClub.id);
     if (error) return toast.error(error.message);
     toast.success("Clube atualizado!");
     setEditClub(null);
+    load();
+  };
+
+
+  const runSeason = async () => {
+    setSeasonRunning(true);
+    const { data, error } = await supabase.rpc("process_season_turnover");
+    setSeasonRunning(false);
+    setConfirmSeason(false);
+    if (error) return toast.error(error.message);
+    setSeasonResult(data || []);
+    toast.success(`Temporada processada para ${data?.length || 0} clubes!`);
     load();
   };
 
@@ -191,6 +214,7 @@ const Admin = () => {
           <TabsTrigger value="clubs">Clubes</TabsTrigger>
           <TabsTrigger value="import">Importar Elenco</TabsTrigger>
           <TabsTrigger value="transfer">Transferências</TabsTrigger>
+          <TabsTrigger value="season">Temporada</TabsTrigger>
         </TabsList>
 
         {/* CLUBES */}
@@ -326,7 +350,64 @@ const Admin = () => {
             <Button onClick={transferPlayer} className="bg-gradient-gold text-primary-foreground hover:opacity-90">Confirmar Transferência</Button>
           </Card>
         </TabsContent>
+
+        {/* TEMPORADA */}
+        <TabsContent value="season" className="space-y-4 mt-4">
+          <Card className="p-5 bg-gradient-card border-border/50 space-y-4">
+            <div className="flex items-start gap-3">
+              <CalendarClock className="h-6 w-6 text-primary mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <h3 className="font-display font-bold">Virada de Temporada</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Aplica a todos os clubes <strong>ativos</strong> a soma de receitas (reputação + bilheteria) e o desconto de manutenção da base + folha salarial. Esta ação não pode ser desfeita.
+                </p>
+              </div>
+            </div>
+            <div className="rounded-lg border border-border/50 p-3 bg-secondary/20 text-xs space-y-1">
+              <div>• Receita base: Estadual € 4.300.000 · Nacional € 11.500.000 · Continental € 23.000.000 · Mundial € 45.000.000</div>
+              <div>• Bilheteria: (Nível Estádio × 500.000) × (Rate ÷ 3,0)</div>
+              <div>• Manutenção: Nível Base × 300.000</div>
+              <div>• Folha salarial: soma dos salários atuais do elenco</div>
+            </div>
+            <Button onClick={() => setConfirmSeason(true)} variant="destructive" disabled={seasonRunning}>
+              <CalendarClock className="h-4 w-4" /> {seasonRunning ? "Processando..." : "Processar Virada de Temporada"}
+            </Button>
+
+            {seasonResult && (
+              <div className="space-y-1">
+                <h4 className="font-bold text-sm">Resultado ({seasonResult.length} clubes)</h4>
+                <div className="max-h-80 overflow-auto space-y-1">
+                  {seasonResult.map((r) => (
+                    <div key={r.club_id} className="flex items-center gap-3 text-sm bg-secondary/30 rounded px-3 py-1.5">
+                      <span className="flex-1 truncate font-medium">{r.club_name}</span>
+                      <span className={`font-bold ${Number(r.delta) >= 0 ? "text-primary" : "text-destructive"}`}>
+                        {Number(r.delta) >= 0 ? "+" : ""}{formatCurrency(Number(r.delta))}
+                      </span>
+                      <span className="text-xs text-muted-foreground">→ {formatCurrency(Number(r.novo_caixa))}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      {/* Confirmação virada */}
+      <Dialog open={confirmSeason} onOpenChange={setConfirmSeason}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-destructive" /> Confirmar virada de temporada</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Esta ação atualizará o caixa de <strong>todos os clubes ativos</strong> de uma vez. Não há rollback automático.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmSeason(false)}>Cancelar</Button>
+            <Button variant="destructive" onClick={runSeason} disabled={seasonRunning}>Sim, processar agora</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog de edição de clube */}
       <Dialog open={!!editClub} onOpenChange={(o) => !o && setEditClub(null)}>
@@ -342,6 +423,32 @@ const Admin = () => {
               <div><Label>Capacidade</Label><Input type="number" value={editClub.stadium_capacity || 0} onChange={(e) => setEditClub({ ...editClub, stadium_capacity: e.target.value })} /></div>
               <div><Label>Cor primária</Label><Input value={editClub.primary_color || ""} onChange={(e) => setEditClub({ ...editClub, primary_color: e.target.value })} placeholder="#ffbe1a" /></div>
               <div><Label>Ano de fundação</Label><Input type="number" value={editClub.founded_year || ""} onChange={(e) => setEditClub({ ...editClub, founded_year: e.target.value })} /></div>
+              <div><Label>Caixa atual (€)</Label><Input type="number" value={editClub.budget ?? 0} onChange={(e) => setEditClub({ ...editClub, budget: e.target.value })} /></div>
+              <div>
+                <Label>Status</Label>
+                <Select value={editClub.status || "ativo"} onValueChange={(v) => setEditClub({ ...editClub, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ativo">Ativo</SelectItem>
+                    <SelectItem value="inativo">Inativo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Reputação</Label>
+                <Select value={editClub.reputacao || ""} onValueChange={(v) => setEditClub({ ...editClub, reputacao: v })}>
+                  <SelectTrigger><SelectValue placeholder="Definir..." /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="estadual">Estadual</SelectItem>
+                    <SelectItem value="nacional">Nacional</SelectItem>
+                    <SelectItem value="continental">Continental</SelectItem>
+                    <SelectItem value="mundial">Mundial</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Rate (decimal, padrão 2.80)</Label><Input type="number" step="0.01" value={editClub.rate ?? 2.80} onChange={(e) => setEditClub({ ...editClub, rate: e.target.value })} /></div>
+              <div><Label>Nível do estádio (1–5)</Label><Input type="number" min="1" max="5" value={editClub.nivel_estadio ?? 1} onChange={(e) => setEditClub({ ...editClub, nivel_estadio: e.target.value })} /></div>
+              <div><Label>Nível da base (1–5)</Label><Input type="number" min="1" max="5" value={editClub.nivel_base ?? 1} onChange={(e) => setEditClub({ ...editClub, nivel_base: e.target.value })} /></div>
             </div>
           )}
           <DialogFooter>

@@ -41,11 +41,16 @@ export type Database = {
           founded_year: number | null
           id: string
           name: string
+          nivel_base: number
+          nivel_estadio: number
           owner_discord_id: string | null
           owner_id: string | null
           primary_color: string | null
+          rate: number
+          reputacao: Database["public"]["Enums"]["club_reputation"] | null
           stadium_capacity: number
           stadium_name: string | null
+          status: Database["public"]["Enums"]["club_status"]
           updated_at: string
           wiki: Json
         }
@@ -57,11 +62,16 @@ export type Database = {
           founded_year?: number | null
           id?: string
           name: string
+          nivel_base?: number
+          nivel_estadio?: number
           owner_discord_id?: string | null
           owner_id?: string | null
           primary_color?: string | null
+          rate?: number
+          reputacao?: Database["public"]["Enums"]["club_reputation"] | null
           stadium_capacity?: number
           stadium_name?: string | null
+          status?: Database["public"]["Enums"]["club_status"]
           updated_at?: string
           wiki?: Json
         }
@@ -73,11 +83,16 @@ export type Database = {
           founded_year?: number | null
           id?: string
           name?: string
+          nivel_base?: number
+          nivel_estadio?: number
           owner_discord_id?: string | null
           owner_id?: string | null
           primary_color?: string | null
+          rate?: number
+          reputacao?: Database["public"]["Enums"]["club_reputation"] | null
           stadium_capacity?: number
           stadium_name?: string | null
+          status?: Database["public"]["Enums"]["club_status"]
           updated_at?: string
           wiki?: Json
         }
@@ -93,8 +108,11 @@ export type Database = {
           market_value: number
           name: string
           nationality: string | null
+          overall: number | null
           position: string
+          salario_atual: number
           updated_at: string
+          valor_base_calculado: number
         }
         Insert: {
           age?: number | null
@@ -105,8 +123,11 @@ export type Database = {
           market_value?: number
           name: string
           nationality?: string | null
+          overall?: number | null
           position: string
+          salario_atual?: number
           updated_at?: string
+          valor_base_calculado?: number
         }
         Update: {
           age?: number | null
@@ -117,8 +138,11 @@ export type Database = {
           market_value?: number
           name?: string
           nationality?: string | null
+          overall?: number | null
           position?: string
+          salario_atual?: number
           updated_at?: string
+          valor_base_calculado?: number
         }
         Relationships: [
           {
@@ -171,6 +195,67 @@ export type Database = {
           },
         ]
       }
+      transferencias: {
+        Row: {
+          clube_comprador_id: string
+          clube_vendedor_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          jogador_id: string
+          salario_ofertado: number
+          status: Database["public"]["Enums"]["transfer_status"]
+          updated_at: string
+          valor_ofertado: number
+        }
+        Insert: {
+          clube_comprador_id: string
+          clube_vendedor_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          jogador_id: string
+          salario_ofertado: number
+          status?: Database["public"]["Enums"]["transfer_status"]
+          updated_at?: string
+          valor_ofertado: number
+        }
+        Update: {
+          clube_comprador_id?: string
+          clube_vendedor_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          jogador_id?: string
+          salario_ofertado?: number
+          status?: Database["public"]["Enums"]["transfer_status"]
+          updated_at?: string
+          valor_ofertado?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transferencias_clube_comprador_id_fkey"
+            columns: ["clube_comprador_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencias_clube_vendedor_id_fkey"
+            columns: ["clube_vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencias_jogador_id_fkey"
+            columns: ["jogador_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -200,6 +285,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_transfer: { Args: { _transfer_id: string }; Returns: undefined }
       current_discord_id: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -208,9 +294,21 @@ export type Database = {
         }
         Returns: boolean
       }
+      process_season_turnover: {
+        Args: never
+        Returns: {
+          club_id: string
+          club_name: string
+          delta: number
+          novo_caixa: number
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"
+      club_reputation: "estadual" | "nacional" | "continental" | "mundial"
+      club_status: "ativo" | "inativo"
+      transfer_status: "pendente" | "aceita" | "recusada"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -339,6 +437,9 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      club_reputation: ["estadual", "nacional", "continental", "mundial"],
+      club_status: ["ativo", "inativo"],
+      transfer_status: ["pendente", "aceita", "recusada"],
     },
   },
 } as const

@@ -12,6 +12,7 @@ import Market from "./pages/Market";
 import WikiGlobal from "./pages/WikiGlobal";
 import MyClub from "./pages/MyClub";
 import Admin from "./pages/Admin";
+import Transferencias from "./pages/Transferencias";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/mercado" element={<Market />} />
               <Route path="/wiki" element={<WikiGlobal />} />
               <Route path="/meu-clube" element={<MyClub />} />
+              <Route path="/transferencias" element={<Transferencias />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
