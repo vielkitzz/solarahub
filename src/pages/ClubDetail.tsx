@@ -103,6 +103,8 @@ const ClubDetail = () => {
             <div className="flex items-center gap-2 flex-wrap">
               {canEdit && <Badge className="bg-primary text-primary-foreground">Você gerencia</Badge>}
               {club.founded_year && <Badge variant="outline">Fundado em {club.founded_year}</Badge>}
+              {club.reputacao && <Badge variant="outline" className="capitalize">{club.reputacao}</Badge>}
+              <Badge variant="outline" className="border-primary/40 text-primary">Rate {Number(club.rate ?? 2.8).toFixed(2)}</Badge>
             </div>
             <h1 className="text-3xl md:text-5xl font-bold">{club.name}</h1>
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
