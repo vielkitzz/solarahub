@@ -42,14 +42,18 @@ const ClubsList = () => {
                   <div className="text-xs text-muted-foreground">{club.city || "Cidade não definida"}</div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="grid grid-cols-3 gap-2 text-xs">
                 <div className="bg-secondary/40 rounded px-2 py-1.5">
-                  <div className="text-muted-foreground">Orçamento</div>
+                  <div className="text-muted-foreground">Caixa</div>
                   <div className="font-bold text-primary">{formatCurrency(Number(club.budget))}</div>
                 </div>
                 <div className="bg-secondary/40 rounded px-2 py-1.5">
                   <div className="text-muted-foreground">Estádio</div>
                   <div className="font-bold">{(club.stadium_capacity || 0).toLocaleString("pt-BR")}</div>
+                </div>
+                <div className="bg-secondary/40 rounded px-2 py-1.5">
+                  <div className="text-muted-foreground">Rate</div>
+                  <div className="font-bold text-primary">{Number(club.rate ?? 2.8).toFixed(2)}</div>
                 </div>
               </div>
             </Card>
