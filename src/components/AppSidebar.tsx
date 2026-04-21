@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Trophy, Shield, Users, BookOpen, Settings, LogOut, LogIn, Sparkles } from "lucide-react";
+import { Trophy, Shield, Users, BookOpen, Settings, LogOut, LogIn, Sparkles, ArrowRightLeft } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
@@ -67,6 +67,14 @@ export function AppSidebar() {
                     <NavLink to="/meu-clube">
                       <Shield className="h-4 w-4" />
                       {!collapsed && <span>Meu Clube</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/transferencias")}>
+                    <NavLink to="/transferencias">
+                      <ArrowRightLeft className="h-4 w-4" />
+                      {!collapsed && <span>Transferências</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
