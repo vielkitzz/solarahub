@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Settings, Plus, ArrowRightLeft, Upload, FileJson, Pencil, Trash2, Shield } from "lucide-react";
+import { Settings, Plus, ArrowRightLeft, Upload, FileJson, Pencil, Trash2, Shield, CalendarClock, AlertTriangle } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ImageUpload";
@@ -93,10 +93,31 @@ const Admin = () => {
       stadium_capacity: parseInt(editClub.stadium_capacity) || 0,
       primary_color: editClub.primary_color || null,
       founded_year: parseInt(editClub.founded_year) || null,
+      budget: editClub.budget !== undefined && editClub.budget !== "" ? parseFloat(editClub.budget) : 0,
+      status: editClub.status || "ativo",
+      rate: parseFloat(editClub.rate) || 2.80,
+      reputacao: editClub.reputacao || null,
+      nivel_estadio: parseInt(editClub.nivel_estadio) || 1,
+      nivel_base: parseInt(editClub.nivel_base) || 1,
     }).eq("id", editClub.id);
     if (error) return toast.error(error.message);
     toast.success("Clube atualizado!");
     setEditClub(null);
+    load();
+  };
+
+  const [seasonRunning, setSeasonRunning] = useState(false);
+  const [seasonResult, setSeasonResult] = useState<any[] | null>(null);
+  const [confirmSeason, setConfirmSeason] = useState(false);
+
+  const runSeason = async () => {
+    setSeasonRunning(true);
+    const { data, error } = await supabase.rpc("process_season_turnover");
+    setSeasonRunning(false);
+    setConfirmSeason(false);
+    if (error) return toast.error(error.message);
+    setSeasonResult(data || []);
+    toast.success(`Temporada processada para ${data?.length || 0} clubes!`);
     load();
   };
 
@@ -191,6 +212,7 @@ const Admin = () => {
           <TabsTrigger value="clubs">Clubes</TabsTrigger>
           <TabsTrigger value="import">Importar Elenco</TabsTrigger>
           <TabsTrigger value="transfer">Transferências</TabsTrigger>
+          <TabsTrigger value="season">Temporada</TabsTrigger>
         </TabsList>
 
         {/* CLUBES */}
@@ -342,6 +364,32 @@ const Admin = () => {
               <div><Label>Capacidade</Label><Input type="number" value={editClub.stadium_capacity || 0} onChange={(e) => setEditClub({ ...editClub, stadium_capacity: e.target.value })} /></div>
               <div><Label>Cor primária</Label><Input value={editClub.primary_color || ""} onChange={(e) => setEditClub({ ...editClub, primary_color: e.target.value })} placeholder="#ffbe1a" /></div>
               <div><Label>Ano de fundação</Label><Input type="number" value={editClub.founded_year || ""} onChange={(e) => setEditClub({ ...editClub, founded_year: e.target.value })} /></div>
+              <div><Label>Caixa atual (€)</Label><Input type="number" value={editClub.budget ?? 0} onChange={(e) => setEditClub({ ...editClub, budget: e.target.value })} /></div>
+              <div>
+                <Label>Status</Label>
+                <Select value={editClub.status || "ativo"} onValueChange={(v) => setEditClub({ ...editClub, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ativo">Ativo</SelectItem>
+                    <SelectItem value="inativo">Inativo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Reputação</Label>
+                <Select value={editClub.reputacao || ""} onValueChange={(v) => setEditClub({ ...editClub, reputacao: v })}>
+                  <SelectTrigger><SelectValue placeholder="Definir..." /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="estadual">Estadual</SelectItem>
+                    <SelectItem value="nacional">Nacional</SelectItem>
+                    <SelectItem value="continental">Continental</SelectItem>
+                    <SelectItem value="mundial">Mundial</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Rate (decimal, padrão 2.80)</Label><Input type="number" step="0.01" value={editClub.rate ?? 2.80} onChange={(e) => setEditClub({ ...editClub, rate: e.target.value })} /></div>
+              <div><Label>Nível do estádio (1–5)</Label><Input type="number" min="1" max="5" value={editClub.nivel_estadio ?? 1} onChange={(e) => setEditClub({ ...editClub, nivel_estadio: e.target.value })} /></div>
+              <div><Label>Nível da base (1–5)</Label><Input type="number" min="1" max="5" value={editClub.nivel_base ?? 1} onChange={(e) => setEditClub({ ...editClub, nivel_base: e.target.value })} /></div>
             </div>
           )}
           <DialogFooter>
