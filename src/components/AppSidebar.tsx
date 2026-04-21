@@ -24,8 +24,8 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
-        <div className="flex items-center gap-3">
+      <SidebarHeader className="border-b border-sidebar-border p-3 group-data-[collapsible=icon]:p-2">
+        <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
           <div className="h-9 w-9 rounded-lg bg-gradient-gold flex items-center justify-center shadow-gold shrink-0">
             <Sparkles className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
           </div>
