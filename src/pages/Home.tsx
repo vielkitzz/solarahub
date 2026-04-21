@@ -88,8 +88,12 @@ const Home = () => {
                       <div className="font-display font-bold text-lg truncate group-hover:text-primary transition-colors">{club.name}</div>
                       <div className="text-xs text-muted-foreground">{club.city || "—"} · {club.player_count} jogadores</div>
                     </div>
+                    <div className="text-right hidden sm:block">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Rate</div>
+                      <div className="font-display font-bold">{Number((club as any).rate ?? 2.8).toFixed(2)}</div>
+                    </div>
                     <div className="text-right">
-                      <div className="text-xs text-muted-foreground">Orçamento</div>
+                      <div className="text-xs text-muted-foreground">Caixa</div>
                       <div className="font-display font-bold text-primary">{formatCurrency(Number(club.budget))}</div>
                     </div>
                   </div>
