@@ -15,6 +15,7 @@ import { formatCurrency, POSITIONS } from "@/lib/format";
 import { flagUrl } from "@/lib/countries";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RichEditor } from "@/components/RichEditor";
+import { WikiSectionsEditor, WikiSectionsView, WikiData } from "@/components/WikiSections";
 import { ImageUpload } from "@/components/ImageUpload";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,7 +27,7 @@ const ClubDetail = () => {
   const [players, setPlayers] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [wikiContent, setWikiContent] = useState("");
+  const [wikiData, setWikiData] = useState<WikiData>({});
   const [editingClub, setEditingClub] = useState<any>(null);
 
   // Tx form
@@ -47,7 +48,7 @@ const ClubDetail = () => {
     setClub(c);
     setPlayers(p || []);
     setTransactions(t || []);
-    setWikiContent((c?.wiki as any)?.content || "");
+    setWikiData((c?.wiki as WikiData) || {});
     setEditingClub(c);
     setLoading(false);
     if (c) document.title = `${c.name} — Solara Hub`;
@@ -56,7 +57,7 @@ const ClubDetail = () => {
   useEffect(() => { load(); }, [id]);
 
   const saveWiki = async () => {
-    const { error } = await supabase.from("clubs").update({ wiki: { content: wikiContent } }).eq("id", id!);
+    const { error } = await supabase.from("clubs").update({ wiki: wikiData as any }).eq("id", id!);
     if (error) toast.error(error.message); else toast.success("Wiki atualizada!");
   };
 
@@ -228,19 +229,17 @@ const ClubDetail = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="wiki" className="mt-4">
-          <Card className="p-5 bg-gradient-card border-border/50">
-            {canEdit ? (
-              <>
-                <RichEditor content={wikiContent} onChange={setWikiContent} />
-                <Button onClick={saveWiki} className="mt-3 bg-gradient-gold text-primary-foreground hover:opacity-90">
-                  <Save className="h-4 w-4" /> Salvar Wiki
-                </Button>
-              </>
-            ) : (
-              <RichEditor content={wikiContent} onChange={() => {}} editable={false} />
-            )}
-          </Card>
+        <TabsContent value="wiki" className="mt-4 space-y-3">
+          {canEdit ? (
+            <>
+              <WikiSectionsEditor wiki={wikiData} onChange={setWikiData} />
+              <Button onClick={saveWiki} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+                <Save className="h-4 w-4" /> Salvar Wiki
+              </Button>
+            </>
+          ) : (
+            <WikiSectionsView wiki={wikiData} />
+          )}
         </TabsContent>
 
         {canEdit && (
