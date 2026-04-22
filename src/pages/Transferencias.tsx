@@ -29,6 +29,7 @@ const Transferencias = () => {
   const [target, setTarget] = useState<any>(null);
   const [valor, setValor] = useState("");
   const [salario, setSalario] = useState("");
+  const [luvas, setLuvas] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => { document.title = "Transferências — Solara Hub"; }, []);
@@ -77,7 +78,11 @@ const Transferencias = () => {
     setTarget(player);
     setValor(String(Math.round(Number(player.valor_base_calculado))));
     setSalario(String(Math.round(Number(player.salario_atual))));
+    setLuvas("0");
   };
+
+  const activeClub = myClubs.find((c) => c.id === activeClubId);
+  const caixaComprador = Number(activeClub?.budget || 0);
 
   const fairPlayCheck = (v: number, base: number) => {
     if (!base) return "Jogador sem valor base";
@@ -87,11 +92,17 @@ const Transferencias = () => {
   };
 
   const valorNum = parseFloat(valor) || 0;
+  const luvasNum = parseFloat(luvas) || 0;
+  const totalDevido = valorNum + luvasNum;
   const fpError = target ? fairPlayCheck(valorNum, Number(target.valor_base_calculado)) : null;
+  const caixaError = target && totalDevido > caixaComprador
+    ? `Caixa insuficiente: necessário ${formatCurrency(totalDevido)}, disponível ${formatCurrency(caixaComprador)}`
+    : null;
 
   const submit = async () => {
     if (!target || !activeClubId || !user) return;
     if (fpError) return toast.error(fpError);
+    if (caixaError) return toast.error(caixaError);
     if (!salario || parseFloat(salario) < 0) return toast.error("Salário inválido");
     setSubmitting(true);
     const { error } = await supabase.from("transferencias").insert({
@@ -100,6 +111,7 @@ const Transferencias = () => {
       clube_vendedor_id: target.club_id,
       valor_ofertado: valorNum,
       salario_ofertado: parseFloat(salario),
+      luvas: luvasNum,
       created_by: user.id,
     });
     setSubmitting(false);
@@ -315,16 +327,28 @@ const Transferencias = () => {
                 <Label>Salário ofertado (€)</Label>
                 <Input type="number" value={salario} onChange={(e) => setSalario(e.target.value)} />
               </div>
+              <div>
+                <Label>Luvas / bônus de assinatura (€)</Label>
+                <Input type="number" value={luvas} onChange={(e) => setLuvas(e.target.value)} />
+                <div className="text-[11px] text-muted-foreground mt-1">
+                  Total a pagar à vista: <strong>{formatCurrency(totalDevido)}</strong> · Caixa do {activeClub?.name || "clube"}: {formatCurrency(caixaComprador)}
+                </div>
+              </div>
               {fpError && (
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
                   <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" /> {fpError}
+                </div>
+              )}
+              {caixaError && !fpError && (
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" /> {caixaError}
                 </div>
               )}
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setTarget(null)}>Cancelar</Button>
-            <Button onClick={submit} disabled={!!fpError || submitting} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+            <Button onClick={submit} disabled={!!fpError || !!caixaError || submitting} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
               {submitting ? "Enviando..." : "Enviar proposta"}
             </Button>
           </DialogFooter>
