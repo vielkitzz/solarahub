@@ -90,6 +90,21 @@ const ClubDetail = () => {
 
   const monthIncome = transactions.filter((t) => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
   const monthExpense = transactions.filter((t) => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
+  const folhaSalarial = players.reduce((s, p) => s + Number(p.salario_atual || 0), 0);
+  const premiacaoPorPosicao = (pos: number | null | undefined) => {
+    if (!pos) return 0;
+    if (pos === 1) return 20_000_000;
+    if (pos === 2) return 12_000_000;
+    if (pos === 3) return 8_000_000;
+    if (pos === 4) return 5_000_000;
+    if (pos <= 8) return 3_000_000;
+    if (pos <= 12) return 1_500_000;
+    if (pos <= 16) return 750_000;
+    if (pos <= 20) return 300_000;
+    return 0;
+  };
+  const premiacao = premiacaoPorPosicao(club.posicao_ultima_temporada);
+  const patrocinio = Number(club.patrocinio_anual || 0);
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -191,6 +206,26 @@ const ClubDetail = () => {
         </TabsContent>
 
         <TabsContent value="financas" className="space-y-4 mt-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <Card className="p-4 bg-gradient-card border-border/50">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Patrocínio anual</div>
+              <div className="font-display font-bold text-success mt-1">{formatCurrency(patrocinio)}</div>
+            </Card>
+            <Card className="p-4 bg-gradient-card border-border/50">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Premiação por posição</div>
+              <div className="font-display font-bold text-success mt-1">{formatCurrency(premiacao)}</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">{club.posicao_ultima_temporada ? `${club.posicao_ultima_temporada}º na última temp.` : "sem posição definida"}</div>
+            </Card>
+            <Card className="p-4 bg-gradient-card border-border/50">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Folha salarial (anual)</div>
+              <div className="font-display font-bold text-destructive mt-1">{formatCurrency(folhaSalarial)}</div>
+            </Card>
+            <Card className="p-4 bg-gradient-card border-border/50">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Manutenção da base</div>
+              <div className="font-display font-bold text-destructive mt-1">{formatCurrency((club.nivel_base || 1) * 300_000)}</div>
+            </Card>
+          </div>
+
           {canEdit && (
             <Card className="p-5 bg-gradient-card border-border/50">
               <h3 className="font-display font-bold mb-3 flex items-center gap-2"><Plus className="h-4 w-4 text-primary" /> Nova Transação</h3>

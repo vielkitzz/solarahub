@@ -45,6 +45,8 @@ export type Database = {
           nivel_estadio: number
           owner_discord_id: string | null
           owner_id: string | null
+          patrocinio_anual: number
+          posicao_ultima_temporada: number | null
           primary_color: string | null
           rate: number
           reputacao: Database["public"]["Enums"]["club_reputation"] | null
@@ -66,6 +68,8 @@ export type Database = {
           nivel_estadio?: number
           owner_discord_id?: string | null
           owner_id?: string | null
+          patrocinio_anual?: number
+          posicao_ultima_temporada?: number | null
           primary_color?: string | null
           rate?: number
           reputacao?: Database["public"]["Enums"]["club_reputation"] | null
@@ -87,6 +91,8 @@ export type Database = {
           nivel_estadio?: number
           owner_discord_id?: string | null
           owner_id?: string | null
+          patrocinio_anual?: number
+          posicao_ultima_temporada?: number | null
           primary_color?: string | null
           rate?: number
           reputacao?: Database["public"]["Enums"]["club_reputation"] | null
@@ -203,6 +209,7 @@ export type Database = {
           created_by: string | null
           id: string
           jogador_id: string
+          luvas: number
           salario_ofertado: number
           status: Database["public"]["Enums"]["transfer_status"]
           updated_at: string
@@ -215,6 +222,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           jogador_id: string
+          luvas?: number
           salario_ofertado: number
           status?: Database["public"]["Enums"]["transfer_status"]
           updated_at?: string
@@ -227,6 +235,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           jogador_id?: string
+          luvas?: number
           salario_ofertado?: number
           status?: Database["public"]["Enums"]["transfer_status"]
           updated_at?: string
@@ -294,6 +303,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      premiacao_por_posicao: { Args: { _pos: number }; Returns: number }
       process_season_turnover: {
         Args: never
         Returns: {

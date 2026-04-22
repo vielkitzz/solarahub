@@ -104,6 +104,8 @@ const Admin = () => {
       reputacao: editClub.reputacao || null,
       nivel_estadio: parseInt(editClub.nivel_estadio) || 1,
       nivel_base: parseInt(editClub.nivel_base) || 1,
+      patrocinio_anual: parseFloat(editClub.patrocinio_anual) || 0,
+      posicao_ultima_temporada: editClub.posicao_ultima_temporada ? parseInt(editClub.posicao_ultima_temporada) : null,
     }).eq("id", editClub.id);
     if (error) return toast.error(error.message);
     toast.success("Clube atualizado!");
@@ -366,6 +368,8 @@ const Admin = () => {
             <div className="rounded-lg border border-border/50 p-3 bg-secondary/20 text-xs space-y-1">
               <div>• Receita base: Estadual € 4.300.000 · Nacional € 11.500.000 · Continental € 23.000.000 · Mundial € 45.000.000</div>
               <div>• Bilheteria: (Nível Estádio × 500.000) × (Rate ÷ 3,0)</div>
+              <div>• Patrocínio anual: valor configurado por clube</div>
+              <div>• Premiação por posição: 1º € 20M · 2º € 12M · 3º € 8M · 4º € 5M · 5º–8º € 3M · 9º–12º € 1,5M · 13º–16º € 750k · 17º–20º € 300k</div>
               <div>• Manutenção: Nível Base × 300.000</div>
               <div>• Folha salarial: soma dos salários atuais do elenco</div>
             </div>
@@ -449,6 +453,8 @@ const Admin = () => {
               <div><Label>Rate (decimal, padrão 2.80)</Label><Input type="number" step="0.01" value={editClub.rate ?? 2.80} onChange={(e) => setEditClub({ ...editClub, rate: e.target.value })} /></div>
               <div><Label>Nível do estádio (1–5)</Label><Input type="number" min="1" max="5" value={editClub.nivel_estadio ?? 1} onChange={(e) => setEditClub({ ...editClub, nivel_estadio: e.target.value })} /></div>
               <div><Label>Nível da base (1–5)</Label><Input type="number" min="1" max="5" value={editClub.nivel_base ?? 1} onChange={(e) => setEditClub({ ...editClub, nivel_base: e.target.value })} /></div>
+              <div><Label>Patrocínio anual (€)</Label><Input type="number" value={editClub.patrocinio_anual ?? 0} onChange={(e) => setEditClub({ ...editClub, patrocinio_anual: e.target.value })} placeholder="0" /></div>
+              <div><Label>Posição última temporada (1–20)</Label><Input type="number" min="1" max="20" value={editClub.posicao_ultima_temporada ?? ""} onChange={(e) => setEditClub({ ...editClub, posicao_ultima_temporada: e.target.value })} placeholder="ex: 3" /></div>
             </div>
           )}
           <DialogFooter>

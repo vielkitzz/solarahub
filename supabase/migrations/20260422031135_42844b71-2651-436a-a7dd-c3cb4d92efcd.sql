@@ -1,0 +1,19 @@
+CREATE OR REPLACE FUNCTION public.premiacao_por_posicao(_pos integer)
+RETURNS numeric
+LANGUAGE sql
+IMMUTABLE
+SET search_path TO 'public'
+AS $$
+  SELECT CASE
+    WHEN _pos IS NULL THEN 0
+    WHEN _pos = 1 THEN 20000000
+    WHEN _pos = 2 THEN 12000000
+    WHEN _pos = 3 THEN 8000000
+    WHEN _pos = 4 THEN 5000000
+    WHEN _pos BETWEEN 5 AND 8 THEN 3000000
+    WHEN _pos BETWEEN 9 AND 12 THEN 1500000
+    WHEN _pos BETWEEN 13 AND 16 THEN 750000
+    WHEN _pos BETWEEN 17 AND 20 THEN 300000
+    ELSE 0
+  END;
+$$;
