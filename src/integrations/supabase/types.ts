@@ -106,6 +106,7 @@ export type Database = {
       }
       players: {
         Row: {
+          a_venda: boolean
           age: number | null
           attributes: Json
           club_id: string | null
@@ -121,6 +122,7 @@ export type Database = {
           valor_base_calculado: number
         }
         Insert: {
+          a_venda?: boolean
           age?: number | null
           attributes?: Json
           club_id?: string | null
@@ -136,6 +138,7 @@ export type Database = {
           valor_base_calculado?: number
         }
         Update: {
+          a_venda?: boolean
           age?: number | null
           attributes?: Json
           club_id?: string | null
@@ -207,11 +210,14 @@ export type Database = {
           clube_vendedor_id: string
           created_at: string
           created_by: string | null
+          duracao_emprestimo: number | null
           id: string
           jogador_id: string
+          jogador_trocado_id: string | null
           luvas: number
           salario_ofertado: number
           status: Database["public"]["Enums"]["transfer_status"]
+          tipo: Database["public"]["Enums"]["transfer_type"]
           updated_at: string
           valor_ofertado: number
         }
@@ -220,11 +226,14 @@ export type Database = {
           clube_vendedor_id: string
           created_at?: string
           created_by?: string | null
+          duracao_emprestimo?: number | null
           id?: string
           jogador_id: string
+          jogador_trocado_id?: string | null
           luvas?: number
           salario_ofertado: number
           status?: Database["public"]["Enums"]["transfer_status"]
+          tipo?: Database["public"]["Enums"]["transfer_type"]
           updated_at?: string
           valor_ofertado: number
         }
@@ -233,11 +242,14 @@ export type Database = {
           clube_vendedor_id?: string
           created_at?: string
           created_by?: string | null
+          duracao_emprestimo?: number | null
           id?: string
           jogador_id?: string
+          jogador_trocado_id?: string | null
           luvas?: number
           salario_ofertado?: number
           status?: Database["public"]["Enums"]["transfer_status"]
+          tipo?: Database["public"]["Enums"]["transfer_type"]
           updated_at?: string
           valor_ofertado?: number
         }
@@ -319,6 +331,7 @@ export type Database = {
       club_reputation: "estadual" | "nacional" | "continental" | "mundial"
       club_status: "ativo" | "inativo"
       transfer_status: "pendente" | "aceita" | "recusada"
+      transfer_type: "compra" | "emprestimo" | "troca"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -450,6 +463,7 @@ export const Constants = {
       club_reputation: ["estadual", "nacional", "continental", "mundial"],
       club_status: ["ativo", "inativo"],
       transfer_status: ["pendente", "aceita", "recusada"],
+      transfer_type: ["compra", "emprestimo", "troca"],
     },
   },
 } as const

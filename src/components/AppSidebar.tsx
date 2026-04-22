@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Trophy, Shield, Users, BookOpen, Settings, LogOut, LogIn, Sparkles, ArrowRightLeft } from "lucide-react";
+import { Home as HomeIcon, Trophy, Shield, Users, BookOpen, Settings, LogOut, LogIn, Sparkles, ArrowRightLeft, MapPin } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
@@ -9,8 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const mainItems = [
-  { title: "Ranking", url: "/", icon: Trophy },
+  { title: "Início", url: "/", icon: HomeIcon },
+  { title: "Ranking", url: "/ranking", icon: Trophy },
   { title: "Clubes", url: "/clubes", icon: Shield },
+  { title: "Mapa", url: "/mapa", icon: MapPin },
   { title: "Mercado", url: "/mercado", icon: Users },
   { title: "Wiki Global", url: "/wiki", icon: BookOpen },
 ];

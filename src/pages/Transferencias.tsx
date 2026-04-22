@@ -10,10 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowRightLeft, Inbox, Send, AlertTriangle, LogIn, Search } from "lucide-react";
+import { ArrowRightLeft, Inbox, Send, AlertTriangle, LogIn, Search, Tag } from "lucide-react";
 import { formatCurrency, POSITIONS } from "@/lib/format";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+
+type TransferType = "compra" | "emprestimo" | "troca";
 
 const Transferencias = () => {
   const { user, loading, signInWithDiscord } = useAuth();
@@ -24,12 +26,16 @@ const Transferencias = () => {
   const [proposals, setProposals] = useState<any[]>([]);
   const [q, setQ] = useState("");
   const [pos, setPos] = useState<string>("all");
+  const [onlyForSale, setOnlyForSale] = useState(false);
 
   // proposal modal
   const [target, setTarget] = useState<any>(null);
+  const [tipo, setTipo] = useState<TransferType>("compra");
   const [valor, setValor] = useState("");
   const [salario, setSalario] = useState("");
   const [luvas, setLuvas] = useState("");
+  const [duracao, setDuracao] = useState("1");
+  const [jogadorTrocado, setJogadorTrocado] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => { document.title = "Transferências — Solara Hub"; }, []);
@@ -69,20 +75,29 @@ const Transferencias = () => {
   const filtered = useMemo(() => {
     return players
       .filter((p) => p.club_id && p.club_id !== activeClubId)
+      .filter((p) => !onlyForSale || p.a_venda)
       .filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))
       .filter((p) => pos === "all" || p.position === pos)
-      .sort((a, b) => Number(b.valor_base_calculado || 0) - Number(a.valor_base_calculado || 0));
-  }, [players, activeClubId, q, pos]);
+      .sort((a, b) => {
+        if (a.a_venda !== b.a_venda) return a.a_venda ? -1 : 1;
+        return Number(b.valor_base_calculado || 0) - Number(a.valor_base_calculado || 0);
+      });
+  }, [players, activeClubId, q, pos, onlyForSale]);
+
+  const myPlayers = useMemo(
+    () => players.filter((p) => p.club_id === activeClubId),
+    [players, activeClubId]
+  );
 
   const openProposal = (player: any) => {
     setTarget(player);
+    setTipo("compra");
     setValor(String(Math.round(Number(player.valor_base_calculado))));
     setSalario(String(Math.round(Number(player.salario_atual))));
     setLuvas("0");
+    setDuracao("1");
+    setJogadorTrocado("");
   };
-
-  const activeClub = myClubs.find((c) => c.id === activeClubId);
-  const caixaComprador = Number(activeClub?.budget || 0);
 
   const fairPlayCheck = (v: number, base: number) => {
     if (!base) return "Jogador sem valor base";
@@ -91,29 +106,43 @@ const Transferencias = () => {
     return null;
   };
 
+  const activeClub = myClubs.find((c) => c.id === activeClubId);
+  const caixaComprador = Number(activeClub?.budget || 0);
   const valorNum = parseFloat(valor) || 0;
   const luvasNum = parseFloat(luvas) || 0;
   const totalDevido = valorNum + luvasNum;
-  const fpError = target ? fairPlayCheck(valorNum, Number(target.valor_base_calculado)) : null;
+
+  const fpError = target && tipo === "compra"
+    ? fairPlayCheck(valorNum, Number(target.valor_base_calculado))
+    : null;
   const caixaError = target && totalDevido > caixaComprador
     ? `Caixa insuficiente: necessário ${formatCurrency(totalDevido)}, disponível ${formatCurrency(caixaComprador)}`
+    : null;
+  const trocaError = tipo === "troca" && !jogadorTrocado
+    ? "Selecione um jogador para oferecer na troca"
     : null;
 
   const submit = async () => {
     if (!target || !activeClubId || !user) return;
     if (fpError) return toast.error(fpError);
     if (caixaError) return toast.error(caixaError);
+    if (trocaError) return toast.error(trocaError);
     if (!salario || parseFloat(salario) < 0) return toast.error("Salário inválido");
     setSubmitting(true);
-    const { error } = await supabase.from("transferencias").insert({
+    const payload: any = {
       jogador_id: target.id,
       clube_comprador_id: activeClubId,
       clube_vendedor_id: target.club_id,
-      valor_ofertado: valorNum,
+      valor_ofertado: tipo === "emprestimo" ? 0 : valorNum,
       salario_ofertado: parseFloat(salario),
-      luvas: luvasNum,
+      luvas: tipo === "compra" ? luvasNum : 0,
+      tipo,
       created_by: user.id,
-    });
+    };
+    if (tipo === "troca") payload.jogador_trocado_id = jogadorTrocado;
+    if (tipo === "emprestimo") payload.duracao_emprestimo = parseInt(duracao) || 1;
+
+    const { error } = await supabase.from("transferencias").insert(payload);
     setSubmitting(false);
     if (error) return toast.error(error.message);
     toast.success("Proposta enviada!");
@@ -161,6 +190,8 @@ const Transferencias = () => {
   const sent = proposals.filter((p) => p.clube_comprador_id === activeClubId);
   const playerById = (id: string) => players.find((p) => p.id === id);
 
+  const tipoLabel = (t: TransferType) => t === "compra" ? "Compra" : t === "emprestimo" ? "Empréstimo" : "Troca";
+
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -168,7 +199,7 @@ const Transferencias = () => {
           <ArrowRightLeft className="h-8 w-8 text-primary" />
           <div>
             <h1 className="text-3xl font-bold">Transferências</h1>
-            <p className="text-sm text-muted-foreground">Mercado de propostas e caixa de entrada do seu clube.</p>
+            <p className="text-sm text-muted-foreground">Negocie compras, empréstimos e trocas.</p>
           </div>
         </div>
         {myClubs.length > 1 && (
@@ -202,6 +233,13 @@ const Transferencias = () => {
                 {POSITIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Button
+              variant={onlyForSale ? "default" : "outline"}
+              onClick={() => setOnlyForSale((v) => !v)}
+              className={onlyForSale ? "bg-gradient-gold text-primary-foreground" : ""}
+            >
+              <Tag className="h-4 w-4" /> {onlyForSale ? "Mostrando à venda" : "Só à venda"}
+            </Button>
           </div>
 
           <Card className="bg-gradient-card border-border/50 overflow-hidden">
@@ -221,16 +259,21 @@ const Transferencias = () => {
                 {filtered.map((p) => {
                   const club = clubs[p.club_id];
                   return (
-                    <TableRow key={p.id}>
+                    <TableRow key={p.id} className={p.a_venda ? "bg-primary/5" : ""}>
                       <TableCell><Badge variant="outline" className="border-primary/40 text-primary">{p.position}</Badge></TableCell>
-                      <TableCell className="font-medium">{p.name}</TableCell>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {p.name}
+                          {p.a_venda && <Badge className="bg-primary/20 text-primary border-primary/40 text-[10px] px-1.5 py-0"><Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA</Badge>}
+                        </div>
+                      </TableCell>
                       <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                         {club && <Link to={`/clubes/${club.id}`} className="hover:text-primary">{club.name}</Link>}
                       </TableCell>
                       <TableCell className="text-center font-bold">{p.overall ?? "—"}</TableCell>
                       <TableCell className="text-center hidden sm:table-cell text-sm">{p.age || "—"}</TableCell>
                       <TableCell className="text-right font-display font-bold text-primary">{formatCurrency(Number(p.valor_base_calculado))}</TableCell>
-                      <TableCell><Button size="sm" onClick={() => openProposal(p)} className="bg-gradient-gold text-primary-foreground hover:opacity-90">Propor</Button></TableCell>
+                      <TableCell><Button size="sm" onClick={() => openProposal(p)} className="bg-gradient-gold text-primary-foreground hover:opacity-90">Negociar</Button></TableCell>
                     </TableRow>
                   );
                 })}
@@ -247,20 +290,29 @@ const Transferencias = () => {
           {inbox.length === 0 && <Card className="p-10 text-center text-muted-foreground bg-gradient-card border-border/50">Nenhuma proposta recebida.</Card>}
           {inbox.map((t) => {
             const player = playerById(t.jogador_id);
+            const oferecido = t.jogador_trocado_id ? playerById(t.jogador_trocado_id) : null;
             const buyer = clubs[t.clube_comprador_id];
             const base = Number(player?.valor_base_calculado || 0);
             return (
               <Card key={t.id} className="p-4 bg-gradient-card border-border/50">
                 <div className="flex flex-wrap items-center gap-3">
-                  <Badge variant="outline" className="border-primary/40 text-primary">{player?.position}</Badge>
+                  <Badge variant="outline" className="border-primary/40 text-primary uppercase text-[10px]">{tipoLabel(t.tipo)}</Badge>
+                  <Badge variant="outline">{player?.position}</Badge>
                   <div className="flex-1 min-w-[200px]">
                     <div className="font-bold">{player?.name || "Jogador"}</div>
-                    <div className="text-xs text-muted-foreground">Oferta de <strong>{buyer?.name || "?"}</strong> · base {formatCurrency(base)}</div>
+                    <div className="text-xs text-muted-foreground">
+                      Oferta de <strong>{buyer?.name || "?"}</strong> · base {formatCurrency(base)}
+                      {t.tipo === "emprestimo" && t.duracao_emprestimo && <> · {t.duracao_emprestimo} temp.</>}
+                      {t.tipo === "troca" && oferecido && <> · oferece <strong>{oferecido.name}</strong></>}
+                      {Number(t.luvas) > 0 && <> · luvas {formatCurrency(Number(t.luvas))}</>}
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-[10px] uppercase text-muted-foreground">Valor</div>
-                    <div className="font-display font-bold text-primary">{formatCurrency(Number(t.valor_ofertado))}</div>
-                  </div>
+                  {t.tipo !== "emprestimo" && (
+                    <div className="text-right">
+                      <div className="text-[10px] uppercase text-muted-foreground">Valor</div>
+                      <div className="font-display font-bold text-primary">{formatCurrency(Number(t.valor_ofertado))}</div>
+                    </div>
+                  )}
                   <div className="text-right">
                     <div className="text-[10px] uppercase text-muted-foreground">Salário</div>
                     <div className="font-display font-bold">{formatCurrency(Number(t.salario_ofertado))}</div>
@@ -288,7 +340,8 @@ const Transferencias = () => {
             return (
               <Card key={t.id} className="p-4 bg-gradient-card border-border/50">
                 <div className="flex flex-wrap items-center gap-3">
-                  <Badge variant="outline" className="border-primary/40 text-primary">{player?.position}</Badge>
+                  <Badge variant="outline" className="border-primary/40 text-primary uppercase text-[10px]">{tipoLabel(t.tipo)}</Badge>
+                  <Badge variant="outline">{player?.position}</Badge>
                   <div className="flex-1 min-w-[200px]">
                     <div className="font-bold">{player?.name || "Jogador"}</div>
                     <div className="text-xs text-muted-foreground">Para <strong>{seller?.name || "?"}</strong></div>
@@ -307,48 +360,98 @@ const Transferencias = () => {
 
       {/* PROPOSAL MODAL */}
       <Dialog open={!!target} onOpenChange={(o) => !o && setTarget(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Enviar proposta</DialogTitle>
+            <DialogTitle>Negociar jogador</DialogTitle>
             <DialogDescription>
               {target && <>Por <strong>{target.name}</strong> · OVR {target.overall} · valor base {formatCurrency(Number(target.valor_base_calculado))}</>}
             </DialogDescription>
           </DialogHeader>
           {target && (
-            <div className="space-y-3">
-              <div>
-                <Label>Valor da transferência (€)</Label>
-                <Input type="number" value={valor} onChange={(e) => setValor(e.target.value)} />
-                <div className="text-[11px] text-muted-foreground mt-1">
-                  Faixa Fair Play: {formatCurrency(Number(target.valor_base_calculado) * 0.5)} – {formatCurrency(Number(target.valor_base_calculado) * 3.0)}
+            <Tabs value={tipo} onValueChange={(v) => setTipo(v as TransferType)}>
+              <TabsList className="grid grid-cols-3 w-full">
+                <TabsTrigger value="compra">Compra</TabsTrigger>
+                <TabsTrigger value="emprestimo">Empréstimo</TabsTrigger>
+                <TabsTrigger value="troca">Troca</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="compra" className="space-y-3 mt-3">
+                <div>
+                  <Label>Valor da transferência (€)</Label>
+                  <Input type="number" value={valor} onChange={(e) => setValor(e.target.value)} />
+                  <div className="text-[11px] text-muted-foreground mt-1">
+                    Faixa Fair Play: {formatCurrency(Number(target.valor_base_calculado) * 0.5)} – {formatCurrency(Number(target.valor_base_calculado) * 3.0)}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <Label>Salário ofertado (€)</Label>
-                <Input type="number" value={salario} onChange={(e) => setSalario(e.target.value)} />
-              </div>
-              <div>
-                <Label>Luvas / bônus de assinatura (€)</Label>
-                <Input type="number" value={luvas} onChange={(e) => setLuvas(e.target.value)} />
-                <div className="text-[11px] text-muted-foreground mt-1">
-                  Total a pagar à vista: <strong>{formatCurrency(totalDevido)}</strong> · Caixa do {activeClub?.name || "clube"}: {formatCurrency(caixaComprador)}
+                <div>
+                  <Label>Salário ofertado (€/ano)</Label>
+                  <Input type="number" value={salario} onChange={(e) => setSalario(e.target.value)} />
                 </div>
-              </div>
+                <div>
+                  <Label>Luvas (€)</Label>
+                  <Input type="number" value={luvas} onChange={(e) => setLuvas(e.target.value)} />
+                  <div className="text-[11px] text-muted-foreground mt-1">
+                    Total à vista: <strong>{formatCurrency(totalDevido)}</strong> · Caixa: {formatCurrency(caixaComprador)}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="emprestimo" className="space-y-3 mt-3">
+                <div>
+                  <Label>Duração (temporadas)</Label>
+                  <Input type="number" min="1" max="3" value={duracao} onChange={(e) => setDuracao(e.target.value)} />
+                </div>
+                <div>
+                  <Label>Salário pago pelo empréstimo (€/ano)</Label>
+                  <Input type="number" value={salario} onChange={(e) => setSalario(e.target.value)} />
+                  <div className="text-[11px] text-muted-foreground mt-1">
+                    O passe permanece com o clube vendedor; o jogador volta ao final do prazo (controle manual pelo admin).
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="troca" className="space-y-3 mt-3">
+                <div>
+                  <Label>Jogador que você oferece</Label>
+                  <Select value={jogadorTrocado} onValueChange={setJogadorTrocado}>
+                    <SelectTrigger><SelectValue placeholder="Selecione do seu elenco..." /></SelectTrigger>
+                    <SelectContent>
+                      {myPlayers.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>{p.position} · {p.name} (OVR {p.overall ?? "—"} · {formatCurrency(Number(p.valor_base_calculado))})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Diferença em dinheiro (€) — opcional</Label>
+                  <Input type="number" value={valor} onChange={(e) => setValor(e.target.value)} />
+                </div>
+                <div>
+                  <Label>Salário ofertado ao jogador-alvo (€/ano)</Label>
+                  <Input type="number" value={salario} onChange={(e) => setSalario(e.target.value)} />
+                </div>
+              </TabsContent>
+
               {fpError && (
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
+                <div className="flex items-start gap-2 p-3 mt-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
                   <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" /> {fpError}
                 </div>
               )}
               {caixaError && !fpError && (
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
+                <div className="flex items-start gap-2 p-3 mt-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
                   <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" /> {caixaError}
                 </div>
               )}
-            </div>
+              {trocaError && (
+                <div className="flex items-start gap-2 p-3 mt-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" /> {trocaError}
+                </div>
+              )}
+            </Tabs>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setTarget(null)}>Cancelar</Button>
-            <Button onClick={submit} disabled={!!fpError || !!caixaError || submitting} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+            <Button onClick={submit} disabled={!!fpError || !!caixaError || !!trocaError || submitting} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
               {submitting ? "Enviando..." : "Enviar proposta"}
             </Button>
           </DialogFooter>

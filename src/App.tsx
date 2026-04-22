@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
 import Home from "./pages/Home";
+import Ranking from "./pages/Ranking";
 import ClubsList from "./pages/ClubsList";
 import ClubDetail from "./pages/ClubDetail";
 import Market from "./pages/Market";
@@ -13,6 +14,7 @@ import WikiGlobal from "./pages/WikiGlobal";
 import MyClub from "./pages/MyClub";
 import Admin from "./pages/Admin";
 import Transferencias from "./pages/Transferencias";
+import Mapa from "./pages/Mapa";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,8 +29,10 @@ const App = () => (
           <AppLayout>
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/ranking" element={<Ranking />} />
               <Route path="/clubes" element={<ClubsList />} />
               <Route path="/clubes/:id" element={<ClubDetail />} />
+              <Route path="/mapa" element={<Mapa />} />
               <Route path="/mercado" element={<Market />} />
               <Route path="/wiki" element={<WikiGlobal />} />
               <Route path="/meu-clube" element={<MyClub />} />
