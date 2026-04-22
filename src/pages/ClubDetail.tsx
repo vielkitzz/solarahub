@@ -174,6 +174,7 @@ const ClubDetail = () => {
                     <TableHead>Nacionalidade</TableHead>
                     <TableHead className="w-20 text-center">Rating</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
+                    {canEdit && <TableHead className="text-center w-24">À venda</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -187,12 +188,17 @@ const ClubDetail = () => {
                     const shirt = p.attributes?.shirtNumber;
                     const rating = p.attributes?.rating;
                     return (
-                      <TableRow key={p.id} className="border-border/50">
+                      <TableRow key={p.id} className={`border-border/50 ${p.a_venda ? "bg-primary/5" : ""}`}>
                         <TableCell className="font-mono text-muted-foreground">{shirt ?? "—"}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className="font-bold border-primary/40 text-primary">{p.position}</Badge>
                         </TableCell>
-                        <TableCell className="font-bold">{p.name}</TableCell>
+                        <TableCell className="font-bold">
+                          <div className="flex items-center gap-2">
+                            {p.name}
+                            {p.a_venda && <Tag className="h-3 w-3 text-primary" />}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-muted-foreground">{p.age ?? "—"}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -204,6 +210,11 @@ const ClubDetail = () => {
                           {rating ? <span className="font-display font-bold text-primary">{rating}</span> : <span className="text-muted-foreground">—</span>}
                         </TableCell>
                         <TableCell className="text-right font-display font-bold text-primary">{formatCurrency(Number(p.market_value))}</TableCell>
+                        {canEdit && (
+                          <TableCell className="text-center">
+                            <Switch checked={!!p.a_venda} onCheckedChange={(v) => toggleSale(p.id, v)} />
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })}
