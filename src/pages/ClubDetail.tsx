@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Shield, MapPin, Users, Wallet, Building2, TrendingUp, TrendingDown, Save, Plus } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Shield, MapPin, Users, Wallet, Building2, TrendingUp, TrendingDown, Save, Plus, Tag } from "lucide-react";
 import { formatCurrency, POSITIONS } from "@/lib/format";
 import { flagUrl } from "@/lib/countries";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -72,6 +73,13 @@ const ClubDetail = () => {
       founded_year: parseInt(editingClub.founded_year) || null,
     }).eq("id", id!);
     if (error) toast.error(error.message); else { toast.success("Clube atualizado!"); load(); }
+  };
+
+  const toggleSale = async (playerId: string, value: boolean) => {
+    const { error } = await supabase.from("players").update({ a_venda: value }).eq("id", playerId);
+    if (error) return toast.error(error.message);
+    setPlayers((prev) => prev.map((p) => p.id === playerId ? { ...p, a_venda: value } : p));
+    toast.success(value ? "Jogador colocado à venda" : "Jogador removido da vitrine");
   };
 
   const addTransaction = async () => {
