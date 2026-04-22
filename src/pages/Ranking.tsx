@@ -18,7 +18,7 @@ interface ClubRow {
   player_count?: number;
 }
 
-const Home = () => {
+const Ranking = () => {
   const [clubs, setClubs] = useState<ClubRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,10 +43,10 @@ const Home = () => {
       <header className="space-y-3">
         <Badge variant="outline" className="border-primary/40 text-primary">Temporada Ativa</Badge>
         <h1 className="text-4xl md:text-5xl font-bold">
-          Bem-vindo ao <span className="gold-text">Solara Hub</span>
+          Ranking de <span className="gold-text">Clubes</span>
         </h1>
         <p className="text-muted-foreground text-lg max-w-2xl">
-          O hub central do RPG de futebol. Acompanhe o ranking, gerencie seu clube e conheça a história de cada elenco.
+          Todos os clubes da liga ordenados por orçamento. Clique para ver elenco, finanças e wiki.
         </p>
       </header>
 
@@ -121,4 +121,4 @@ const StatCard = ({ icon: Icon, label, value }: { icon: any; label: string; valu
   </Card>
 );
 
-export default Home;
+export default Ranking;
