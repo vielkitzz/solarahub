@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Search } from "lucide-react";
+import { Users, Search, Tag, ArrowRightLeft } from "lucide-react";
 import { formatCurrency, POSITIONS } from "@/lib/format";
 
 const Market = () => {
@@ -13,6 +14,7 @@ const Market = () => {
   const [clubs, setClubs] = useState<Record<string, any>>({});
   const [q, setQ] = useState("");
   const [pos, setPos] = useState<string>("all");
+  const [onlyForSale, setOnlyForSale] = useState(false);
 
   useEffect(() => {
     document.title = "Mercado da Bola — Solara Hub";
@@ -29,10 +31,18 @@ const Market = () => {
     load();
   }, []);
 
-  const filtered = players.filter((p) =>
-    p.name.toLowerCase().includes(q.toLowerCase()) &&
-    (pos === "all" || p.position === pos)
-  );
+  const filtered = useMemo(() => {
+    return players
+      .filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))
+      .filter((p) => pos === "all" || p.position === pos)
+      .filter((p) => !onlyForSale || p.a_venda)
+      .sort((a, b) => {
+        if (a.a_venda !== b.a_venda) return a.a_venda ? -1 : 1;
+        return Number(b.market_value) - Number(a.market_value);
+      });
+  }, [players, q, pos, onlyForSale]);
+
+  const forSaleCount = players.filter((p) => p.a_venda).length;
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -40,7 +50,9 @@ const Market = () => {
         <h1 className="text-3xl md:text-4xl font-bold flex items-center gap-3">
           <Users className="h-8 w-8 text-primary" /> Mercado da Bola
         </h1>
-        <p className="text-muted-foreground">Todos os jogadores da liga ordenados por valor de mercado.</p>
+        <p className="text-muted-foreground">
+          Todos os jogadores da liga. <Badge variant="outline" className="border-primary/40 text-primary ml-1"><Tag className="h-2.5 w-2.5 mr-1" />{forSaleCount} à venda</Badge>
+        </p>
       </header>
 
       <div className="flex flex-col md:flex-row gap-3">
@@ -55,22 +67,32 @@ const Market = () => {
             {POSITIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Button
+          variant={onlyForSale ? "default" : "outline"}
+          onClick={() => setOnlyForSale((v) => !v)}
+          className={onlyForSale ? "bg-gradient-gold text-primary-foreground" : ""}
+        >
+          <Tag className="h-4 w-4" /> {onlyForSale ? "Mostrando à venda" : "Só à venda"}
+        </Button>
       </div>
 
       <div className="space-y-2">
         {filtered.map((p) => {
           const club = p.club_id ? clubs[p.club_id] : null;
           return (
-            <Card key={p.id} className="p-4 bg-gradient-card border-border/50 flex items-center gap-3">
+            <Card key={p.id} className={`p-4 bg-gradient-card border-border/50 flex items-center gap-3 transition-all ${p.a_venda ? "border-primary/40 shadow-gold/20" : ""}`}>
               <Badge variant="outline" className="font-bold w-14 justify-center border-primary/40 text-primary shrink-0">{p.position}</Badge>
               <div className="flex-1 min-w-0">
-                <div className="font-bold truncate">{p.name}</div>
-                <div className="text-xs text-muted-foreground">{p.age ? `${p.age}a` : ""} {p.nationality && `· ${p.nationality}`}</div>
+                <div className="font-bold truncate flex items-center gap-2">
+                  {p.name}
+                  {p.a_venda && <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0"><Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA</Badge>}
+                </div>
+                <div className="text-xs text-muted-foreground">{p.age ? `${p.age}a` : ""} {p.nationality && `· ${p.nationality}`} {p.overall && `· OVR ${p.overall}`}</div>
               </div>
               {club ? (
                 <Link to={`/clubes/${club.id}`} className="flex items-center gap-2 text-xs hover:text-primary transition-colors">
-                  <div className="h-8 w-8 rounded bg-secondary overflow-hidden">
-                    {club.crest_url && <img src={club.crest_url} alt={club.name} className="w-full h-full object-cover" />}
+                  <div className="h-8 w-8 flex items-center justify-center">
+                    {club.crest_url && <img src={club.crest_url} alt={club.name} className="w-full h-full object-contain" />}
                   </div>
                   <span className="hidden md:inline">{club.name}</span>
                 </Link>
@@ -81,6 +103,11 @@ const Market = () => {
                 <div className="text-[10px] text-muted-foreground uppercase">Valor</div>
                 <div className="font-display font-bold text-primary">{formatCurrency(Number(p.market_value))}</div>
               </div>
+              {p.a_venda && (
+                <Button asChild size="sm" className="bg-gradient-gold text-primary-foreground hover:opacity-90 shrink-0">
+                  <Link to="/transferencias"><ArrowRightLeft className="h-3.5 w-3.5" /> Negociar</Link>
+                </Button>
+              )}
             </Card>
           );
         })}
