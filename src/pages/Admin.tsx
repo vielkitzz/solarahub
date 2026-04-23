@@ -14,6 +14,7 @@ import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ImageUpload";
 import { parseSquadJson, ImportedPlayer } from "@/lib/squad-import";
+import { useSeason } from "@/contexts/SeasonContext";
 
 const Admin = () => {
   const { user, isAdmin, loading } = useAuth();
@@ -49,6 +50,10 @@ const Admin = () => {
   const [seasonRunning, setSeasonRunning] = useState(false);
   const [seasonResult, setSeasonResult] = useState<any[] | null>(null);
   const [confirmSeason, setConfirmSeason] = useState(false);
+  
+  // season settings
+  const { currentSeason, updateSeason } = useSeason();
+  const [newSeasonName, setNewSeasonName] = useState("");
 
   const load = async () => {
     const [{ data: cs }, { data: ps }] = await Promise.all([
@@ -174,6 +179,17 @@ const Admin = () => {
     load();
   };
 
+  const updateSeasonName = async () => {
+    if (!newSeasonName.trim()) return toast.error("Nome da temporada obrigatório");
+    try {
+      await updateSeason(newSeasonName);
+      toast.success("Temporada atualizada!");
+      setNewSeasonName("");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao atualizar temporada");
+    }
+  };
+
   const transferPlayer = async () => {
     if (!tPlayer) return toast.error("Selecione um jogador");
     const newClubId = tNewClub === "none" ? null : tNewClub;
@@ -216,7 +232,8 @@ const Admin = () => {
           <TabsTrigger value="clubs">Clubes</TabsTrigger>
           <TabsTrigger value="import">Importar Elenco</TabsTrigger>
           <TabsTrigger value="transfer">Transferências</TabsTrigger>
-          <TabsTrigger value="season">Temporada</TabsTrigger>
+          <TabsTrigger value="config-season">Configurações</TabsTrigger>
+          <TabsTrigger value="season">Virada de Temporada</TabsTrigger>
         </TabsList>
 
         {/* CLUBES */}
@@ -354,6 +371,37 @@ const Admin = () => {
         </TabsContent>
 
         {/* TEMPORADA */}
+
+        {/* CONFIGURAÇÕES */}
+        <TabsContent value="config-season" className="space-y-4 mt-4">
+          <Card className="p-5 bg-gradient-card border-border/50 space-y-4">
+            <div className="flex items-start gap-3">
+              <Settings className="h-6 w-6 text-primary mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <h3 className="font-display font-bold">Configurações Globais</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Personalize as configurações gerais do Solara Hub.
+                </p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <Label>Temporada/Ano Atual</Label>
+                <p className="text-xs text-muted-foreground mb-2">Atual: <strong>{currentSeason}</strong></p>
+                <div className="flex gap-2">
+                  <Input
+                    value={newSeasonName}
+                    onChange={(e) => setNewSeasonName(e.target.value)}
+                    placeholder="ex: Temporada 2024, Ano 5, etc."
+                  />
+                  <Button onClick={updateSeasonName} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+                    Atualizar
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
         <TabsContent value="season" className="space-y-4 mt-4">
           <Card className="p-5 bg-gradient-card border-border/50 space-y-4">
             <div className="flex items-start gap-3">

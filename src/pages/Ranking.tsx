@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSeason } from "@/contexts/SeasonContext";
 
 interface ClubRow {
   id: string;
@@ -19,6 +20,7 @@ interface ClubRow {
 }
 
 const Ranking = () => {
+  const { currentSeason } = useSeason();
   const [clubs, setClubs] = useState<ClubRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +43,7 @@ const Ranking = () => {
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       <header className="space-y-3">
-        <Badge variant="outline" className="border-primary/40 text-primary">Temporada Ativa</Badge>
+        <Badge variant="outline" className="border-primary/40 text-primary">{currentSeason || "Temporada Ativa"}</Badge>
         <h1 className="text-4xl md:text-5xl font-bold">
           Ranking de <span className="gold-text">Clubes</span>
         </h1>

@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Trophy, Shield, Users, BookOpen, ArrowRightLeft, MapPin, Sparkles, ArrowRight } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSeason } from "@/contexts/SeasonContext";
 
 const Home = () => {
   const { user, signInWithDiscord } = useAuth();
+  const { currentSeason } = useSeason();
   const [stats, setStats] = useState({ clubs: 0, players: 0, capital: 0, forSale: 0 });
   const [topClubs, setTopClubs] = useState<any[]>([]);
 
@@ -43,7 +45,7 @@ const Home = () => {
         <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ background: "radial-gradient(circle at 80% 20%, hsl(var(--primary) / 0.4), transparent 50%)" }} />
         <div className="relative space-y-5 max-w-3xl">
           <Badge variant="outline" className="border-primary/40 text-primary">
-            <Sparkles className="h-3 w-3 mr-1" /> Temporada Ativa
+            <Sparkles className="h-3 w-3 mr-1" /> {currentSeason || "Temporada Ativa"}
           </Badge>
           <h1 className="text-4xl md:text-6xl font-bold leading-tight">
             Bem-vindo ao <span className="gold-text">Solara Hub</span>

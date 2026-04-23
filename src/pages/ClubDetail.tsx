@@ -172,7 +172,7 @@ const ClubDetail = () => {
                     <TableHead>Nome</TableHead>
                     <TableHead className="w-20">Idade</TableHead>
                     <TableHead>Nacionalidade</TableHead>
-                    <TableHead className="w-20 text-center">Rating</TableHead>
+                    <TableHead className="w-20 text-center">Overall</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
                     {canEdit && <TableHead className="text-center w-24">À venda</TableHead>}
                   </TableRow>
@@ -186,7 +186,7 @@ const ClubDetail = () => {
                   }).map((p) => {
                     const flag = flagUrl(p.nationality);
                     const shirt = p.attributes?.shirtNumber;
-                    const rating = p.attributes?.rating;
+                    const overall = p.overall;
                     return (
                       <TableRow key={p.id} className={`border-border/50 ${p.a_venda ? "bg-primary/5" : ""}`}>
                         <TableCell className="font-mono text-muted-foreground">{shirt ?? "—"}</TableCell>
@@ -207,7 +207,7 @@ const ClubDetail = () => {
                           </div>
                         </TableCell>
                         <TableCell className="text-center">
-                          {rating ? <span className="font-display font-bold text-primary">{rating}</span> : <span className="text-muted-foreground">—</span>}
+                          {overall ? <span className="font-display font-bold text-primary">{overall}</span> : <span className="text-muted-foreground">—</span>}
                         </TableCell>
                         <TableCell className="text-right font-display font-bold text-primary">{formatCurrency(Number(p.market_value))}</TableCell>
                         {canEdit && (

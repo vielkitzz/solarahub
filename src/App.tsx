@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SeasonProvider } from "@/contexts/SeasonContext";
 import { AppLayout } from "@/components/AppLayout";
 import Home from "./pages/Home";
 import Ranking from "./pages/Ranking";
@@ -26,7 +27,8 @@ const App = () => (
       <Sonner theme="dark" />
       <BrowserRouter>
         <AuthProvider>
-          <AppLayout>
+          <SeasonProvider>
+            <AppLayout>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/ranking" element={<Ranking />} />
@@ -40,7 +42,8 @@ const App = () => (
               <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </AppLayout>
+            </AppLayout>
+          </SeasonProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
