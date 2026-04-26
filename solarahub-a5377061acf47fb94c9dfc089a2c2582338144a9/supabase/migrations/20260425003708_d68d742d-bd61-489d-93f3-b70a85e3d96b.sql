@@ -1,0 +1,9 @@
+ALTER TYPE public.contrato_categoria ADD VALUE IF NOT EXISTS 'fornecedora';
+ALTER TYPE public.contrato_categoria ADD VALUE IF NOT EXISTS 'master';
+ALTER TYPE public.contrato_categoria ADD VALUE IF NOT EXISTS 'secundario_central';
+ALTER TYPE public.contrato_categoria ADD VALUE IF NOT EXISTS 'omoplata';
+ALTER TYPE public.contrato_categoria ADD VALUE IF NOT EXISTS 'barra_frontal';
+ALTER TYPE public.contrato_categoria ADD VALUE IF NOT EXISTS 'barra_traseira';
+ALTER TYPE public.contrato_categoria ADD VALUE IF NOT EXISTS 'costas_superior';
+ALTER TYPE public.contrato_categoria ADD VALUE IF NOT EXISTS 'manga';
+ALTER TYPE public.contrato_categoria ADD VALUE IF NOT EXISTS 'lateral';
