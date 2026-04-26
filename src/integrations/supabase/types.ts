@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      academy_players: {
+        Row: {
+          age: number
+          club_id: string
+          created_at: string
+          development_progress: number
+          free_agent: boolean
+          id: string
+          name: string
+          nationality: string | null
+          position: string
+          potential_max: number
+          potential_min: number
+          seasons_in_academy: number
+          skill: number
+        }
+        Insert: {
+          age: number
+          club_id: string
+          created_at?: string
+          development_progress?: number
+          free_agent?: boolean
+          id?: string
+          name: string
+          nationality?: string | null
+          position: string
+          potential_max: number
+          potential_min: number
+          seasons_in_academy?: number
+          skill?: number
+        }
+        Update: {
+          age?: number
+          club_id?: string
+          created_at?: string
+          development_progress?: number
+          free_agent?: boolean
+          id?: string
+          name?: string
+          nationality?: string | null
+          position?: string
+          potential_max?: number
+          potential_min?: number
+          seasons_in_academy?: number
+          skill?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_players_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_discord_ids: {
         Row: {
           created_at: string
@@ -34,12 +90,14 @@ export type Database = {
       }
       clubs: {
         Row: {
+          academy_scouting_count: number
           budget: number
           city: string | null
           created_at: string
           crest_url: string | null
           founded_year: number | null
           id: string
+          jogos_por_temporada: number
           name: string
           nivel_base: number
           nivel_estadio: number
@@ -47,6 +105,8 @@ export type Database = {
           owner_id: string | null
           patrocinio_anual: number
           posicao_ultima_temporada: number | null
+          preco_ingresso_internacional: number
+          preco_ingresso_nacional: number
           primary_color: string | null
           rate: number
           reputacao: Database["public"]["Enums"]["club_reputation"] | null
@@ -57,12 +117,14 @@ export type Database = {
           wiki: Json
         }
         Insert: {
+          academy_scouting_count?: number
           budget?: number
           city?: string | null
           created_at?: string
           crest_url?: string | null
           founded_year?: number | null
           id?: string
+          jogos_por_temporada?: number
           name: string
           nivel_base?: number
           nivel_estadio?: number
@@ -70,6 +132,8 @@ export type Database = {
           owner_id?: string | null
           patrocinio_anual?: number
           posicao_ultima_temporada?: number | null
+          preco_ingresso_internacional?: number
+          preco_ingresso_nacional?: number
           primary_color?: string | null
           rate?: number
           reputacao?: Database["public"]["Enums"]["club_reputation"] | null
@@ -80,12 +144,14 @@ export type Database = {
           wiki?: Json
         }
         Update: {
+          academy_scouting_count?: number
           budget?: number
           city?: string | null
           created_at?: string
           crest_url?: string | null
           founded_year?: number | null
           id?: string
+          jogos_por_temporada?: number
           name?: string
           nivel_base?: number
           nivel_estadio?: number
@@ -93,6 +159,8 @@ export type Database = {
           owner_id?: string | null
           patrocinio_anual?: number
           posicao_ultima_temporada?: number | null
+          preco_ingresso_internacional?: number
+          preco_ingresso_nacional?: number
           primary_color?: string | null
           rate?: number
           reputacao?: Database["public"]["Enums"]["club_reputation"] | null
@@ -104,19 +172,121 @@ export type Database = {
         }
         Relationships: []
       }
+      contratos_clube: {
+        Row: {
+          anos_duracao: number
+          ativo: boolean
+          categoria: Database["public"]["Enums"]["contrato_categoria"]
+          club_id: string
+          created_at: string
+          empresa_id: string | null
+          fim_temporada: number | null
+          id: string
+          inicio_temporada: number | null
+          multa_rescisao: number | null
+          observacoes: string | null
+          updated_at: string
+          valor_anual: number
+        }
+        Insert: {
+          anos_duracao?: number
+          ativo?: boolean
+          categoria: Database["public"]["Enums"]["contrato_categoria"]
+          club_id: string
+          created_at?: string
+          empresa_id?: string | null
+          fim_temporada?: number | null
+          id?: string
+          inicio_temporada?: number | null
+          multa_rescisao?: number | null
+          observacoes?: string | null
+          updated_at?: string
+          valor_anual?: number
+        }
+        Update: {
+          anos_duracao?: number
+          ativo?: boolean
+          categoria?: Database["public"]["Enums"]["contrato_categoria"]
+          club_id?: string
+          created_at?: string
+          empresa_id?: string | null
+          fim_temporada?: number | null
+          id?: string
+          inicio_temporada?: number | null
+          multa_rescisao?: number | null
+          observacoes?: string | null
+          updated_at?: string
+          valor_anual?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contratos_clube_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_clube_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empresas: {
+        Row: {
+          ativa: boolean
+          categoria: Database["public"]["Enums"]["contrato_categoria"]
+          created_at: string
+          exigencias: string | null
+          id: string
+          logo_url: string | null
+          nome: string
+          updated_at: string
+          valor_anual_sugerido: number
+        }
+        Insert: {
+          ativa?: boolean
+          categoria: Database["public"]["Enums"]["contrato_categoria"]
+          created_at?: string
+          exigencias?: string | null
+          id?: string
+          logo_url?: string | null
+          nome: string
+          updated_at?: string
+          valor_anual_sugerido?: number
+        }
+        Update: {
+          ativa?: boolean
+          categoria?: Database["public"]["Enums"]["contrato_categoria"]
+          created_at?: string
+          exigencias?: string | null
+          id?: string
+          logo_url?: string | null
+          nome?: string
+          updated_at?: string
+          valor_anual_sugerido?: number
+        }
+        Relationships: []
+      }
       players: {
         Row: {
           a_venda: boolean
           age: number | null
           attributes: Json
           club_id: string | null
+          contrato_ate: number | null
           created_at: string
+          habilidade: number | null
           id: string
           market_value: number
           name: string
           nationality: string | null
-          overall: number | null
           position: string
+          potential_max: number | null
+          potential_min: number | null
           salario_atual: number
           updated_at: string
           valor_base_calculado: number
@@ -126,13 +296,16 @@ export type Database = {
           age?: number | null
           attributes?: Json
           club_id?: string | null
+          contrato_ate?: number | null
           created_at?: string
+          habilidade?: number | null
           id?: string
           market_value?: number
           name: string
           nationality?: string | null
-          overall?: number | null
           position: string
+          potential_max?: number | null
+          potential_min?: number | null
           salario_atual?: number
           updated_at?: string
           valor_base_calculado?: number
@@ -142,13 +315,16 @@ export type Database = {
           age?: number | null
           attributes?: Json
           club_id?: string | null
+          contrato_ate?: number | null
           created_at?: string
+          habilidade?: number | null
           id?: string
           market_value?: number
           name?: string
           nationality?: string | null
-          overall?: number | null
           position?: string
+          potential_max?: number | null
+          potential_min?: number | null
           salario_atual?: number
           updated_at?: string
           valor_base_calculado?: number
@@ -163,46 +339,26 @@ export type Database = {
           },
         ]
       }
-      transactions: {
+      settings: {
         Row: {
-          amount: number
-          category: string | null
-          club_id: string
           created_at: string
-          created_by: string | null
-          description: string
           id: string
-          type: string
+          key: string
+          value: Json
         }
         Insert: {
-          amount: number
-          category?: string | null
-          club_id: string
           created_at?: string
-          created_by?: string | null
-          description: string
           id?: string
-          type: string
+          key: string
+          value?: Json
         }
         Update: {
-          amount?: number
-          category?: string | null
-          club_id?: string
           created_at?: string
-          created_by?: string | null
-          description?: string
           id?: string
-          type?: string
+          key?: string
+          value?: Json
         }
-        Relationships: [
-          {
-            foreignKeyName: "transactions_club_id_fkey"
-            columns: ["club_id"]
-            isOneToOne: false
-            referencedRelation: "clubs"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       transferencias: {
         Row: {
@@ -325,11 +481,64 @@ export type Database = {
           novo_caixa: number
         }[]
       }
+      promover_academia: {
+        Args: { _academy_player_id: string }
+        Returns: string
+      }
+      realizar_peneira: {
+        Args: {
+          _age_max: number
+          _age_min: number
+          _club_id: string
+          _nationality: string
+          _position: string
+        }
+        Returns: {
+          scout_age: number
+          scout_id: string
+          scout_name: string
+          scout_nationality: string
+          scout_position: string
+          scout_potential_max: number
+          scout_potential_min: number
+          scout_skill: number
+        }[]
+      }
+      renovar_contrato_jogador: {
+        Args: {
+          _jogador_id: string
+          _novo_salario: number
+          _novos_anos: number
+        }
+        Returns: undefined
+      }
+      upgrade_estadio: {
+        Args: {
+          _club_id: string
+          _nova_capacidade: number
+          _novo_nivel: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"
       club_reputation: "estadual" | "nacional" | "continental" | "mundial"
       club_status: "ativo" | "inativo"
+      contrato_categoria:
+        | "patrocinio_master"
+        | "material_esportivo"
+        | "direitos_tv"
+        | "socio_torcedor"
+        | "fornecedora"
+        | "master"
+        | "secundario_central"
+        | "omoplata"
+        | "barra_frontal"
+        | "barra_traseira"
+        | "costas_superior"
+        | "manga"
+        | "lateral"
       transfer_status: "pendente" | "aceita" | "recusada"
       transfer_type: "compra" | "emprestimo" | "troca"
     }
@@ -462,6 +671,21 @@ export const Constants = {
       app_role: ["admin", "user"],
       club_reputation: ["estadual", "nacional", "continental", "mundial"],
       club_status: ["ativo", "inativo"],
+      contrato_categoria: [
+        "patrocinio_master",
+        "material_esportivo",
+        "direitos_tv",
+        "socio_torcedor",
+        "fornecedora",
+        "master",
+        "secundario_central",
+        "omoplata",
+        "barra_frontal",
+        "barra_traseira",
+        "costas_superior",
+        "manga",
+        "lateral",
+      ],
       transfer_status: ["pendente", "aceita", "recusada"],
       transfer_type: ["compra", "emprestimo", "troca"],
     },

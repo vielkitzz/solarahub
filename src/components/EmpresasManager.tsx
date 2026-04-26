@@ -1,32 +1,52 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Building2 } from "lucide-react";
-import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ImageUpload } from "@/components/ImageUpload";
 import { formatCurrency } from "@/lib/format";
+import { toast } from "sonner";
+import { Plus, Pencil, Trash2, Building2 } from "lucide-react";
+
+const CATEGORIAS = [
+  { value: "fornecedora", label: "Fornecedora (material)" },
+  { value: "master", label: "Patrocínio Máster" },
+  { value: "secundario_central", label: "Secundário central" },
+  { value: "omoplata", label: "Omoplata" },
+  { value: "barra_frontal", label: "Barra frontal" },
+  { value: "barra_traseira", label: "Barra traseira" },
+  { value: "costas_superior", label: "Costas superior" },
+  { value: "manga", label: "Manga" },
+  { value: "lateral", label: "Lateral" },
+];
+
+const empty = {
+  id: "",
+  nome: "",
+  categoria: "master",
+  valor_anual_sugerido: 0,
+  logo_url: "",
+  exigencias: "",
+  ativa: true,
+};
 
 export const EmpresasManager = () => {
   const [empresas, setEmpresas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newName, setNewName] = useState("");
-  const [newBudget, setNewBudget] = useState("");
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(empty);
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("settings")
-      .select("value")
-      .eq("key", "empresas")
-      .maybeSingle();
-
-    if (error) {
-      toast.error("Erro ao carregar empresas");
-    } else if (data) {
-      setEmpresas(data.value as any[]);
-    }
+    const { data, error } = await supabase.from("empresas").select("*").order("nome");
+    if (error) toast.error(error.message);
+    setEmpresas(data || []);
     setLoading(false);
   };
 
@@ -34,89 +54,175 @@ export const EmpresasManager = () => {
     load();
   }, []);
 
-  const saveEmpresas = async (newList: any[]) => {
-    const { error } = await supabase
-      .from("settings")
-      .upsert({ key: "empresas", value: newList }, { onConflict: "key" });
-
-    if (error) {
-      toast.error("Erro ao salvar empresas");
-      return false;
-    }
-    setEmpresas(newList);
-    return true;
+  const openNew = () => {
+    setEditing(empty);
+    setOpen(true);
   };
 
-  const addEmpresa = async () => {
-    if (!newName || !newBudget) return toast.error("Preencha todos os campos");
-    const newEmpresa = {
-      id: crypto.randomUUID(),
-      name: newName,
-      budget: parseFloat(newBudget),
-      created_at: new Date().toISOString(),
+  const openEdit = (e: any) => {
+    setEditing(e);
+    setOpen(true);
+  };
+
+  const save = async () => {
+    if (!editing.nome.trim()) return toast.error("Nome obrigatório");
+    const payload = {
+      nome: editing.nome.trim(),
+      categoria: editing.categoria,
+      valor_anual_sugerido: Number(editing.valor_anual_sugerido) || 0,
+      logo_url: editing.logo_url || null,
+      exigencias: editing.exigencias || null,
+      ativa: !!editing.ativa,
     };
-    const newList = [...empresas, newEmpresa];
-    if (await saveEmpresas(newList)) {
-      toast.success("Empresa adicionada!");
-      setNewName("");
-      setNewBudget("");
-    }
+    const { error } = editing.id
+      ? await supabase.from("empresas").update(payload).eq("id", editing.id)
+      : await supabase.from("empresas").insert(payload);
+    if (error) return toast.error(error.message);
+    toast.success(editing.id ? "Empresa atualizada" : "Empresa criada");
+    setOpen(false);
+    load();
   };
 
-  const removeEmpresa = async (id: string) => {
-    if (!confirm("Remover esta empresa?")) return;
-    const newList = empresas.filter((e) => e.id !== id);
-    if (await saveEmpresas(newList)) {
-      toast.success("Empresa removida");
-    }
+  const remove = async (id: string) => {
+    if (!confirm("Excluir essa empresa?")) return;
+    const { error } = await supabase.from("empresas").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Empresa excluída");
+    load();
   };
 
   return (
     <Card className="p-5 bg-gradient-card border-border/50 space-y-4">
-      <div className="flex items-center gap-2">
-        <Building2 className="h-5 w-5 text-primary" />
-        <h3 className="font-display font-bold text-lg">Gerenciar Empresas / Patrocinadores</h3>
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-3 items-end bg-secondary/20 p-4 rounded-xl border border-border/50">
-        <div className="space-y-2">
-          <Label>Nome da Empresa</Label>
-          <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Ex: Fly Emirates" />
-        </div>
-        <div className="space-y-2">
-          <Label>Orçamento Disponível (€)</Label>
-          <Input type="number" value={newBudget} onChange={(e) => setNewBudget(e.target.value)} placeholder="0" />
-        </div>
-        <Button onClick={addEmpresa} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
-          <Plus className="h-4 w-4 mr-2" /> Adicionar
+      <div className="flex justify-between items-center">
+        <h3 className="font-display font-bold flex items-center gap-2">
+          <Building2 className="h-5 w-5 text-primary" /> Empresas patrocinadoras
+        </h3>
+        <Button onClick={openNew} className="bg-gradient-gold text-primary-foreground">
+          <Plus className="h-4 w-4" /> Nova empresa
         </Button>
       </div>
 
-      <div className="space-y-2">
-        {loading ? (
-          <p className="text-center py-4 text-muted-foreground">Carregando...</p>
-        ) : empresas.length === 0 ? (
-          <p className="text-center py-4 text-muted-foreground">Nenhuma empresa cadastrada.</p>
-        ) : (
-          empresas.map((e) => (
-            <div key={e.id} className="flex items-center gap-3 p-3 bg-secondary/30 rounded-lg border border-border/50">
-              <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center shrink-0">
-                <Building2 className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-bold truncate">{e.name}</div>
-                <div className="text-xs text-muted-foreground">Adicionado em {new Date(e.created_at).toLocaleDateString()}</div>
-              </div>
-              <div className="text-right">
-                <div className="font-display font-bold text-primary">{formatCurrency(e.budget)}</div>
-              </div>
-              <Button size="sm" variant="ghost" onClick={() => removeEmpresa(e.id)} className="text-destructive hover:bg-destructive/10">
-                <Trash2 className="h-4 w-4" />
-              </Button>
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Carregando…</p>
+      ) : empresas.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nenhuma empresa cadastrada.</p>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border/50">
+              <TableHead className="w-12"></TableHead>
+              <TableHead>Nome</TableHead>
+              <TableHead>Categoria</TableHead>
+              <TableHead className="text-right">Valor sugerido/ano</TableHead>
+              <TableHead className="w-20 text-center">Ativa</TableHead>
+              <TableHead className="w-24"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {empresas.map((e) => (
+              <TableRow key={e.id} className="border-border/50">
+                <TableCell>
+                  {e.logo_url ? (
+                    <img src={e.logo_url} alt={e.nome} className="h-7 w-7 object-contain rounded" />
+                  ) : (
+                    <Building2 className="h-5 w-5 text-muted-foreground" />
+                  )}
+                </TableCell>
+                <TableCell className="font-bold">{e.nome}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {CATEGORIAS.find((c) => c.value === e.categoria)?.label || e.categoria}
+                </TableCell>
+                <TableCell className="text-right font-mono text-primary">
+                  {formatCurrency(Number(e.valor_anual_sugerido))}
+                </TableCell>
+                <TableCell className="text-center">
+                  <span
+                    className={`inline-block h-2 w-2 rounded-full ${e.ativa ? "bg-success" : "bg-muted-foreground"}`}
+                  />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button size="icon" variant="ghost" onClick={() => openEdit(e)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={() => remove(e.id)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editing.id ? "Editar empresa" : "Nova empresa"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Nome</Label>
+              <Input value={editing.nome} onChange={(e) => setEditing({ ...editing, nome: e.target.value })} />
             </div>
-          ))
-        )}
-      </div>
+            <div>
+              <Label>Categoria</Label>
+              <Select value={editing.categoria} onValueChange={(v) => setEditing({ ...editing, categoria: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIAS.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>
+                      {c.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Valor anual sugerido (R$)</Label>
+              <Input
+                type="number"
+                value={editing.valor_anual_sugerido}
+                onChange={(e) => setEditing({ ...editing, valor_anual_sugerido: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Logo</Label>
+              <ImageUpload
+                value={editing.logo_url}
+                onChange={(url) => setEditing({ ...editing, logo_url: url })}
+                folder="empresas"
+                bucket="empresas-logos"
+              />
+            </div>
+            <div>
+              <Label>Exigências (opcional)</Label>
+              <Textarea
+                rows={3}
+                value={editing.exigencias || ""}
+                onChange={(e) => setEditing({ ...editing, exigencias: e.target.value })}
+                placeholder="Ex: clube com reputação nacional ou superior"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={!!editing.ativa}
+                onCheckedChange={(v) => setEditing({ ...editing, ativa: v })}
+              />
+              <Label className="!m-0">Ativa</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={save} className="bg-gradient-gold text-primary-foreground">
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

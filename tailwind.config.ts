@@ -10,6 +10,7 @@ export default {
       fontFamily: {
         display: ['Sora', 'system-ui', 'sans-serif'],
         body: ['Manrope', 'system-ui', 'sans-serif'],
+        serif: ['Lora', 'Georgia', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",

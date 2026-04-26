@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowRightLeft, Inbox, Send, AlertTriangle, LogIn, Search, Tag } from "lucide-react";
-import { formatCurrency, POSITIONS } from "@/lib/format";
+import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
+import { StarRating } from "@/components/StarRating";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
@@ -270,7 +271,7 @@ const Transferencias = () => {
                       <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                         {club && <Link to={`/clubes/${club.id}`} className="hover:text-primary">{club.name}</Link>}
                       </TableCell>
-                      <TableCell className="text-center font-bold">{p.overall ?? "—"}</TableCell>
+                      <TableCell className="text-center"><StarRating value={calcStars(p.habilidade, club?.rate)} /></TableCell>
                       <TableCell className="text-center hidden sm:table-cell text-sm">{p.age || "—"}</TableCell>
                       <TableCell className="text-right font-display font-bold text-primary">{formatCurrency(Number(p.valor_base_calculado))}</TableCell>
                       <TableCell><Button size="sm" onClick={() => openProposal(p)} className="bg-gradient-gold text-primary-foreground hover:opacity-90">Negociar</Button></TableCell>
@@ -364,7 +365,7 @@ const Transferencias = () => {
           <DialogHeader>
             <DialogTitle>Negociar jogador</DialogTitle>
             <DialogDescription>
-              {target && <>Por <strong>{target.name}</strong> · OVR {target.overall} · valor base {formatCurrency(Number(target.valor_base_calculado))}</>}
+              {target && <>Por <strong>{target.name}</strong> · valor base {formatCurrency(Number(target.valor_base_calculado))}</>}
             </DialogDescription>
           </DialogHeader>
           {target && (
@@ -417,7 +418,7 @@ const Transferencias = () => {
                     <SelectTrigger><SelectValue placeholder="Selecione do seu elenco..." /></SelectTrigger>
                     <SelectContent>
                       {myPlayers.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>{p.position} · {p.name} (OVR {p.overall ?? "—"} · {formatCurrency(Number(p.valor_base_calculado))})</SelectItem>
+                        <SelectItem key={p.id} value={p.id}>{p.position} · {p.name} ({formatCurrency(Number(p.valor_base_calculado))})</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

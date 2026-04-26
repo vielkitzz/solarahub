@@ -87,7 +87,7 @@ const Market = () => {
                   {p.name}
                   {p.a_venda && <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0"><Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA</Badge>}
                 </div>
-                <div className="text-xs text-muted-foreground">{p.age ? `${p.age}a` : ""} {p.nationality && `· ${p.nationality}`} {p.overall && `· OVR ${p.overall}`}</div>
+                <div className="text-xs text-muted-foreground">{p.age ? `${p.age}a` : ""} {p.nationality && `· ${p.nationality}`}</div>
               </div>
               {club ? (
                 <Link to={`/clubes/${club.id}`} className="flex items-center gap-2 text-xs hover:text-primary transition-colors">

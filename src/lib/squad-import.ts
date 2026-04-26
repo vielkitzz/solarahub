@@ -28,13 +28,13 @@ export interface ImportedPlayer {
   age: number | null;
   nationality: string | null;
   market_value: number;
-  overall: number;
+  habilidade: number;
   attributes: Record<string, any>;
 }
 
-// overall 45-99 → valor de mercado estimado (escala linear)
-const overallToValue = (overall: number): number => {
-  const o = Math.max(45, Math.min(99, overall || 45));
+// habilidade 45-99 → valor de mercado estimado (escala linear)
+const habilidadeToValue = (habilidade: number): number => {
+  const o = Math.max(45, Math.min(99, habilidade || 45));
   return Math.round(o * 100000); // 45=4.5M, 99=9.9M
 };
 
@@ -50,13 +50,14 @@ export const parseSquadJson = (raw: string): ImportedPlayer[] => {
 
   return players.map((p: any) => {
     if (!p?.name) throw new Error("Jogador sem nome");
+    const skill = Math.max(45, Math.min(99, Number(p.skill) || 45));
     return {
       name: String(p.name),
       position: normalizePosition(p.position || "ATA"),
       age: p.age ? Number(p.age) : null,
       nationality: p.nationality || null,
-      overall: Math.max(45, Math.min(99, Number(p.skill) || 45)),
-      market_value: overallToValue(Number(p.skill) || 45),
+      habilidade: skill,
+      market_value: habilidadeToValue(skill),
       attributes: {
         shirtNumber: p.shirtNumber ?? null,
         seasonYear: p.seasonYear ?? null,

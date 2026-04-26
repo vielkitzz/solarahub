@@ -1,19 +1,45 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Home as HomeIcon, Trophy, Shield, Users, BookOpen, Settings, LogOut, LogIn, Sparkles, ArrowRightLeft, MapPin } from "lucide-react";
 import {
-  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
+  Home as HomeIcon,
+  Trophy,
+  Shield,
+  Users,
+  BookOpen,
+  Settings,
+  LogOut,
+  LogIn,
+  ArrowRightLeft,
+  MapPin,
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarHeader,
+  SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-const mainItems = [
+const navegarItems = [
   { title: "Início", url: "/", icon: HomeIcon },
   { title: "Ranking", url: "/ranking", icon: Trophy },
-  { title: "Clubes", url: "/clubes", icon: Shield },
   { title: "Mapa", url: "/mapa", icon: MapPin },
+];
+
+const competicaoItems = [
+  { title: "Clubes", url: "/clubes", icon: Shield },
   { title: "Mercado", url: "/mercado", icon: Users },
+];
+
+const conhecimentoItems = [
   { title: "Wiki Global", url: "/wiki", icon: BookOpen },
 ];
 
@@ -26,26 +52,62 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
-      <SidebarHeader className="border-b border-sidebar-border p-3 group-data-[collapsible=icon]:p-2">
+      <SidebarHeader className="h-14 flex flex-col justify-center border-b border-sidebar-border px-4 group-data-[collapsible=icon]:px-0 overflow-hidden">
         <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
-          <div className="h-9 w-9 rounded-lg bg-gradient-gold flex items-center justify-center shadow-gold shrink-0">
-            <Sparkles className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
+          <div className="h-9 w-9 shrink-0 flex items-center justify-center">
+            <img src="/logo-solara-hub.svg" alt="Logo Solara Hub" className="h-full w-full object-contain" />
           </div>
-          {!collapsed && (
-            <div className="min-w-0">
-              <div className="font-display font-bold text-base leading-none text-sidebar-foreground">Solara Hub</div>
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">RPG de Futebol</div>
+          {/* Escondemos via CSS com 'group-data-[collapsible=icon]:hidden' em vez de usar o estado '!collapsed' */}
+          <div className="min-w-0 group-data-[collapsible=icon]:hidden transition-opacity">
+            <div className="font-display font-bold text-base leading-none text-sidebar-foreground truncate">
+              SOLARA HUB
             </div>
-          )}
+          </div>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Liga</SidebarGroupLabel>
+          <SidebarGroupLabel>Navegar</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => (
+              {navegarItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                    <NavLink to={item.url} end>
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Competição</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {competicaoItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                    <NavLink to={item.url} end>
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Conhecimento</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {conhecimentoItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url} end>
@@ -118,7 +180,11 @@ export function AppSidebar() {
             )}
           </div>
         ) : (
-          <Button onClick={signInWithDiscord} variant="default" className="w-full bg-[#5865F2] hover:bg-[#4752c4] text-white">
+          <Button
+            onClick={signInWithDiscord}
+            variant="default"
+            className="w-full bg-[#5865F2] hover:bg-[#4752c4] text-white"
+          >
             <LogIn className="h-4 w-4" />
             {!collapsed && <span>Entrar com Discord</span>}
           </Button>
