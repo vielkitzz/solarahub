@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Building2, Save } from "lucide-react";
+import { Plus, Trash2, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/format";
 

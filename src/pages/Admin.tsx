@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { 
   Settings, Plus, ArrowRightLeft, Upload, FileJson, Pencil, 
   Trash2, Shield, CalendarClock, AlertTriangle, Users, 
-  Search, Filter, Database, TrendingUp, Info
+  Search, Database, TrendingUp, Info
 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
