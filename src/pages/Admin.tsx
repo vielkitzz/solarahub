@@ -273,7 +273,7 @@ const Admin = () => {
       </header>
 
       <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="bg-secondary/50 w-full flex overflow-x-auto justify-start border-b border-border/50 rounded-none h-12">
+        <TabsList className="bg-secondary/50 w-full flex overflow-x-auto justify-start border-b border-sidebar-border rounded-none h-12">
           <TabsTrigger value="dashboard" className="gap-2">
             <LayoutDashboard className="h-4 w-4" /> Visão Geral
           </TabsTrigger>
@@ -283,8 +283,11 @@ const Admin = () => {
           <TabsTrigger value="players" className="gap-2">
             <UsersRound className="h-4 w-4" /> Jogadores
           </TabsTrigger>
-          <TabsTrigger value="economy" className="gap-2">
-            <ArrowRightLeft className="h-4 w-4" /> Economia & Temporada
+          <TabsTrigger value="empresas" className="gap-2">
+            <ArrowRightLeft className="h-4 w-4" /> Empresas
+          </TabsTrigger>
+          <TabsTrigger value="season" className="gap-2">
+            <CalendarClock className="h-4 w-4" /> Temporada
           </TabsTrigger>
           <TabsTrigger value="config" className="gap-2">
             <Settings className="h-4 w-4" /> Configurações
@@ -533,51 +536,74 @@ const Admin = () => {
           </div>
         </TabsContent>
 
-        {/* ECONOMIA E TEMPORADA */}
-        <TabsContent value="economy" className="mt-6 space-y-6">
-          <div className="grid md:grid-cols-2 gap-6">
+        {/* ABA: EMPRESAS (ECONOMIA) */}
+        <TabsContent value="empresas" className="mt-6">
+          <div className="max-w-4xl mx-auto">
             <EmpresasManager />
+          </div>
+        </TabsContent>
 
-            <Card className="p-5 bg-gradient-card border-destructive/30 relative overflow-hidden">
+        {/* ABA: TEMPORADA (PROCESSAMENTO) */}
+        <TabsContent value="season" className="mt-6">
+          <div className="max-w-3xl mx-auto">
+            <Card className="p-6 bg-gradient-card border-destructive/30 relative overflow-hidden">
               <div className="absolute inset-0 bg-destructive/5 pointer-events-none" />
-              <div className="relative">
-                <div className="flex items-start gap-3 mb-4">
-                  <CalendarClock className="h-6 w-6 text-destructive shrink-0" />
+              <div className="relative space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                    <CalendarClock className="h-6 w-6 text-destructive" />
+                  </div>
                   <div>
-                    <h3 className="font-display font-bold text-destructive">Virada de Temporada Global</h3>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Este processo é irreversível. Calcula rendimentos, paga salários e atualiza o orçamento de{" "}
-                      <strong>todos</strong> os clubes baseados nas tabelas de reputação.
+                    <h3 className="font-display font-bold text-xl text-destructive">Virada de Temporada Global</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Esta ação encerra o ciclo atual. O sistema irá calcular automaticamente:
                     </p>
+                    <ul className="text-xs text-muted-foreground mt-2 list-disc list-inside space-y-1">
+                      <li>Pagamento de salários de todos os elencos ativos.</li>
+                      <li>Recebimento de patrocínios e direitos de TV.</li>
+                      <li>Custo de manutenção de estádios e categorias de base.</li>
+                      <li>Premiações baseadas na posição final da última temporada.</li>
+                    </ul>
                   </div>
                 </div>
+
+                <div className="p-4 bg-secondary/20 rounded-lg border border-border/50">
+                  <p className="text-xs text-center font-medium text-amber-500 flex items-center justify-center gap-2">
+                    <AlertTriangle className="h-3 w-3" /> Certifique-se de que todos os resultados foram lançados antes
+                    de prosseguir.
+                  </p>
+                </div>
+
                 <Button
                   onClick={() => setConfirmSeason(true)}
                   variant="destructive"
-                  className="w-full"
+                  className="w-full h-12 text-base font-bold shadow-lg shadow-destructive/20"
                   disabled={seasonRunning}
                 >
-                  {seasonRunning ? "Processando..." : "Executar Virada Financeira"}
+                  {seasonRunning ? "Processando Virada..." : "Executar Virada Financeira"}
                 </Button>
 
                 {seasonResult && (
-                  <div className="mt-4 border border-border/50 rounded-lg overflow-hidden">
-                    <div className="bg-secondary/40 px-3 py-2 text-xs font-bold border-b border-border/50">
-                      Relatório de Impacto ({seasonResult.length} clubes)
+                  <div className="mt-6 border border-border/50 rounded-xl overflow-hidden bg-background/50">
+                    <div className="bg-secondary/40 px-4 py-2.5 text-xs font-bold border-b border-border/50 flex justify-between">
+                      <span>RELATÓRIO DE IMPACTO</span>
+                      <span className="text-muted-foreground">{seasonResult.length} CLUBES PROCESSADOS</span>
                     </div>
-                    <div className="max-h-64 overflow-auto p-2 space-y-1">
+                    <div className="max-h-80 overflow-auto p-2 space-y-1">
                       {seasonResult.map((r) => (
                         <div
                           key={r.club_id}
-                          className="flex justify-between items-center text-xs p-1.5 hover:bg-secondary/30 rounded"
+                          className="flex justify-between items-center text-xs p-2 hover:bg-secondary/30 rounded-md border border-transparent hover:border-border/20 transition-colors"
                         >
-                          <span className="truncate w-1/3">{r.club_name}</span>
-                          <span className={`font-mono ${Number(r.delta) >= 0 ? "text-success" : "text-destructive"}`}>
+                          <span className="truncate font-medium w-1/3">{r.club_name}</span>
+                          <span
+                            className={`font-mono font-bold w-1/3 text-center ${Number(r.delta) >= 0 ? "text-success" : "text-destructive"}`}
+                          >
                             {Number(r.delta) >= 0 ? "+" : ""}
                             {formatCurrency(Number(r.delta))}
                           </span>
                           <span className="font-mono text-muted-foreground w-1/3 text-right">
-                            {formatCurrency(Number(r.novo_caixa))}
+                            Saldo: {formatCurrency(Number(r.novo_caixa))}
                           </span>
                         </div>
                       ))}
