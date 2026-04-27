@@ -2,7 +2,6 @@ import { useEditor, EditorContent, NodeViewWrapper, NodeViewProps, ReactNodeView
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
-import { Image as TiptapImage } from "@tiptap/extension-image";
 import { Node, mergeAttributes } from "@tiptap/core";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -66,101 +65,89 @@ const ResizableImageComponent = ({ node, updateAttributes, deleteNode, selected 
 
   return (
     <NodeViewWrapper
-      as="span"
-      className="inline-block relative group my-4 select-none"
-      style={{ width: width ? `${width}px` : "auto", maxWidth: "100%" }}
+      as="div" // Mudado para div para melhor controle de bloco
+      className="relative group my-4 select-none flex justify-center"
       data-drag-handle
     >
-      <button
-        onClick={deleteNode}
-        className="absolute -top-2.5 -right-2.5 z-10 h-6 w-6 rounded-full bg-destructive text-destructive-foreground items-center justify-center shadow hidden group-hover:flex transition-opacity"
-        title="Remover imagem"
-      >
-        <Trash2 className="h-3 w-3" />
-      </button>
+      <div className="relative" style={{ width: width ? `${width}px` : "auto", maxWidth: "100%" }}>
+        <button
+          onClick={deleteNode}
+          className="absolute -top-2 -right-2 z-20 h-6 w-6 rounded-full bg-destructive text-white items-center justify-center shadow-lg hidden group-hover:flex"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
 
-      <span
-        onMouseDown={(e) => onMouseDown(e, "left")}
-        className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 z-10 w-2 h-10 rounded cursor-ew-resize bg-primary/60 opacity-0 group-hover:opacity-100 transition-opacity ${resizing ? "opacity-100" : ""}`}
-      />
+        <span
+          onMouseDown={(e) => onMouseDown(e, "left")}
+          className={`absolute left-0 top-0 bottom-0 w-1.5 z-10 cursor-ew-resize bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity ${resizing ? "opacity-100" : ""}`}
+        />
 
-      <img
-        ref={imgRef}
-        src={src}
-        alt={alt ?? ""}
-        style={{ width: width ? `${width}px` : "auto", maxWidth: "100%", display: "block" }}
-        className={`rounded-lg border ${selected ? "ring-2 ring-primary" : "border-border"}`}
-        draggable={false}
-      />
+        <img
+          ref={imgRef}
+          src={src}
+          alt={alt ?? ""}
+          className={`rounded-lg border w-full h-auto block ${selected ? "ring-2 ring-primary border-transparent" : "border-border"}`}
+          draggable={false}
+        />
 
-      <span
-        onMouseDown={(e) => onMouseDown(e, "right")}
-        className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 z-10 w-2 h-10 rounded cursor-ew-resize bg-primary/60 opacity-0 group-hover:opacity-100 transition-opacity ${resizing ? "opacity-100" : ""}`}
-      />
+        <span
+          onMouseDown={(e) => onMouseDown(e, "right")}
+          className={`absolute right-0 top-0 bottom-0 w-1.5 z-10 cursor-ew-resize bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity ${resizing ? "opacity-100" : ""}`}
+        />
 
-      <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center gap-1 bg-popover border border-border rounded-md px-2 py-1 shadow-md z-10">
-        {[200, 400, 600, 900].map((w) => (
-          <button
-            key={w}
-            onClick={() => updateAttributes({ width: w })}
-            className="text-[10px] text-muted-foreground hover:text-foreground px-1 transition-colors"
-          >
-            {w === 200 ? "P" : w === 400 ? "M" : w === 600 ? "G" : "Max"}
-          </button>
-        ))}
-      </span>
+        {/* Presets simplificados para não vazar */}
+        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center gap-2 bg-background border rounded-md px-2 py-1 shadow-sm z-30">
+          {[200, 400, 600].map((w) => (
+            <button
+              key={w}
+              onClick={() => updateAttributes({ width: w })}
+              className="text-[10px] font-medium hover:text-primary"
+            >
+              {w === 200 ? "P" : w === 400 ? "M" : "G"}
+            </button>
+          ))}
+        </div>
+      </div>
     </NodeViewWrapper>
   );
 };
 
 const ResizableImage = Node.create({
   name: "resizableImage",
-  group: "inline",
-  inline: true,
+  group: "block", // Mudado para block para evitar problemas de linha
   draggable: true,
   atom: true,
-
   addAttributes() {
-    return {
-      src: { default: null },
-      alt: { default: null },
-      width: { default: null },
-    };
+    return { src: { default: null }, alt: { default: null }, width: { default: 400 } };
   },
-
   parseHTML() {
     return [{ tag: "img[src]" }];
   },
-
   renderHTML({ HTMLAttributes }) {
-    return ["img", mergeAttributes(HTMLAttributes, { style: `width:${HTMLAttributes.width}px;max-width:100%` })];
+    return [
+      "img",
+      mergeAttributes(HTMLAttributes, { style: `width:${HTMLAttributes.width}px; max-width:100%; height:auto;` }),
+    ];
   },
-
   addNodeView() {
     return ReactNodeViewRenderer(ResizableImageComponent);
   },
 });
 
-// ── Tiptap prose styles ───────────────────────────────────────────────────────
-
+// Estilos para forçar o scroll e conter elementos
 const tiptapStyles = `
   [&_.tiptap]:outline-none
-  [&_p]:mb-4 [&_p]:leading-relaxed
-  [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:mb-4
-  [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:mb-4
-  [&_li]:mt-1
-  [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-8 [&_h2]:mb-4
-  [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-6 [&_h3]:mb-3
-  [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4 [&_blockquote]:text-muted-foreground
-  [&_img]:rounded-lg [&_img]:my-4 [&_img]:border [&_img]:border-border [&_img]:max-w-full
-  [&_a]:text-primary [&_a]:underline
+  [&_.tiptap]:min-h-[200px]
+  [&_p]:mb-4
+  [&_img]:max-w-full
+  [&_img]:h-auto
 `;
 
 export function RichEditor({
   content,
   onChange,
   editable = true,
-  placeholder = "Conte a história do clube...",
+  placeholder = "Conte a história...",
 }: RichEditorProps) {
   const [openImageUpload, setOpenImageUpload] = useState(false);
 
@@ -168,10 +155,7 @@ export function RichEditor({
     extensions: [
       StarterKit,
       Placeholder.configure({ placeholder }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: { class: "text-primary underline cursor-pointer" },
-      }),
+      Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-primary underline" } }),
       ResizableImage,
     ],
     content: content || "",
@@ -183,149 +167,56 @@ export function RichEditor({
 
   if (!editable) {
     return (
-      <div
-        className={`overflow-x-hidden break-words ${tiptapStyles}`}
-        dangerouslySetInnerHTML={{
-          __html: content || "<p class='text-muted-foreground italic mb-0'>Sem conteúdo na wiki ainda.</p>",
-        }}
-      />
+      <div className={`overflow-hidden break-words ${tiptapStyles}`} dangerouslySetInnerHTML={{ __html: content }} />
     );
   }
 
-  const ToolBtn = ({
-    onClick,
-    active,
-    children,
-    title,
-  }: {
-    onClick: () => void;
-    active?: boolean;
-    children: React.ReactNode;
-    title?: string;
-  }) => (
-    <Button
-      type="button"
-      variant={active ? "secondary" : "ghost"}
-      size="sm"
-      onClick={onClick}
-      title={title}
-      className="h-8 w-8 p-0"
-    >
-      {children}
-    </Button>
-  );
-
   return (
-    <div className="group border border-border rounded-xl bg-card overflow-hidden focus-within:ring-1 focus-within:ring-ring transition-all">
-      <div className="flex flex-wrap items-center gap-1 p-1.5 border-b border-border bg-muted/30">
-        <div className="flex items-center gap-0.5">
-          <ToolBtn
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            active={editor.isActive("bold")}
-            title="Negrito"
-          >
-            <Bold className="h-4 w-4" />
-          </ToolBtn>
-          <ToolBtn
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            active={editor.isActive("italic")}
-            title="Itálico"
-          >
-            <Italic className="h-4 w-4" />
-          </ToolBtn>
-        </div>
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        <div className="flex items-center gap-0.5">
-          <ToolBtn
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-            active={editor.isActive("heading", { level: 2 })}
-            title="Título"
-          >
-            <Heading2 className="h-4 w-4" />
-          </ToolBtn>
-          <ToolBtn
-            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-            active={editor.isActive("heading", { level: 3 })}
-            title="Subtítulo"
-          >
-            <Heading3 className="h-4 w-4" />
-          </ToolBtn>
-        </div>
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        <div className="flex items-center gap-0.5">
-          <ToolBtn
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-            active={editor.isActive("bulletList")}
-            title="Lista"
-          >
-            <List className="h-4 w-4" />
-          </ToolBtn>
-          <ToolBtn
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            active={editor.isActive("orderedList")}
-            title="Lista Numerada"
-          >
-            <ListOrdered className="h-4 w-4" />
-          </ToolBtn>
-          <ToolBtn
-            onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            active={editor.isActive("blockquote")}
-            title="Citação"
-          >
-            <Quote className="h-4 w-4" />
-          </ToolBtn>
-          <ToolBtn
-            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-            active={editor.isActive("codeBlock")}
-            title="Código"
-          >
-            <Code className="h-4 w-4" />
-          </ToolBtn>
-        </div>
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        <div className="flex items-center gap-0.5">
-          <ToolBtn
-            onClick={() => {
-              const url = prompt("URL do link:");
-              if (url) editor.chain().focus().setLink({ href: url }).run();
-            }}
-            active={editor.isActive("link")}
-            title="Adicionar Link"
-          >
-            <Link2 className="h-4 w-4" />
-          </ToolBtn>
-          <ToolBtn onClick={() => setOpenImageUpload(true)} title="Upload de Imagem">
-            <ImageIcon className="h-4 w-4" />
-          </ToolBtn>
-        </div>
-
+    <div className="flex flex-col border rounded-lg bg-card max-h-[500px]">
+      {/* Toolbar fixa no topo */}
+      <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/20 shrink-0">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          className={editor.isActive("bold") ? "bg-muted" : ""}
+        >
+          <Bold className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          className={editor.isActive("italic") ? "bg-muted" : ""}
+        >
+          <Italic className="h-4 w-4" />
+        </Button>
+        <Separator orientation="vertical" className="h-6 mx-1" />
+        <Button size="sm" variant="ghost" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
+          <Heading2 className="h-4 w-4" />
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => editor.chain().focus().toggleBulletList().run()}>
+          <List className="h-4 w-4" />
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => setOpenImageUpload(true)}>
+          <ImageIcon className="h-4 w-4" />
+        </Button>
         <div className="flex-1" />
-
-        <div className="flex items-center gap-0.5">
-          <ToolBtn onClick={() => editor.chain().focus().undo().run()} title="Desfazer">
-            <Undo className="h-4 w-4" />
-          </ToolBtn>
-          <ToolBtn onClick={() => editor.chain().focus().redo().run()} title="Refazer">
-            <Redo className="h-4 w-4" />
-          </ToolBtn>
-        </div>
+        <Button size="sm" variant="ghost" onClick={() => editor.chain().focus().undo().run()}>
+          <Undo className="h-4 w-4" />
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => editor.chain().focus().redo().run()}>
+          <Redo className="h-4 w-4" />
+        </Button>
       </div>
 
-      <div className={`p-4 min-h-[250px] max-h-[70vh] overflow-y-auto overflow-x-hidden cursor-text ${tiptapStyles}`}>
+      {/* Área de edição com scroll forçado */}
+      <div className={`p-4 overflow-y-auto overflow-x-hidden ${tiptapStyles}`}>
         <EditorContent editor={editor} />
       </div>
 
       <Dialog open={openImageUpload} onOpenChange={setOpenImageUpload}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Enviar imagem para a Wiki</DialogTitle>
-          </DialogHeader>
           <ImageUpload
             bucket="crests"
             folder="wiki"
@@ -334,10 +225,7 @@ export function RichEditor({
                 editor
                   .chain()
                   .focus()
-                  .insertContent({
-                    type: "resizableImage",
-                    attrs: { src: url, width: 400 },
-                  })
+                  .insertContent({ type: "resizableImage", attrs: { src: url, width: 400 } })
                   .run();
                 setOpenImageUpload(false);
               }
