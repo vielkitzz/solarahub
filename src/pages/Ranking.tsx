@@ -44,11 +44,11 @@ const Ranking = () => {
     <div className="space-y-8 max-w-7xl mx-auto">
       <header className="space-y-3">
         <Badge variant="outline" className="border-primary/40 text-primary">{currentSeason || "Temporada Ativa"}</Badge>
-        <h1 className="text-4xl md:text-5xl font-bold">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">
           Ranking de <span className="gold-text">Clubes</span>
         </h1>
-        <p className="text-muted-foreground text-lg max-w-2xl">
-          Todos os clubes da liga ordenados por orçamento. Clique para ver elenco, finanças e wiki.
+        <p className="text-muted-foreground text-base sm:text-lg max-w-2xl">
+          Todos os clubes da liga ordenados por orçamento. Toque para ver elenco, finanças e wiki.
         </p>
       </header>
 
@@ -74,12 +74,12 @@ const Ranking = () => {
           <div className="grid gap-3">
             {clubs.map((club, idx) => (
               <Link key={club.id} to={`/clubes/${club.id}`}>
-                <Card className="p-4 bg-gradient-card border-border/50 hover:border-primary/50 hover:shadow-gold transition-all hover:translate-x-1 cursor-pointer group">
-                  <div className="flex items-center gap-4">
-                    <div className={`text-2xl font-display font-bold w-10 text-center ${idx < 3 ? "gold-text" : "text-muted-foreground"}`}>
+                <Card className="p-3 sm:p-4 bg-gradient-card border-border/50 hover:border-primary/50 hover:shadow-gold transition-all hover:translate-x-1 cursor-pointer group">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className={`text-xl sm:text-2xl font-display font-bold w-8 sm:w-10 text-center shrink-0 ${idx < 3 ? "gold-text" : "text-muted-foreground"}`}>
                       {String(idx + 1).padStart(2, "0")}
                     </div>
-                    <div className="h-14 w-14 flex items-center justify-center shrink-0">
+                    <div className="h-10 w-10 sm:h-14 sm:w-14 flex items-center justify-center shrink-0">
                       {club.crest_url ? (
                         <img src={club.crest_url} alt={club.name} className="h-full w-full object-contain" />
                       ) : (
@@ -87,16 +87,16 @@ const Ranking = () => {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-display font-bold text-lg truncate group-hover:text-primary transition-colors">{club.name}</div>
-                      <div className="text-xs text-muted-foreground">{club.city || "—"} · {club.player_count} jogadores</div>
+                      <div className="font-display font-bold text-sm sm:text-lg truncate group-hover:text-primary transition-colors">{club.name}</div>
+                      <div className="text-[11px] sm:text-xs text-muted-foreground truncate">{club.city || "—"} · {club.player_count} jogadores</div>
                     </div>
-                    <div className="text-right hidden sm:block">
+                    <div className="text-right hidden md:block shrink-0">
                       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Rate</div>
                       <div className="font-display font-bold">{Number((club as any).rate ?? 2.8).toFixed(2)}</div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-xs text-muted-foreground">Caixa</div>
-                      <div className="font-display font-bold text-primary">{formatCurrency(Number(club.budget))}</div>
+                    <div className="text-right shrink-0">
+                      <div className="text-[10px] sm:text-xs text-muted-foreground">Caixa</div>
+                      <div className="font-display font-bold text-primary text-sm sm:text-base">{formatCurrency(Number(club.budget))}</div>
                     </div>
                   </div>
                 </Card>

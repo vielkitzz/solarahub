@@ -12,7 +12,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <SidebarTrigger />
             <div className="flex-1" />
           </header>
-          <main className="flex-1 p-4 md:p-8 animate-fade-in">{children}</main>
+          <main className="flex-1 p-3 sm:p-4 md:p-8 animate-fade-in min-w-0">{children}</main>
         </div>
       </div>
     </SidebarProvider>

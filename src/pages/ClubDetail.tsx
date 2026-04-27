@@ -197,7 +197,7 @@ const ClubDetail = () => {
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* Hero */}
-      <Card className="p-6 md:p-8 bg-gradient-card border-border/50 overflow-hidden relative">
+      <Card className="p-4 sm:p-6 md:p-8 bg-gradient-card border-border/50 overflow-hidden relative">
         <div
           className="absolute inset-0 opacity-20"
           style={
@@ -206,49 +206,58 @@ const ClubDetail = () => {
               : undefined
           }
         />
-        <div className="relative flex flex-col md:flex-row gap-6 items-start md:items-center">
-          <div className="h-24 w-24 md:h-32 md:w-32 flex items-center justify-center shrink-0">
-            {club.crest_url ? (
-              <img
-                src={club.crest_url}
-                alt={club.name}
-                className="h-full w-full object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
-              />
-            ) : (
-              <Shield className="h-14 w-14 text-muted-foreground" />
-            )}
+        <div className="relative flex flex-col md:flex-row gap-4 md:gap-6 items-start md:items-center">
+          <div className="flex items-start gap-4 w-full md:w-auto">
+            <div className="h-16 w-16 sm:h-20 sm:w-20 md:h-32 md:w-32 flex items-center justify-center shrink-0">
+              {club.crest_url ? (
+                <img
+                  src={club.crest_url}
+                  alt={club.name}
+                  className="h-full w-full object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
+                />
+              ) : (
+                <Shield className="h-10 w-10 md:h-14 md:w-14 text-muted-foreground" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0 md:hidden">
+              <h1 className="text-xl sm:text-2xl font-bold leading-tight break-words">{club.name}</h1>
+              <div className="text-[10px] uppercase text-muted-foreground tracking-wider mt-2">Caixa Atual</div>
+              <div className="text-xl font-display font-bold gold-text">
+                {formatCurrency(Number(club.budget))}
+              </div>
+            </div>
           </div>
-          <div className="flex-1 space-y-2">
+          <div className="flex-1 min-w-0 space-y-2 w-full">
             <div className="flex items-center gap-2 flex-wrap">
-              {canEdit && <Badge className="bg-primary text-primary-foreground">Você gerencia</Badge>}
-              {club.founded_year && <Badge variant="outline">Fundado em {club.founded_year}</Badge>}
+              {canEdit && <Badge className="bg-primary text-primary-foreground text-[10px]">Você gerencia</Badge>}
+              {club.founded_year && <Badge variant="outline" className="text-[10px]">Fundado em {club.founded_year}</Badge>}
               {club.reputacao && (
-                <Badge variant="outline" className="capitalize">
+                <Badge variant="outline" className="capitalize text-[10px]">
                   {club.reputacao}
                 </Badge>
               )}
-              <Badge variant="outline" className="border-primary/40 text-primary">
+              <Badge variant="outline" className="border-primary/40 text-primary text-[10px]">
                 Rate {Number(club.rate ?? 2.8).toFixed(2)}
               </Badge>
             </div>
-            <h1 className="text-3xl md:text-5xl font-bold">{club.name}</h1>
-            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+            <h1 className="hidden md:block text-3xl md:text-5xl font-bold break-words">{club.name}</h1>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs sm:text-sm text-muted-foreground">
               {club.city && (
-                <span className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" /> {club.city}
+                <span className="flex items-center gap-1 min-w-0">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{club.city}</span>
                 </span>
               )}
               {club.stadium_name && (
-                <span className="flex items-center gap-1">
-                  <Building2 className="h-4 w-4" /> {club.stadium_name}
+                <span className="flex items-center gap-1 min-w-0">
+                  <Building2 className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{club.stadium_name}</span>
                 </span>
               )}
               <span className="flex items-center gap-1">
-                <Users className="h-4 w-4" /> {players.length} jogadores
+                <Users className="h-3.5 w-3.5 shrink-0" /> {players.length} jogadores
               </span>
             </div>
           </div>
-          <div className="text-right shrink-0">
+          <div className="hidden md:block text-right shrink-0">
             <div className="text-xs uppercase text-muted-foreground tracking-wider">Caixa Atual</div>
             <div className="text-3xl md:text-4xl font-display font-bold gold-text">
               {formatCurrency(Number(club.budget))}
@@ -279,14 +288,16 @@ const ClubDetail = () => {
         }}
         className="w-full"
       >
-        <TabsList className="bg-secondary/50">
-          <TabsTrigger value="elenco">Elenco</TabsTrigger>
-          <TabsTrigger value="financas">Finanças</TabsTrigger>
-          <TabsTrigger value="estadio">Estádio</TabsTrigger>
-          <TabsTrigger value="base">Base</TabsTrigger>
-          <TabsTrigger value="wiki">Wiki</TabsTrigger>
-          {canEdit && <TabsTrigger value="config">Configurações</TabsTrigger>}
-        </TabsList>
+        <div className="-mx-3 sm:-mx-4 md:mx-0 overflow-x-auto scrollbar-thin">
+          <TabsList className="bg-secondary/50 mx-3 sm:mx-4 md:mx-0 w-max">
+            <TabsTrigger value="elenco">Elenco</TabsTrigger>
+            <TabsTrigger value="financas">Finanças</TabsTrigger>
+            <TabsTrigger value="estadio">Estádio</TabsTrigger>
+            <TabsTrigger value="base">Base</TabsTrigger>
+            <TabsTrigger value="wiki">Wiki</TabsTrigger>
+            {canEdit && <TabsTrigger value="config">Config</TabsTrigger>}
+          </TabsList>
+        </div>
 
         <TabsContent value="elenco" className="mt-4">
           {players.length === 0 ? (

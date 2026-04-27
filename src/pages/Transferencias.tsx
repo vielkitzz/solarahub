@@ -214,33 +214,37 @@ const Transferencias = () => {
       </header>
 
       <Tabs defaultValue="market">
-        <TabsList className="bg-secondary/50">
-          <TabsTrigger value="market"><Search className="h-3.5 w-3.5 mr-1" /> Mercado</TabsTrigger>
-          <TabsTrigger value="inbox"><Inbox className="h-3.5 w-3.5 mr-1" /> Caixa de Entrada {inbox.filter(p => p.status === 'pendente').length > 0 && <Badge className="ml-2 bg-primary text-primary-foreground">{inbox.filter(p => p.status === 'pendente').length}</Badge>}</TabsTrigger>
-          <TabsTrigger value="sent"><Send className="h-3.5 w-3.5 mr-1" /> Enviadas</TabsTrigger>
-        </TabsList>
+        <div className="-mx-3 sm:-mx-4 md:mx-0 overflow-x-auto scrollbar-thin">
+          <TabsList className="bg-secondary/50 mx-3 sm:mx-4 md:mx-0 w-max">
+            <TabsTrigger value="market"><Search className="h-3.5 w-3.5 mr-1" /> Mercado</TabsTrigger>
+            <TabsTrigger value="inbox"><Inbox className="h-3.5 w-3.5 mr-1" /> <span className="hidden sm:inline">Caixa de Entrada</span><span className="sm:hidden">Inbox</span> {inbox.filter(p => p.status === 'pendente').length > 0 && <Badge className="ml-2 bg-primary text-primary-foreground">{inbox.filter(p => p.status === 'pendente').length}</Badge>}</TabsTrigger>
+            <TabsTrigger value="sent"><Send className="h-3.5 w-3.5 mr-1" /> Enviadas</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* MERCADO */}
         <TabsContent value="market" className="space-y-3 mt-4">
-          <div className="flex flex-col md:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar jogador..." className="pl-10" />
             </div>
-            <Select value={pos} onValueChange={setPos}>
-              <SelectTrigger className="md:w-48"><SelectValue placeholder="Posição" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas posições</SelectItem>
-                {POSITIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Button
-              variant={onlyForSale ? "default" : "outline"}
-              onClick={() => setOnlyForSale((v) => !v)}
-              className={onlyForSale ? "bg-gradient-gold text-primary-foreground" : ""}
-            >
-              <Tag className="h-4 w-4" /> {onlyForSale ? "Mostrando à venda" : "Só à venda"}
-            </Button>
+            <div className="flex gap-3">
+              <Select value={pos} onValueChange={setPos}>
+                <SelectTrigger className="flex-1 sm:w-48"><SelectValue placeholder="Posição" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas posições</SelectItem>
+                  {POSITIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Button
+                variant={onlyForSale ? "default" : "outline"}
+                onClick={() => setOnlyForSale((v) => !v)}
+                className={onlyForSale ? "bg-gradient-gold text-primary-foreground shrink-0" : "shrink-0"}
+              >
+                <Tag className="h-4 w-4" /> <span className="hidden sm:inline">{onlyForSale ? "Mostrando à venda" : "Só à venda"}</span>
+              </Button>
+            </div>
           </div>
 
           <Card className="bg-gradient-card border-border/50 overflow-hidden">
@@ -296,36 +300,42 @@ const Transferencias = () => {
             const base = Number(player?.valor_base_calculado || 0);
             return (
               <Card key={t.id} className="p-4 bg-gradient-card border-border/50">
-                <div className="flex flex-wrap items-center gap-3">
-                  <Badge variant="outline" className="border-primary/40 text-primary uppercase text-[10px]">{tipoLabel(t.tipo)}</Badge>
-                  <Badge variant="outline">{player?.position}</Badge>
-                  <div className="flex-1 min-w-[200px]">
-                    <div className="font-bold">{player?.name || "Jogador"}</div>
-                    <div className="text-xs text-muted-foreground">
-                      Oferta de <strong>{buyer?.name || "?"}</strong> · base {formatCurrency(base)}
-                      {t.tipo === "emprestimo" && t.duracao_emprestimo && <> · {t.duracao_emprestimo} temp.</>}
-                      {t.tipo === "troca" && oferecido && <> · oferece <strong>{oferecido.name}</strong></>}
-                      {Number(t.luvas) > 0 && <> · luvas {formatCurrency(Number(t.luvas))}</>}
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline" className="border-primary/40 text-primary uppercase text-[10px]">{tipoLabel(t.tipo)}</Badge>
+                    <Badge variant="outline" className="text-[10px]">{player?.position}</Badge>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold truncate">{player?.name || "Jogador"}</div>
+                      <div className="text-xs text-muted-foreground">
+                        Oferta de <strong>{buyer?.name || "?"}</strong> · base {formatCurrency(base)}
+                        {t.tipo === "emprestimo" && t.duracao_emprestimo && <> · {t.duracao_emprestimo} temp.</>}
+                        {t.tipo === "troca" && oferecido && <> · oferece <strong>{oferecido.name}</strong></>}
+                        {Number(t.luvas) > 0 && <> · luvas {formatCurrency(Number(t.luvas))}</>}
+                      </div>
                     </div>
                   </div>
-                  {t.tipo !== "emprestimo" && (
-                    <div className="text-right">
-                      <div className="text-[10px] uppercase text-muted-foreground">Valor</div>
-                      <div className="font-display font-bold text-primary">{formatCurrency(Number(t.valor_ofertado))}</div>
+                  <div className="flex items-end justify-between gap-3 flex-wrap">
+                    <div className="flex gap-4">
+                      {t.tipo !== "emprestimo" && (
+                        <div>
+                          <div className="text-[10px] uppercase text-muted-foreground">Valor</div>
+                          <div className="font-display font-bold text-primary text-sm">{formatCurrency(Number(t.valor_ofertado))}</div>
+                        </div>
+                      )}
+                      <div>
+                        <div className="text-[10px] uppercase text-muted-foreground">Salário</div>
+                        <div className="font-display font-bold text-sm">{formatCurrency(Number(t.salario_ofertado))}</div>
+                      </div>
                     </div>
-                  )}
-                  <div className="text-right">
-                    <div className="text-[10px] uppercase text-muted-foreground">Salário</div>
-                    <div className="font-display font-bold">{formatCurrency(Number(t.salario_ofertado))}</div>
+                    {t.status === "pendente" ? (
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => respond(t.id, false)}>Recusar</Button>
+                        <Button size="sm" onClick={() => respond(t.id, true)} className="bg-gradient-gold text-primary-foreground hover:opacity-90">Aceitar</Button>
+                      </div>
+                    ) : (
+                      <Badge variant={t.status === "aceita" ? "default" : "secondary"} className={t.status === "aceita" ? "bg-primary text-primary-foreground" : ""}>{t.status}</Badge>
+                    )}
                   </div>
-                  {t.status === "pendente" ? (
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => respond(t.id, false)}>Recusar</Button>
-                      <Button size="sm" onClick={() => respond(t.id, true)} className="bg-gradient-gold text-primary-foreground hover:opacity-90">Aceitar</Button>
-                    </div>
-                  ) : (
-                    <Badge variant={t.status === "aceita" ? "default" : "secondary"} className={t.status === "aceita" ? "bg-primary text-primary-foreground" : ""}>{t.status}</Badge>
-                  )}
                 </div>
               </Card>
             );
@@ -340,16 +350,16 @@ const Transferencias = () => {
             const seller = clubs[t.clube_vendedor_id];
             return (
               <Card key={t.id} className="p-4 bg-gradient-card border-border/50">
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <Badge variant="outline" className="border-primary/40 text-primary uppercase text-[10px]">{tipoLabel(t.tipo)}</Badge>
-                  <Badge variant="outline">{player?.position}</Badge>
-                  <div className="flex-1 min-w-[200px]">
-                    <div className="font-bold">{player?.name || "Jogador"}</div>
-                    <div className="text-xs text-muted-foreground">Para <strong>{seller?.name || "?"}</strong></div>
+                  <Badge variant="outline" className="text-[10px]">{player?.position}</Badge>
+                  <div className="flex-1 min-w-0 basis-full sm:basis-auto">
+                    <div className="font-bold truncate">{player?.name || "Jogador"}</div>
+                    <div className="text-xs text-muted-foreground truncate">Para <strong>{seller?.name || "?"}</strong></div>
                   </div>
                   <div className="text-right">
                     <div className="text-[10px] uppercase text-muted-foreground">Valor</div>
-                    <div className="font-display font-bold text-primary">{formatCurrency(Number(t.valor_ofertado))}</div>
+                    <div className="font-display font-bold text-primary text-sm">{formatCurrency(Number(t.valor_ofertado))}</div>
                   </div>
                   <Badge variant={t.status === "aceita" ? "default" : t.status === "recusada" ? "destructive" : "secondary"} className={t.status === "aceita" ? "bg-primary text-primary-foreground" : ""}>{t.status}</Badge>
                 </div>
