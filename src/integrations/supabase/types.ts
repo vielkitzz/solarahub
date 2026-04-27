@@ -487,6 +487,13 @@ export type Database = {
         Returns: string
       }
       current_discord_id: { Args: never; Returns: string }
+      get_owner_display_info: {
+        Args: { _user_id: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
