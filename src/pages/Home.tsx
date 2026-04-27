@@ -19,7 +19,10 @@ const Home = () => {
     document.title = "Solara Hub — RPG de Futebol";
     (async () => {
       const [{ data: cs }, { data: ps }] = await Promise.all([
-        supabase.from("clubs").select("id,name,crest_url,budget,city,primary_color").order("budget", { ascending: false }),
+        supabase
+          .from("clubs")
+          .select("id,name,crest_url,budget,city,primary_color")
+          .order("budget", { ascending: false }),
         supabase.from("players").select("id,a_venda"),
       ]);
       const capital = (cs || []).reduce((s, c) => s + Number(c.budget), 0);
@@ -34,7 +37,12 @@ const Home = () => {
     { to: "/clubes", icon: Shield, title: "Clubes", desc: "Explore todos os clubes da liga." },
     { to: "/mapa", icon: MapPin, title: "Mapa", desc: "Localização geográfica de cada clube." },
     { to: "/mercado", icon: Users, title: "Mercado", desc: "Todos os jogadores da liga e os à venda." },
-    { to: "/transferencias", icon: ArrowRightLeft, title: "Transferências", desc: "Compre, empreste ou troque jogadores." },
+    {
+      to: "/transferencias",
+      icon: ArrowRightLeft,
+      title: "Transferências",
+      desc: "Compre, empreste ou troque jogadores.",
+    },
     { to: "/wiki", icon: BookOpen, title: "Wiki Global", desc: "História, escudos, mascotes e títulos." },
   ];
 
@@ -42,22 +50,28 @@ const Home = () => {
     <div className="space-y-10 max-w-7xl mx-auto">
       {/* HERO */}
       <section className="relative overflow-hidden rounded-2xl bg-gradient-card border border-border/50 p-6 sm:p-8 md:p-12">
-        <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ background: "radial-gradient(circle at 80% 20%, hsl(var(--primary) / 0.4), transparent 50%)" }} />
+        <div
+          className="absolute inset-0 opacity-30 pointer-events-none"
+          style={{ background: "radial-gradient(circle at 80% 20%, hsl(var(--primary) / 0.4), transparent 50%)" }}
+        />
         <div className="relative space-y-5 max-w-3xl">
           <Badge variant="outline" className="border-primary/40 text-primary">
-            <Sparkles className="h-3 w-3 mr-1" /> {currentSeason || "Temporada Ativa"}
+            <Sparkles className="h-3 w-3 mr-1" /> {currentSeason}
           </Badge>
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold leading-tight">
             Bem-vindo ao <span className="gold-text">Solara Hub</span>
           </h1>
           <p className="text-muted-foreground text-lg">
-            O hub central do RPG de futebol da Solara. Gerencie o seu clube, negocie no mercado, acompanhe o ranking e construa a história do seu elenco.
+            O hub central do RPG de futebol da Solara. Gerencie o seu clube, negocie no mercado, acompanhe o ranking e
+            construa a história do seu elenco.
           </p>
           <div className="flex flex-wrap gap-3 pt-2">
             {user ? (
               <>
                 <Button asChild className="bg-gradient-gold text-primary-foreground hover:opacity-90">
-                  <Link to="/meu-clube">Meu Clube <ArrowRight className="h-4 w-4" /></Link>
+                  <Link to="/meu-clube">
+                    Meu Clube <ArrowRight className="h-4 w-4" />
+                  </Link>
                 </Button>
                 <Button asChild variant="outline">
                   <Link to="/ranking">Ver Ranking</Link>
@@ -111,20 +125,30 @@ const Home = () => {
       {topClubs.length > 0 && (
         <section>
           <div className="flex items-end justify-between mb-4">
-            <h2 className="text-2xl font-bold flex items-center gap-2"><Trophy className="h-6 w-6 text-primary" /> Top 5</h2>
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Trophy className="h-6 w-6 text-primary" /> Top 5
+            </h2>
             <Button asChild variant="ghost" size="sm">
-              <Link to="/ranking">Ver ranking completo <ArrowRight className="h-3.5 w-3.5" /></Link>
+              <Link to="/ranking">
+                Ver ranking completo <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </Button>
           </div>
           <div className="grid gap-2">
             {topClubs.map((c, idx) => (
               <Link key={c.id} to={`/clubes/${c.id}`}>
                 <Card className="p-3 bg-gradient-card border-border/50 hover:border-primary/40 transition-all flex items-center gap-3">
-                  <div className={`text-xl font-display font-bold w-8 text-center ${idx < 3 ? "gold-text" : "text-muted-foreground"}`}>
+                  <div
+                    className={`text-xl font-display font-bold w-8 text-center ${idx < 3 ? "gold-text" : "text-muted-foreground"}`}
+                  >
                     {idx + 1}
                   </div>
                   <div className="h-10 w-10 flex items-center justify-center shrink-0">
-                    {c.crest_url ? <img src={c.crest_url} alt={c.name} className="h-full w-full object-contain" /> : <Shield className="h-5 w-5 text-muted-foreground" />}
+                    {c.crest_url ? (
+                      <img src={c.crest_url} alt={c.name} className="h-full w-full object-contain" />
+                    ) : (
+                      <Shield className="h-5 w-5 text-muted-foreground" />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-bold truncate">{c.name}</div>
