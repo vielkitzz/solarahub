@@ -290,6 +290,9 @@ const Admin = () => {
           <TabsTrigger value="empresas" className="gap-2">
             <ArrowRightLeft className="h-4 w-4" /> Empresas
           </TabsTrigger>
+          <TabsTrigger value="economia" className="gap-2">
+            <Coins className="h-4 w-4" /> Economia
+          </TabsTrigger>
           <TabsTrigger value="season" className="gap-2">
             <CalendarClock className="h-4 w-4" /> Temporada
           </TabsTrigger>
