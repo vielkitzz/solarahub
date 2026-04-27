@@ -85,29 +85,29 @@ const ClubDetail = () => {
       supabase.from("players").select("*").eq("club_id", id),
       supabase.from("contratos_clube").select("valor_anual").eq("club_id", id).eq("ativo", true),
       supabase
+        .from("settings")
+        .select("key, value")
+        .in("key", ["temporada_atual", "direitos_tv_por_reputacao", "direitos_imagem"]),
+      supabase
         .from("contratos_clube")
-        .select("nome, categoria")
+        .select("empresa_nome, categoria")
         .eq("club_id", id)
         .eq("ativo", true)
-        .in("categoria", ["master", "patrocinador_master"])
+        .in("categoria", ["master", "patrocinio_master"])
         .limit(1)
         .maybeSingle(),
       supabase
         .from("contratos_clube")
-        .select("nome, categoria")
+        .select("empresa_nome, categoria")
         .eq("club_id", id)
         .eq("ativo", true)
         .eq("categoria", "fornecedora")
         .limit(1)
         .maybeSingle(),
-      supabase
-        .from("settings")
-        .select("key, value")
-        .in("key", ["temporada_atual", "direitos_tv_por_reputacao", "direitos_imagem"]),
     ]);
     setClub(c);
-    setMasterSponsor((masterContract as any)?.nome ?? null);
-    setKitSupplier((kitContract as any)?.nome ?? null);
+    setMasterSponsor((masterContract as any)?.empresa_nome ?? null);
+    setKitSupplier((kitContract as any)?.empresa_nome ?? null);
     setPlayers(p || []);
     setContratosTotal((ct || []).reduce((s, r: any) => s + Number(r.valor_anual || 0), 0));
     (settings || []).forEach((s: any) => {
