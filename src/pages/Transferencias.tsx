@@ -300,36 +300,42 @@ const Transferencias = () => {
             const base = Number(player?.valor_base_calculado || 0);
             return (
               <Card key={t.id} className="p-4 bg-gradient-card border-border/50">
-                <div className="flex flex-wrap items-center gap-3">
-                  <Badge variant="outline" className="border-primary/40 text-primary uppercase text-[10px]">{tipoLabel(t.tipo)}</Badge>
-                  <Badge variant="outline">{player?.position}</Badge>
-                  <div className="flex-1 min-w-[200px]">
-                    <div className="font-bold">{player?.name || "Jogador"}</div>
-                    <div className="text-xs text-muted-foreground">
-                      Oferta de <strong>{buyer?.name || "?"}</strong> · base {formatCurrency(base)}
-                      {t.tipo === "emprestimo" && t.duracao_emprestimo && <> · {t.duracao_emprestimo} temp.</>}
-                      {t.tipo === "troca" && oferecido && <> · oferece <strong>{oferecido.name}</strong></>}
-                      {Number(t.luvas) > 0 && <> · luvas {formatCurrency(Number(t.luvas))}</>}
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline" className="border-primary/40 text-primary uppercase text-[10px]">{tipoLabel(t.tipo)}</Badge>
+                    <Badge variant="outline" className="text-[10px]">{player?.position}</Badge>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold truncate">{player?.name || "Jogador"}</div>
+                      <div className="text-xs text-muted-foreground">
+                        Oferta de <strong>{buyer?.name || "?"}</strong> · base {formatCurrency(base)}
+                        {t.tipo === "emprestimo" && t.duracao_emprestimo && <> · {t.duracao_emprestimo} temp.</>}
+                        {t.tipo === "troca" && oferecido && <> · oferece <strong>{oferecido.name}</strong></>}
+                        {Number(t.luvas) > 0 && <> · luvas {formatCurrency(Number(t.luvas))}</>}
+                      </div>
                     </div>
                   </div>
-                  {t.tipo !== "emprestimo" && (
-                    <div className="text-right">
-                      <div className="text-[10px] uppercase text-muted-foreground">Valor</div>
-                      <div className="font-display font-bold text-primary">{formatCurrency(Number(t.valor_ofertado))}</div>
+                  <div className="flex items-end justify-between gap-3 flex-wrap">
+                    <div className="flex gap-4">
+                      {t.tipo !== "emprestimo" && (
+                        <div>
+                          <div className="text-[10px] uppercase text-muted-foreground">Valor</div>
+                          <div className="font-display font-bold text-primary text-sm">{formatCurrency(Number(t.valor_ofertado))}</div>
+                        </div>
+                      )}
+                      <div>
+                        <div className="text-[10px] uppercase text-muted-foreground">Salário</div>
+                        <div className="font-display font-bold text-sm">{formatCurrency(Number(t.salario_ofertado))}</div>
+                      </div>
                     </div>
-                  )}
-                  <div className="text-right">
-                    <div className="text-[10px] uppercase text-muted-foreground">Salário</div>
-                    <div className="font-display font-bold">{formatCurrency(Number(t.salario_ofertado))}</div>
+                    {t.status === "pendente" ? (
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => respond(t.id, false)}>Recusar</Button>
+                        <Button size="sm" onClick={() => respond(t.id, true)} className="bg-gradient-gold text-primary-foreground hover:opacity-90">Aceitar</Button>
+                      </div>
+                    ) : (
+                      <Badge variant={t.status === "aceita" ? "default" : "secondary"} className={t.status === "aceita" ? "bg-primary text-primary-foreground" : ""}>{t.status}</Badge>
+                    )}
                   </div>
-                  {t.status === "pendente" ? (
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => respond(t.id, false)}>Recusar</Button>
-                      <Button size="sm" onClick={() => respond(t.id, true)} className="bg-gradient-gold text-primary-foreground hover:opacity-90">Aceitar</Button>
-                    </div>
-                  ) : (
-                    <Badge variant={t.status === "aceita" ? "default" : "secondary"} className={t.status === "aceita" ? "bg-primary text-primary-foreground" : ""}>{t.status}</Badge>
-                  )}
                 </div>
               </Card>
             );
@@ -344,16 +350,16 @@ const Transferencias = () => {
             const seller = clubs[t.clube_vendedor_id];
             return (
               <Card key={t.id} className="p-4 bg-gradient-card border-border/50">
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <Badge variant="outline" className="border-primary/40 text-primary uppercase text-[10px]">{tipoLabel(t.tipo)}</Badge>
-                  <Badge variant="outline">{player?.position}</Badge>
-                  <div className="flex-1 min-w-[200px]">
-                    <div className="font-bold">{player?.name || "Jogador"}</div>
-                    <div className="text-xs text-muted-foreground">Para <strong>{seller?.name || "?"}</strong></div>
+                  <Badge variant="outline" className="text-[10px]">{player?.position}</Badge>
+                  <div className="flex-1 min-w-0 basis-full sm:basis-auto">
+                    <div className="font-bold truncate">{player?.name || "Jogador"}</div>
+                    <div className="text-xs text-muted-foreground truncate">Para <strong>{seller?.name || "?"}</strong></div>
                   </div>
                   <div className="text-right">
                     <div className="text-[10px] uppercase text-muted-foreground">Valor</div>
-                    <div className="font-display font-bold text-primary">{formatCurrency(Number(t.valor_ofertado))}</div>
+                    <div className="font-display font-bold text-primary text-sm">{formatCurrency(Number(t.valor_ofertado))}</div>
                   </div>
                   <Badge variant={t.status === "aceita" ? "default" : t.status === "recusada" ? "destructive" : "secondary"} className={t.status === "aceita" ? "bg-primary text-primary-foreground" : ""}>{t.status}</Badge>
                 </div>
