@@ -8,7 +8,6 @@ import {
   Settings,
   LogOut,
   LogIn,
-  ArrowRightLeft,
   MapPin,
 } from "lucide-react";
 import {
@@ -133,15 +132,7 @@ export function AppSidebar() {
                       {!collapsed && <span>Meu Clube</span>}
                     </NavLink>
                   </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/transferencias")}>
-                    <NavLink to="/transferencias">
-                      <ArrowRightLeft className="h-4 w-4" />
-                      {!collapsed && <span>Transferências</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+              </SidebarMenuItem>
                 {isAdmin && (
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive("/admin")}>

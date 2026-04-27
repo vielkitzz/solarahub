@@ -23,11 +23,15 @@ import {
   UsersRound,
   LayoutDashboard,
   Search,
+  Coins,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ImageUpload";
 import { EmpresasManager } from "@/components/EmpresasManager";
+import { SeasonPreview } from "@/components/admin/SeasonPreview";
+import { EconomyParams } from "@/components/admin/EconomyParams";
+import { BulkBudgetAdjuster } from "@/components/admin/BulkBudgetAdjuster";
 import { parseSquadJson, ImportedPlayer } from "@/lib/squad-import";
 import { useSeason } from "@/contexts/SeasonContext";
 
@@ -286,6 +290,9 @@ const Admin = () => {
           <TabsTrigger value="empresas" className="gap-2">
             <ArrowRightLeft className="h-4 w-4" /> Empresas
           </TabsTrigger>
+          <TabsTrigger value="economia" className="gap-2">
+            <Coins className="h-4 w-4" /> Economia
+          </TabsTrigger>
           <TabsTrigger value="season" className="gap-2">
             <CalendarClock className="h-4 w-4" /> Temporada
           </TabsTrigger>
@@ -318,7 +325,9 @@ const Admin = () => {
 
         {/* CLUBES */}
         <TabsContent value="clubs" className="mt-6 space-y-4">
-          <div className="flex justify-between items-center">
+          <BulkBudgetAdjuster clubs={clubs} onDone={load} />
+
+          <div className="flex justify-between items-center pt-2">
             <h3 className="font-display font-bold text-xl">Gestão de Clubes</h3>
             <Button
               onClick={() => {
@@ -543,9 +552,17 @@ const Admin = () => {
           </div>
         </TabsContent>
 
+        {/* ABA: ECONOMIA (PARÂMETROS) */}
+        <TabsContent value="economia" className="mt-6">
+          <div className="max-w-4xl mx-auto">
+            <EconomyParams />
+          </div>
+        </TabsContent>
+
         {/* ABA: TEMPORADA (PROCESSAMENTO) */}
         <TabsContent value="season" className="mt-6">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-5xl mx-auto space-y-6">
+            <SeasonPreview />
             <Card className="p-6 bg-gradient-card border-destructive/30 relative overflow-hidden">
               <div className="absolute inset-0 bg-destructive/5 pointer-events-none" />
               <div className="relative space-y-4">

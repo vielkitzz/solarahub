@@ -371,6 +371,7 @@ export type Database = {
           jogador_id: string
           jogador_trocado_id: string | null
           luvas: number
+          proposta_pai_id: string | null
           salario_ofertado: number
           status: Database["public"]["Enums"]["transfer_status"]
           tipo: Database["public"]["Enums"]["transfer_type"]
@@ -387,6 +388,7 @@ export type Database = {
           jogador_id: string
           jogador_trocado_id?: string | null
           luvas?: number
+          proposta_pai_id?: string | null
           salario_ofertado: number
           status?: Database["public"]["Enums"]["transfer_status"]
           tipo?: Database["public"]["Enums"]["transfer_type"]
@@ -403,6 +405,7 @@ export type Database = {
           jogador_id?: string
           jogador_trocado_id?: string | null
           luvas?: number
+          proposta_pai_id?: string | null
           salario_ofertado?: number
           status?: Database["public"]["Enums"]["transfer_status"]
           tipo?: Database["public"]["Enums"]["transfer_type"]
@@ -429,6 +432,13 @@ export type Database = {
             columns: ["jogador_id"]
             isOneToOne: false
             referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencias_proposta_pai_id_fkey"
+            columns: ["proposta_pai_id"]
+            isOneToOne: false
+            referencedRelation: "transferencias"
             referencedColumns: ["id"]
           },
         ]
@@ -463,7 +473,27 @@ export type Database = {
     }
     Functions: {
       accept_transfer: { Args: { _transfer_id: string }; Returns: undefined }
+      ajustar_caixa_clubes: {
+        Args: { _club_ids: string[]; _delta: number }
+        Returns: number
+      }
+      criar_contraproposta: {
+        Args: {
+          _luvas: number
+          _proposta_id: string
+          _salario: number
+          _valor: number
+        }
+        Returns: string
+      }
       current_discord_id: { Args: never; Returns: string }
+      get_owner_display_info: {
+        Args: { _user_id: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -472,6 +502,22 @@ export type Database = {
         Returns: boolean
       }
       premiacao_por_posicao: { Args: { _pos: number }; Returns: number }
+      preview_season_turnover: {
+        Args: never
+        Returns: {
+          bilheteria: number
+          club_id: string
+          club_name: string
+          contratos: number
+          delta: number
+          folha: number
+          manutencao: number
+          novo_caixa: number
+          premiacao: number
+          receita_base: number
+          reputacao: string
+        }[]
+      }
       process_season_turnover: {
         Args: never
         Returns: {
@@ -539,7 +585,7 @@ export type Database = {
         | "costas_superior"
         | "manga"
         | "lateral"
-      transfer_status: "pendente" | "aceita" | "recusada"
+      transfer_status: "pendente" | "aceita" | "recusada" | "contraproposta"
       transfer_type: "compra" | "emprestimo" | "troca"
     }
     CompositeTypes: {
@@ -686,7 +732,7 @@ export const Constants = {
         "manga",
         "lateral",
       ],
-      transfer_status: ["pendente", "aceita", "recusada"],
+      transfer_status: ["pendente", "aceita", "recusada", "contraproposta"],
       transfer_type: ["compra", "emprestimo", "troca"],
     },
   },

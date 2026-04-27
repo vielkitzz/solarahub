@@ -40,6 +40,7 @@ import { ContractsManager } from "@/components/ContractsManager";
 import { StadiumManager } from "@/components/StadiumManager";
 import { AcademyManager } from "@/components/AcademyManager";
 import { ImageUpload } from "@/components/ImageUpload";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getFlagUrl } from "@/lib/countries";
@@ -58,7 +59,9 @@ const ClubDetail = () => {
   const [wikiData, setWikiData] = useState<WikiData>({});
   const [editingClub, setEditingClub] = useState<any>(null);
 
-  const canEdit = !!user && (isAdmin || (club && club.owner_id === user.id));
+  // Apenas o dono do clube pode editar pela página do clube. Admins editam pelo painel /admin.
+  const canEdit = !!user && !!club && club.owner_id === user.id;
+  const [ownerInfo, setOwnerInfo] = useState<{ display_name: string | null; avatar_url: string | null } | null>(null);
 
   const [tvSettings, setTvSettings] = useState<Record<string, number>>({});
   const [imgSettings, setImgSettings] = useState<{ custo_pct: number; receita_pct: number }>({
@@ -98,6 +101,17 @@ const ClubDetail = () => {
   useEffect(() => {
     load();
   }, [id]);
+
+  // Carrega informação do dono (nome + avatar) quando o clube é carregado
+  useEffect(() => {
+    const loadOwner = async () => {
+      if (!club?.owner_id) { setOwnerInfo(null); return; }
+      const { data } = await supabase.rpc("get_owner_display_info", { _user_id: club.owner_id });
+      const row = Array.isArray(data) ? data[0] : data;
+      setOwnerInfo(row ? { display_name: row.display_name ?? null, avatar_url: row.avatar_url ?? null } : null);
+    };
+    loadOwner();
+  }, [club?.owner_id]);
 
   const saveWiki = async (next: WikiData) => {
     setWikiData(next);
@@ -229,7 +243,21 @@ const ClubDetail = () => {
           </div>
           <div className="flex-1 min-w-0 space-y-2 w-full">
             <div className="flex items-center gap-2 flex-wrap">
-              {canEdit && <Badge className="bg-primary text-primary-foreground text-[10px]">Você gerencia</Badge>}
+              {club.owner_id ? (
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-secondary/60 border border-border/50 pl-1 pr-2.5 py-0.5">
+                  <Avatar className="h-5 w-5 ring-1 ring-primary/30">
+                    <AvatarImage src={ownerInfo?.avatar_url ?? undefined} />
+                    <AvatarFallback className="text-[9px] bg-secondary">
+                      {(ownerInfo?.display_name ?? "?").charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-[10px] font-semibold text-foreground/90 max-w-[140px] truncate">
+                    {ownerInfo?.display_name ?? "Dono"}
+                  </span>
+                </div>
+              ) : (
+                <Badge variant="outline" className="text-[10px] text-muted-foreground">Sem dono</Badge>
+              )}
               {club.founded_year && <Badge variant="outline" className="text-[10px]">Fundado em {club.founded_year}</Badge>}
               {club.reputacao && (
                 <Badge variant="outline" className="capitalize text-[10px]">
