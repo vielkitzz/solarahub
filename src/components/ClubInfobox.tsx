@@ -33,12 +33,22 @@ interface Props {
   onSave: (next: InfoboxData) => Promise<void> | void;
 }
 
-const Row = ({ label, value }: { label: string; value?: string | number | null }) => {
+const Row = ({ label, value, readOnly }: { label: string; value?: string | number | null; readOnly?: boolean }) => {
   if (value === null || value === undefined || value === "") return null;
   return (
     <tr className="border-b border-border/40 last:border-0">
       <th className="text-left align-top py-1.5 pr-3 text-xs uppercase tracking-wider text-muted-foreground font-medium w-1/2">
-        {label}
+        <span className="flex items-center gap-1">
+          {label}
+          {readOnly && (
+            <span
+              title="Sincronizado automaticamente"
+              className="text-[9px] text-primary/60 font-normal normal-case tracking-normal"
+            >
+              auto
+            </span>
+          )}
+        </span>
       </th>
       <td className="py-1.5 text-sm font-serif text-foreground">{value}</td>
     </tr>
@@ -97,8 +107,8 @@ export function ClubInfobox({ club, infobox, canEdit, onSave }: Props) {
             />
             <Row label="Cidade" value={club.city ?? undefined} />
             <Row label="Presidente" value={infobox.presidente} />
-            <Row label="Patrocinador" value={infobox.patrocinador} />
-            <Row label="Material" value={infobox.material} />
+            <Row label="Patrocinador" value={infobox.patrocinador} readOnly />
+            <Row label="Material" value={infobox.material} readOnly />
             <Row label="Competição" value={infobox.competicao} />
           </tbody>
         </table>
@@ -127,8 +137,6 @@ export function ClubInfobox({ club, infobox, canEdit, onSave }: Props) {
                     ["torcedor", "Torcedor(a) / Adepto(a)"],
                     ["rival", "Rival principal"],
                     ["presidente", "Presidente"],
-                    ["patrocinador", "Patrocinador"],
-                    ["material", "Material esportivo"],
                     ["competicao", "Competição"],
                   ] as const
                 ).map(([key, label]) => (
@@ -138,7 +146,8 @@ export function ClubInfobox({ club, infobox, canEdit, onSave }: Props) {
                   </div>
                 ))}
                 <p className="text-xs text-muted-foreground">
-                  Nome, escudo, fundação, estádio, capacidade e cidade são puxados do cadastro do clube.
+                  Nome, escudo, fundação, estádio, capacidade e cidade são puxados do cadastro do clube. Patrocinador e
+                  material são sincronizados automaticamente com os contratos ativos.
                 </p>
               </div>
               <DialogFooter>
