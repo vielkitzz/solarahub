@@ -19,17 +19,9 @@ import {
   Image as ImageIcon,
   Undo,
   Redo,
-  Code,
   Trash2,
 } from "lucide-react";
 import { useState, useRef, useCallback } from "react";
-
-interface RichEditorProps {
-  content: string;
-  onChange: (html: string) => void;
-  editable?: boolean;
-  placeholder?: string;
-}
 
 // ── Resizable Image Node ──────────────────────────────────────────────────────
 
@@ -49,7 +41,7 @@ const ResizableImageComponent = ({ node, updateAttributes, deleteNode, selected 
 
       const onMove = (me: MouseEvent) => {
         const delta = direction === "right" ? me.clientX - startX.current : startX.current - me.clientX;
-        const newW = Math.max(80, Math.min(startW.current + delta, 900));
+        const newW = Math.max(80, Math.min(startW.current + delta, 800));
         updateAttributes({ width: newW });
       };
       const onUp = () => {
@@ -60,53 +52,36 @@ const ResizableImageComponent = ({ node, updateAttributes, deleteNode, selected 
       window.addEventListener("mousemove", onMove);
       window.addEventListener("mouseup", onUp);
     },
-    [updateAttributes],
+    [updateAttributes, width],
   );
 
   return (
-    <NodeViewWrapper
-      as="div" // Mudado para div para melhor controle de bloco
-      className="relative group my-4 select-none flex justify-center"
-      data-drag-handle
-    >
-      <div className="relative" style={{ width: width ? `${width}px` : "auto", maxWidth: "100%" }}>
+    <NodeViewWrapper as="div" className="flex justify-center my-6">
+      <div className="relative inline-block group" style={{ width: width ? `${width}px` : "auto", maxWidth: "100%" }}>
         <button
           onClick={deleteNode}
-          className="absolute -top-2 -right-2 z-20 h-6 w-6 rounded-full bg-destructive text-white items-center justify-center shadow-lg hidden group-hover:flex"
+          className="absolute -top-2 -right-2 z-30 h-6 w-6 rounded-full bg-red-600 text-white items-center justify-center shadow-md hidden group-hover:flex"
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <Trash2 className="h-3 w-3" />
         </button>
 
         <span
           onMouseDown={(e) => onMouseDown(e, "left")}
-          className={`absolute left-0 top-0 bottom-0 w-1.5 z-10 cursor-ew-resize bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity ${resizing ? "opacity-100" : ""}`}
+          className="absolute left-0 top-0 bottom-0 w-1.5 z-10 cursor-ew-resize bg-primary/30 opacity-0 group-hover:opacity-100"
         />
 
         <img
           ref={imgRef}
           src={src}
           alt={alt ?? ""}
-          className={`rounded-lg border w-full h-auto block ${selected ? "ring-2 ring-primary border-transparent" : "border-border"}`}
+          className={`rounded-lg border block w-full h-auto ${selected ? "ring-2 ring-primary" : "border-border"}`}
           draggable={false}
         />
 
         <span
           onMouseDown={(e) => onMouseDown(e, "right")}
-          className={`absolute right-0 top-0 bottom-0 w-1.5 z-10 cursor-ew-resize bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity ${resizing ? "opacity-100" : ""}`}
+          className="absolute right-0 top-0 bottom-0 w-1.5 z-10 cursor-ew-resize bg-primary/30 opacity-0 group-hover:opacity-100"
         />
-
-        {/* Presets simplificados para não vazar */}
-        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center gap-2 bg-background border rounded-md px-2 py-1 shadow-sm z-30">
-          {[200, 400, 600].map((w) => (
-            <button
-              key={w}
-              onClick={() => updateAttributes({ width: w })}
-              className="text-[10px] font-medium hover:text-primary"
-            >
-              {w === 200 ? "P" : w === 400 ? "M" : "G"}
-            </button>
-          ))}
-        </div>
       </div>
     </NodeViewWrapper>
   );
@@ -114,11 +89,11 @@ const ResizableImageComponent = ({ node, updateAttributes, deleteNode, selected 
 
 const ResizableImage = Node.create({
   name: "resizableImage",
-  group: "block", // Mudado para block para evitar problemas de linha
+  group: "block",
   draggable: true,
   atom: true,
   addAttributes() {
-    return { src: { default: null }, alt: { default: null }, width: { default: 400 } };
+    return { src: { default: null }, width: { default: 400 } };
   },
   parseHTML() {
     return [{ tag: "img[src]" }];
@@ -134,28 +109,16 @@ const ResizableImage = Node.create({
   },
 });
 
-// Estilos para forçar o scroll e conter elementos
-const tiptapStyles = `
-  [&_.tiptap]:outline-none
-  [&_.tiptap]:min-h-[200px]
-  [&_p]:mb-4
-  [&_img]:max-w-full
-  [&_img]:h-auto
-`;
+// ── Main Component ────────────────────────────────────────────────────────────
 
-export function RichEditor({
-  content,
-  onChange,
-  editable = true,
-  placeholder = "Conte a história...",
-}: RichEditorProps) {
+export function RichEditor({ content, onChange, editable = true, placeholder = "" }: any) {
   const [openImageUpload, setOpenImageUpload] = useState(false);
 
   const editor = useEditor({
     extensions: [
       StarterKit,
       Placeholder.configure({ placeholder }),
-      Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-primary underline" } }),
+      Link.configure({ openOnClick: false }),
       ResizableImage,
     ],
     content: content || "",
@@ -166,20 +129,18 @@ export function RichEditor({
   if (!editor) return null;
 
   if (!editable) {
-    return (
-      <div className={`overflow-hidden break-words ${tiptapStyles}`} dangerouslySetInnerHTML={{ __html: content }} />
-    );
+    return <div className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: content }} />;
   }
 
   return (
-    <div className="flex flex-col border rounded-lg bg-card max-h-[500px]">
-      {/* Toolbar fixa no topo */}
-      <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/20 shrink-0">
+    <div className="flex flex-col border rounded-md bg-card overflow-hidden h-[500px] max-h-[60vh]">
+      {/* TOOLBAR - Fica sempre no topo */}
+      <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30 shrink-0">
         <Button
           size="sm"
           variant="ghost"
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className={editor.isActive("bold") ? "bg-muted" : ""}
+          className={editor.isActive("bold") ? "bg-accent" : ""}
         >
           <Bold className="h-4 w-4" />
         </Button>
@@ -187,7 +148,7 @@ export function RichEditor({
           size="sm"
           variant="ghost"
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={editor.isActive("italic") ? "bg-muted" : ""}
+          className={editor.isActive("italic") ? "bg-accent" : ""}
         >
           <Italic className="h-4 w-4" />
         </Button>
@@ -210,13 +171,20 @@ export function RichEditor({
         </Button>
       </div>
 
-      {/* Área de edição com scroll forçado */}
-      <div className={`p-4 overflow-y-auto overflow-x-hidden ${tiptapStyles}`}>
-        <EditorContent editor={editor} />
+      {/* ÁREA DE TEXTO - Única parte que rola */}
+      <div className="flex-1 overflow-y-auto p-4 focus-within:outline-none">
+        <style>{`
+          .tiptap:focus { outline: none; }
+          .tiptap img { max-width: 100%; height: auto; }
+        `}</style>
+        <EditorContent editor={editor} className="tiptap-content" />
       </div>
 
       <Dialog open={openImageUpload} onOpenChange={setOpenImageUpload}>
         <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload de Imagem</DialogTitle>
+          </DialogHeader>
           <ImageUpload
             bucket="crests"
             folder="wiki"
