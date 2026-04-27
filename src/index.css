@@ -56,16 +56,10 @@
 @layer base {
   * {
     @apply border-border;
-    box-sizing: border-box;
   }
-
   html {
     color-scheme: dark;
-    max-width: 100%;
-    overflow-x: hidden;
-    position: relative;
   }
-
   body {
     @apply bg-background text-foreground font-body antialiased;
     font-feature-settings: "ss01", "cv11";
@@ -73,11 +67,8 @@
       radial-gradient(at 20% 0%, hsl(207 53% 20% / 0.5) 0px, transparent 50%),
       radial-gradient(at 80% 100%, hsl(44 100% 55% / 0.08) 0px, transparent 50%);
     background-attachment: fixed;
-    max-width: 100%;
     overflow-x: hidden;
-    position: relative;
   }
-
   /* Scrollbar thin para barras horizontais (tabs etc.) */
   .scrollbar-thin::-webkit-scrollbar {
     height: 4px;
@@ -90,7 +81,6 @@
   .scrollbar-thin {
     scrollbar-width: thin;
   }
-
   h1,
   h2,
   h3,
@@ -107,27 +97,22 @@
       var(--shadow-card),
       inset 0 1px 0 hsl(207 60% 50% / 0.15);
   }
-
   .gold-text {
     background: var(--gradient-gold);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
-
   .stat-grid {
     @apply grid gap-4 md:grid-cols-2 lg:grid-cols-4;
   }
-
   .tiptap-editor .ProseMirror {
     @apply min-h-[280px] outline-none prose prose-invert max-w-none;
   }
-
   .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
     content: attr(data-placeholder);
     @apply text-muted-foreground float-left h-0 pointer-events-none;
   }
-
   .prose-solara {
     @apply prose prose-invert max-w-none
       prose-headings:font-display prose-headings:text-foreground
@@ -140,19 +125,12 @@
   .wiki-prose {
     @apply text-foreground/90 leading-relaxed;
     font-size: 0.9375rem;
-    max-width: 100%;
-    overflow-x: hidden;
-    word-wrap: break-word;
-    word-break: break-word;
   }
-
   .wiki-prose p {
     margin-top: 0;
     margin-bottom: 0.875rem;
     line-height: 1.75;
-    max-width: 100%;
   }
-
   .wiki-prose p:last-child {
     margin-bottom: 0;
   }
@@ -164,20 +142,17 @@
     margin-top: 0.5rem;
     margin-bottom: 0.875rem;
   }
-
   .wiki-prose ol {
     list-style-type: decimal;
     padding-left: 1.5rem;
     margin-top: 0.5rem;
     margin-bottom: 0.875rem;
   }
-
   .wiki-prose li {
     margin-bottom: 0.3rem;
     line-height: 1.7;
     display: list-item;
   }
-
   .wiki-prose li::marker {
     color: hsl(var(--primary));
   }
@@ -191,18 +166,13 @@
     margin-top: 1.5rem;
     margin-bottom: 0.5rem;
     line-height: 1.3;
-    max-width: 100%;
-    overflow-x: hidden;
   }
-
   .wiki-prose h1 {
     font-size: 1.5rem;
   }
-
   .wiki-prose h2 {
     font-size: 1.25rem;
   }
-
   .wiki-prose h3 {
     font-size: 1.1rem;
   }
@@ -211,136 +181,49 @@
   .wiki-prose strong {
     @apply font-semibold text-foreground;
   }
-
   .wiki-prose em {
     @apply italic text-foreground/80;
   }
-
   .wiki-prose a {
     @apply text-primary underline underline-offset-2 hover:text-primary/80 transition-colors;
   }
-
   .wiki-prose blockquote {
     border-left: 3px solid hsl(var(--primary) / 0.6);
     padding-left: 1rem;
     margin: 1rem 0;
     @apply text-muted-foreground italic;
   }
-
   .wiki-prose hr {
     border: none;
     border-top: 1px solid hsl(var(--border));
     margin: 1.25rem 0;
   }
-}
-
-/* ============================================ */
-/* CORREÇÕES PARA O RICH EDITOR E IMAGENS      */
-/* ============================================ */
-
-@layer base {
-  /* Garantir que nenhum conteúdo ultrapasse os limites da tela */
-  html,
-  body {
+  /* JAULA DO EDITOR: Força o conteúdo a nunca vazar horizontalmente */
+  .tiptap-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
     max-width: 100%;
-    overflow-x: hidden;
-    position: relative;
+    overflow: hidden; /* Impede que o modal estique lateralmente */
   }
 
-  /* Corrigir problemas de overflow no editor */
-  .tiptap-editor,
-  .tiptap-editor .ProseMirror,
-  .rich-editor-container,
-  .rich-editor-content {
-    max-width: 100%;
-    overflow-x: hidden !important;
+  .tiptap-scroll-area {
+    overflow-y: auto;
+    overflow-x: hidden; /* Proíbe scroll horizontal */
+    width: 100%;
   }
 
-  /* Garantir que todas as imagens respeitem o container */
-  img,
-  .resizable-image-container,
-  [data-drag-handle] {
-    max-width: 100% !important;
-    height: auto !important;
-  }
-
-  /* Estilos específicos para o editor Tiptap */
-  .tiptap {
-    max-width: 100%;
-    overflow-x: hidden !important;
-    word-wrap: break-word;
-    word-break: break-word;
-  }
-
-  .tiptap > * {
-    max-width: 100%;
-    overflow-x: hidden;
-  }
-
-  /* Corrigir nodes personalizados que podem causar overflow */
-  .tiptap .inline-block[style*="width"] {
-    max-width: 100% !important;
-  }
-
-  /* Garantir que wrappers de imagens respeitem o limite */
-  .ProseMirror [data-drag-handle] {
-    display: inline-block;
-    max-width: 100% !important;
-  }
-
-  .ProseMirror [data-drag-handle] > div {
-    max-width: 100% !important;
-  }
-
-  /* Correção para o container do editor no RichEditor */
-  .rich-editor-scroll {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-  }
-
-  /* Forçar contenção de overflow em todos os níveis */
-  .rich-editor-container,
-  .rich-editor-container * {
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  .rich-editor-scroll {
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-  }
-
-  /* Corrigir wrappers do TipTap */
-  .ProseMirror {
-    overflow-x: hidden !important;
-    word-wrap: break-word;
-    word-break: break-word;
-  }
-
-  .ProseMirror .ProseMirror {
-    overflow-x: hidden !important;
-  }
-
-  /* Garantir que qualquer elemento inline-block com largura fixa respeite o container */
-  .ProseMirror [style*="width"] {
-    max-width: 100% !important;
-  }
-
-  /* Evitar scroll horizontal em qualquer container */
-  .overflow-x-hidden {
-    overflow-x: hidden !important;
-  }
-
-  /* Garantir que imagens dentro do ProseMirror não causem overflow */
+  /* FORÇA BRUTA NAS IMAGENS: Garante que 900px vire 100% se a tela for pequena */
   .ProseMirror img {
     max-width: 100% !important;
     height: auto !important;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
   }
 
-  /* Corrigir containers com overflow auto */
-  .overflow-auto,
-  .overflow-y-auto,
-  .overflow-x-auto {
-    max-width: 100%;
+  /* Corrige o problema do seletor de redimensionamento vazar */
+  .NodeViewWrapper {
+    max-width: 100% !important;
   }
 }
