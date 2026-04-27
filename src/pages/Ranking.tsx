@@ -44,11 +44,11 @@ const Ranking = () => {
     <div className="space-y-8 max-w-7xl mx-auto">
       <header className="space-y-3">
         <Badge variant="outline" className="border-primary/40 text-primary">{currentSeason || "Temporada Ativa"}</Badge>
-        <h1 className="text-4xl md:text-5xl font-bold">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">
           Ranking de <span className="gold-text">Clubes</span>
         </h1>
-        <p className="text-muted-foreground text-lg max-w-2xl">
-          Todos os clubes da liga ordenados por orçamento. Clique para ver elenco, finanças e wiki.
+        <p className="text-muted-foreground text-base sm:text-lg max-w-2xl">
+          Todos os clubes da liga ordenados por orçamento. Toque para ver elenco, finanças e wiki.
         </p>
       </header>
 
