@@ -37,18 +37,11 @@ const Row = ({ label, value, readOnly }: { label: string; value?: string | numbe
   if (value === null || value === undefined || value === "") return null;
   return (
     <tr className="border-b border-border/40 last:border-0">
-      <th className="text-left align-top py-1.5 pr-3 text-xs uppercase tracking-wider text-muted-foreground font-medium w-1/2">
-        <span className="flex items-center gap-1">
-          {label}
-          {readOnly && (
-            <span
-              title="Sincronizado automaticamente"
-              className="text-[9px] text-primary/60 font-normal normal-case tracking-normal"
-            >
-              auto
-            </span>
-          )}
-        </span>
+      <th
+        className="text-left align-top py-1.5 pr-3 text-xs uppercase tracking-wider text-muted-foreground font-medium w-1/2"
+        title={readOnly ? "Sincronizado automaticamente" : undefined}
+      >
+        {label}
       </th>
       <td className="py-1.5 text-sm font-serif text-foreground">{value}</td>
     </tr>
