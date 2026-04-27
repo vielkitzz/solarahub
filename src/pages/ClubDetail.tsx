@@ -40,6 +40,7 @@ import { ContractsManager } from "@/components/ContractsManager";
 import { StadiumManager } from "@/components/StadiumManager";
 import { AcademyManager } from "@/components/AcademyManager";
 import { ImageUpload } from "@/components/ImageUpload";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getFlagUrl } from "@/lib/countries";
@@ -100,6 +101,17 @@ const ClubDetail = () => {
   useEffect(() => {
     load();
   }, [id]);
+
+  // Carrega informação do dono (nome + avatar) quando o clube é carregado
+  useEffect(() => {
+    const loadOwner = async () => {
+      if (!club?.owner_id) { setOwnerInfo(null); return; }
+      const { data } = await supabase.rpc("get_owner_display_info", { _user_id: club.owner_id });
+      const row = Array.isArray(data) ? data[0] : data;
+      setOwnerInfo(row ? { display_name: row.display_name ?? null, avatar_url: row.avatar_url ?? null } : null);
+    };
+    loadOwner();
+  }, [club?.owner_id]);
 
   const saveWiki = async (next: WikiData) => {
     setWikiData(next);
