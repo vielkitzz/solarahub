@@ -58,6 +58,8 @@ const ClubDetail = () => {
   const [loading, setLoading] = useState(true);
   const [wikiData, setWikiData] = useState<WikiData>({});
   const [editingClub, setEditingClub] = useState<any>(null);
+  const [masterSponsor, setMasterSponsor] = useState<string | null>(null);
+  const [kitSupplier, setKitSupplier] = useState<string | null>(null);
 
   // Apenas o dono do clube pode editar pela página do clube. Admins editam pelo painel /admin.
   const canEdit = !!user && !!club && club.owner_id === user.id;
@@ -71,16 +73,41 @@ const ClubDetail = () => {
 
   const load = async () => {
     if (!id) return;
-    const [{ data: c }, { data: p }, { data: ct }, { data: settings }] = await Promise.all([
+    const [
+      { data: c },
+      { data: p },
+      { data: ct },
+      { data: settings },
+      { data: masterContract },
+      { data: kitContract },
+    ] = await Promise.all([
       supabase.from("clubs").select("*").eq("id", id).maybeSingle(),
       supabase.from("players").select("*").eq("club_id", id),
       supabase.from("contratos_clube").select("valor_anual").eq("club_id", id).eq("ativo", true),
+      supabase
+        .from("contratos_clube")
+        .select("nome, categoria")
+        .eq("club_id", id)
+        .eq("ativo", true)
+        .in("categoria", ["master", "patrocinador_master"])
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("contratos_clube")
+        .select("nome, categoria")
+        .eq("club_id", id)
+        .eq("ativo", true)
+        .eq("categoria", "fornecedora")
+        .limit(1)
+        .maybeSingle(),
       supabase
         .from("settings")
         .select("key, value")
         .in("key", ["temporada_atual", "direitos_tv_por_reputacao", "direitos_imagem"]),
     ]);
     setClub(c);
+    setMasterSponsor((masterContract as any)?.nome ?? null);
+    setKitSupplier((kitContract as any)?.nome ?? null);
     setPlayers(p || []);
     setContratosTotal((ct || []).reduce((s, r: any) => s + Number(r.valor_anual || 0), 0));
     (settings || []).forEach((s: any) => {
@@ -105,7 +132,10 @@ const ClubDetail = () => {
   // Carrega informação do dono (nome + avatar) quando o clube é carregado
   useEffect(() => {
     const loadOwner = async () => {
-      if (!club?.owner_id) { setOwnerInfo(null); return; }
+      if (!club?.owner_id) {
+        setOwnerInfo(null);
+        return;
+      }
       const { data } = await supabase.rpc("get_owner_display_info", { _user_id: club.owner_id });
       const row = Array.isArray(data) ? data[0] : data;
       setOwnerInfo(row ? { display_name: row.display_name ?? null, avatar_url: row.avatar_url ?? null } : null);
@@ -132,7 +162,13 @@ const ClubDetail = () => {
   };
 
   const saveInfobox = async (next: InfoboxData) => {
-    await saveWiki({ ...wikiData, infobox: next });
+    // Patrocinador e material são sempre derivados dos contratos ativos — nunca editáveis manualmente
+    const synced: InfoboxData = {
+      ...next,
+      patrocinador: masterSponsor ?? next.patrocinador,
+      material: kitSupplier ?? next.material,
+    };
+    await saveWiki({ ...wikiData, infobox: synced });
   };
 
   const saveClubInfo = async () => {
@@ -143,7 +179,6 @@ const ClubDetail = () => {
         crest_url: editingClub.crest_url,
         city: editingClub.city,
         stadium_name: editingClub.stadium_name,
-        stadium_capacity: parseInt(editingClub.stadium_capacity) || 0,
         primary_color: editingClub.primary_color,
         founded_year: parseInt(editingClub.founded_year) || null,
       })
@@ -236,9 +271,7 @@ const ClubDetail = () => {
             <div className="flex-1 min-w-0 md:hidden">
               <h1 className="text-xl sm:text-2xl font-bold leading-tight break-words">{club.name}</h1>
               <div className="text-[10px] uppercase text-muted-foreground tracking-wider mt-2">Caixa Atual</div>
-              <div className="text-xl font-display font-bold gold-text">
-                {formatCurrency(Number(club.budget))}
-              </div>
+              <div className="text-xl font-display font-bold gold-text">{formatCurrency(Number(club.budget))}</div>
             </div>
           </div>
           <div className="flex-1 min-w-0 space-y-2 w-full">
@@ -256,9 +289,15 @@ const ClubDetail = () => {
                   </span>
                 </div>
               ) : (
-                <Badge variant="outline" className="text-[10px] text-muted-foreground">Sem dono</Badge>
+                <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                  Sem dono
+                </Badge>
               )}
-              {club.founded_year && <Badge variant="outline" className="text-[10px]">Fundado em {club.founded_year}</Badge>}
+              {club.founded_year && (
+                <Badge variant="outline" className="text-[10px]">
+                  Fundado em {club.founded_year}
+                </Badge>
+              )}
               {club.reputacao && (
                 <Badge variant="outline" className="capitalize text-[10px]">
                   {club.reputacao}
@@ -466,14 +505,6 @@ const ClubDetail = () => {
                   <Input
                     value={editingClub?.stadium_name || ""}
                     onChange={(e) => setEditingClub({ ...editingClub, stadium_name: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label>Capacidade</Label>
-                  <Input
-                    type="number"
-                    value={editingClub?.stadium_capacity || 0}
-                    onChange={(e) => setEditingClub({ ...editingClub, stadium_capacity: e.target.value })}
                   />
                 </div>
                 <div>
