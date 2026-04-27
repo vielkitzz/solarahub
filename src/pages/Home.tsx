@@ -41,13 +41,13 @@ const Home = () => {
   return (
     <div className="space-y-10 max-w-7xl mx-auto">
       {/* HERO */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-card border border-border/50 p-8 md:p-12">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-card border border-border/50 p-6 sm:p-8 md:p-12">
         <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ background: "radial-gradient(circle at 80% 20%, hsl(var(--primary) / 0.4), transparent 50%)" }} />
         <div className="relative space-y-5 max-w-3xl">
           <Badge variant="outline" className="border-primary/40 text-primary">
             <Sparkles className="h-3 w-3 mr-1" /> {currentSeason || "Temporada Ativa"}
           </Badge>
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold leading-tight">
             Bem-vindo ao <span className="gold-text">Solara Hub</span>
           </h1>
           <p className="text-muted-foreground text-lg">
