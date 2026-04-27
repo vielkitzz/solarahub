@@ -60,54 +60,58 @@ const Market = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar jogador..." className="pl-10" />
         </div>
-        <Select value={pos} onValueChange={setPos}>
-          <SelectTrigger className="md:w-48"><SelectValue placeholder="Posição" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas posições</SelectItem>
-            {POSITIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Button
-          variant={onlyForSale ? "default" : "outline"}
-          onClick={() => setOnlyForSale((v) => !v)}
-          className={onlyForSale ? "bg-gradient-gold text-primary-foreground" : ""}
-        >
-          <Tag className="h-4 w-4" /> {onlyForSale ? "Mostrando à venda" : "Só à venda"}
-        </Button>
+        <div className="flex gap-3">
+          <Select value={pos} onValueChange={setPos}>
+            <SelectTrigger className="flex-1 md:w-48"><SelectValue placeholder="Posição" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas posições</SelectItem>
+              {POSITIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button
+            variant={onlyForSale ? "default" : "outline"}
+            onClick={() => setOnlyForSale((v) => !v)}
+            className={onlyForSale ? "bg-gradient-gold text-primary-foreground shrink-0" : "shrink-0"}
+          >
+            <Tag className="h-4 w-4" /> <span className="hidden sm:inline">{onlyForSale ? "Mostrando à venda" : "Só à venda"}</span>
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-2">
         {filtered.map((p) => {
           const club = p.club_id ? clubs[p.club_id] : null;
           return (
-            <Card key={p.id} className={`p-4 bg-gradient-card border-border/50 flex items-center gap-3 transition-all ${p.a_venda ? "border-primary/40 shadow-gold/20" : ""}`}>
-              <Badge variant="outline" className="font-bold w-14 justify-center border-primary/40 text-primary shrink-0">{p.position}</Badge>
-              <div className="flex-1 min-w-0">
-                <div className="font-bold truncate flex items-center gap-2">
-                  {p.name}
-                  {p.a_venda && <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0"><Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA</Badge>}
-                </div>
-                <div className="text-xs text-muted-foreground">{p.age ? `${p.age}a` : ""} {p.nationality && `· ${p.nationality}`}</div>
-              </div>
-              {club ? (
-                <Link to={`/clubes/${club.id}`} className="flex items-center gap-2 text-xs hover:text-primary transition-colors">
-                  <div className="h-8 w-8 flex items-center justify-center">
-                    {club.crest_url && <img src={club.crest_url} alt={club.name} className="w-full h-full object-contain" />}
+            <Card key={p.id} className={`p-3 sm:p-4 bg-gradient-card border-border/50 transition-all ${p.a_venda ? "border-primary/40 shadow-gold/20" : ""}`}>
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
+                <Badge variant="outline" className="font-bold w-12 sm:w-14 justify-center border-primary/40 text-primary shrink-0 text-xs">{p.position}</Badge>
+                <div className="flex-1 min-w-0 order-1 sm:order-none basis-full sm:basis-auto">
+                  <div className="font-bold truncate flex items-center gap-2">
+                    {p.name}
+                    {p.a_venda && <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0 shrink-0"><Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA</Badge>}
                   </div>
-                  <span className="hidden md:inline">{club.name}</span>
-                </Link>
-              ) : (
-                <Badge variant="secondary" className="text-xs">Sem clube</Badge>
-              )}
-              <div className="text-right shrink-0">
-                <div className="text-[10px] text-muted-foreground uppercase">Valor</div>
-                <div className="font-display font-bold text-primary">{formatCurrency(Number(p.market_value))}</div>
+                  <div className="text-xs text-muted-foreground truncate">{p.age ? `${p.age}a` : ""} {p.nationality && `· ${p.nationality}`}</div>
+                </div>
+                {club ? (
+                  <Link to={`/clubes/${club.id}`} className="flex items-center gap-2 text-xs hover:text-primary transition-colors shrink-0">
+                    <div className="h-7 w-7 sm:h-8 sm:w-8 flex items-center justify-center">
+                      {club.crest_url && <img src={club.crest_url} alt={club.name} className="w-full h-full object-contain" />}
+                    </div>
+                    <span className="hidden md:inline">{club.name}</span>
+                  </Link>
+                ) : (
+                  <Badge variant="secondary" className="text-xs">Sem clube</Badge>
+                )}
+                <div className="text-right shrink-0 ml-auto sm:ml-0">
+                  <div className="text-[10px] text-muted-foreground uppercase">Valor</div>
+                  <div className="font-display font-bold text-primary text-sm sm:text-base">{formatCurrency(Number(p.market_value))}</div>
+                </div>
+                {p.a_venda && (
+                  <Button asChild size="sm" className="bg-gradient-gold text-primary-foreground hover:opacity-90 shrink-0">
+                    <Link to="/transferencias"><ArrowRightLeft className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Negociar</span></Link>
+                  </Button>
+                )}
               </div>
-              {p.a_venda && (
-                <Button asChild size="sm" className="bg-gradient-gold text-primary-foreground hover:opacity-90 shrink-0">
-                  <Link to="/transferencias"><ArrowRightLeft className="h-3.5 w-3.5" /> Negociar</Link>
-                </Button>
-              )}
             </Card>
           );
         })}
