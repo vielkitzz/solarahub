@@ -552,9 +552,17 @@ const Admin = () => {
           </div>
         </TabsContent>
 
+        {/* ABA: ECONOMIA (PARÂMETROS) */}
+        <TabsContent value="economia" className="mt-6">
+          <div className="max-w-4xl mx-auto">
+            <EconomyParams />
+          </div>
+        </TabsContent>
+
         {/* ABA: TEMPORADA (PROCESSAMENTO) */}
         <TabsContent value="season" className="mt-6">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-5xl mx-auto space-y-6">
+            <SeasonPreview />
             <Card className="p-6 bg-gradient-card border-destructive/30 relative overflow-hidden">
               <div className="absolute inset-0 bg-destructive/5 pointer-events-none" />
               <div className="relative space-y-4">
