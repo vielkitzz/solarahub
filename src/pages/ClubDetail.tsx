@@ -362,7 +362,7 @@ const ClubDetail = () => {
             <TabsTrigger value="estadio">Estádio</TabsTrigger>
             <TabsTrigger value="base">Base</TabsTrigger>
             <TabsTrigger value="wiki">Wiki</TabsTrigger>
-            {canEdit && <TabsTrigger value="config">Config</TabsTrigger>}
+            {canEdit && <TabsTrigger value="config">Configurações</TabsTrigger>}
           </TabsList>
         </div>
 
