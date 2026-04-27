@@ -4,11 +4,8 @@ import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
 import { Image as TiptapImage } from "@tiptap/extension-image";
 import { Node, mergeAttributes } from "@tiptap/core";
-import TextStyle from "@tiptap/extension-text-style";
-import Color from "@tiptap/extension-color";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ImageUpload } from "@/components/ImageUpload";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -24,10 +21,7 @@ import {
   Undo,
   Redo,
   Code,
-  Palette,
   Trash2,
-  Maximize2,
-  Minimize2,
 } from "lucide-react";
 import { useState, useRef, useCallback } from "react";
 
@@ -77,7 +71,6 @@ const ResizableImageComponent = ({ node, updateAttributes, deleteNode, selected 
       style={{ width: width ? `${width}px` : "auto", maxWidth: "100%" }}
       data-drag-handle
     >
-      {/* Delete button */}
       <button
         onClick={deleteNode}
         className="absolute -top-2.5 -right-2.5 z-10 h-6 w-6 rounded-full bg-destructive text-destructive-foreground items-center justify-center shadow hidden group-hover:flex transition-opacity"
@@ -86,7 +79,6 @@ const ResizableImageComponent = ({ node, updateAttributes, deleteNode, selected 
         <Trash2 className="h-3 w-3" />
       </button>
 
-      {/* Resize handle — left */}
       <span
         onMouseDown={(e) => onMouseDown(e, "left")}
         className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 z-10 w-2 h-10 rounded cursor-ew-resize bg-primary/60 opacity-0 group-hover:opacity-100 transition-opacity ${resizing ? "opacity-100" : ""}`}
@@ -101,13 +93,11 @@ const ResizableImageComponent = ({ node, updateAttributes, deleteNode, selected 
         draggable={false}
       />
 
-      {/* Resize handle — right */}
       <span
         onMouseDown={(e) => onMouseDown(e, "right")}
         className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 z-10 w-2 h-10 rounded cursor-ew-resize bg-primary/60 opacity-0 group-hover:opacity-100 transition-opacity ${resizing ? "opacity-100" : ""}`}
       />
 
-      {/* Size presets */}
       <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center gap-1 bg-popover border border-border rounded-md px-2 py-1 shadow-md z-10">
         {[200, 400, 600, 900].map((w) => (
           <button
@@ -151,20 +141,6 @@ const ResizableImage = Node.create({
   },
 });
 
-// ── Color palette ─────────────────────────────────────────────────────────────
-
-const TEXT_COLORS = [
-  { label: "Padrão", value: "inherit" },
-  { label: "Dourado", value: "#c9a84c" },
-  { label: "Vermelho", value: "#ef4444" },
-  { label: "Verde", value: "#22c55e" },
-  { label: "Azul", value: "#3b82f6" },
-  { label: "Roxo", value: "#a855f7" },
-  { label: "Laranja", value: "#f97316" },
-  { label: "Cinza", value: "#6b7280" },
-  { label: "Branco", value: "#ffffff" },
-];
-
 // ── Tiptap prose styles ───────────────────────────────────────────────────────
 
 const tiptapStyles = `
@@ -180,8 +156,6 @@ const tiptapStyles = `
   [&_a]:text-primary [&_a]:underline
 `;
 
-// ── Main component ────────────────────────────────────────────────────────────
-
 export function RichEditor({
   content,
   onChange,
@@ -189,7 +163,6 @@ export function RichEditor({
   placeholder = "Conte a história do clube...",
 }: RichEditorProps) {
   const [openImageUpload, setOpenImageUpload] = useState(false);
-  const [colorOpen, setColorOpen] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -199,8 +172,6 @@ export function RichEditor({
         openOnClick: false,
         HTMLAttributes: { class: "text-primary underline cursor-pointer" },
       }),
-      TextStyle,
-      Color,
       ResizableImage,
     ],
     content: content || "",
@@ -210,7 +181,6 @@ export function RichEditor({
 
   if (!editor) return null;
 
-  // ── Read-only view ──
   if (!editable) {
     return (
       <div
@@ -245,11 +215,8 @@ export function RichEditor({
     </Button>
   );
 
-  const currentColor = editor.getAttributes("textStyle").color ?? "inherit";
-
   return (
     <div className="group border border-border rounded-xl bg-card overflow-hidden focus-within:ring-1 focus-within:ring-ring transition-all">
-      {/* TOOLBAR */}
       <div className="flex flex-wrap items-center gap-1 p-1.5 border-b border-border bg-muted/30">
         <div className="flex items-center gap-0.5">
           <ToolBtn
@@ -322,49 +289,6 @@ export function RichEditor({
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 
-        {/* Color picker */}
-        <Popover open={colorOpen} onOpenChange={setColorOpen}>
-          <PopoverTrigger asChild>
-            <Button type="button" variant="ghost" size="sm" title="Cor do texto" className="h-8 w-8 p-0 relative">
-              <Palette className="h-4 w-4" />
-              <span
-                className="absolute bottom-1 left-1/2 -translate-x-1/2 h-[3px] w-4 rounded-full"
-                style={{
-                  backgroundColor: currentColor === "inherit" ? "transparent" : currentColor,
-                  border: currentColor === "inherit" ? "1px solid currentColor" : "none",
-                }}
-              />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-48 p-2" align="start">
-            <div className="grid grid-cols-3 gap-1.5">
-              {TEXT_COLORS.map((c) => (
-                <button
-                  key={c.value}
-                  title={c.label}
-                  onClick={() => {
-                    if (c.value === "inherit") {
-                      editor.chain().focus().unsetColor().run();
-                    } else {
-                      editor.chain().focus().setColor(c.value).run();
-                    }
-                    setColorOpen(false);
-                  }}
-                  className="flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-muted text-xs transition-colors"
-                >
-                  <span
-                    className="h-3.5 w-3.5 rounded-full border border-border shrink-0"
-                    style={{ backgroundColor: c.value === "inherit" ? "transparent" : c.value }}
-                  />
-                  {c.label}
-                </button>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
         <div className="flex items-center gap-0.5">
           <ToolBtn
             onClick={() => {
@@ -393,7 +317,6 @@ export function RichEditor({
         </div>
       </div>
 
-      {/* EDITOR AREA — scrollable, never overflows */}
       <div className={`p-4 min-h-[250px] max-h-[70vh] overflow-y-auto overflow-x-hidden cursor-text ${tiptapStyles}`}>
         <EditorContent editor={editor} />
       </div>
