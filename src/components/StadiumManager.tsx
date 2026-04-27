@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge"; // <-- Adicione essa linha!
 import { Building2, Star, ArrowUpCircle, Check, X, Trophy } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
@@ -26,194 +26,242 @@ const TABELA_CUSTOS_NIVEL: Record<number, number> = {
 };
 
 export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
-  const [novoNivel, setNovoNivel] = useState<number>(club.nivel_estadio || 1);
-  const [novosAssentosStr, setNovosAssentosStr] = useState<string>("");
-  const [loading, setLoading] = useState(false);
-
   const capMax = 85000;
-  const capacidadeAtual = club.stadium_capacity || 0;
-  const novosAssentos = parseInt(novosAssentosStr) || 0;
-  const novaCapacidadeFinal = capacidadeAtual + novosAssentos;
+  const [novoNivel, setNovoNivel] = useState<number>(club.nivel_estadio || 1);
+
+  // States para os inputs (usando string para permitir apagar tudo ao digitar)
+  const [novaCapStr, setNovaCapStr] = useState<string>(String(club.stadium_capacity || 0));
+  const [precoNacStr, setPrecoNacStr] = useState<string>(String(club.preco_ingresso_nacional || 15));
+  const [precoIntStr, setPrecoIntStr] = useState<string>(String(club.preco_ingresso_internacional || 25));
+
+  const [saving, setSaving] = useState(false);
+  const jogos = Number(club.jogos_por_temporada || 38);
+
+  const novaCap = parseInt(novaCapStr) || 0;
+  const precoNac = parseFloat(precoNacStr) || 0;
+  const precoInt = parseFloat(precoIntStr) || 0;
 
   const custoUpgrade = useMemo(() => {
     let total = 0;
-
-    // 1. Custo da subida de nível
+    // Soma custos de níveis
     if (novoNivel > club.nivel_estadio) {
       for (let i = (club.nivel_estadio || 1) + 1; i <= novoNivel; i++) {
         total += TABELA_CUSTOS_NIVEL[i] || 0;
       }
     }
-
-    // 2. Custo dos novos assentos adicionados
-    total += novosAssentos * CUSTO_POR_LUGAR;
-
+    // Soma custo de novos lugares
+    const lugaresExtras = Math.max(0, novaCap - (club.stadium_capacity || 0));
+    total += lugaresExtras * CUSTO_POR_LUGAR;
     return total;
-  }, [novoNivel, novosAssentos, club.nivel_estadio]);
+  }, [novoNivel, novaCap, club.nivel_estadio, club.stadium_capacity]);
+
+  const ocupacaoNac = Math.max(0.3, Math.min(1, 1 - ((precoNac - 5) / 25) * 0.5));
+  const ocupacaoInt = Math.max(0.3, Math.min(1, 1 - ((precoInt - 10) / 40) * 0.5));
+  const receitaPorJogoNac = novaCap * ocupacaoNac * precoNac;
+  const receitaPorJogoInt = novaCap * ocupacaoInt * precoInt;
+  const receitaAnual = ((receitaPorJogoNac + receitaPorJogoInt) / 2) * jogos;
+
+  const salvarPrecos = async () => {
+    setSaving(true);
+    const pNac = Math.max(5, Math.min(30, precoNac));
+    const pInt = Math.max(10, Math.min(50, precoInt));
+
+    const { error } = await supabase
+      .from("clubs")
+      .update({
+        preco_ingresso_nacional: pNac,
+        preco_ingresso_internacional: pInt,
+      })
+      .eq("id", club.id);
+
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    setPrecoNacStr(String(pNac));
+    setPrecoIntStr(String(pInt));
+    toast.success("Preços de ingressos atualizados!");
+    onChange();
+  };
 
   const aplicarUpgrade = async () => {
-    if (custoUpgrade > (club.balance || 0)) {
-      return toast.error("Saldo insuficiente para realizar estas obras.");
-    }
+    if (custoUpgrade <= 0) return toast.info("Nenhuma alteração selecionada.");
+    if (Number(club.budget) < custoUpgrade)
+      return toast.error(`Caixa insuficiente. Necessário ${formatCurrency(custoUpgrade)}`);
+    if (novaCap > capMax) return toast.error(`A capacidade máxima permitida é de ${capMax.toLocaleString()} lugares.`);
 
-    setLoading(true);
-    try {
-      const { error } = await supabase
-        .from("clubs")
-        .update({
-          nivel_estadio: novoNivel,
-          stadium_capacity: novaCapacidadeFinal,
-          balance: (club.balance || 0) - custoUpgrade,
-        } as any) // Adicionado 'as any' para ignorar a validação estrita do esquema
-        .eq("id", club.id);
+    if (!confirm(`Confirmar investimento de ${formatCurrency(custoUpgrade)} nas obras do estádio?`)) return;
 
-      if (error) throw error;
+    setSaving(true);
+    const { error } = await supabase
+      .from("clubs")
+      .update({
+        budget: Number(club.budget) - custoUpgrade,
+        nivel_estadio: novoNivel,
+        stadium_capacity: novaCap,
+      })
+      .eq("id", club.id);
 
-      toast.success("Obras concluídas com sucesso!");
-      setNovosAssentosStr(""); // Limpa o input após o sucesso
-      onChange();
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-    }
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Obras concluídas com sucesso!");
+    onChange();
   };
 
   const requisitos = [
-    { nome: "Série D", capMin: 5000, nivelMin: 1 },
-    { nome: "Série C", capMin: 10000, nivelMin: 2 },
-    { nome: "Série B", capMin: 15000, nivelMin: 3 },
-    { nome: "Série A", capMin: 20000, nivelMin: 4 },
-    { nome: "Libertadores", capMin: 30000, nivelMin: 5 },
+    { nome: "Libertadores", capMin: 20000, nivelMin: 2 },
+    { nome: "Sudamericana", capMin: 10000, nivelMin: 2 },
+    { nome: "Padrão FIFA", capMin: 40000, nivelMin: 4 },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="p-4 bg-secondary/10 border-border/50">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-              <Building2 className="h-6 w-6" />
-            </div>
+    <div className="space-y-4">
+      {/* Status Atual */}
+      <Card className="p-5 bg-gradient-card border-border/50">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Building2 className="h-6 w-6 text-primary" />
             <div>
-              <p className="text-xs text-muted-foreground uppercase">Capacidade Atual</p>
-              <h3 className="text-xl font-bold font-display">
-                {capacidadeAtual.toLocaleString()}{" "}
-                <span className="text-sm font-normal text-muted-foreground">lugares</span>
-              </h3>
+              <h2 className="font-display font-bold text-xl">{club.stadium_name || "Estádio"}</h2>
+              <p className="text-sm text-muted-foreground">
+                Nível {club.nivel_estadio || 1} ({NIVEL_LABELS[club.nivel_estadio || 1]}) ·{" "}
+                {club.stadium_capacity?.toLocaleString()} lugares
+              </p>
             </div>
           </div>
-        </Card>
-
-        <Card className="p-4 bg-secondary/10 border-border/50">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500">
-              <Star className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground uppercase">Nível da Infraestrutura</p>
-              <h3 className="text-xl font-bold font-display">
-                {club.nivel_estadio}★{" "}
-                <span className="text-sm font-normal text-muted-foreground">
-                  ({NIVEL_LABELS[club.nivel_estadio || 1]})
-                </span>
-              </h3>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {canEdit && (
-        <Card className="p-6 border-primary/20 bg-gradient-to-b from-primary/5 to-transparent">
-          <div className="flex items-center gap-2 mb-6">
-            <ArrowUpCircle className="h-5 w-5 text-primary" />
-            <h3 className="font-display font-bold">Departamento de Obras</h3>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold">
-                  Construir Novos Assentos (Máx: {capMax.toLocaleString()})
-                </Label>
-                <Input
-                  type="number"
-                  placeholder="Ex: 5000"
-                  value={novosAssentosStr}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val === "") {
-                      setNovosAssentosStr("");
-                      return;
-                    }
-                    const num = parseInt(val, 10);
-                    // Validação: não negativo e não ultrapassa capMax
-                    if (num >= 0 && capacidadeAtual + num <= capMax) {
-                      setNovosAssentosStr(val);
-                    }
-                  }}
-                  className="bg-secondary/20"
-                />
-                {novosAssentos > 0 && (
-                  <p className="text-[11px] text-success font-medium">
-                    Nova capacidade total: {novaCapacidadeFinal.toLocaleString()} lugares.
-                  </p>
+          <div className="flex gap-1">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Star
+                key={i}
+                className={cn(
+                  "h-5 w-5",
+                  i < (club.nivel_estadio || 1) ? "text-primary fill-primary" : "text-muted-foreground/20",
                 )}
-              </div>
+              />
+            ))}
+          </div>
+        </div>
+      </Card>
 
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold">Melhorar Categoria (Nível)</Label>
-                <div className="flex items-center gap-2">
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <Button
-                      key={n}
-                      variant={novoNivel === n ? "default" : "outline"}
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => setNovoNivel(n)}
-                      disabled={n < (club.nivel_estadio || 1)}
-                    >
-                      {n}★
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
+      {/* Seção de Upgrade */}
+      {canEdit && (
+        <Card className="p-5 bg-gradient-card border-border/50 space-y-6">
+          <div className="flex items-center gap-2 border-b border-border/50 pb-3">
+            <ArrowUpCircle className="h-5 w-5 text-primary" />
+            <h3 className="font-display font-bold">Gerenciar Obras e Melhorias</h3>
+          </div>
 
-            <div className="bg-secondary/30 rounded-xl p-4 flex flex-col justify-between border border-border/50">
-              <div>
-                <p className="text-xs text-muted-foreground uppercase mb-1">Custo Total do Projeto</p>
-                <h2
+          <div className="space-y-4">
+            <Label className="text-sm font-semibold">Nível de Infraestrutura</Label>
+            <div className="grid grid-cols-5 gap-2">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  disabled={n < (club.nivel_estadio || 1)}
+                  onClick={() => setNovoNivel(n)}
                   className={cn(
-                    "text-2xl font-bold font-display",
-                    custoUpgrade > (club.balance || 0) ? "text-destructive" : "text-primary",
+                    "flex flex-col items-center justify-center p-3 rounded-lg border transition-all",
+                    novoNivel === n ? "border-primary bg-primary/10" : "border-border/50 bg-secondary/20",
+                    n < (club.nivel_estadio || 1) && "opacity-40 cursor-not-allowed grayscale",
                   )}
                 >
-                  {formatCurrency(custoUpgrade)}
-                </h2>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  Saldo disponível: {formatCurrency(club.balance || 0)}
-                </p>
-              </div>
-
-              <Button
-                className="w-full mt-4"
-                disabled={
-                  loading ||
-                  (novoNivel === club.nivel_estadio && novosAssentos === 0) ||
-                  custoUpgrade > (club.balance || 0)
-                }
-                onClick={aplicarUpgrade}
-              >
-                {loading ? "Processando Obras..." : "Confirmar Investimento"}
-              </Button>
+                  <span className="text-xs font-bold">Nível {n}</span>
+                  <Star
+                    className={cn(
+                      "h-4 w-4 mt-1",
+                      novoNivel >= n ? "fill-primary text-primary" : "text-muted-foreground",
+                    )}
+                  />
+                  {n > (club.nivel_estadio || 1) && (
+                    <span className="text-[9px] mt-1 text-success">+{formatCurrency(TABELA_CUSTOS_NIVEL[n])}</span>
+                  )}
+                </button>
+              ))}
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold">Nova Capacidade (Máx: {capMax.toLocaleString()})</Label>
+            <Input
+              type="number"
+              value={novaCapStr}
+              onChange={(e) => setNovaCapStr(e.target.value)}
+              placeholder="Ex: 50000"
+              className="bg-secondary/20"
+            />
+            {novaCap > (club.stadium_capacity || 0) && (
+              <p className="text-[11px] text-success font-medium">
+                Ampliação: +{(novaCap - club.stadium_capacity).toLocaleString()} lugares (
+                {formatCurrency((novaCap - club.stadium_capacity) * CUSTO_POR_LUGAR)})
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between p-4 bg-primary/5 rounded-xl border border-primary/20">
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Investimento Total</p>
+              <p className="text-2xl font-display font-bold gold-text">{formatCurrency(custoUpgrade)}</p>
+            </div>
+            <Button
+              onClick={aplicarUpgrade}
+              disabled={saving || custoUpgrade <= 0}
+              className="bg-gradient-gold text-primary-foreground font-bold px-8"
+            >
+              Iniciar Obras
+            </Button>
           </div>
         </Card>
       )}
 
-      <div className="space-y-3">
-        <h3 className="text-sm font-bold flex items-center gap-2">
+      {/* Bilheteria */}
+      <Card className="p-5 bg-gradient-card border-border/50 space-y-4">
+        <h3 className="font-display font-bold">Gestão de Ingressos</h3>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label className="text-xs">Preço Nacional (€5 - €30)</Label>
+            <Input
+              type="number"
+              value={precoNacStr}
+              onChange={(e) => setPrecoNacStr(e.target.value)}
+              disabled={!canEdit}
+            />
+            <p className="text-[10px] text-muted-foreground">
+              Ocupação: {(ocupacaoNac * 100).toFixed(0)}% · Receita/jogo: {formatCurrency(receitaPorJogoNac)}
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">Preço Internacional (€10 - €50)</Label>
+            <Input
+              type="number"
+              value={precoIntStr}
+              onChange={(e) => setPrecoIntStr(e.target.value)}
+              disabled={!canEdit}
+            />
+            <p className="text-[10px] text-muted-foreground">
+              Ocupação: {(ocupacaoInt * 100).toFixed(0)}% · Receita/jogo: {formatCurrency(receitaPorJogoInt)}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between p-4 bg-secondary/20 rounded-xl">
+          <div>
+            <p className="text-[10px] uppercase text-muted-foreground">Projeção Anual ({jogos} jogos)</p>
+            <p className="text-xl font-display font-bold text-success">{formatCurrency(receitaAnual)}</p>
+          </div>
+          {canEdit && (
+            <Button
+              variant="outline"
+              onClick={salvarPrecos}
+              disabled={saving}
+              className="border-primary/50 text-primary"
+            >
+              Salvar Preços
+            </Button>
+          )}
+        </div>
+      </Card>
+
+      {/* Requisitos */}
+      <Card className="p-5 bg-gradient-card border-border/50 space-y-4">
+        <h3 className="font-display font-bold flex items-center gap-2">
           <Trophy className="h-4 w-4 text-primary" /> Requisitos de Competição
         </h3>
         <div className="grid gap-2">
@@ -242,7 +290,7 @@ export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
             );
           })}
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

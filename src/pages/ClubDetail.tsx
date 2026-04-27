@@ -520,22 +520,7 @@ const ClubDetail = () => {
                   <Input
                     type="number"
                     value={editingClub?.founded_year || ""}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      // Permite apagar o campo
-                      if (val === "") {
-                        setEditingClub({ ...editingClub, founded_year: "" });
-                        return;
-                      }
-
-                      const num = parseInt(val, 10);
-                      const anoAtual = new Date().getFullYear();
-
-                      // Impede que digitem um ano maior que o atual ou valores negativos
-                      if (num >= 0 && num <= anoAtual) {
-                        setEditingClub({ ...editingClub, founded_year: num.toString() });
-                      }
-                    }}
+                    onChange={(e) => setEditingClub({ ...editingClub, founded_year: e.target.value })}
                   />
                 </div>
               </div>
