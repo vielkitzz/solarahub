@@ -68,7 +68,7 @@ const ResizableImageComponent = ({ node, updateAttributes, deleteNode, selected 
     <NodeViewWrapper
       as="span"
       className="inline-block relative group my-4 select-none"
-      style={{ width: width ? `${width}px` : "auto", maxWidth: "100%" }}
+      style={{ width: width ? `min(${width}px, 100%)` : "auto", maxWidth: "100%" }}
       data-drag-handle
     >
       <button
@@ -88,7 +88,7 @@ const ResizableImageComponent = ({ node, updateAttributes, deleteNode, selected 
         ref={imgRef}
         src={src}
         alt={alt ?? ""}
-        style={{ width: width ? `${width}px` : "auto", maxWidth: "100%", display: "block" }}
+        style={{ width: "100%", maxWidth: width ? `${width}px` : "100%", display: "block" }}
         className={`rounded-lg border ${selected ? "ring-2 ring-primary" : "border-border"}`}
         draggable={false}
       />
