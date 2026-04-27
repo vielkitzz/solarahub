@@ -8,7 +8,6 @@ import {
   Settings,
   LogOut,
   LogIn,
-  ArrowRightLeft,
   MapPin,
 } from "lucide-react";
 import {
