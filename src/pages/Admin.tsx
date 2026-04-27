@@ -264,61 +264,107 @@ const Admin = () => {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-10">
-      <header className="flex items-center gap-3 bg-gradient-card border border-border/50 p-6 rounded-xl">
-        <div className="h-12 w-12 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
-          <Settings className="h-6 w-6 text-primary" />
+      <header className="relative flex items-center gap-4 bg-gradient-card border border-border/50 p-6 rounded-xl overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-gold opacity-60" />
+        <div className="h-14 w-14 rounded-xl bg-primary/15 border border-primary/20 flex items-center justify-center shrink-0">
+          <Shield className="h-7 w-7 text-primary" />
         </div>
-        <div>
-          <h1 className="text-3xl font-bold font-display text-foreground">Painel Administrador</h1>
-          <p className="text-sm text-muted-foreground">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-3xl font-bold font-display gold-text">Painel Administrador</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
             Controle total sobre clubes, elencos, finanças e temporadas do Solara Hub.
           </p>
+        </div>
+        <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground bg-secondary/50 border border-border/40 rounded-lg px-3 py-1.5 shrink-0">
+          <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+          Acesso Restrito
         </div>
       </header>
 
       <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="bg-secondary/50 w-full flex overflow-x-auto justify-start border-b border-sidebar-border rounded-none h-12">
-          <TabsTrigger value="dashboard" className="gap-2">
+        <TabsList className="bg-transparent w-full flex overflow-x-auto justify-start border-b border-border/50 rounded-none h-11 p-0 gap-1">
+          <TabsTrigger
+            value="dashboard"
+            className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
+          >
             <LayoutDashboard className="h-4 w-4" /> Visão Geral
           </TabsTrigger>
-          <TabsTrigger value="clubs" className="gap-2">
+          <TabsTrigger
+            value="clubs"
+            className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
+          >
             <Shield className="h-4 w-4" /> Clubes
           </TabsTrigger>
-          <TabsTrigger value="players" className="gap-2">
+          <TabsTrigger
+            value="players"
+            className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
+          >
             <UsersRound className="h-4 w-4" /> Jogadores
           </TabsTrigger>
-          <TabsTrigger value="empresas" className="gap-2">
+          <TabsTrigger
+            value="empresas"
+            className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
+          >
             <ArrowRightLeft className="h-4 w-4" /> Empresas
           </TabsTrigger>
-          <TabsTrigger value="economia" className="gap-2">
+          <TabsTrigger
+            value="economia"
+            className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
+          >
             <Coins className="h-4 w-4" /> Economia
           </TabsTrigger>
-          <TabsTrigger value="season" className="gap-2">
+          <TabsTrigger
+            value="season"
+            className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
+          >
             <CalendarClock className="h-4 w-4" /> Temporada
           </TabsTrigger>
-          <TabsTrigger value="config" className="gap-2">
+          <TabsTrigger
+            value="config"
+            className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
+          >
             <Settings className="h-4 w-4" /> Configurações
           </TabsTrigger>
         </TabsList>
 
-        {/* DASHBOARD */}
         <TabsContent value="dashboard" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="p-5 border-border/50 bg-gradient-card">
-              <div className="text-sm uppercase tracking-wider text-muted-foreground mb-1">Clubes Ativos</div>
-              <div className="text-4xl font-display font-bold text-primary">
-                {activeClubs} <span className="text-lg text-muted-foreground font-normal">/ {clubs.length} totais</span>
+            <Card className="p-5 border-border/50 bg-gradient-card relative overflow-hidden group hover:border-primary/30 transition-colors">
+              <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-gold opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Clubes Ativos</div>
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Shield className="h-4 w-4 text-primary" />
+                </div>
               </div>
+              <div className="text-4xl font-display font-bold gold-text">{activeClubs}</div>
+              <div className="text-sm text-muted-foreground mt-1">de {clubs.length} cadastrados</div>
             </Card>
-            <Card className="p-5 border-border/50 bg-gradient-card">
-              <div className="text-sm uppercase tracking-wider text-muted-foreground mb-1">Jogadores Registrados</div>
+            <Card className="p-5 border-border/50 bg-gradient-card relative overflow-hidden group hover:border-primary/30 transition-colors">
+              <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-gold opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                  Jogadores Registrados
+                </div>
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <UsersRound className="h-4 w-4 text-primary" />
+                </div>
+              </div>
               <div className="text-4xl font-display font-bold text-foreground">{players.length}</div>
+              <div className="text-sm text-muted-foreground mt-1">no banco de dados</div>
             </Card>
-            <Card className="p-5 border-border/50 bg-gradient-card">
-              <div className="text-sm uppercase tracking-wider text-muted-foreground mb-1">
-                Volume Financeiro Global
+            <Card className="p-5 border-border/50 bg-gradient-card relative overflow-hidden group hover:border-primary/30 transition-colors">
+              <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-gold opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                  Volume Financeiro Global
+                </div>
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Coins className="h-4 w-4 text-primary" />
+                </div>
               </div>
               <div className="text-3xl font-display font-bold gold-text truncate">{formatCurrency(totalBudget)}</div>
+              <div className="text-sm text-muted-foreground mt-1">em caixa total</div>
             </Card>
           </div>
         </TabsContent>
@@ -328,13 +374,15 @@ const Admin = () => {
           <BulkBudgetAdjuster clubs={clubs} onDone={load} />
 
           <div className="flex justify-between items-center pt-2">
-            <h3 className="font-display font-bold text-xl">Gestão de Clubes</h3>
+            <h3 className="font-display font-bold text-xl flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" /> Gestão de Clubes
+            </h3>
             <Button
               onClick={() => {
                 setEditClub({});
                 setIsCreatingClub(true);
               }}
-              className="bg-primary text-primary-foreground"
+              className="bg-gradient-gold text-primary-foreground"
             >
               <Plus className="h-4 w-4 mr-2" /> Novo Clube
             </Button>
@@ -344,8 +392,9 @@ const Admin = () => {
             {clubs.map((c) => (
               <Card
                 key={c.id}
-                className="p-4 bg-gradient-card border-border/50 flex flex-col gap-3 group relative overflow-hidden"
+                className="p-4 bg-gradient-card border-border/50 flex flex-col gap-3 group relative overflow-hidden hover:border-primary/30 transition-colors"
               >
+                <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-gold opacity-0 group-hover:opacity-80 transition-opacity" />
                 <div className="flex items-center gap-3">
                   <div className="h-12 w-12 flex items-center justify-center shrink-0 rounded-md bg-secondary/50 p-1">
                     {c.crest_url ? (
@@ -396,7 +445,7 @@ const Admin = () => {
             {/* Bloco 1: Lista e Edição Rápida */}
             <Card className="p-5 border-border/50 bg-gradient-card flex flex-col h-[500px]">
               <h3 className="font-display font-bold mb-4 flex items-center gap-2">
-                <UsersRound className="h-4 w-4" /> Banco de Jogadores
+                <UsersRound className="h-4 w-4 text-primary" /> Banco de Jogadores
               </h3>
               <div className="relative mb-3 shrink-0">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -510,10 +559,12 @@ const Admin = () => {
                   {!importPreview ? (
                     <div
                       onClick={() => fileRef.current?.click()}
-                      className="rounded-lg border-2 border-dashed border-border/50 hover:border-primary/50 bg-secondary/20 p-4 text-center cursor-pointer"
+                      className="rounded-lg border-2 border-dashed border-border/50 hover:border-primary/60 hover:bg-primary/5 bg-secondary/20 p-6 text-center cursor-pointer transition-colors group"
                     >
-                      <Upload className="h-5 w-5 text-muted-foreground mx-auto mb-1" />
-                      <p className="text-xs text-muted-foreground">Arraste ou clique para enviar JSON</p>
+                      <Upload className="h-6 w-6 text-muted-foreground group-hover:text-primary mx-auto mb-2 transition-colors" />
+                      <p className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+                        Arraste ou clique para enviar JSON
+                      </p>
                       <input
                         ref={fileRef}
                         type="file"
@@ -634,9 +685,10 @@ const Admin = () => {
 
         {/* CONFIGURAÇÕES GLOBAIS */}
         <TabsContent value="config" className="mt-6">
-          <Card className="p-5 bg-gradient-card border-border/50 max-w-lg">
+          <Card className="p-5 bg-gradient-card border-border/50 max-w-lg relative overflow-hidden">
+            <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-gold opacity-40" />
             <h3 className="font-display font-bold mb-4 flex items-center gap-2">
-              <Settings className="h-4 w-4" /> Variáveis do Sistema
+              <Settings className="h-4 w-4 text-primary" /> Variáveis do Sistema
             </h3>
             <div className="space-y-4">
               <div>
@@ -910,7 +962,7 @@ const Admin = () => {
             <Button variant="outline" onClick={() => setEditPlayer(null)}>
               Cancelar
             </Button>
-            <Button onClick={savePlayer} className="bg-primary text-primary-foreground">
+            <Button onClick={savePlayer} className="bg-gradient-gold text-primary-foreground">
               Salvar Alterações
             </Button>
           </DialogFooter>
