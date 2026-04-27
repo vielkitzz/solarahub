@@ -23,11 +23,15 @@ import {
   UsersRound,
   LayoutDashboard,
   Search,
+  Coins,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ImageUpload";
 import { EmpresasManager } from "@/components/EmpresasManager";
+import { SeasonPreview } from "@/components/admin/SeasonPreview";
+import { EconomyParams } from "@/components/admin/EconomyParams";
+import { BulkBudgetAdjuster } from "@/components/admin/BulkBudgetAdjuster";
 import { parseSquadJson, ImportedPlayer } from "@/lib/squad-import";
 import { useSeason } from "@/contexts/SeasonContext";
 
