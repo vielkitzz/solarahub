@@ -214,33 +214,37 @@ const Transferencias = () => {
       </header>
 
       <Tabs defaultValue="market">
-        <TabsList className="bg-secondary/50">
-          <TabsTrigger value="market"><Search className="h-3.5 w-3.5 mr-1" /> Mercado</TabsTrigger>
-          <TabsTrigger value="inbox"><Inbox className="h-3.5 w-3.5 mr-1" /> Caixa de Entrada {inbox.filter(p => p.status === 'pendente').length > 0 && <Badge className="ml-2 bg-primary text-primary-foreground">{inbox.filter(p => p.status === 'pendente').length}</Badge>}</TabsTrigger>
-          <TabsTrigger value="sent"><Send className="h-3.5 w-3.5 mr-1" /> Enviadas</TabsTrigger>
-        </TabsList>
+        <div className="-mx-3 sm:-mx-4 md:mx-0 overflow-x-auto scrollbar-thin">
+          <TabsList className="bg-secondary/50 mx-3 sm:mx-4 md:mx-0 w-max">
+            <TabsTrigger value="market"><Search className="h-3.5 w-3.5 mr-1" /> Mercado</TabsTrigger>
+            <TabsTrigger value="inbox"><Inbox className="h-3.5 w-3.5 mr-1" /> <span className="hidden sm:inline">Caixa de Entrada</span><span className="sm:hidden">Inbox</span> {inbox.filter(p => p.status === 'pendente').length > 0 && <Badge className="ml-2 bg-primary text-primary-foreground">{inbox.filter(p => p.status === 'pendente').length}</Badge>}</TabsTrigger>
+            <TabsTrigger value="sent"><Send className="h-3.5 w-3.5 mr-1" /> Enviadas</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* MERCADO */}
         <TabsContent value="market" className="space-y-3 mt-4">
-          <div className="flex flex-col md:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar jogador..." className="pl-10" />
             </div>
-            <Select value={pos} onValueChange={setPos}>
-              <SelectTrigger className="md:w-48"><SelectValue placeholder="Posição" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas posições</SelectItem>
-                {POSITIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Button
-              variant={onlyForSale ? "default" : "outline"}
-              onClick={() => setOnlyForSale((v) => !v)}
-              className={onlyForSale ? "bg-gradient-gold text-primary-foreground" : ""}
-            >
-              <Tag className="h-4 w-4" /> {onlyForSale ? "Mostrando à venda" : "Só à venda"}
-            </Button>
+            <div className="flex gap-3">
+              <Select value={pos} onValueChange={setPos}>
+                <SelectTrigger className="flex-1 sm:w-48"><SelectValue placeholder="Posição" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas posições</SelectItem>
+                  {POSITIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Button
+                variant={onlyForSale ? "default" : "outline"}
+                onClick={() => setOnlyForSale((v) => !v)}
+                className={onlyForSale ? "bg-gradient-gold text-primary-foreground shrink-0" : "shrink-0"}
+              >
+                <Tag className="h-4 w-4" /> <span className="hidden sm:inline">{onlyForSale ? "Mostrando à venda" : "Só à venda"}</span>
+              </Button>
+            </div>
           </div>
 
           <Card className="bg-gradient-card border-border/50 overflow-hidden">
