@@ -325,7 +325,9 @@ const Admin = () => {
 
         {/* CLUBES */}
         <TabsContent value="clubs" className="mt-6 space-y-4">
-          <div className="flex justify-between items-center">
+          <BulkBudgetAdjuster clubs={clubs} onDone={load} />
+
+          <div className="flex justify-between items-center pt-2">
             <h3 className="font-display font-bold text-xl">Gestão de Clubes</h3>
             <Button
               onClick={() => {
