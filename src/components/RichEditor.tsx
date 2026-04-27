@@ -2,6 +2,7 @@ import { useEditor, EditorContent, NodeViewWrapper, NodeViewProps, ReactNodeView
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
+import { Image as TiptapImage } from "@tiptap/extension-image";
 import { Node, mergeAttributes } from "@tiptap/core";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -24,6 +25,13 @@ import {
 } from "lucide-react";
 import { useState, useRef, useCallback } from "react";
 
+interface RichEditorProps {
+  content: string;
+  onChange: (html: string) => void;
+  editable?: boolean;
+  placeholder?: string;
+}
+
 // ── Resizable Image Node ──────────────────────────────────────────────────────
 
 const ResizableImageComponent = ({ node, updateAttributes, deleteNode, selected }: NodeViewProps) => {
@@ -42,8 +50,7 @@ const ResizableImageComponent = ({ node, updateAttributes, deleteNode, selected 
 
       const onMove = (me: MouseEvent) => {
         const delta = direction === "right" ? me.clientX - startX.current : startX.current - me.clientX;
-        // Limita a largura entre 100px e 800px para evitar quebra de layout
-        const newW = Math.max(100, Math.min(startW.current + delta, 800));
+        const newW = Math.max(80, Math.min(startW.current + delta, 900));
         updateAttributes({ width: newW });
       };
       const onUp = () => {
@@ -54,83 +61,107 @@ const ResizableImageComponent = ({ node, updateAttributes, deleteNode, selected 
       window.addEventListener("mousemove", onMove);
       window.addEventListener("mouseup", onUp);
     },
-    [updateAttributes, width],
+    [updateAttributes],
   );
 
   return (
-    <NodeViewWrapper as="div" className="flex justify-center w-full my-6 overflow-hidden">
-      <div className="relative group inline-block" style={{ width: width ? `${width}px` : "auto", maxWidth: "100%" }}>
-        <button
-          onClick={deleteNode}
-          className="absolute -top-2 -right-2 z-30 h-6 w-6 rounded-full bg-destructive text-white items-center justify-center shadow-md hidden group-hover:flex transition-opacity"
-          title="Remover imagem"
-        >
-          <Trash2 className="h-3 w-3" />
-        </button>
+    <NodeViewWrapper
+      as="span"
+      className="inline-block relative group my-4 select-none"
+      style={{ width: width ? `${width}px` : "auto", maxWidth: "100%" }}
+      data-drag-handle
+    >
+      <button
+        onClick={deleteNode}
+        className="absolute -top-2.5 -right-2.5 z-10 h-6 w-6 rounded-full bg-destructive text-destructive-foreground items-center justify-center shadow hidden group-hover:flex transition-opacity"
+        title="Remover imagem"
+      >
+        <Trash2 className="h-3 w-3" />
+      </button>
 
-        <span
-          onMouseDown={(e) => onMouseDown(e, "left")}
-          className={`absolute left-0 top-0 bottom-0 w-2 z-10 cursor-ew-resize bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity ${resizing ? "opacity-100" : ""}`}
-        />
+      <span
+        onMouseDown={(e) => onMouseDown(e, "left")}
+        className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 z-10 w-2 h-10 rounded cursor-ew-resize bg-primary/60 opacity-0 group-hover:opacity-100 transition-opacity ${resizing ? "opacity-100" : ""}`}
+      />
 
-        <img
-          ref={imgRef}
-          src={src}
-          alt={alt ?? ""}
-          className={`rounded-lg border block w-full h-auto transition-all ${selected ? "ring-2 ring-primary border-transparent" : "border-border"}`}
-          draggable={false}
-        />
+      <img
+        ref={imgRef}
+        src={src}
+        alt={alt ?? ""}
+        style={{ width: width ? `${width}px` : "auto", maxWidth: "100%", display: "block" }}
+        className={`rounded-lg border ${selected ? "ring-2 ring-primary" : "border-border"}`}
+        draggable={false}
+      />
 
-        <span
-          onMouseDown={(e) => onMouseDown(e, "right")}
-          className={`absolute right-0 top-0 bottom-0 w-2 z-10 cursor-ew-resize bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity ${resizing ? "opacity-100" : ""}`}
-        />
-      </div>
+      <span
+        onMouseDown={(e) => onMouseDown(e, "right")}
+        className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 z-10 w-2 h-10 rounded cursor-ew-resize bg-primary/60 opacity-0 group-hover:opacity-100 transition-opacity ${resizing ? "opacity-100" : ""}`}
+      />
+
+      <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center gap-1 bg-popover border border-border rounded-md px-2 py-1 shadow-md z-10">
+        {[200, 400, 600, 900].map((w) => (
+          <button
+            key={w}
+            onClick={() => updateAttributes({ width: w })}
+            className="text-[10px] text-muted-foreground hover:text-foreground px-1 transition-colors"
+          >
+            {w === 200 ? "P" : w === 400 ? "M" : w === 600 ? "G" : "Max"}
+          </button>
+        ))}
+      </span>
     </NodeViewWrapper>
   );
 };
 
 const ResizableImage = Node.create({
   name: "resizableImage",
-  group: "block",
+  group: "inline",
+  inline: true,
   draggable: true,
   atom: true,
+
   addAttributes() {
     return {
       src: { default: null },
       alt: { default: null },
-      width: { default: 400 },
+      width: { default: null },
     };
   },
+
   parseHTML() {
     return [{ tag: "img[src]" }];
   },
+
   renderHTML({ HTMLAttributes }) {
-    return [
-      "img",
-      mergeAttributes(HTMLAttributes, {
-        style: `width: ${HTMLAttributes.width}px; max-width: 100%; height: auto; display: block; margin: 0 auto;`,
-      }),
-    ];
+    return ["img", mergeAttributes(HTMLAttributes, { style: `width:${HTMLAttributes.width}px;max-width:100%` })];
   },
+
   addNodeView() {
     return ReactNodeViewRenderer(ResizableImageComponent);
   },
 });
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// ── Tiptap prose styles ───────────────────────────────────────────────────────
+
+const tiptapStyles = `
+  [&_.tiptap]:outline-none
+  [&_p]:mb-4 [&_p]:leading-relaxed
+  [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:mb-4
+  [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:mb-4
+  [&_li]:mt-1
+  [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-8 [&_h2]:mb-4
+  [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-6 [&_h3]:mb-3
+  [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4 [&_blockquote]:text-muted-foreground
+  [&_img]:rounded-lg [&_img]:my-4 [&_img]:border [&_img]:border-border [&_img]:max-w-full
+  [&_a]:text-primary [&_a]:underline
+`;
 
 export function RichEditor({
   content,
   onChange,
   editable = true,
-  placeholder = "Conte a história...",
-}: {
-  content: string;
-  onChange: (html: string) => void;
-  editable?: boolean;
-  placeholder?: string;
-}) {
+  placeholder = "Conte a história do clube...",
+}: RichEditorProps) {
   const [openImageUpload, setOpenImageUpload] = useState(false);
 
   const editor = useEditor({
@@ -150,128 +181,148 @@ export function RichEditor({
 
   if (!editor) return null;
 
-  // Visualização apenas leitura
   if (!editable) {
     return (
-      <div className="wiki-prose break-words overflow-hidden" dangerouslySetInnerHTML={{ __html: content || "" }} />
+      <div
+        className={`overflow-x-hidden break-words ${tiptapStyles}`}
+        dangerouslySetInnerHTML={{
+          __html: content || "<p class='text-muted-foreground italic mb-0'>Sem conteúdo na wiki ainda.</p>",
+        }}
+      />
     );
   }
 
+  const ToolBtn = ({
+    onClick,
+    active,
+    children,
+    title,
+  }: {
+    onClick: () => void;
+    active?: boolean;
+    children: React.ReactNode;
+    title?: string;
+  }) => (
+    <Button
+      type="button"
+      variant={active ? "secondary" : "ghost"}
+      size="sm"
+      onClick={onClick}
+      title={title}
+      className="h-8 w-8 p-0"
+    >
+      {children}
+    </Button>
+  );
+
   return (
-    <div className="flex flex-col border rounded-lg bg-card overflow-hidden w-full h-[550px] max-h-[70vh]">
-      {/* TOOLBAR FIXA */}
-      <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/40 shrink-0">
+    <div className="group border border-border rounded-xl bg-card overflow-hidden focus-within:ring-1 focus-within:ring-ring transition-all">
+      <div className="flex flex-wrap items-center gap-1 p-1.5 border-b border-border bg-muted/30">
         <div className="flex items-center gap-0.5">
-          <Button
-            size="sm"
-            variant="ghost"
+          <ToolBtn
             onClick={() => editor.chain().focus().toggleBold().run()}
-            className={editor.isActive("bold") ? "bg-accent" : ""}
+            active={editor.isActive("bold")}
+            title="Negrito"
           >
             <Bold className="h-4 w-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
+          </ToolBtn>
+          <ToolBtn
             onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={editor.isActive("italic") ? "bg-accent" : ""}
+            active={editor.isActive("italic")}
+            title="Itálico"
           >
             <Italic className="h-4 w-4" />
-          </Button>
+          </ToolBtn>
         </div>
 
-        <Separator orientation="vertical" className="h-6 mx-1" />
+        <Separator orientation="vertical" className="mx-1 h-6" />
 
         <div className="flex items-center gap-0.5">
-          <Button
-            size="sm"
-            variant="ghost"
+          <ToolBtn
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-            className={editor.isActive("heading", { level: 2 }) ? "bg-accent" : ""}
+            active={editor.isActive("heading", { level: 2 })}
+            title="Título"
           >
             <Heading2 className="h-4 w-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
+          </ToolBtn>
+          <ToolBtn
             onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-            className={editor.isActive("heading", { level: 3 }) ? "bg-accent" : ""}
+            active={editor.isActive("heading", { level: 3 })}
+            title="Subtítulo"
           >
             <Heading3 className="h-4 w-4" />
-          </Button>
+          </ToolBtn>
         </div>
 
-        <Separator orientation="vertical" className="h-6 mx-1" />
+        <Separator orientation="vertical" className="mx-1 h-6" />
 
         <div className="flex items-center gap-0.5">
-          <Button
-            size="sm"
-            variant="ghost"
+          <ToolBtn
             onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={editor.isActive("bulletList") ? "bg-accent" : ""}
+            active={editor.isActive("bulletList")}
+            title="Lista"
           >
             <List className="h-4 w-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
+          </ToolBtn>
+          <ToolBtn
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={editor.isActive("orderedList") ? "bg-accent" : ""}
+            active={editor.isActive("orderedList")}
+            title="Lista Numerada"
           >
             <ListOrdered className="h-4 w-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
+          </ToolBtn>
+          <ToolBtn
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            className={editor.isActive("blockquote") ? "bg-accent" : ""}
+            active={editor.isActive("blockquote")}
+            title="Citação"
           >
             <Quote className="h-4 w-4" />
-          </Button>
+          </ToolBtn>
+          <ToolBtn
+            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+            active={editor.isActive("codeBlock")}
+            title="Código"
+          >
+            <Code className="h-4 w-4" />
+          </ToolBtn>
         </div>
 
-        <Separator orientation="vertical" className="h-6 mx-1" />
+        <Separator orientation="vertical" className="mx-1 h-6" />
 
         <div className="flex items-center gap-0.5">
-          <Button
-            size="sm"
-            variant="ghost"
+          <ToolBtn
             onClick={() => {
               const url = prompt("URL do link:");
               if (url) editor.chain().focus().setLink({ href: url }).run();
             }}
-            className={editor.isActive("link") ? "bg-accent" : ""}
+            active={editor.isActive("link")}
+            title="Adicionar Link"
           >
             <Link2 className="h-4 w-4" />
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => setOpenImageUpload(true)}>
+          </ToolBtn>
+          <ToolBtn onClick={() => setOpenImageUpload(true)} title="Upload de Imagem">
             <ImageIcon className="h-4 w-4" />
-          </Button>
+          </ToolBtn>
         </div>
 
         <div className="flex-1" />
 
         <div className="flex items-center gap-0.5">
-          <Button size="sm" variant="ghost" onClick={() => editor.chain().focus().undo().run()}>
+          <ToolBtn onClick={() => editor.chain().focus().undo().run()} title="Desfazer">
             <Undo className="h-4 w-4" />
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => editor.chain().focus().redo().run()}>
+          </ToolBtn>
+          <ToolBtn onClick={() => editor.chain().focus().redo().run()} title="Refazer">
             <Redo className="h-4 w-4" />
-          </Button>
+          </ToolBtn>
         </div>
       </div>
 
-      {/* ÁREA DE TEXTO COM SCROLL INTERNO */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 focus-within:outline-none">
-        <style>{`
-          .tiptap-editor .tiptap { outline: none; }
-          .tiptap-editor .tiptap img { max-width: 100% !important; height: auto !important; }
-        `}</style>
-        <EditorContent editor={editor} className="tiptap-editor" />
+      <div className={`p-4 min-h-[250px] max-h-[70vh] overflow-y-auto overflow-x-hidden cursor-text ${tiptapStyles}`}>
+        <EditorContent editor={editor} />
       </div>
 
       <Dialog open={openImageUpload} onOpenChange={setOpenImageUpload}>
-        <DialogContent className="max-w-md">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Enviar imagem para a Wiki</DialogTitle>
           </DialogHeader>
