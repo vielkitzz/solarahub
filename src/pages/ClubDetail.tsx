@@ -243,7 +243,21 @@ const ClubDetail = () => {
           </div>
           <div className="flex-1 min-w-0 space-y-2 w-full">
             <div className="flex items-center gap-2 flex-wrap">
-              {canEdit && <Badge className="bg-primary text-primary-foreground text-[10px]">Você gerencia</Badge>}
+              {club.owner_id ? (
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-secondary/60 border border-border/50 pl-1 pr-2.5 py-0.5">
+                  <Avatar className="h-5 w-5 ring-1 ring-primary/30">
+                    <AvatarImage src={ownerInfo?.avatar_url ?? undefined} />
+                    <AvatarFallback className="text-[9px] bg-secondary">
+                      {(ownerInfo?.display_name ?? "?").charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-[10px] font-semibold text-foreground/90 max-w-[140px] truncate">
+                    {ownerInfo?.display_name ?? "Dono"}
+                  </span>
+                </div>
+              ) : (
+                <Badge variant="outline" className="text-[10px] text-muted-foreground">Sem dono</Badge>
+              )}
               {club.founded_year && <Badge variant="outline" className="text-[10px]">Fundado em {club.founded_year}</Badge>}
               {club.reputacao && (
                 <Badge variant="outline" className="capitalize text-[10px]">
