@@ -58,7 +58,9 @@ const ClubDetail = () => {
   const [wikiData, setWikiData] = useState<WikiData>({});
   const [editingClub, setEditingClub] = useState<any>(null);
 
-  const canEdit = !!user && (isAdmin || (club && club.owner_id === user.id));
+  // Apenas o dono do clube pode editar pela página do clube. Admins editam pelo painel /admin.
+  const canEdit = !!user && !!club && club.owner_id === user.id;
+  const [ownerInfo, setOwnerInfo] = useState<{ display_name: string | null; avatar_url: string | null } | null>(null);
 
   const [tvSettings, setTvSettings] = useState<Record<string, number>>({});
   const [imgSettings, setImgSettings] = useState<{ custo_pct: number; receita_pct: number }>({
