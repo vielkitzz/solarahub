@@ -249,8 +249,16 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
       const multSetor = isFornecedora ? 1.5 : getMultiplicadorSetor(b.setor);
       const prestígio = getPrestígio(b.name, (b as any).prestige);
 
-      // CÁLCULO FINAL: rate × reputação × setor × posição × prestígio da marca
-      const valorFinal = valorBaseRate * multRep * multSetor * multCamisa * prestígio;
+      // Casas de apostas não se importam com reputação — patrocinam qualquer clube igualmente.
+      // Para as demais, marcas maiores ficam mais seletivas: a curva exponencial (multRep^prestige)
+      // faz a Nike triplicar para clubes mundiais e cair para estaduais, enquanto a Walon mal varia.
+      const entusiasmo =
+        b.setor === "Casa de Apostas"
+          ? prestígio // flat — sem curva de reputação
+          : Math.pow(multRep, prestígio); // multRep absorve o papel de multRep separado
+
+      // CÁLCULO FINAL: rate × setor × posição × entusiasmo (já inclui reputação e prestígio)
+      const valorFinal = valorBaseRate * multSetor * multCamisa * entusiasmo * prestígio;
 
       return {
         id: b.name,
