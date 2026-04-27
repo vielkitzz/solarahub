@@ -41,74 +41,218 @@ const ResizableImageComponent = ({ node, updateAttributes, deleteNode, selected 
   const startW = useRef(0);
   const imgRef = useRef<HTMLImageElement>(null);
 
+  // Garantir que a largura nunca ultrapasse 100% do container
+  const finalWidth = width ? Math.min(width, 100) : 400;
+  const widthPercent = typeof finalWidth === "number" ? finalWidth : 400;
+
   const onMouseDown = useCallback(
     (e: React.MouseEvent, direction: "left" | "right") => {
       e.preventDefault();
+      e.stopPropagation();
       setResizing(true);
+
+      // Obter o container pai
+      const container = imgRef.current?.parentElement?.parentElement;
+      const maxWidth = container ? container.clientWidth - 20 : 800; // Margem de segurança
+
       startX.current = e.clientX;
-      startW.current = imgRef.current?.offsetWidth ?? (typeof width === "number" ? width : 400);
+      startW.current = imgRef.current?.offsetWidth ?? widthPercent;
 
       const onMove = (me: MouseEvent) => {
         const delta = direction === "right" ? me.clientX - startX.current : startX.current - me.clientX;
-        const newW = Math.max(80, Math.min(startW.current + delta, 900));
+        let newW = Math.max(80, Math.min(startW.current + delta, maxWidth));
         updateAttributes({ width: newW });
       };
+
       const onUp = () => {
         setResizing(false);
         window.removeEventListener("mousemove", onMove);
         window.removeEventListener("mouseup", onUp);
       };
+
       window.addEventListener("mousemove", onMove);
       window.addEventListener("mouseup", onUp);
     },
-    [updateAttributes],
+    [updateAttributes, widthPercent],
   );
 
   return (
     <NodeViewWrapper
       as="span"
-      className="inline-block relative group my-4 select-none"
-      style={{ width: width ? `${width}px` : "auto", maxWidth: "100%" }}
+      className="inline-block relative group my-4"
+      style={{
+        display: "inline-block",
+        maxWidth: "100%",
+        position: "relative",
+      }}
       data-drag-handle
     >
-      <button
-        onClick={deleteNode}
-        className="absolute -top-2.5 -right-2.5 z-10 h-6 w-6 rounded-full bg-destructive text-destructive-foreground items-center justify-center shadow hidden group-hover:flex transition-opacity"
-        title="Remover imagem"
+      <div
+        style={{
+          position: "relative",
+          display: "inline-block",
+          maxWidth: "100%",
+        }}
       >
-        <Trash2 className="h-3 w-3" />
-      </button>
+        {/* Delete button */}
+        <button
+          onClick={deleteNode}
+          className="absolute -top-2.5 -right-2.5 z-10 h-6 w-6 rounded-full bg-destructive text-destructive-foreground items-center justify-center shadow hidden group-hover:flex transition-opacity"
+          title="Remover imagem"
+        >
+          <Trash2 className="h-3 w-3" />
+        </button>
 
-      <span
-        onMouseDown={(e) => onMouseDown(e, "left")}
-        className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 z-10 w-2 h-10 rounded cursor-ew-resize bg-primary/60 opacity-0 group-hover:opacity-100 transition-opacity ${resizing ? "opacity-100" : ""}`}
-      />
+        {/* Resize handle — left */}
+        <span
+          onMouseDown={(e) => onMouseDown(e, "left")}
+          className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 z-10 w-2 h-10 rounded cursor-ew-resize bg-primary/60 opacity-0 group-hover:opacity-100 transition-opacity ${resizing ? "opacity-100" : ""}`}
+        />
 
-      <img
-        ref={imgRef}
-        src={src}
-        alt={alt ?? ""}
-        style={{ width: width ? `${width}px` : "auto", maxWidth: "100%", display: "block" }}
-        className={`rounded-lg border ${selected ? "ring-2 ring-primary" : "border-border"}`}
-        draggable={false}
-      />
+        <img
+          ref={imgRef}
+          src={src}
+          alt={alt ?? ""}
+          style={{
+            width: widthPercent ? `${widthPercent}px` : "auto",
+            maxWidth: "100%",
+            height: "auto",
+            display: "block",
+          }}
+          className={`rounded-lg border ${selected ? "ring-2 ring-primary" : "border-border"}`}
+          draggable={false}
+        />
 
-      <span
-        onMouseDown={(e) => onMouseDown(e, "right")}
-        className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 z-10 w-2 h-10 rounded cursor-ew-resize bg-primary/60 opacity-0 group-hover:opacity-100 transition-opacity ${resizing ? "opacity-100" : ""}`}
-      />
+        {/* Resize handle — right */}
+        <span
+          onMouseDown={(e) => onMouseDown(e, "right")}
+          className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 z-10 w-2 h-10 rounded cursor-ew-resize bg-primary/60 opacity-0 group-hover:opacity-100 transition-opacity ${resizing ? "opacity-100" : ""}`}
+        />
 
-      <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center gap-1 bg-popover border border-border rounded-md px-2 py-1 shadow-md z-10">
-        {[200, 400, 600, 900].map((w) => (
-          <button
-            key={w}
-            onClick={() => updateAttributes({ width: w })}
-            className="text-[10px] text-muted-foreground hover:text-foreground px-1 transition-colors"
-          >
-            {w === 200 ? "P" : w === 400 ? "M" : w === 600 ? "G" : "Max"}
-          </button>
-        ))}
-      </span>
+        {/* Size presets */}
+        <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center gap-1 bg-popover border border-border rounded-md px-2 py-1 shadow-md z-10 whitespace-nowrap">
+          {[200, 400, 600].map((w) => (
+            <button
+              key={w}
+              onClick={() => updateAttributes({ width: w })}
+              className="text-[10px] text-muted-foreground hover:text-foreground px-1 transition-colors"
+            >
+              {w === 200 ? "P" : w === 400 ? "M" : w === 600 ? "G" : "Max"}
+            </button>
+          ))}
+        </span>
+      </div>
+    </NodeViewWrapper>
+  );
+};
+const ResizableImageComponent = ({ node, updateAttributes, deleteNode, selected }: NodeViewProps) => {
+  const { src, alt, width } = node.attrs;
+  const [resizing, setResizing] = useState(false);
+  const startX = useRef(0);
+  const startW = useRef(0);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Garantir que a largura nunca ultrapasse 100% do container
+  const finalWidth = width ? Math.min(width, 100) : 400;
+  const widthPercent = typeof finalWidth === "number" ? finalWidth : 400;
+
+  const onMouseDown = useCallback(
+    (e: React.MouseEvent, direction: "left" | "right") => {
+      e.preventDefault();
+      e.stopPropagation();
+      setResizing(true);
+
+      // Obter o container pai
+      const container = imgRef.current?.parentElement?.parentElement;
+      const maxWidth = container ? container.clientWidth - 20 : 800; // Margem de segurança
+
+      startX.current = e.clientX;
+      startW.current = imgRef.current?.offsetWidth ?? widthPercent;
+
+      const onMove = (me: MouseEvent) => {
+        const delta = direction === "right" ? me.clientX - startX.current : startX.current - me.clientX;
+        let newW = Math.max(80, Math.min(startW.current + delta, maxWidth));
+        updateAttributes({ width: newW });
+      };
+
+      const onUp = () => {
+        setResizing(false);
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+      };
+
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+    },
+    [updateAttributes, widthPercent],
+  );
+
+  return (
+    <NodeViewWrapper
+      as="span"
+      className="inline-block relative group my-4"
+      style={{
+        display: "inline-block",
+        maxWidth: "100%",
+        position: "relative",
+      }}
+      data-drag-handle
+    >
+      <div
+        style={{
+          position: "relative",
+          display: "inline-block",
+          maxWidth: "100%",
+        }}
+      >
+        {/* Delete button */}
+        <button
+          onClick={deleteNode}
+          className="absolute -top-2.5 -right-2.5 z-10 h-6 w-6 rounded-full bg-destructive text-destructive-foreground items-center justify-center shadow hidden group-hover:flex transition-opacity"
+          title="Remover imagem"
+        >
+          <Trash2 className="h-3 w-3" />
+        </button>
+
+        {/* Resize handle — left */}
+        <span
+          onMouseDown={(e) => onMouseDown(e, "left")}
+          className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 z-10 w-2 h-10 rounded cursor-ew-resize bg-primary/60 opacity-0 group-hover:opacity-100 transition-opacity ${resizing ? "opacity-100" : ""}`}
+        />
+
+        <img
+          ref={imgRef}
+          src={src}
+          alt={alt ?? ""}
+          style={{
+            width: widthPercent ? `${widthPercent}px` : "auto",
+            maxWidth: "100%",
+            height: "auto",
+            display: "block",
+          }}
+          className={`rounded-lg border ${selected ? "ring-2 ring-primary" : "border-border"}`}
+          draggable={false}
+        />
+
+        {/* Resize handle — right */}
+        <span
+          onMouseDown={(e) => onMouseDown(e, "right")}
+          className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 z-10 w-2 h-10 rounded cursor-ew-resize bg-primary/60 opacity-0 group-hover:opacity-100 transition-opacity ${resizing ? "opacity-100" : ""}`}
+        />
+
+        {/* Size presets */}
+        <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center gap-1 bg-popover border border-border rounded-md px-2 py-1 shadow-md z-10 whitespace-nowrap">
+          {[200, 400, 600].map((w) => (
+            <button
+              key={w}
+              onClick={() => updateAttributes({ width: w })}
+              className="text-[10px] text-muted-foreground hover:text-foreground px-1 transition-colors"
+            >
+              {w === 200 ? "P" : w === 400 ? "M" : w === 600 ? "G" : "Max"}
+            </button>
+          ))}
+        </span>
+      </div>
     </NodeViewWrapper>
   );
 };
@@ -317,8 +461,11 @@ export function RichEditor({
         </div>
       </div>
 
-      <div className={`p-4 min-h-[250px] max-h-[70vh] overflow-y-auto overflow-x-hidden cursor-text ${tiptapStyles}`}>
-        <EditorContent editor={editor} />
+      {/* EDITOR AREA — scrollable, never overflows */}
+      <div className={`p-4 min-h-[250px] max-h-[70vh] overflow-y-auto cursor-text ${tiptapStyles}`}>
+        <div className="max-w-full">
+          <EditorContent editor={editor} />
+        </div>
       </div>
 
       <Dialog open={openImageUpload} onOpenChange={setOpenImageUpload}>
