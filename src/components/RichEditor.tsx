@@ -3,9 +3,6 @@ import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
 import { Image as TiptapImage } from "@tiptap/extension-image";
-import TextAlign from "@tiptap/extension-text-align";
-import { Color } from "@tiptap/extension-color";
-import TextStyle from "@tiptap/extension-text-style";
 import { Node, mergeAttributes } from "@tiptap/core";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -25,11 +22,6 @@ import {
   Redo,
   Code,
   Trash2,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
-  Baseline,
 } from "lucide-react";
 import { useState, useRef, useCallback } from "react";
 
@@ -149,23 +141,6 @@ const ResizableImage = Node.create({
   },
 });
 
-// ── Color palette ─────────────────────────────────────────────────────────────
-
-const TEXT_COLORS = [
-  { label: "Padrão", value: "" },
-  { label: "Branco", value: "#ffffff" },
-  { label: "Cinza", value: "#9ca3af" },
-  { label: "Vermelho", value: "#ef4444" },
-  { label: "Laranja", value: "#f97316" },
-  { label: "Amarelo", value: "#eab308" },
-  { label: "Verde", value: "#22c55e" },
-  { label: "Ciano", value: "#06b6d4" },
-  { label: "Azul", value: "#3b82f6" },
-  { label: "Roxo", value: "#a855f7" },
-  { label: "Rosa", value: "#ec4899" },
-  { label: "Ouro", value: "#f59e0b" },
-];
-
 // ── Tiptap prose styles ───────────────────────────────────────────────────────
 
 const tiptapStyles = `
@@ -188,7 +163,6 @@ export function RichEditor({
   placeholder = "Conte a história do clube...",
 }: RichEditorProps) {
   const [openImageUpload, setOpenImageUpload] = useState(false);
-  const [showColorPicker, setShowColorPicker] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -198,9 +172,6 @@ export function RichEditor({
         openOnClick: false,
         HTMLAttributes: { class: "text-primary underline cursor-pointer" },
       }),
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
-      TextStyle,
-      Color,
       ResizableImage,
     ],
     content: content || "",
@@ -244,13 +215,9 @@ export function RichEditor({
     </Button>
   );
 
-  // Current active color (empty string = default/no color)
-  const activeColor = (editor.getAttributes("textStyle").color as string) ?? "";
-
   return (
     <div className="group border border-border rounded-xl bg-card overflow-hidden focus-within:ring-1 focus-within:ring-ring transition-all">
       <div className="flex flex-wrap items-center gap-1 p-1.5 border-b border-border bg-muted/30">
-        {/* Bold / Italic */}
         <div className="flex items-center gap-0.5">
           <ToolBtn
             onClick={() => editor.chain().focus().toggleBold().run()}
@@ -270,7 +237,6 @@ export function RichEditor({
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 
-        {/* Headings */}
         <div className="flex items-center gap-0.5">
           <ToolBtn
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
@@ -290,41 +256,6 @@ export function RichEditor({
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 
-        {/* Text alignment */}
-        <div className="flex items-center gap-0.5">
-          <ToolBtn
-            onClick={() => editor.chain().focus().setTextAlign("left").run()}
-            active={editor.isActive({ textAlign: "left" })}
-            title="Alinhar à esquerda"
-          >
-            <AlignLeft className="h-4 w-4" />
-          </ToolBtn>
-          <ToolBtn
-            onClick={() => editor.chain().focus().setTextAlign("center").run()}
-            active={editor.isActive({ textAlign: "center" })}
-            title="Centralizar"
-          >
-            <AlignCenter className="h-4 w-4" />
-          </ToolBtn>
-          <ToolBtn
-            onClick={() => editor.chain().focus().setTextAlign("right").run()}
-            active={editor.isActive({ textAlign: "right" })}
-            title="Alinhar à direita"
-          >
-            <AlignRight className="h-4 w-4" />
-          </ToolBtn>
-          <ToolBtn
-            onClick={() => editor.chain().focus().setTextAlign("justify").run()}
-            active={editor.isActive({ textAlign: "justify" })}
-            title="Justificar"
-          >
-            <AlignJustify className="h-4 w-4" />
-          </ToolBtn>
-        </div>
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        {/* Lists / blockquote / code */}
         <div className="flex items-center gap-0.5">
           <ToolBtn
             onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -358,7 +289,6 @@ export function RichEditor({
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 
-        {/* Link / image / color */}
         <div className="flex items-center gap-0.5">
           <ToolBtn
             onClick={() => {
@@ -373,71 +303,10 @@ export function RichEditor({
           <ToolBtn onClick={() => setOpenImageUpload(true)} title="Upload de Imagem">
             <ImageIcon className="h-4 w-4" />
           </ToolBtn>
-
-          {/* Color picker button */}
-          <div className="relative">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowColorPicker((v) => !v)}
-              title="Cor do texto"
-              className="h-8 w-8 p-0 flex flex-col items-center justify-center gap-0.5"
-            >
-              <Baseline className="h-4 w-4" />
-              {/* Color indicator strip */}
-              <span
-                className="h-[3px] w-4 rounded-full transition-colors"
-                style={{ backgroundColor: activeColor || "hsl(var(--foreground))" }}
-              />
-            </Button>
-
-            {showColorPicker && (
-              <div className="absolute top-full left-0 mt-1 z-50 bg-popover border border-border rounded-lg shadow-lg p-2 w-44">
-                <p className="text-[10px] text-muted-foreground mb-2 px-1">Cor do texto</p>
-                <div className="grid grid-cols-4 gap-1">
-                  {TEXT_COLORS.map(({ label, value }) => (
-                    <button
-                      key={label}
-                      title={label}
-                      onClick={() => {
-                        if (value === "") {
-                          editor.chain().focus().unsetColor().run();
-                        } else {
-                          editor.chain().focus().setColor(value).run();
-                        }
-                        setShowColorPicker(false);
-                      }}
-                      className={`h-7 w-7 rounded-md border transition-transform hover:scale-110 flex items-center justify-center ${
-                        activeColor === value ? "ring-2 ring-ring ring-offset-1 ring-offset-popover" : "border-border"
-                      }`}
-                      style={{ backgroundColor: value || "transparent" }}
-                    >
-                      {value === "" && (
-                        <span className="text-[9px] text-muted-foreground font-medium leading-none">A</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-                {/* Native color input for custom color */}
-                <div className="mt-2 pt-2 border-t border-border flex items-center gap-2">
-                  <label className="text-[10px] text-muted-foreground flex-1">Personalizada</label>
-                  <input
-                    type="color"
-                    value={activeColor || "#ffffff"}
-                    onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
-                    className="h-6 w-10 rounded cursor-pointer border border-border bg-transparent"
-                    title="Escolher cor"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
         <div className="flex-1" />
 
-        {/* Undo / Redo */}
         <div className="flex items-center gap-0.5">
           <ToolBtn onClick={() => editor.chain().focus().undo().run()} title="Desfazer">
             <Undo className="h-4 w-4" />
@@ -447,9 +316,6 @@ export function RichEditor({
           </ToolBtn>
         </div>
       </div>
-
-      {/* Backdrop to close color picker when clicking outside */}
-      {showColorPicker && <div className="fixed inset-0 z-40" onClick={() => setShowColorPicker(false)} />}
 
       <div className={`p-4 min-h-[250px] max-h-[70vh] overflow-y-auto overflow-x-hidden cursor-text ${tiptapStyles}`}>
         <EditorContent editor={editor} />
