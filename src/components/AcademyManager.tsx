@@ -65,7 +65,7 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
   const [players, setPlayers] = useState<AcademyPlayer[]>([]);
   const [loading, setLoading] = useState(true);
   const [scoutOpen, setScoutOpen] = useState(false);
-  const [scoutPos, setScoutPos] = useState("");
+  const [scoutPositions, setScoutPositions] = useState<string[]>([]);
   const [scoutAgeMin, setScoutAgeMin] = useState(14);
   const [scoutAgeMax, setScoutAgeMax] = useState(23);
   const [scoutNat, setScoutNat] = useState<string>("__any__");
@@ -121,22 +121,21 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
     setScoutLoading(true);
     setScoutResults(null);
     setPicked(new Set());
-    const { data, error } = await supabase.rpc("realizar_peneira" as any, {
+    const { data, error } = await supabase.rpc("realizar_peneira_v2" as any, {
       _club_id: club.id,
-      _position: scoutPos || null,
+      _positions: scoutPositions.length > 0 ? scoutPositions : null,
       _age_min: scoutAgeMin,
       _age_max: scoutAgeMax,
       _nationality: scoutNat === "__any__" ? null : scoutNat,
     });
     setScoutLoading(false);
     if (error) return toast.error(error.message);
-    // Substitui nomes genéricos pelo banco local de nomes
     const enriched = (data as ScoutResult[]).map((p) => ({
       ...p,
       scout_name: generateRandomName(p.scout_nationality),
     }));
     setScoutResults(enriched);
-    onChange(); // atualizar contador de peneiras
+    onChange();
   };
 
   const togglePick = (id: string) => {
@@ -395,64 +394,84 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
 
           {!scoutResults ? (
             <>
-              <div className="grid sm:grid-cols-2 gap-3">
+              <div className="space-y-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">Posição (opcional)</Label>
-                  <Select value={scoutPos || "__any__"} onValueChange={(v) => setScoutPos(v === "__any__" ? "" : v)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Qualquer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__any__">Qualquer</SelectItem>
-                      {POSITIONS.map((p) => (
-                        <SelectItem key={p} value={p}>
+                  <Label className="text-xs">Posições (opcional — múltipla seleção)</Label>
+                  <div className="flex flex-wrap gap-1.5 p-2 rounded-md border border-border/50 bg-secondary/20">
+                    {POSITIONS.map((p) => {
+                      const active = scoutPositions.includes(p);
+                      return (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() =>
+                            setScoutPositions((prev) =>
+                              active ? prev.filter((x) => x !== p) : [...prev, p],
+                            )
+                          }
+                          className={`px-2.5 py-1 rounded text-xs font-bold transition-colors ${
+                            active
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-background/40 text-muted-foreground hover:text-foreground border border-border/40"
+                          }`}
+                        >
                           {p}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground">
+                    {scoutPositions.length === 0
+                      ? "Nenhuma escolhida → posições aleatórias"
+                      : `${scoutPositions.length} posição(ões) selecionada(s)`}
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <Label className="text-xs">Nacionalidade (opcional)</Label>
-                  <Select value={scoutNat} onValueChange={setScoutNat}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Qualquer" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-72">
-                      <SelectItem value="__any__">Qualquer</SelectItem>
-                      {COUNTRIES_DATA.map((c) => (
-                        <SelectItem key={c.code} value={c.name}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1">
-                  <Label className="text-xs">Idade mínima (14–23)</Label>
-                  <Input
-                    type="number"
-                    min={14}
-                    max={23}
-                    value={scoutAgeMin}
-                    onChange={(e) =>
-                      setScoutAgeMin(Math.max(14, Math.min(23, Number(e.target.value) || 14)))
-                    }
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Idade máxima (14–23)</Label>
-                  <Input
-                    type="number"
-                    min={14}
-                    max={23}
-                    value={scoutAgeMax}
-                    onChange={(e) =>
-                      setScoutAgeMax(Math.max(14, Math.min(23, Number(e.target.value) || 23)))
-                    }
-                  />
+                <div className="grid sm:grid-cols-3 gap-3">
+                  <div className="space-y-1 sm:col-span-1">
+                    <Label className="text-xs">Nacionalidade</Label>
+                    <Select value={scoutNat} onValueChange={setScoutNat}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Qualquer" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-72">
+                        <SelectItem value="__any__">Qualquer</SelectItem>
+                        {COUNTRIES_DATA.map((c) => (
+                          <SelectItem key={c.code} value={c.name}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Idade mín. (14–23)</Label>
+                    <Input
+                      type="number"
+                      min={14}
+                      max={23}
+                      value={scoutAgeMin}
+                      onChange={(e) => {
+                        const v = Number(e.target.value);
+                        if (Number.isNaN(v)) return;
+                        setScoutAgeMin(Math.max(14, Math.min(23, v)));
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Idade máx. (14–23)</Label>
+                    <Input
+                      type="number"
+                      min={14}
+                      max={23}
+                      value={scoutAgeMax}
+                      onChange={(e) => {
+                        const v = Number(e.target.value);
+                        if (Number.isNaN(v)) return;
+                        setScoutAgeMax(Math.max(14, Math.min(23, v)));
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -467,7 +486,7 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
                 </Button>
                 <Button
                   onClick={realizarPeneira}
-                  disabled={scoutLoading || !scoutPos || peneirasRestantes <= 0}
+                  disabled={scoutLoading || peneirasRestantes <= 0}
                   className="bg-gradient-gold text-primary-foreground hover:opacity-90"
                 >
                   {scoutLoading ? "Buscando..." : "Iniciar peneira"}

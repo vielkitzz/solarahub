@@ -3,11 +3,15 @@ import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
 import { Image as TiptapImage } from "@tiptap/extension-image";
+import TextAlign from "@tiptap/extension-text-align";
+import { Color } from "@tiptap/extension-color";
+import { TextStyle } from "@tiptap/extension-text-style";
 import { Node, mergeAttributes } from "@tiptap/core";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ImageUpload } from "@/components/ImageUpload";
 import { Separator } from "@/components/ui/separator";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Bold,
   Italic,
@@ -22,6 +26,10 @@ import {
   Redo,
   Code,
   Trash2,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Palette,
 } from "lucide-react";
 import { useState, useRef, useCallback } from "react";
 
@@ -154,6 +162,7 @@ const tiptapStyles = `
   [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4 [&_blockquote]:text-muted-foreground
   [&_img]:rounded-lg [&_img]:my-4 [&_img]:border [&_img]:border-border [&_img]:max-w-full
   [&_a]:text-primary [&_a]:underline
+  [&_[style*='text-align:_center']]:text-center [&_[style*='text-align:_right']]:text-right [&_[style*='text-align:_left']]:text-left
 `;
 
 export function RichEditor({
@@ -173,6 +182,9 @@ export function RichEditor({
         HTMLAttributes: { class: "text-primary underline cursor-pointer" },
       }),
       ResizableImage,
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      TextStyle,
+      Color,
     ],
     content: content || "",
     editable,
@@ -286,6 +298,88 @@ export function RichEditor({
             <Code className="h-4 w-4" />
           </ToolBtn>
         </div>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
+        {/* Alinhamento */}
+        <div className="flex items-center gap-0.5">
+          <ToolBtn
+            onClick={() => editor.chain().focus().setTextAlign("left").run()}
+            active={editor.isActive({ textAlign: "left" })}
+            title="Alinhar à esquerda"
+          >
+            <AlignLeft className="h-4 w-4" />
+          </ToolBtn>
+          <ToolBtn
+            onClick={() => editor.chain().focus().setTextAlign("center").run()}
+            active={editor.isActive({ textAlign: "center" })}
+            title="Centralizar"
+          >
+            <AlignCenter className="h-4 w-4" />
+          </ToolBtn>
+          <ToolBtn
+            onClick={() => editor.chain().focus().setTextAlign("right").run()}
+            active={editor.isActive({ textAlign: "right" })}
+            title="Alinhar à direita"
+          >
+            <AlignRight className="h-4 w-4" />
+          </ToolBtn>
+        </div>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
+        {/* Cor do texto */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              title="Cor do texto"
+              className="h-8 w-8 p-0 relative"
+            >
+              <Palette className="h-4 w-4" />
+              <span
+                className="absolute bottom-1 left-1.5 right-1.5 h-0.5 rounded"
+                style={{ background: editor.getAttributes("textStyle").color || "currentColor" }}
+              />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-2">
+            <div className="grid grid-cols-7 gap-1.5">
+              {[
+                "#ffffff", "#000000", "#9ca3af", "#ef4444", "#f97316", "#f59e0b", "#eab308",
+                "#84cc16", "#22c55e", "#10b981", "#14b8a6", "#06b6d4", "#3b82f6", "#6366f1",
+                "#8b5cf6", "#a855f7", "#d946ef", "#ec4899", "#f43f5e", "#facc15", "#7c2d12",
+              ].map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => editor.chain().focus().setColor(c).run()}
+                  className="h-6 w-6 rounded border border-border/40 hover:scale-110 transition-transform"
+                  style={{ background: c }}
+                  title={c}
+                />
+              ))}
+            </div>
+            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/40">
+              <input
+                type="color"
+                onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
+                className="h-7 w-10 cursor-pointer bg-transparent border border-border/40 rounded"
+              />
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => editor.chain().focus().unsetColor().run()}
+                className="text-xs h-7 flex-1"
+              >
+                Remover cor
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 
