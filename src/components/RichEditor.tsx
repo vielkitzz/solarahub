@@ -162,6 +162,7 @@ const tiptapStyles = `
   [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4 [&_blockquote]:text-muted-foreground
   [&_img]:rounded-lg [&_img]:my-4 [&_img]:border [&_img]:border-border [&_img]:max-w-full
   [&_a]:text-primary [&_a]:underline
+  [&_[style*='text-align:_center']]:text-center [&_[style*='text-align:_right']]:text-right [&_[style*='text-align:_left']]:text-left
 `;
 
 export function RichEditor({
