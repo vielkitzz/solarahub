@@ -121,22 +121,21 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
     setScoutLoading(true);
     setScoutResults(null);
     setPicked(new Set());
-    const { data, error } = await supabase.rpc("realizar_peneira" as any, {
+    const { data, error } = await supabase.rpc("realizar_peneira_v2" as any, {
       _club_id: club.id,
-      _position: scoutPos || null,
+      _positions: scoutPositions.length > 0 ? scoutPositions : null,
       _age_min: scoutAgeMin,
       _age_max: scoutAgeMax,
       _nationality: scoutNat === "__any__" ? null : scoutNat,
     });
     setScoutLoading(false);
     if (error) return toast.error(error.message);
-    // Substitui nomes genéricos pelo banco local de nomes
     const enriched = (data as ScoutResult[]).map((p) => ({
       ...p,
       scout_name: generateRandomName(p.scout_nationality),
     }));
     setScoutResults(enriched);
-    onChange(); // atualizar contador de peneiras
+    onChange();
   };
 
   const togglePick = (id: string) => {
