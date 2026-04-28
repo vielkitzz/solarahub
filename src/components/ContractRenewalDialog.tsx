@@ -34,6 +34,13 @@ export const ContractRenewalDialog = ({ player, open, onOpenChange, onRenewed }:
     setAnos(3);
   };
 
+  useEffect(() => {
+    if (!open || !player?.id) return;
+    supabase.rpc("sugerir_salario_jogador", { _jogador_id: player.id }).then(({ data }) => {
+      if (data) setSugerido(Math.round(Number(data)));
+    });
+  }, [open, player?.id]);
+
   const handleClose = (v: boolean) => {
     if (!v) reset();
     onOpenChange(v);
