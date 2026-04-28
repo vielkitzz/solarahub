@@ -300,6 +300,88 @@ export function RichEditor({
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 
+        {/* Alinhamento */}
+        <div className="flex items-center gap-0.5">
+          <ToolBtn
+            onClick={() => editor.chain().focus().setTextAlign("left").run()}
+            active={editor.isActive({ textAlign: "left" })}
+            title="Alinhar à esquerda"
+          >
+            <AlignLeft className="h-4 w-4" />
+          </ToolBtn>
+          <ToolBtn
+            onClick={() => editor.chain().focus().setTextAlign("center").run()}
+            active={editor.isActive({ textAlign: "center" })}
+            title="Centralizar"
+          >
+            <AlignCenter className="h-4 w-4" />
+          </ToolBtn>
+          <ToolBtn
+            onClick={() => editor.chain().focus().setTextAlign("right").run()}
+            active={editor.isActive({ textAlign: "right" })}
+            title="Alinhar à direita"
+          >
+            <AlignRight className="h-4 w-4" />
+          </ToolBtn>
+        </div>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
+        {/* Cor do texto */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              title="Cor do texto"
+              className="h-8 w-8 p-0 relative"
+            >
+              <Palette className="h-4 w-4" />
+              <span
+                className="absolute bottom-1 left-1.5 right-1.5 h-0.5 rounded"
+                style={{ background: editor.getAttributes("textStyle").color || "currentColor" }}
+              />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-2">
+            <div className="grid grid-cols-7 gap-1.5">
+              {[
+                "#ffffff", "#000000", "#9ca3af", "#ef4444", "#f97316", "#f59e0b", "#eab308",
+                "#84cc16", "#22c55e", "#10b981", "#14b8a6", "#06b6d4", "#3b82f6", "#6366f1",
+                "#8b5cf6", "#a855f7", "#d946ef", "#ec4899", "#f43f5e", "#facc15", "#7c2d12",
+              ].map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => editor.chain().focus().setColor(c).run()}
+                  className="h-6 w-6 rounded border border-border/40 hover:scale-110 transition-transform"
+                  style={{ background: c }}
+                  title={c}
+                />
+              ))}
+            </div>
+            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/40">
+              <input
+                type="color"
+                onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
+                className="h-7 w-10 cursor-pointer bg-transparent border border-border/40 rounded"
+              />
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => editor.chain().focus().unsetColor().run()}
+                className="text-xs h-7 flex-1"
+              >
+                Remover cor
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
         <div className="flex items-center gap-0.5">
           <ToolBtn
             onClick={() => {
