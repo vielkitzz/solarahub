@@ -128,10 +128,17 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
     if (error) return toast.error(error.message);
     // Como a geração de nome agora é async (faz requests), precisamos usar Promise.all
     const enriched = await Promise.all(
-      (data as ScoutResult[]).map(async (p) => ({
-        ...p,
-        scout_name: await generateRandomName(p.scout_nationality),
-      })),
+      (data as ScoutResult[]).map(async (p) => {
+        // Se a nacionalidade vier nula (usuário escolheu "Qualquer"), sorteamos uma!
+        const finalNationality =
+          p.scout_nationality || COUNTRIES_DATA[Math.floor(Math.random() * COUNTRIES_DATA.length)].name;
+
+        return {
+          ...p,
+          scout_nationality: finalNationality, // Define a nacionalidade sorteada
+          scout_name: await generateRandomName(finalNationality), // Gera o nome com base nela
+        };
+      }),
     );
 
     setScoutResults(enriched);
