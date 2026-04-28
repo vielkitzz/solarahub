@@ -127,12 +127,12 @@ BEGIN
 
   -- Pesos por nível da base (faixas: 60-69, 70-79, 80-86, 87-91, 92-94)
   weights := CASE c.nivel_base
-    WHEN 1 THEN ARRAY[50, 35, 12, 2.5, 0.5]
-    WHEN 2 THEN ARRAY[30, 40, 22, 6.5, 1.5]
-    WHEN 3 THEN ARRAY[15, 35, 35, 12, 3]
-    WHEN 4 THEN ARRAY[8, 25, 40, 22, 5]
-    WHEN 5 THEN ARRAY[3, 12, 50, 27, 8]
-    ELSE ARRAY[50, 35, 12, 2.5, 0.5]
+    WHEN 1 THEN ARRAY[70, 23,  6,   0.9, 0.1] -- Nível 1: Quase impossível vir craque
+    WHEN 2 THEN ARRAY[55, 30, 12,   2.5, 0.5] 
+    WHEN 3 THEN ARRAY[35, 40, 19,   5,   1]   
+    WHEN 4 THEN ARRAY[20, 40, 28,   10,  2]   
+    WHEN 5 THEN ARRAY[10, 30, 40,   16,  4]   -- Nível 5: Craque geracional (92+) acontece apenas em 4% dos casos
+    ELSE ARRAY[70, 23, 6, 0.9, 0.1]
   END;
 
   qty := 3 + floor(random() * 6)::INTEGER; -- 3 a 8
