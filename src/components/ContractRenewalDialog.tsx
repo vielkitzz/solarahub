@@ -20,6 +20,7 @@ export const ContractRenewalDialog = ({ player, open, onOpenChange, onRenewed }:
   const baseSalario = Number(player?.salario_atual || 0);
   const [salario, setSalario] = useState<number>(baseSalario);
   const [anos, setAnos] = useState<number>(3);
+  const [sugerido, setSugerido] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [resultado, setResultado] = useState<{
     aceita: boolean;
