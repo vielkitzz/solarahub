@@ -114,7 +114,7 @@ export async function generateRandomName(nationality?: string | null): Promise<s
   // 4. Se a API suportar o código, faz a requisição
   if (API_SUPPORTED_NATS.includes(code)) {
     try {
-      const response = await fetch(`https://randomuser.me/api/?nat=${code}&inc=name`);
+      const response = await fetch(`https://randomuser.me/api/?nat=${code}&inc=name&gender=male`);
       const data = await response.json();
       const user = data.results[0];
       return `${user.name.first} ${user.name.last}`;
