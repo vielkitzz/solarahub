@@ -493,18 +493,26 @@ const Market = () => {
               <TabsContent value="compra" className="space-y-3 mt-3">
                 <div>
                   <Label>Valor da transferência (€)</Label>
-                  <Input type="number" value={valor} onChange={(e) => setValor(e.target.value)} />
+                  <NumberInput
+                    value={valor}
+                    onChange={(v) => setValor(String(v))}
+                    min={Math.round(Number(target.valor_base_calculado) * 0.5)}
+                    max={Math.round(Number(target.valor_base_calculado) * 3.0)}
+                  />
                   <div className="text-[11px] text-muted-foreground mt-1">
                     Faixa Fair Play: {formatCurrency(Number(target.valor_base_calculado) * 0.5)} – {formatCurrency(Number(target.valor_base_calculado) * 3.0)}
                   </div>
                 </div>
                 <div>
                   <Label>Salário ofertado (€/ano)</Label>
-                  <Input type="number" value={salario} onChange={(e) => setSalario(e.target.value)} />
+                  <NumberInput value={salario} onChange={(v) => setSalario(String(v))} min={0} />
+                  <div className="text-[11px] text-muted-foreground mt-1">
+                    Sugerido: {formatCurrency(Math.round(Number(target.valor_base_calculado || 0) * 0.10))}/ano (10% do valor base)
+                  </div>
                 </div>
                 <div>
                   <Label>Luvas (€)</Label>
-                  <Input type="number" value={luvas} onChange={(e) => setLuvas(e.target.value)} />
+                  <NumberInput value={luvas} onChange={(v) => setLuvas(String(v))} min={0} max={Math.max(0, caixaComprador)} />
                   <div className="text-[11px] text-muted-foreground mt-1">
                     Total à vista: <strong>{formatCurrency(totalDevido)}</strong> · Caixa: {formatCurrency(caixaComprador)}
                   </div>
@@ -514,11 +522,11 @@ const Market = () => {
               <TabsContent value="emprestimo" className="space-y-3 mt-3">
                 <div>
                   <Label>Duração (temporadas)</Label>
-                  <Input type="number" min="1" max="3" value={duracao} onChange={(e) => setDuracao(e.target.value)} />
+                  <NumberInput value={duracao} onChange={(v) => setDuracao(String(v))} min={1} max={3} thousands={false} />
                 </div>
                 <div>
                   <Label>Salário pago pelo empréstimo (€/ano)</Label>
-                  <Input type="number" value={salario} onChange={(e) => setSalario(e.target.value)} />
+                  <NumberInput value={salario} onChange={(v) => setSalario(String(v))} min={0} />
                 </div>
               </TabsContent>
 
@@ -536,11 +544,11 @@ const Market = () => {
                 </div>
                 <div>
                   <Label>Diferença em dinheiro (€) — opcional</Label>
-                  <Input type="number" value={valor} onChange={(e) => setValor(e.target.value)} />
+                  <NumberInput value={valor} onChange={(v) => setValor(String(v))} min={0} />
                 </div>
                 <div>
                   <Label>Salário ofertado ao jogador-alvo (€/ano)</Label>
-                  <Input type="number" value={salario} onChange={(e) => setSalario(e.target.value)} />
+                  <NumberInput value={salario} onChange={(v) => setSalario(String(v))} min={0} />
                 </div>
               </TabsContent>
 
