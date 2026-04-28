@@ -271,6 +271,30 @@ export type Database = {
         }
         Relationships: []
       }
+      marcas_bloqueadas: {
+        Row: {
+          club_id: string
+          created_at: string
+          empresa_nome: string
+          id: string
+          motivo: string | null
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          empresa_nome: string
+          id?: string
+          motivo?: string | null
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          empresa_nome?: string
+          id?: string
+          motivo?: string | null
+        }
+        Relationships: []
+      }
       players: {
         Row: {
           a_venda: boolean
@@ -487,6 +511,8 @@ export type Database = {
         Returns: string
       }
       current_discord_id: { Args: never; Returns: string }
+      envelhecer_todos_jogadores: { Args: never; Returns: number }
+      gerar_potenciais_em_massa: { Args: never; Returns: number }
       get_owner_display_info: {
         Args: { _user_id: string }
         Returns: {
@@ -550,6 +576,25 @@ export type Database = {
           scout_skill: number
         }[]
       }
+      realizar_peneira_v2: {
+        Args: {
+          _age_max: number
+          _age_min: number
+          _club_id: string
+          _nationality: string
+          _positions: string[]
+        }
+        Returns: {
+          scout_age: number
+          scout_id: string
+          scout_name: string
+          scout_nationality: string
+          scout_position: string
+          scout_potential_max: number
+          scout_potential_min: number
+          scout_skill: number
+        }[]
+      }
       renovar_contrato_jogador: {
         Args: {
           _jogador_id: string
@@ -557,6 +602,10 @@ export type Database = {
           _novos_anos: number
         }
         Returns: undefined
+      }
+      sugerir_salario_jogador: {
+        Args: { _jogador_id: string }
+        Returns: number
       }
       upgrade_estadio: {
         Args: {
