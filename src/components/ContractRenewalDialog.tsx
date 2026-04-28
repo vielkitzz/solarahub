@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/format";
@@ -20,6 +20,7 @@ export const ContractRenewalDialog = ({ player, open, onOpenChange, onRenewed }:
   const baseSalario = Number(player?.salario_atual || 0);
   const [salario, setSalario] = useState<number>(baseSalario);
   const [anos, setAnos] = useState<number>(3);
+  const [sugerido, setSugerido] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [resultado, setResultado] = useState<{
     aceita: boolean;
@@ -32,6 +33,13 @@ export const ContractRenewalDialog = ({ player, open, onOpenChange, onRenewed }:
     setSalario(baseSalario);
     setAnos(3);
   };
+
+  useEffect(() => {
+    if (!open || !player?.id) return;
+    supabase.rpc("sugerir_salario_jogador", { _jogador_id: player.id }).then(({ data }) => {
+      if (data) setSugerido(Math.round(Number(data)));
+    });
+  }, [open, player?.id]);
 
   const handleClose = (v: boolean) => {
     if (!v) reset();
@@ -105,22 +113,31 @@ export const ContractRenewalDialog = ({ player, open, onOpenChange, onRenewed }:
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label>Salário anual (R$)</Label>
-            <Input
-              type="number"
+            <Label>Salário anual (€)</Label>
+            <NumberInput
               value={salario}
-              onChange={(e) => setSalario(Number(e.target.value))}
+              onChange={(v) => setSalario(v)}
+              min={0}
               disabled={loading}
             />
+            {sugerido > 0 && (
+              <button
+                type="button"
+                onClick={() => setSalario(sugerido)}
+                className="text-[11px] text-primary hover:underline mt-1"
+              >
+                Sugerido: {formatCurrency(sugerido)}/ano
+              </button>
+            )}
           </div>
           <div>
             <Label>Duração (anos)</Label>
-            <Input
-              type="number"
+            <NumberInput
+              value={anos}
+              onChange={(v) => setAnos(v)}
               min={1}
               max={5}
-              value={anos}
-              onChange={(e) => setAnos(Number(e.target.value))}
+              thousands={false}
               disabled={loading}
             />
           </div>
