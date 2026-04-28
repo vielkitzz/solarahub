@@ -3,11 +3,15 @@ import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
 import { Image as TiptapImage } from "@tiptap/extension-image";
+import TextAlign from "@tiptap/extension-text-align";
+import { Color } from "@tiptap/extension-color";
+import { TextStyle } from "@tiptap/extension-text-style";
 import { Node, mergeAttributes } from "@tiptap/core";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ImageUpload } from "@/components/ImageUpload";
 import { Separator } from "@/components/ui/separator";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Bold,
   Italic,
@@ -22,6 +26,10 @@ import {
   Redo,
   Code,
   Trash2,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Palette,
 } from "lucide-react";
 import { useState, useRef, useCallback } from "react";
 
