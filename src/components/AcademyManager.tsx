@@ -65,7 +65,7 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
   const [players, setPlayers] = useState<AcademyPlayer[]>([]);
   const [loading, setLoading] = useState(true);
   const [scoutOpen, setScoutOpen] = useState(false);
-  const [scoutPos, setScoutPos] = useState("");
+  const [scoutPositions, setScoutPositions] = useState<string[]>([]);
   const [scoutAgeMin, setScoutAgeMin] = useState(14);
   const [scoutAgeMax, setScoutAgeMax] = useState(23);
   const [scoutNat, setScoutNat] = useState<string>("__any__");
