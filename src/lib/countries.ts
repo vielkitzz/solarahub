@@ -17,7 +17,6 @@ export const COUNTRIES_DATA: Country[] = [
   { name: "Antígua e Barbuda", code: "ag" },
   { name: "Arábia Saudita", code: "sa" },
   { name: "Argélia", code: "dz" },
-  { name: "Argentina", code: "ar" },
   { name: "Armênia", code: "am" },
   { name: "Austrália", code: "au" },
   { name: "Áustria", code: "at" },

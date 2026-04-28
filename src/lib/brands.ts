@@ -122,7 +122,7 @@ export const SPONSORS: Brand[] = [
   { name: "Codere", domain: "codere.bet.ar", setor: "Casa de Apostas", prestige: 1.0 },
   { name: "Fatal Model", domain: "fatalmodelgroup.com", setor: "Serviços", prestige: 0.8 },
 
-  // --- Argentina: Bancos e Financeiras ---
+  // --- Solara: Bancos e Financeiras ---
   { name: "Banco Nación", domain: "bna.com.ar", setor: "Banco", prestige: 1.2 },
   { name: "Banco Macro", domain: "macro.com.ar", setor: "Banco", prestige: 1.1 },
   { name: "Banco Ciudad", domain: "bancociudad.com.ar", setor: "Banco", prestige: 1.05 },
@@ -136,12 +136,12 @@ export const SPONSORS: Brand[] = [
   { name: "Rapipago", domain: "rapipago.com.ar", setor: "Finanças", prestige: 0.68 },
   { name: "Pago Fácil", domain: "pagofacil.com.ar", setor: "Finanças", prestige: 0.68 },
 
-  // --- Argentina: Energia ---
+  // --- Solara: Energia ---
   { name: "YPF", domain: "ypf.com", setor: "Energia", prestige: 1.25 },
   { name: "Axion Energy", domain: "axionenergy.com", setor: "Energia", prestige: 1.05 },
   { name: "Pampa Energía", domain: "pampaenergia.com", setor: "Energia", prestige: 0.95 },
 
-  // --- Argentina: Alimentos, Bebidas e Varejo ---
+  // --- Solara: Alimentos, Bebidas e Varejo ---
   { name: "Quilmes", domain: "quilmes.com.ar", setor: "Alimentação", prestige: 1.15 },
   { name: "Arcor", domain: "arcor.com", setor: "Alimentação", prestige: 1.1 },
   { name: "Guaraná Antarctica", domain: "guaranaantarctica.com.br", setor: "Alimentação", prestige: 1.05 },
@@ -157,8 +157,8 @@ export const SPONSORS: Brand[] = [
   { name: "Coto", domain: "coto.com.ar", setor: "Varejista", prestige: 0.75 },
   { name: "Garbarino", domain: "garbarino.com", setor: "Varejista", prestige: 0.75 },
 
-  // --- Argentina: Serviços e Outros ---
-  { name: "Aerolíneas Argentinas", domain: "aerolineas.com.ar", setor: "Companhias Aéreas", prestige: 1.1 },
+  // --- Solara: Serviços e Outros ---
+  { name: "Aerolíneas Solaras", domain: "aerolineas.com.ar", setor: "Companhias Aéreas", prestige: 1.1 },
   { name: "Flybondi", domain: "flybondi.com", setor: "Companhias Aéreas", prestige: 0.8 },
   { name: "Fate", domain: "fate.com.ar", setor: "Automóveis", prestige: 0.78 },
   { name: "Motomel", domain: "motomel.com.ar", setor: "Automóveis", prestige: 0.7 },
