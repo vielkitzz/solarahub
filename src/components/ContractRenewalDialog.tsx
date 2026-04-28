@@ -106,22 +106,31 @@ export const ContractRenewalDialog = ({ player, open, onOpenChange, onRenewed }:
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label>Salário anual (R$)</Label>
-            <Input
-              type="number"
+            <Label>Salário anual (€)</Label>
+            <NumberInput
               value={salario}
-              onChange={(e) => setSalario(Number(e.target.value))}
+              onChange={(v) => setSalario(v)}
+              min={0}
               disabled={loading}
             />
+            {sugerido > 0 && (
+              <button
+                type="button"
+                onClick={() => setSalario(sugerido)}
+                className="text-[11px] text-primary hover:underline mt-1"
+              >
+                Sugerido: {formatCurrency(sugerido)}/ano
+              </button>
+            )}
           </div>
           <div>
             <Label>Duração (anos)</Label>
-            <Input
-              type="number"
+            <NumberInput
+              value={anos}
+              onChange={(v) => setAnos(v)}
               min={1}
               max={5}
-              value={anos}
-              onChange={(e) => setAnos(Number(e.target.value))}
+              thousands={false}
               disabled={loading}
             />
           </div>
