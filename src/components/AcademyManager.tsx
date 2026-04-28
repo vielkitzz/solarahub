@@ -9,9 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  GraduationCap, Search, ArrowUp, X, AlertTriangle, Sparkles, Star, ArrowUpCircle,
-} from "lucide-react";
+import { GraduationCap, Search, ArrowUp, X, AlertTriangle, Sparkles, Star, ArrowUpCircle } from "lucide-react";
 import { POSITIONS, formatCurrency, calcStars } from "@/lib/format";
 import { COUNTRIES_DATA } from "@/lib/countries";
 import { StarRating } from "@/components/StarRating";
@@ -95,9 +93,7 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
   }, [club.id]);
 
   const proximoNivel = (club.nivel_base || 1) < 5 ? (club.nivel_base || 1) + 1 : null;
-  const custoUpgrade = proximoNivel
-    ? BASE_UPGRADE_CUSTOS[`${club.nivel_base}_${proximoNivel}`] || 0
-    : 0;
+  const custoUpgrade = proximoNivel ? BASE_UPGRADE_CUSTOS[`${club.nivel_base}_${proximoNivel}`] || 0 : 0;
 
   const upgradeBase = async () => {
     if (!proximoNivel) return;
@@ -130,10 +126,14 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
     });
     setScoutLoading(false);
     if (error) return toast.error(error.message);
-    const enriched = (data as ScoutResult[]).map((p) => ({
-      ...p,
-      scout_name: generateRandomName(p.scout_nationality),
-    }));
+    // Como a geração de nome agora é async (faz requests), precisamos usar Promise.all
+    const enriched = await Promise.all(
+      (data as ScoutResult[]).map(async (p) => ({
+        ...p,
+        scout_name: await generateRandomName(p.scout_nationality),
+      })),
+    );
+
     setScoutResults(enriched);
     onChange();
   };
@@ -384,7 +384,15 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
       )}
 
       {/* Dialog peneira */}
-      <Dialog open={scoutOpen} onOpenChange={(o) => { if (!o) { setScoutOpen(false); setScoutResults(null); } }}>
+      <Dialog
+        open={scoutOpen}
+        onOpenChange={(o) => {
+          if (!o) {
+            setScoutOpen(false);
+            setScoutResults(null);
+          }
+        }}
+      >
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -405,9 +413,7 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
                           key={p}
                           type="button"
                           onClick={() =>
-                            setScoutPositions((prev) =>
-                              active ? prev.filter((x) => x !== p) : [...prev, p],
-                            )
+                            setScoutPositions((prev) => (active ? prev.filter((x) => x !== p) : [...prev, p]))
                           }
                           className={`px-2.5 py-1 rounded text-xs font-bold transition-colors ${
                             active
@@ -476,8 +482,8 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
               </div>
 
               <div className="text-xs text-muted-foreground bg-secondary/30 rounded p-3 mt-2">
-                A peneira gera entre 3 e 8 jogadores. A chance de talentos raros depende do nível
-                da sua base ({club.nivel_base}). Esta operação consome 1 das 2 peneiras desta temporada.
+                A peneira gera entre 3 e 8 jogadores. A chance de talentos raros depende do nível da sua base (
+                {club.nivel_base}). Esta operação consome 1 das 2 peneiras desta temporada.
               </div>
 
               <DialogFooter>
