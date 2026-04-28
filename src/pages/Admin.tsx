@@ -595,6 +595,8 @@ const Admin = () => {
               </Card>
             </div>
           </div>
+
+          <PlayerBulkActions onChanged={load} />
         </TabsContent>
 
         {/* ABA: EMPRESAS (ECONOMIA) */}
