@@ -112,11 +112,17 @@ const Market = () => {
     [players, activeClubId]
   );
 
-  const openProposal = (player: any) => {
+  const openProposal = async (player: any) => {
     setTarget(player);
     setTipo("compra");
     setValor(String(Math.round(Number(player.valor_base_calculado))));
-    setSalario(String(Math.round(Number(player.salario_atual))));
+    // Sugere salário coerente: 10% do valor base / ano (via RPC)
+    let sugerido = Math.round(Number(player.valor_base_calculado || 0) * 0.10);
+    try {
+      const { data } = await supabase.rpc("sugerir_salario_jogador", { _jogador_id: player.id });
+      if (data) sugerido = Math.round(Number(data));
+    } catch {}
+    setSalario(String(Math.max(50000, sugerido)));
     setLuvas("0");
     setDuracao("1");
     setJogadorTrocado("");
