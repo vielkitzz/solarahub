@@ -32,6 +32,7 @@ import { EmpresasManager } from "@/components/EmpresasManager";
 import { SeasonPreview } from "@/components/admin/SeasonPreview";
 import { EconomyParams } from "@/components/admin/EconomyParams";
 import { BulkBudgetAdjuster } from "@/components/admin/BulkBudgetAdjuster";
+import { PlayerBulkActions } from "@/components/admin/PlayerBulkActions";
 import { parseSquadJson, ImportedPlayer } from "@/lib/squad-import";
 import { useSeason } from "@/contexts/SeasonContext";
 
