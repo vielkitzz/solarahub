@@ -1,10 +1,11 @@
 export const formatCurrency = (value: number | string) => {
   const n = typeof value === "string" ? parseFloat(value) : value;
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n || 0);
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(
+    n || 0,
+  );
 };
 
-export const formatNumber = (value: number) =>
-  new Intl.NumberFormat("pt-BR").format(value || 0);
+export const formatNumber = (value: number) => new Intl.NumberFormat("pt-BR").format(value || 0);
 
 /** Formata um número (ou string numérica) com separador de milhar pt-BR (1000000 → "1.000.000"). */
 export const formatThousands = (value: number | string | null | undefined): string => {
@@ -18,14 +19,15 @@ export const formatThousands = (value: number | string | null | undefined): stri
 export const parseFormatted = (value: string | number | null | undefined): number => {
   if (value === null || value === undefined || value === "") return 0;
   if (typeof value === "number") return value;
-  const cleaned = String(value).replace(/\./g, "").replace(",", ".").replace(/[^\d.-]/g, "");
+  const cleaned = String(value)
+    .replace(/\./g, "")
+    .replace(",", ".")
+    .replace(/[^\d.-]/g, "");
   const n = parseFloat(cleaned);
   return Number.isFinite(n) ? n : 0;
 };
 
-export const POSITIONS = [
-  "GOL", "ZAG", "LD", "LE", "VOL", "MC", "MEI", "PD", "PE", "SA", "ATA",
-];
+export const POSITIONS = ["GOL", "ZAG", "LD", "LE", "VOL", "MC", "MEI", "PD", "PE", "SA", "ATA"];
 
 // Calcula a "exigência" do clube com base no rate
 export const exigenciaClube = (rate: number | string | null | undefined): number => {
@@ -39,13 +41,13 @@ export const exigenciaClube = (rate: number | string | null | undefined): number
  */
 export const calcStars = (habilidade: number | null | undefined, rate: number | string | null | undefined): number => {
   if (habilidade == null) return 0;
+
   const exig = exigenciaClube(rate);
   const diff = habilidade - exig;
-  let stars: number;
-  if (diff >= 15) stars = 5;
-  else if (diff >= 8) stars = 4 + (diff - 8) / 14;
-  else if (diff >= -7) stars = 3 + (diff + 7) / 28;
-  else if (diff >= -14) stars = 2 + (diff + 14) / 14;
-  else stars = 1 + Math.max(0, (diff + 21) / 14);
+
+  // Fórmula simples: Começa em 3 estrelas (média). Cada 10 pontos de diferença muda 1 estrela.
+  const stars = 3 + diff / 10;
+
+  // Arredonda para o 0.5 mais próximo e limita entre 0.5 e 5
   return Math.max(0.5, Math.min(5, Math.round(stars * 2) / 2));
 };
