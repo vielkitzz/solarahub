@@ -106,7 +106,7 @@ BEGIN
 
   IF c.rate < 3.05
      AND rep_rank < 3
-     AND prestigio > 1.0
+     AND prestigio > 1.5
      AND NEW.categoria::text NOT IN ('fornecedora')
      AND setor_lower NOT LIKE '%casa de apostas%'
      AND setor_lower NOT LIKE '%aposta%'
