@@ -102,7 +102,7 @@ const ClubDetail = () => {
         .eq("categoria", "fornecedora")
         .limit(1)
         .maybeSingle(),
-      supabase.rpc("get_tv_rights_value", { _club_id: id }),
+      supabase.rpc("get_tv_rights_value" as any, { _club_id: id }),
     ]);
 
     setClub(c);
