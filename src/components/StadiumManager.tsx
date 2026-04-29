@@ -239,12 +239,24 @@ export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
             <Label className="text-xs">Preço Nacional (€5 - €30)</Label>
             <Input
               type="number"
-              min="0"
+              min="5"
+              max="30"
               value={precoNacStr}
               onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                if (val < 0) return; // Bloqueia valores negativos
-                setPrecoNacStr(e.target.value);
+                const str = e.target.value;
+                if (str === "") {
+                  setPrecoNacStr("");
+                  return;
+                }
+                const val = parseFloat(str);
+                if (isNaN(val) || val < 0) return;
+
+                // Trava rigorosa no 30
+                if (val > 30) {
+                  setPrecoNacStr("30");
+                } else {
+                  setPrecoNacStr(str);
+                }
               }}
               disabled={!canEdit}
             />
@@ -256,12 +268,24 @@ export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
             <Label className="text-xs">Preço Internacional (€10 - €50)</Label>
             <Input
               type="number"
-              min="0"
+              min="5"
+              max="50"
               value={precoIntStr}
               onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                if (val < 0) return; // Bloqueia valores negativos
-                setPrecoIntStr(e.target.value);
+                const str = e.target.value;
+                if (str === "") {
+                  setPrecoIntStr("");
+                  return;
+                }
+                const val = parseFloat(str);
+                if (isNaN(val) || val < 0) return;
+
+                // Trava rigorosa no 50
+                if (val > 50) {
+                  setPrecoIntStr("50");
+                } else {
+                  setPrecoIntStr(str);
+                }
               }}
               disabled={!canEdit}
             />
