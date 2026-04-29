@@ -57,7 +57,7 @@ const ClubDetail = () => {
   const [renewPlayer, setRenewPlayer] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [wikiData, setWikiData] = useState<WikiData>({});
-  const [editingClub, setEditingClub] = useState<any>(null);
+const [editingClub, setEditingClub] = useState<any>(null);
   const [masterSponsor, setMasterSponsor] = useState<string | null>(null);
   const [kitSupplier, setKitSupplier] = useState<string | null>(null);
 
@@ -80,7 +80,7 @@ const ClubDetail = () => {
       { data: settings },
       { data: masterContract },
       { data: kitContract },
-      { data: tvRightsValue }, // <--- Novo retorno da RPC
+      { data: tvRightsValue },
     ] = await Promise.all([
       supabase.from("clubs").select("*").eq("id", id).maybeSingle(),
       supabase.from("players").select("*").eq("club_id", id),
@@ -88,7 +88,7 @@ const ClubDetail = () => {
       supabase
         .from("settings")
         .select("key, value")
-        .in("key", ["temporada_atual", "direitos_imagem"]), // Direitos de TV não precisam mais vir daqui
+        .in("key", ["temporada_atual", "direitos_imagem"]),
       supabase
         .from("contratos_clube")
         .select("empresa_nome, categoria")
@@ -105,7 +105,7 @@ const ClubDetail = () => {
         .eq("categoria", "fornecedora")
         .limit(1)
         .maybeSingle(),
-      supabase.rpc("get_tv_rights_value", { _club_id: id }), // <--- Chamada para o banco de dados
+      supabase.rpc("get_tv_rights_value", { _club_id: id }),
     ]);
     
     setClub(c);
@@ -123,28 +123,7 @@ const ClubDetail = () => {
         });
     });
     
-    // Salva o valor exato calculado pela função do banco (já com o bônus/punição)
     setDireitosTv(Number(tvRightsValue || 0));
-    
-    setWikiData((c?.wiki as WikiData) || {});
-    setEditingClub(c);
-    setLoading(false);
-    if (c) document.title = `${c.name} — Solara Hub`;
-  };
-    setClub(c);
-    setMasterSponsor((masterContract as any)?.empresa_nome ?? null);
-    setKitSupplier((kitContract as any)?.empresa_nome ?? null);
-    setPlayers(p || []);
-    setContratosTotal((ct || []).reduce((s, r: any) => s + Number(r.valor_anual || 0), 0));
-    (settings || []).forEach((s: any) => {
-      if (s.key === "temporada_atual" && typeof s.value?.ano === "number") setTemporadaAtual(s.value.ano);
-      if (s.key === "direitos_tv_por_reputacao") setTvSettings(s.value || {});
-      if (s.key === "direitos_imagem")
-        setImgSettings({
-          custo_pct: Number(s.value?.custo_pct ?? 0.03),
-          receita_pct: Number(s.value?.receita_pct ?? 0.5),
-        });
-    });
     setWikiData((c?.wiki as WikiData) || {});
     setEditingClub(c);
     setLoading(false);
@@ -156,6 +135,7 @@ const ClubDetail = () => {
   }, [id]);
 
   // Carrega informação do dono (nome + avatar) quando o clube é carregado
+  useEffect(() => {
   useEffect(() => {
     const loadOwner = async () => {
       if (!club?.owner_id) {
