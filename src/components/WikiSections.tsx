@@ -1,95 +1,198 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RichEditor } from "./RichEditor";
-import { Pencil } from "lucide-react";
+import { Pencil, Plus, GripVertical, Trash2 } from "lucide-react";
 import type { InfoboxData } from "./ClubInfobox";
 
 export interface WikiData {
-  content?: string;
-  sections?: Partial<Record<WikiSectionKey, string>>;
+  content?: string; // Mantido para compatibilidade, mas não renderizado como "Legado"
+  sections?: Record<string, string>;
+  sectionOrder?: string[]; // Nova propriedade para controlar a ordem
   infobox?: InfoboxData;
 }
 
-export type WikiSectionKey = "historia" | "titulos" | "cores" | "escudos" | "mascotes" | "extras";
-
-interface SectionMeta {
-  key: WikiSectionKey;
+export interface SectionMeta {
+  key: string;
   title: string;
   placeholder: string;
+  isSystem?: boolean; // Define se é uma seção fixa (como a Introdução)
 }
 
-export const WIKI_SECTIONS: SectionMeta[] = [
+// Configuração inicial das seções conforme solicitado
+const INITIAL_SECTIONS: SectionMeta[] = [
+  { key: "introducao", title: "", placeholder: "Introdução e visão geral do artigo...", isSystem: true },
   { key: "historia", title: "História", placeholder: "Conte a trajetória, fundação e marcos do clube..." },
-  {
-    key: "titulos",
-    title: "Títulos",
-    placeholder: "Liste as conquistas: estaduais, nacionais, continentais, mundiais...",
-  },
-  {
-    key: "cores",
-    title: "Cores e uniformes",
-    placeholder: "Descreva as cores oficiais, alternativas e seu significado...",
-  },
-  { key: "escudos", title: "Escudos", placeholder: "História dos escudos do clube ao longo do tempo..." },
-  { key: "mascotes", title: "Mascotes e símbolos", placeholder: "Mascotes oficiais e símbolos do clube..." },
-  { key: "extras", title: "Curiosidades", placeholder: "Fatos, lendas, ídolos e curiosidades..." },
+  { key: "titulos", title: "Títulos", placeholder: "Liste as conquistas..." },
+  { key: "cores", title: "Cores e uniformes", placeholder: "Significado das cores e mantos..." },
+  { key: "escudos", title: "Escudos", placeholder: "Evolução visual ao longo do tempo..." },
+  { key: "mascotes", title: "Mascotes e símbolos", placeholder: "Mascotes oficiais e simbologias..." },
+  { key: "extras", title: "Curiosidades", placeholder: "Fatos, lendas e ídolos..." },
 ];
-
-export function getSection(wiki: WikiData | null | undefined, key: WikiSectionKey): string {
-  return wiki?.sections?.[key] ?? "";
-}
-
-export function hasAnyContent(wiki: WikiData | null | undefined): boolean {
-  if (!wiki) return false;
-  if (wiki.content?.trim()) return true;
-  return WIKI_SECTIONS.some((s) => (wiki.sections?.[s.key] ?? "").trim());
-}
 
 interface ViewProps {
   wiki: WikiData | null | undefined;
   canEdit?: boolean;
-  onSaveSection?: (key: WikiSectionKey, html: string) => Promise<void> | void;
+  onSaveWiki?: (updatedWiki: WikiData) => Promise<void> | void;
   title?: string;
 }
 
-interface SectionProps {
+export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, title }: ViewProps) {
+  // Estado para gerenciar a ordem e existência das seções
+  const [sections, setSections] = useState<SectionMeta[]>([]);
+  const [isAddingSection, setIsAddingSection] = useState(false);
+  const [newSectionTitle, setNewSectionTitle] = useState("");
+
+  useEffect(() => {
+    // Inicializa as seções baseadas no WikiData ou no padrão
+    if (wiki?.sectionOrder) {
+      // Reconstroi a lista baseada na ordem salva
+      const ordered = wiki.sectionOrder.map((key) => {
+        const existing = INITIAL_SECTIONS.find((s) => s.key === key);
+        return existing || { key, title: key, placeholder: "Escreva aqui..." };
+      });
+      setSections(ordered);
+    } else {
+      setSections(INITIAL_SECTIONS);
+    }
+  }, [wiki]);
+
+  const handleSaveSection = async (key: string, html: string) => {
+    if (!onSaveWiki) return;
+    const newWiki = {
+      ...wiki,
+      sections: { ...wiki?.sections, [key]: html },
+      sectionOrder: sections.map((s) => s.key),
+    };
+    await onSaveWiki(newWiki);
+  };
+
+  const addNewSection = () => {
+    if (!newSectionTitle.trim()) return;
+    const key = newSectionTitle.toLowerCase().replace(/\s+/g, "-");
+    const newMeta: SectionMeta = {
+      key,
+      title: newSectionTitle,
+      placeholder: "Adicione conteúdo a esta nova seção...",
+    };
+    setSections([...sections, newMeta]);
+    setNewSectionTitle("");
+    setIsAddingSection(false);
+  };
+
+  const moveSection = (index: number, direction: "up" | "down") => {
+    const newSections = [...sections];
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newSections.length) return;
+
+    [newSections[index], newSections[targetIndex]] = [newSections[targetIndex], newSections[index]];
+    setSections(newSections);
+    // Opcional: Salvar ordem automaticamente no backend aqui
+  };
+
+  return (
+    <article className="wiki-surface px-5 md:px-8 py-6 md:py-8">
+      {title && (
+        <header className="mb-8">
+          <h1 className="font-serif text-3xl md:text-4xl font-semibold border-b border-border/60 pb-3 m-0">{title}</h1>
+          <p className="text-xs text-muted-foreground mt-2 italic">Origem: Solara Hub — wiki colaborativa do clube.</p>
+        </header>
+      )}
+
+      <div className="space-y-2">
+        {sections.map((meta, index) => (
+          <div key={meta.key} className="group relative">
+            {canEdit && !meta.isSystem && (
+              <div className="absolute -left-10 top-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveSection(index, "up")}>
+                  <GripVertical className="h-4 w-4 rotate-180" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveSection(index, "down")}>
+                  <GripVertical className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+            <Section meta={meta} html={wiki?.sections?.[meta.key] ?? ""} canEdit={canEdit} onSave={handleSaveSection} />
+          </div>
+        ))}
+      </div>
+
+      {canEdit && (
+        <div className="mt-8 pt-6 border-t border-dashed border-border flex justify-center">
+          <Button variant="outline" onClick={() => setIsAddingSection(true)} className="gap-2">
+            <Plus className="h-4 w-4" /> Adicionar nova seção
+          </Button>
+        </div>
+      )}
+
+      {/* Dialog para Nova Seção */}
+      <Dialog open={isAddingSection} onOpenChange={setIsAddingSection}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Criar nova seção</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <label className="text-sm font-medium mb-2 block">Título da Seção</label>
+            <input
+              className="w-full p-2 border rounded-md"
+              value={newSectionTitle}
+              onChange={(e) => setNewSectionTitle(e.target.value)}
+              placeholder="Ex: Estádio, Rivalidades..."
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddingSection(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={addNewSection} className="bg-gradient-gold text-primary-foreground">
+              Criar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </article>
+  );
+}
+
+// Componente Section mantido com ajustes no header para esconder o título se for a Introdução
+function Section({
+  meta,
+  html,
+  canEdit,
+  onSave,
+}: {
   meta: SectionMeta;
   html: string;
   canEdit: boolean;
-  onSave?: (key: WikiSectionKey, html: string) => Promise<void> | void;
-}
-
-function Section({ meta, html, canEdit, onSave }: SectionProps) {
+  onSave: (key: string, html: string) => void;
+}) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(html);
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    if (!onSave) return;
     setSaving(true);
     await onSave(meta.key, draft);
     setSaving(false);
     setOpen(false);
   };
 
-  const empty = !html.trim();
-
   return (
     <section className="scroll-mt-20 mb-10" id={`wiki-${meta.key}`}>
-      {/* Header da seção com separador visual */}
       <div className="wiki-section-heading flex items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <h2 className="font-serif text-xl md:text-2xl font-semibold text-foreground m-0 p-0 leading-tight shrink-0">
-            {meta.title}
-          </h2>
-          <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
+          {meta.title && (
+            <h2 className="font-serif text-xl md:text-2xl font-semibold text-foreground m-0 p-0 leading-tight shrink-0">
+              {meta.title}
+            </h2>
+          )}
+          {meta.title && <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />}
         </div>
         {canEdit && (
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs text-primary hover:text-primary shrink-0"
+            className="h-7 text-xs text-primary"
             onClick={() => {
               setDraft(html);
               setOpen(true);
@@ -100,19 +203,18 @@ function Section({ meta, html, canEdit, onSave }: SectionProps) {
         )}
       </div>
 
-      {empty ? (
-        <p className="text-sm italic text-muted-foreground">
-          Sem conteúdo nesta seção{canEdit ? " — clique em editar para adicionar." : "."}
-        </p>
+      {!html.trim() ? (
+        <p className="text-sm italic text-muted-foreground">Sem conteúdo aqui.</p>
       ) : (
         <div className="wiki-prose" dangerouslySetInnerHTML={{ __html: html }} />
       )}
 
+      {/* Modal de edição mantido igual ao seu original... */}
       {canEdit && (
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent className="max-w-3xl">
             <DialogHeader>
-              <DialogTitle className="font-serif">Editar — {meta.title}</DialogTitle>
+              <DialogTitle className="font-serif">Editar — {meta.title || "Introdução"}</DialogTitle>
             </DialogHeader>
             <div className="py-2">
               <RichEditor content={draft} onChange={setDraft} placeholder={meta.placeholder} />
@@ -122,41 +224,12 @@ function Section({ meta, html, canEdit, onSave }: SectionProps) {
                 Cancelar
               </Button>
               <Button onClick={handleSave} disabled={saving} className="bg-gradient-gold text-primary-foreground">
-                {saving ? "Salvando..." : "Salvar seção"}
+                {saving ? "Salvando..." : "Salvar"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       )}
     </section>
-  );
-}
-
-export function WikiSectionsView({ wiki, canEdit = false, onSaveSection, title }: ViewProps) {
-  return (
-    <article className="wiki-surface px-5 md:px-8 py-6 md:py-8">
-      {title && (
-        <header className="mb-8">
-          <h1 className="font-serif text-3xl md:text-4xl font-semibold border-b border-border/60 pb-3 m-0">{title}</h1>
-          <p className="text-xs text-muted-foreground mt-2 italic">Origem: Solara Hub — wiki colaborativa do clube.</p>
-        </header>
-      )}
-
-      {WIKI_SECTIONS.map((s) => (
-        <Section key={s.key} meta={s} html={getSection(wiki, s.key)} canEdit={canEdit} onSave={onSaveSection} />
-      ))}
-
-      {wiki?.content?.trim() && (
-        <section className="mb-10">
-          <div className="wiki-section-heading flex items-center gap-3 mb-4">
-            <h2 className="font-serif text-xl md:text-2xl font-semibold text-foreground m-0 p-0 leading-tight shrink-0">
-              Conteúdo legado
-            </h2>
-            <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />
-          </div>
-          <div className="wiki-prose" dangerouslySetInnerHTML={{ __html: wiki.content }} />
-        </section>
-      )}
-    </article>
   );
 }
