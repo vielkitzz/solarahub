@@ -373,9 +373,26 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
   };
 
   const rescindir = async (c: Contrato) => {
-    const multa = Number(c.multa_rescisao || c.valor_anual * 0.7);
+    // Calcula quantos anos faltam para o fim do contrato
+    const anosRestantes = (c.fim_temporada || temporadaAtual) - temporadaAtual;
+
+    // Lógica da multa proporcional
+    let multa = 0;
+    if (anosRestantes <= 0) {
+      // Se já está no último ano/meses, cobra apenas uma multa residual (30% do ano)
+      multa = Number(c.valor_anual) * 0.3;
+    } else {
+      // Se faltam anos, calcula 70% de todo o valor restante que o clube receberia
+      const valorTotalRestante = Number(c.valor_anual) * anosRestantes;
+      multa = valorTotalRestante * 0.7;
+    }
+
+    const textoTempo = anosRestantes <= 0 ? "menos de 1 ano" : `${anosRestantes} ano(s)`;
+
     if (
-      !confirm(`Rescindir contrato com ${c.empresa?.nome}? Multa de ${formatCurrency(multa)} será debitada do caixa.`)
+      !confirm(
+        `Rescindir contrato com ${c.empresa?.nome}? Resta(m) ${textoTempo}. Multa de ${formatCurrency(multa)} será debitada do caixa.`,
+      )
     )
       return;
 
@@ -487,7 +504,11 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
                             size="icon"
                             className="h-6 w-6 text-destructive"
                             onClick={() => rescindir(c)}
-                            title={`Rescindir (multa ${formatCurrency(Number(c.multa_rescisao || c.valor_anual * 0.7))})`}
+                            title={`Rescindir (multa ${formatCurrency(
+                              (c.fim_temporada || temporadaAtual) - temporadaAtual <= 0
+                                ? Number(c.valor_anual) * 0.3
+                                : Number(c.valor_anual) * ((c.fim_temporada || temporadaAtual) - temporadaAtual) * 0.7,
+                            )})`}
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
