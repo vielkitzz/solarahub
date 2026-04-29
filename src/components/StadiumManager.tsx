@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge"; // <-- Adicione essa linha!
+import { Badge } from "@/components/ui/badge";
 import { Building2, Star, ArrowUpCircle, Check, X, Trophy } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
@@ -30,14 +30,16 @@ export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
   const [novoNivel, setNovoNivel] = useState<number>(club.nivel_estadio || 1);
 
   // States para os inputs (usando string para permitir apagar tudo ao digitar)
-  const [novaCapStr, setNovaCapStr] = useState<string>(String(club.stadium_capacity || 0));
+  const [assentosAdicionaisStr, setAssentosAdicionaisStr] = useState<string>("");
   const [precoNacStr, setPrecoNacStr] = useState<string>(String(club.preco_ingresso_nacional || 15));
   const [precoIntStr, setPrecoIntStr] = useState<string>(String(club.preco_ingresso_internacional || 25));
 
   const [saving, setSaving] = useState(false);
   const jogos = Number(club.jogos_por_temporada || 38);
 
-  const novaCap = parseInt(novaCapStr) || 0;
+  const qtdAssentos = parseInt(assentosAdicionaisStr) || 0;
+  const capacidadeFinal = (club.stadium_capacity || 0) + Math.max(0, qtdAssentos);
+
   const precoNac = parseFloat(precoNacStr) || 0;
   const precoInt = parseFloat(precoIntStr) || 0;
 
@@ -50,15 +52,14 @@ export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
       }
     }
     // Soma custo de novos lugares
-    const lugaresExtras = Math.max(0, novaCap - (club.stadium_capacity || 0));
-    total += lugaresExtras * CUSTO_POR_LUGAR;
+    total += Math.max(0, qtdAssentos) * CUSTO_POR_LUGAR;
     return total;
-  }, [novoNivel, novaCap, club.nivel_estadio, club.stadium_capacity]);
+  }, [novoNivel, qtdAssentos, club.nivel_estadio]);
 
   const ocupacaoNac = Math.max(0.3, Math.min(1, 1 - ((precoNac - 5) / 25) * 0.5));
   const ocupacaoInt = Math.max(0.3, Math.min(1, 1 - ((precoInt - 10) / 40) * 0.5));
-  const receitaPorJogoNac = novaCap * ocupacaoNac * precoNac;
-  const receitaPorJogoInt = novaCap * ocupacaoInt * precoInt;
+  const receitaPorJogoNac = capacidadeFinal * ocupacaoNac * precoNac;
+  const receitaPorJogoInt = capacidadeFinal * ocupacaoInt * precoInt;
   const receitaAnual = ((receitaPorJogoNac + receitaPorJogoInt) / 2) * jogos;
 
   const salvarPrecos = async () => {
@@ -86,7 +87,8 @@ export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
     if (custoUpgrade <= 0) return toast.info("Nenhuma alteração selecionada.");
     if (Number(club.budget) < custoUpgrade)
       return toast.error(`Caixa insuficiente. Necessário ${formatCurrency(custoUpgrade)}`);
-    if (novaCap > capMax) return toast.error(`A capacidade máxima permitida é de ${capMax.toLocaleString()} lugares.`);
+    if (capacidadeFinal > capMax)
+      return toast.error(`A capacidade máxima permitida é de ${capMax.toLocaleString()} lugares.`);
 
     if (!confirm(`Confirmar investimento de ${formatCurrency(custoUpgrade)} nas obras do estádio?`)) return;
 
@@ -96,13 +98,15 @@ export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
       .update({
         budget: Number(club.budget) - custoUpgrade,
         nivel_estadio: novoNivel,
-        stadium_capacity: novaCap,
+        stadium_capacity: capacidadeFinal,
       })
       .eq("id", club.id);
 
     setSaving(false);
     if (error) return toast.error(error.message);
+
     toast.success("Obras concluídas com sucesso!");
+    setAssentosAdicionaisStr(""); // Reseta o input após construir
     onChange();
   };
 
@@ -179,18 +183,22 @@ export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-sm font-semibold">Nova Capacidade (Máx: {capMax.toLocaleString()})</Label>
+            <Label className="text-sm font-semibold">Novos assentos a construir</Label>
             <Input
               type="number"
-              value={novaCapStr}
-              onChange={(e) => setNovaCapStr(e.target.value)}
-              placeholder="Ex: 50000"
+              min="0"
+              value={assentosAdicionaisStr}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                if (val < 0) return; // Bloqueia valores negativos
+                setAssentosAdicionaisStr(e.target.value);
+              }}
+              placeholder="Ex: 5000"
               className="bg-secondary/20"
             />
-            {novaCap > (club.stadium_capacity || 0) && (
+            {qtdAssentos > 0 && (
               <p className="text-[11px] text-success font-medium">
-                Ampliação: +{(novaCap - club.stadium_capacity).toLocaleString()} lugares (
-                {formatCurrency((novaCap - club.stadium_capacity) * CUSTO_POR_LUGAR)})
+                A capacidade final será de {capacidadeFinal.toLocaleString()} lugares (Máx: {capMax.toLocaleString()})
               </p>
             )}
           </div>
@@ -211,7 +219,7 @@ export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
         </Card>
       )}
 
-      {/* Bilheteria */}
+      {/* Bilheteira */}
       <Card className="p-5 bg-gradient-card border-border/50 space-y-4">
         <h3 className="font-display font-bold">Gestão de Ingressos</h3>
         <div className="grid sm:grid-cols-2 gap-4">
@@ -219,8 +227,13 @@ export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
             <Label className="text-xs">Preço Nacional (€5 - €30)</Label>
             <Input
               type="number"
+              min="0"
               value={precoNacStr}
-              onChange={(e) => setPrecoNacStr(e.target.value)}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                if (val < 0) return; // Bloqueia valores negativos
+                setPrecoNacStr(e.target.value);
+              }}
               disabled={!canEdit}
             />
             <p className="text-[10px] text-muted-foreground">
@@ -231,8 +244,13 @@ export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
             <Label className="text-xs">Preço Internacional (€10 - €50)</Label>
             <Input
               type="number"
+              min="0"
               value={precoIntStr}
-              onChange={(e) => setPrecoIntStr(e.target.value)}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                if (val < 0) return; // Bloqueia valores negativos
+                setPrecoIntStr(e.target.value);
+              }}
               disabled={!canEdit}
             />
             <p className="text-[10px] text-muted-foreground">
