@@ -116,10 +116,10 @@ export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, onSaveSect
             {canEdit && !meta.isSystem && (
               <div className="absolute -left-10 top-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveSection(index, "up")}>
-                  <ChevronUp className="h-4 w-4 rotate-180" />
+                  <ChevronUp className="h-4 w-4" />
                 </Button>
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveSection(index, "down")}>
-                  <ChevronUp className="h-4 w-4" />
+                  <ChevronUp className="h-4 w-4 rotate-180" />
                 </Button>
               </div>
             )}
