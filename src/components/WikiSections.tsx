@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RichEditor } from "./RichEditor";
-import { Pencil, Plus, GripVertical } from "lucide-react";
+import { Pencil, Plus, chevron-up } from "lucide-react";
 import type { InfoboxData } from "./ClubInfobox";
 
 // --- EXPORTS RESTAURADOS PARA COMPATIBILIDADE ---
@@ -116,10 +116,10 @@ export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, onSaveSect
             {canEdit && !meta.isSystem && (
               <div className="absolute -left-10 top-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveSection(index, "up")}>
-                  <GripVertical className="h-4 w-4 rotate-180" />
+                  <chevron-up className="h-4 w-4 rotate-180" />
                 </Button>
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveSection(index, "down")}>
-                  <GripVertical className="h-4 w-4" />
+                  <chevron-up className="h-4 w-4" />
                 </Button>
               </div>
             )}
