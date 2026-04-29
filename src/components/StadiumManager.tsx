@@ -27,7 +27,7 @@ const TABELA_CUSTOS_NIVEL: Record<number, number> = {
 
 export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
   const capMax = 85000;
-  const [novoNivel, setNovoNivel] = useState<number>(club.nivel_estadio || 1);
+  const maxAssentosAdicionais = Math.max(0, capMax - (club.stadium_capacity || 0));
 
   // States para os inputs (usando string para permitir apagar tudo ao digitar)
   const [assentosAdicionaisStr, setAssentosAdicionaisStr] = useState<string>("");
@@ -187,11 +187,23 @@ export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
             <Input
               type="number"
               min="0"
+              max={maxAssentosAdicionais}
               value={assentosAdicionaisStr}
               onChange={(e) => {
-                const val = parseInt(e.target.value);
-                if (val < 0) return; // Bloqueia valores negativos
-                setAssentosAdicionaisStr(e.target.value);
+                const str = e.target.value;
+                if (str === "") {
+                  setAssentosAdicionaisStr("");
+                  return;
+                }
+                const val = parseInt(str);
+                if (isNaN(val) || val < 0) return;
+
+                // Trava rigorosa: Não deixa ultrapassar o limite restante para os 85k
+                if (val > maxAssentosAdicionais) {
+                  setAssentosAdicionaisStr(maxAssentosAdicionais.toString());
+                } else {
+                  setAssentosAdicionaisStr(str);
+                }
               }}
               placeholder="Ex: 5000"
               className="bg-secondary/20"
