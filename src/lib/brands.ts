@@ -156,6 +156,7 @@ export const SPONSORS: Brand[] = [
   { name: "Havan", domain: "havan.com.br", setor: "Varejista", prestige: 0.8 },
   { name: "Coto", domain: "coto.com.ar", setor: "Varejista", prestige: 0.75 },
   { name: "Garbarino", domain: "garbarino.com", setor: "Varejista", prestige: 0.75 },
+  { name: "Bimbo", domain: "grupobimbo.com", setor: "Alimentação", prestige: 0.75 },
 
   // --- Solara: Serviços e Outros ---
   { name: "Aerolíneas Solaras", domain: "aerolineas.com.ar", setor: "Companhias Aéreas", prestige: 1.1 },
