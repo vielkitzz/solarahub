@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RichEditor } from "./RichEditor";
-import { Pencil, Plus, ChevronUp } from "lucide-react";
+import { Pencil, Plus, GripVertical, ChevronUp, ChevronDown, Trash2, Settings2 } from "lucide-react";
 import type { InfoboxData } from "./ClubInfobox";
 
-// --- EXPORTS RESTAURADOS PARA COMPATIBILIDADE ---
+// --- COMPATIBILIDADE E TIPAGEM ---
 export type WikiSectionKey = string;
 
 export interface WikiData {
@@ -28,11 +28,10 @@ export const WIKI_SECTIONS: SectionMeta[] = [
   { key: "titulos", title: "Títulos", placeholder: "Liste as conquistas..." },
   { key: "cores", title: "Cores e uniformes", placeholder: "Significado das cores e mantos..." },
   { key: "escudos", title: "Escudos", placeholder: "Evolução visual ao longo do tempo..." },
-  { key: "mascotes", title: "Mascotes e símbolos", placeholder: "Mascotes oficiais e simbologias..." },
+  { key: "mascotes", title: "Mascotes e símbolos", placeholder: "Mascotes oficiais e símbolos..." },
   { key: "extras", title: "Curiosidades", placeholder: "Fatos, lendas e ídolos..." },
 ];
 
-// Funções auxiliares restauradas para o WikiGlobal.tsx
 export function getSection(wiki: WikiData | null | undefined, key: string): string {
   return wiki?.sections?.[key] ?? "";
 }
@@ -42,13 +41,10 @@ export function hasAnyContent(wiki: WikiData | null | undefined): boolean {
   return Object.values(wiki.sections ?? {}).some((content) => content.trim().length > 0);
 }
 
-// --- COMPONENTE PRINCIPAL ---
-
 interface ViewProps {
   wiki: WikiData | null | undefined;
   canEdit?: boolean;
   onSaveWiki?: (updatedWiki: WikiData) => Promise<void> | void;
-  // Adicionado onSaveSection para manter compatibilidade com ClubDetail.tsx
   onSaveSection?: (key: string, html: string) => Promise<void> | void;
   title?: string;
 }
@@ -62,7 +58,10 @@ export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, onSaveSect
     if (wiki?.sectionOrder && wiki.sectionOrder.length > 0) {
       const ordered = wiki.sectionOrder.map((key) => {
         const existing = WIKI_SECTIONS.find((s) => s.key === key);
-        return existing || { key, title: key, placeholder: "Escreva aqui..." };
+        // Se não existir nas fixas, tenta recriar o meta básico
+        return (
+          existing || { key, title: key.replace("custom-", "").replace(/-/g, " "), placeholder: "Escreva aqui..." }
+        );
       });
       setSections(ordered);
     } else {
@@ -70,15 +69,28 @@ export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, onSaveSect
     }
   }, [wiki]);
 
-  const handleInternalSave = async (key: string, html: string) => {
-    // Tenta usar a nova função onSaveWiki, senão usa a antiga onSaveSection
+  const updateWikiState = async (newSections: SectionMeta[], updatedContent?: Record<string, string>) => {
+    if (!onSaveWiki && !onSaveSection) return;
+
+    const newOrder = newSections.map((s) => s.key);
+    const newSectionsContent = updatedContent || wiki?.sections || {};
+
     if (onSaveWiki) {
-      const newWiki = {
+      await onSaveWiki({
+        ...wiki,
+        sections: newSectionsContent,
+        sectionOrder: newOrder,
+      });
+    }
+  };
+
+  const handleInternalSave = async (key: string, html: string) => {
+    if (onSaveWiki) {
+      await onSaveWiki({
         ...wiki,
         sections: { ...wiki?.sections, [key]: html },
         sectionOrder: sections.map((s) => s.key),
-      };
-      await onSaveWiki(newWiki);
+      });
     } else if (onSaveSection) {
       await onSaveSection(key, html);
     }
@@ -86,11 +98,28 @@ export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, onSaveSect
 
   const addNewSection = () => {
     if (!newSectionTitle.trim()) return;
-    const key = `custom-${Date.now()}`; // Chave única para evitar conflitos
+    const key = `custom-${Date.now()}`;
     const newMeta: SectionMeta = { key, title: newSectionTitle, placeholder: "Conteúdo..." };
-    setSections([...sections, newMeta]);
+    const updated = [...sections, newMeta];
+    setSections(updated);
+    updateWikiState(updated);
     setNewSectionTitle("");
     setIsAddingSection(false);
+  };
+
+  const removeSection = (key: string) => {
+    const updated = sections.filter((s) => s.key !== key);
+    setSections(updated);
+
+    const newContent = { ...wiki?.sections };
+    delete newContent[key];
+    updateWikiState(updated, newContent);
+  };
+
+  const renameSection = (key: string, newTitle: string) => {
+    const updated = sections.map((s) => (s.key === key ? { ...s, title: newTitle } : s));
+    setSections(updated);
+    updateWikiState(updated);
   };
 
   const moveSection = (index: number, direction: "up" | "down") => {
@@ -99,6 +128,7 @@ export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, onSaveSect
     if (targetIndex < 0 || targetIndex >= newSections.length) return;
     [newSections[index], newSections[targetIndex]] = [newSections[targetIndex], newSections[index]];
     setSections(newSections);
+    updateWikiState(newSections);
   };
 
   return (
@@ -106,7 +136,6 @@ export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, onSaveSect
       {title && (
         <header className="mb-8">
           <h1 className="font-serif text-3xl md:text-4xl font-semibold border-b border-border/60 pb-3 m-0">{title}</h1>
-          <p className="text-xs text-muted-foreground mt-2 italic">Origem: Solara Hub</p>
         </header>
       )}
 
@@ -114,16 +143,23 @@ export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, onSaveSect
         {sections.map((meta, index) => (
           <div key={meta.key} className="group relative">
             {canEdit && !meta.isSystem && (
-              <div className="absolute -left-10 top-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute -left-12 top-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveSection(index, "up")}>
                   <ChevronUp className="h-4 w-4" />
                 </Button>
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveSection(index, "down")}>
-                  <ChevronUp className="h-4 w-4 rotate-180" />
+                  <ChevronDown className="h-4 w-4" />
                 </Button>
               </div>
             )}
-            <Section meta={meta} html={getSection(wiki, meta.key)} canEdit={canEdit} onSave={handleInternalSave} />
+            <Section
+              meta={meta}
+              html={getSection(wiki, meta.key)}
+              canEdit={canEdit}
+              onSave={handleInternalSave}
+              onRemove={() => removeSection(meta.key)}
+              onRename={(newTitle) => renameSection(meta.key, newTitle)}
+            />
           </div>
         ))}
       </div>
@@ -146,7 +182,7 @@ export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, onSaveSect
               className="w-full p-2 border rounded-md"
               value={newSectionTitle}
               onChange={(e) => setNewSectionTitle(e.target.value)}
-              placeholder="Título da seção (ex: Rivalidades)"
+              placeholder="Título da seção"
             />
           </div>
           <DialogFooter>
@@ -163,19 +199,24 @@ export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, onSaveSect
   );
 }
 
-// Subcomponente Section (ajustado para aceitar onSave)
 function Section({
   meta,
   html,
   canEdit,
   onSave,
+  onRemove,
+  onRename,
 }: {
   meta: SectionMeta;
   html: string;
   canEdit: boolean;
   onSave: (key: string, html: string) => Promise<void>;
+  onRemove: () => void;
+  onRename: (title: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState(meta.title);
   const [draft, setDraft] = useState(html);
   const [saving, setSaving] = useState(false);
 
@@ -187,52 +228,101 @@ function Section({
           {meta.title && <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />}
         </div>
         {canEdit && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 text-xs text-primary"
-            onClick={() => {
-              setDraft(html);
-              setOpen(true);
-            }}
-          >
-            <Pencil className="h-3 w-3 mr-1" /> editar
-          </Button>
+          <div className="flex gap-1">
+            {!meta.isSystem && (
+              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setIsSettingsOpen(true)}>
+                <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs text-primary"
+              onClick={() => {
+                setDraft(html);
+                setOpen(true);
+              }}
+            >
+              <Pencil className="h-3 w-3 mr-1" /> editar
+            </Button>
+          </div>
         )}
       </div>
 
-      {!html.trim() ? (
-        <p className="text-sm italic text-muted-foreground">Sem conteúdo.</p>
-      ) : (
-        <div className="wiki-prose" dangerouslySetInnerHTML={{ __html: html }} />
-      )}
+      <div
+        className="wiki-prose"
+        dangerouslySetInnerHTML={{ __html: html || '<p class="italic text-muted-foreground">Sem conteúdo.</p>' }}
+      />
 
-      {canEdit && (
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>Editar — {meta.title || "Introdução"}</DialogTitle>
-            </DialogHeader>
-            <RichEditor content={draft} onChange={setDraft} placeholder={meta.placeholder} />
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>
-                Cancelar
-              </Button>
+      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Configurações da Seção</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium">Renomear Título</label>
+              <div className="flex gap-2 mt-1">
+                <input
+                  className="flex-1 p-2 border rounded-md text-sm"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                />
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    onRename(newTitle);
+                    setIsSettingsOpen(false);
+                  }}
+                >
+                  OK
+                </Button>
+              </div>
+            </div>
+            <div className="pt-4 border-t">
+              <p className="text-sm text-muted-foreground mb-2">Zona de perigo</p>
               <Button
-                onClick={async () => {
-                  setSaving(true);
-                  await onSave(meta.key, draft);
-                  setSaving(false);
-                  setOpen(false);
+                variant="destructive"
+                size="sm"
+                className="w-full gap-2"
+                onClick={() => {
+                  if (confirm("Excluir seção?")) {
+                    onRemove();
+                    setIsSettingsOpen(false);
+                  }
                 }}
-                disabled={saving}
               >
-                {saving ? "Salvando..." : "Salvar"}
+                <Trash2 className="h-4 w-4" /> Remover Seção
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Editar — {meta.title || "Introdução"}</DialogTitle>
+          </DialogHeader>
+          <RichEditor content={draft} onChange={setDraft} placeholder={meta.placeholder} />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={async () => {
+                setSaving(true);
+                await onSave(meta.key, draft);
+                setSaving(false);
+                setOpen(false);
+              }}
+              disabled={saving}
+            >
+              {saving ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
