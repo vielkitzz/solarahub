@@ -57,7 +57,7 @@ const ClubDetail = () => {
   const [renewPlayer, setRenewPlayer] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [wikiData, setWikiData] = useState<WikiData>({});
-const [editingClub, setEditingClub] = useState<any>(null);
+  const [editingClub, setEditingClub] = useState<any>(null);
   const [masterSponsor, setMasterSponsor] = useState<string | null>(null);
   const [kitSupplier, setKitSupplier] = useState<string | null>(null);
 
@@ -85,10 +85,7 @@ const [editingClub, setEditingClub] = useState<any>(null);
       supabase.from("clubs").select("*").eq("id", id).maybeSingle(),
       supabase.from("players").select("*").eq("club_id", id),
       supabase.from("contratos_clube").select("valor_anual").eq("club_id", id).eq("ativo", true),
-      supabase
-        .from("settings")
-        .select("key, value")
-        .in("key", ["temporada_atual", "direitos_imagem"]),
+      supabase.from("settings").select("key, value").in("key", ["temporada_atual", "direitos_imagem"]),
       supabase
         .from("contratos_clube")
         .select("empresa_nome, categoria")
@@ -107,13 +104,13 @@ const [editingClub, setEditingClub] = useState<any>(null);
         .maybeSingle(),
       supabase.rpc("get_tv_rights_value", { _club_id: id }),
     ]);
-    
+
     setClub(c);
     setMasterSponsor((masterContract as any)?.empresa_nome ?? null);
     setKitSupplier((kitContract as any)?.empresa_nome ?? null);
     setPlayers(p || []);
     setContratosTotal((ct || []).reduce((s, r: any) => s + Number(r.valor_anual || 0), 0));
-    
+
     (settings || []).forEach((s: any) => {
       if (s.key === "temporada_atual" && typeof s.value?.ano === "number") setTemporadaAtual(s.value.ano);
       if (s.key === "direitos_imagem")
@@ -122,7 +119,7 @@ const [editingClub, setEditingClub] = useState<any>(null);
           receita_pct: Number(s.value?.receita_pct ?? 0.5),
         });
     });
-    
+
     setDireitosTv(Number(tvRightsValue || 0));
     setWikiData((c?.wiki as WikiData) || {});
     setEditingClub(c);
@@ -135,7 +132,6 @@ const [editingClub, setEditingClub] = useState<any>(null);
   }, [id]);
 
   // Carrega informação do dono (nome + avatar) quando o clube é carregado
-  useEffect(() => {
   useEffect(() => {
     const loadOwner = async () => {
       if (!club?.owner_id) {
