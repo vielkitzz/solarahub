@@ -162,6 +162,7 @@ export const SPONSORS: Brand[] = [
   { name: "Aerolíneas Solaras", domain: "aerolineas.com.ar", setor: "Companhias Aéreas", prestige: 1.1 },
   { name: "Flybondi", domain: "flybondi.com", setor: "Companhias Aéreas", prestige: 0.8 },
   { name: "Fate", domain: "fate.com.ar", setor: "Automóveis", prestige: 0.78 },
+  { name: "CATA Internacional", domain: "catainternacional.com", setor: "Automóveis", prestige: 0.7 },
   { name: "Motomel", domain: "motomel.com.ar", setor: "Automóveis", prestige: 0.7 },
   { name: "Universidad Católica de Santa Fe", domain: "ucsf.edu.ar", setor: "Serviços", prestige: 0.62 },
 ];
