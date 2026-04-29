@@ -278,13 +278,13 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
   const calcTVBase = (rep: string | null | undefined) => {
     switch (rep?.toLowerCase()) {
       case "estadual":
-        return 1500000;
+        return 2500000;
       case "nacional":
-        return 4000000;
+        return 5000000;
       case "continental":
-        return 8000000;
+        return 10000000;
       case "mundial":
-        return 12000000;
+        return 15000000;
       default:
         return 0;
     }
