@@ -29,6 +29,9 @@ export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
   const capMax = 85000;
   const maxAssentosAdicionais = Math.max(0, capMax - (club.stadium_capacity || 0));
 
+  // RESTAURE ESTA LINHA:
+  const [novoNivel, setNovoNivel] = useState<number>(club.nivel_estadio || 1);
+
   // States para os inputs (usando string para permitir apagar tudo ao digitar)
   const [assentosAdicionaisStr, setAssentosAdicionaisStr] = useState<string>("");
   const [precoNacStr, setPrecoNacStr] = useState<string>(String(club.preco_ingresso_nacional || 15));
