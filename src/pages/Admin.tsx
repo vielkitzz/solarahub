@@ -24,6 +24,7 @@ import {
   LayoutDashboard,
   Search,
   Coins,
+  Trophy,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
