@@ -323,6 +323,12 @@ const Admin = () => {
             <CalendarClock className="h-4 w-4" /> Temporada
           </TabsTrigger>
           <TabsTrigger
+            value="campanhas"
+            className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
+          >
+            <Trophy className="h-4 w-4" /> Campanhas
+          </TabsTrigger>
+          <TabsTrigger
             value="config"
             className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
           >
