@@ -188,27 +188,27 @@ export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
           <div className="space-y-2">
             <Label className="text-sm font-semibold">Novos assentos a construir</Label>
             <Input
-              type="number"
-              min="0"
-              max={maxAssentosAdicionais}
-              value={assentosAdicionaisStr}
+              type="text"
+              inputMode="numeric"
+              value={assentosAdicionaisStr ? Number(assentosAdicionaisStr).toLocaleString("pt-BR") : ""}
               onChange={(e) => {
-                const str = e.target.value;
-                if (str === "") {
+                // Remove qualquer caractere que não seja número (incluindo pontos antigos)
+                const rawValue = e.target.value.replace(/\D/g, "");
+                if (rawValue === "") {
                   setAssentosAdicionaisStr("");
                   return;
                 }
-                const val = parseInt(str);
-                if (isNaN(val) || val < 0) return;
 
-                // Trava rigorosa: Não deixa ultrapassar o limite restante para os 85k
+                const val = parseInt(rawValue, 10);
+
+                // Trava rigorosa: Não deixa ultrapassar o limite restante
                 if (val > maxAssentosAdicionais) {
                   setAssentosAdicionaisStr(maxAssentosAdicionais.toString());
                 } else {
-                  setAssentosAdicionaisStr(str);
+                  setAssentosAdicionaisStr(val.toString());
                 }
               }}
-              placeholder="Ex: 5000"
+              placeholder="Ex: 5.000"
               className="bg-secondary/20"
             />
             {qtdAssentos > 0 && (
