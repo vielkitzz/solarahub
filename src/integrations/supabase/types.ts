@@ -363,6 +363,69 @@ export type Database = {
           },
         ]
       }
+      premiacoes_torneio: {
+        Row: {
+          created_at: string
+          fase: string
+          id: string
+          torneio: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          fase: string
+          id?: string
+          torneio: string
+          updated_at?: string
+          valor?: number
+        }
+        Update: {
+          created_at?: string
+          fase?: string
+          id?: string
+          torneio?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: []
+      }
+      resultados_temporada: {
+        Row: {
+          clube_id: string | null
+          clube_nome: string
+          created_at: string
+          fase: string | null
+          id: string
+          posicao: number | null
+          temporada: number
+          torneio: string
+          updated_at: string
+        }
+        Insert: {
+          clube_id?: string | null
+          clube_nome: string
+          created_at?: string
+          fase?: string | null
+          id?: string
+          posicao?: number | null
+          temporada: number
+          torneio: string
+          updated_at?: string
+        }
+        Update: {
+          clube_id?: string | null
+          clube_nome?: string
+          created_at?: string
+          fase?: string | null
+          id?: string
+          posicao?: number | null
+          temporada?: number
+          torneio?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       settings: {
         Row: {
           created_at: string

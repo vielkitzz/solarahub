@@ -24,6 +24,7 @@ import {
   LayoutDashboard,
   Search,
   Coins,
+  Trophy,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ import { SeasonPreview } from "@/components/admin/SeasonPreview";
 import { EconomyParams } from "@/components/admin/EconomyParams";
 import { BulkBudgetAdjuster } from "@/components/admin/BulkBudgetAdjuster";
 import { PlayerBulkActions } from "@/components/admin/PlayerBulkActions";
+import { CampanhasManager } from "@/components/admin/CampanhasManager";
 import { parseSquadJson, ImportedPlayer } from "@/lib/squad-import";
 import { useSeason } from "@/contexts/SeasonContext";
 
@@ -319,6 +321,12 @@ const Admin = () => {
             className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
           >
             <CalendarClock className="h-4 w-4" /> Temporada
+          </TabsTrigger>
+          <TabsTrigger
+            value="campanhas"
+            className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
+          >
+            <Trophy className="h-4 w-4" /> Campanhas
           </TabsTrigger>
           <TabsTrigger
             value="config"
@@ -687,6 +695,10 @@ const Admin = () => {
         </TabsContent>
 
         {/* CONFIGURAÇÕES GLOBAIS */}
+        <TabsContent value="campanhas" className="mt-6">
+          <CampanhasManager />
+        </TabsContent>
+
         <TabsContent value="config" className="mt-6">
           <Card className="p-5 bg-gradient-card border-border/50 max-w-lg relative overflow-hidden">
             <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-gold opacity-40" />
