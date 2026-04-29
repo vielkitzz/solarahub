@@ -224,8 +224,6 @@ const ClubDetail = () => {
   };
   const premiacao = premiacaoPorPosicao(club.posicao_ultima_temporada);
   const manutencao = (club.nivel_base || 1) * 300_000;
-  // Direitos de TV (vindos das settings, por reputação)
-  const direitosTv = Number(tvSettings[club.reputacao || ""] || 0);
   // Direitos de imagem
   const direitosImagemCusto = valorBaseFolha * imgSettings.custo_pct;
   const direitosImagemReceita = direitosImagemCusto * imgSettings.receita_pct;
