@@ -109,6 +109,7 @@ export const SPONSORS: Brand[] = [
   { name: "Accor", domain: "accor.com", setor: "Serviços", prestige: 1.3 },
   { name: "Kayak", domain: "kayak.com", setor: "Serviços", prestige: 1.1 },
   { name: "UNICEF", domain: "unicef.org", setor: "Multinacional", prestige: 1.8 },
+  { name: "Olla", domain: "olla.com.br", setor: "Serviços", prestige: 1.8 },
 
   // --- Casas de Apostas ---
   { name: "Betano", domain: "betano.com", setor: "Casa de Apostas", prestige: 1.45 },
