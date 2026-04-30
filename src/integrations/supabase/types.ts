@@ -98,6 +98,8 @@ export type Database = {
           founded_year: number | null
           id: string
           jogos_por_temporada: number
+          latitude: number | null
+          longitude: number | null
           name: string
           nivel_base: number
           nivel_estadio: number
@@ -125,6 +127,8 @@ export type Database = {
           founded_year?: number | null
           id?: string
           jogos_por_temporada?: number
+          latitude?: number | null
+          longitude?: number | null
           name: string
           nivel_base?: number
           nivel_estadio?: number
@@ -152,6 +156,8 @@ export type Database = {
           founded_year?: number | null
           id?: string
           jogos_por_temporada?: number
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           nivel_base?: number
           nivel_estadio?: number
