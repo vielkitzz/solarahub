@@ -900,7 +900,7 @@ function SquadTable({
               </TableRow>
             ) : (
               filteredAndSorted.map((p: any) => {
-                const shirt = p.attributes?.shirtNumber;
+                const shirt = p.shirt_number ?? p.attributes?.shirtNumber;
                 const stars = calcStars(p.habilidade, club.rate);
                 const potStars = p.potential_max ? calcStars(p.potential_max, club.rate) : null;
                 const expirando =
@@ -913,7 +913,17 @@ function SquadTable({
                     className={`border-border/30 hover:bg-primary/5 transition-colors text-sm ${p.a_venda ? "bg-primary/5" : ""}`}
                   >
                     <TableCell className="text-[11px] text-center text-muted-foreground/60 py-2">
-                      {shirt ?? "—"}
+                      {canEdit ? (
+                        <button
+                          onClick={() => setShirtPlayer(p)}
+                          className="hover:text-primary transition-colors font-semibold"
+                          title="Alterar número da camisa"
+                        >
+                          {shirt ?? "—"}
+                        </button>
+                      ) : (
+                        shirt ?? "—"
+                      )}
                     </TableCell>
                     <TableCell className="py-2">
                       <span
@@ -969,14 +979,38 @@ function SquadTable({
                     )}
                     {canEdit && (
                       <TableCell className="py-2 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Renovar contrato"
+                            onClick={() => setRenewPlayer(p)}
+                            className="h-7 w-7"
+                          >
+                            <FileSignature className="h-3.5 w-3.5 text-primary" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Pagar multa rescisória (liberar)"
+                            onClick={() => setMultaPlayer(p)}
+                            className="h-7 w-7"
+                          >
+                            <Gavel className="h-3.5 w-3.5 text-amber-400" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
+                    {!canEdit && isAdmin && (
+                      <TableCell className="py-2 text-center">
                         <Button
                           variant="ghost"
                           size="icon"
-                          title="Renovar contrato"
-                          onClick={() => setRenewPlayer(p)}
+                          title="Pagar multa (admin)"
+                          onClick={() => setMultaPlayer(p)}
                           className="h-7 w-7"
                         >
-                          <FileSignature className="h-3.5 w-3.5 text-primary" />
+                          <Gavel className="h-3.5 w-3.5 text-amber-400" />
                         </Button>
                       </TableCell>
                     )}
