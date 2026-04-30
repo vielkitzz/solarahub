@@ -249,4 +249,33 @@
   .NodeViewWrapper {
     max-width: 100% !important;
   }
+
+  /* ── Leaflet: tema escuro para popups ─────────────────────── */
+  .leaflet-popup-content-wrapper,
+  .leaflet-popup-tip {
+    background: hsl(var(--popover)) !important;
+    color: hsl(var(--popover-foreground)) !important;
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-elevated);
+  }
+  .leaflet-popup-content {
+    margin: 12px 14px !important;
+    font-family: inherit;
+  }
+  .leaflet-container {
+    background: hsl(var(--background));
+    font-family: inherit;
+  }
+  .leaflet-control-zoom a {
+    background: hsl(var(--card)) !important;
+    color: hsl(var(--foreground)) !important;
+    border-color: hsl(var(--border)) !important;
+  }
+  .leaflet-control-attribution {
+    background: hsl(var(--background) / 0.8) !important;
+    color: hsl(var(--muted-foreground)) !important;
+  }
+  .leaflet-control-attribution a {
+    color: hsl(var(--primary)) !important;
+  }
 }
