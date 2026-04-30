@@ -24,14 +24,14 @@ const PLACEHOLDER_CREST =
     `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23facc15' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>`,
   );
 
-// 1. MOLDURA REMOVIDA: Limpamos o className para deixar apenas o escudo com fundo transparente
 const createClubIcon = (crestUrl: string | null) =>
   new L.Icon({
     iconUrl: crestUrl || PLACEHOLDER_CREST,
     iconSize: [36, 36],
     iconAnchor: [18, 18],
     popupAnchor: [0, -18],
-    className: "bg-transparent border-none shadow-none object-contain hover:scale-110 transition-transform",
+    className:
+      "bg-transparent border-none shadow-none object-contain hover:scale-110 transition-transform cursor-pointer",
   });
 
 const Mapa = () => {
@@ -56,10 +56,15 @@ const Mapa = () => {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      {/* 2. MAPA AZUL: Este estilo converte o mapa preto/cinza para o azul escuro do app */}
+      {/* 1. ESTILO DO MAPA: Filtro de cor + Opacidade para absorver o fundo */}
       <style>{`
-        .blue-theme-map {
-          filter: sepia(100%) hue-rotate(185deg) saturate(350%) brightness(65%) contrast(110%);
+        .solara-map-tiles {
+          filter: sepia(100%) hue-rotate(185deg) saturate(300%) brightness(75%) contrast(110%);
+          opacity: 0.85; 
+        }
+        /* Remove o fundo branco padrão do Leaflet */
+        .leaflet-container {
+          background-color: #071622 !important;
         }
       `}</style>
 
@@ -75,17 +80,22 @@ const Mapa = () => {
       {loading ? (
         <Skeleton className="h-[65vh] min-h-[500px] w-full rounded-[var(--radius)]" />
       ) : (
-        <Card className="overflow-hidden bg-gradient-card border-border/50 p-0 relative z-0">
+        /* 2. CARD E CONTAINER: Pintados com a cor da Água e Terra para máxima imersão */
+        <Card
+          className="overflow-hidden p-0 relative z-0 border-2"
+          style={{ backgroundColor: "#071622", borderColor: "#183348" }}
+        >
           <MapContainer
             center={[-35.0, -65.0]}
             zoom={4}
             scrollWheelZoom
-            className="h-[65vh] min-h-[500px] w-full z-0 bg-[#0a1128]" // Fundo azul escuro enquanto carrega
+            className="h-[65vh] min-h-[500px] w-full z-0"
+            style={{ backgroundColor: "#071622" }} // COR DA ÁGUA EXATA AQUI
           >
             <TileLayer
-              className="blue-theme-map" // <-- Aplica o filtro de cor criado lá em cima
+              className="solara-map-tiles"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
             />
             {geoClubs.map((c) => (
               <Marker
