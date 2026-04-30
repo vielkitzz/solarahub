@@ -29,6 +29,9 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { ContractRenewalDialog } from "@/components/ContractRenewalDialog";
+import { ShirtNumberDialog } from "@/components/ShirtNumberDialog";
+import { MultaRescisoriaDialog } from "@/components/MultaRescisoriaDialog";
+import { Gavel, Shirt } from "lucide-react";
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
 import { StarRating } from "@/components/StarRating";
 
@@ -55,6 +58,9 @@ const ClubDetail = () => {
   const [contratosTotal, setContratosTotal] = useState(0);
   const [temporadaAtual, setTemporadaAtual] = useState<number>(2020);
   const [renewPlayer, setRenewPlayer] = useState<any>(null);
+  const [shirtPlayer, setShirtPlayer] = useState<any>(null);
+  const [multaPlayer, setMultaPlayer] = useState<any>(null);
+  const [myClubId, setMyClubId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [wikiData, setWikiData] = useState<WikiData>({});
   const [editingClub, setEditingClub] = useState<any>(null);
@@ -376,9 +382,12 @@ const ClubDetail = () => {
               players={players}
               club={club}
               canEdit={canEdit}
+              isAdmin={isAdmin}
               temporadaAtual={temporadaAtual}
               toggleSale={toggleSale}
               setRenewPlayer={setRenewPlayer}
+              setShirtPlayer={setShirtPlayer}
+              setMultaPlayer={setMultaPlayer}
             />
           )}
         </TabsContent>
@@ -543,6 +552,20 @@ const ClubDetail = () => {
           }}
         />
       )}
+      <ShirtNumberDialog
+        player={shirtPlayer}
+        open={!!shirtPlayer}
+        onOpenChange={(v) => !v && setShirtPlayer(null)}
+        onSaved={load}
+      />
+      <MultaRescisoriaDialog
+        player={multaPlayer}
+        open={!!multaPlayer}
+        onOpenChange={(v) => !v && setMultaPlayer(null)}
+        myClubId={user ? (club?.owner_id === user.id ? club.id : null) : null}
+        isAdmin={isAdmin}
+        onDone={load}
+      />
     </div>
   );
 };
