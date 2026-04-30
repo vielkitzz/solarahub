@@ -31,7 +31,7 @@ import {
 import { ContractRenewalDialog } from "@/components/ContractRenewalDialog";
 import { ShirtNumberDialog } from "@/components/ShirtNumberDialog";
 import { MultaRescisoriaDialog } from "@/components/MultaRescisoriaDialog";
-import { Gavel, Shirt } from "lucide-react";
+import { Gavel } from "lucide-react";
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
 import { StarRating } from "@/components/StarRating";
 
@@ -60,7 +60,6 @@ const ClubDetail = () => {
   const [renewPlayer, setRenewPlayer] = useState<any>(null);
   const [shirtPlayer, setShirtPlayer] = useState<any>(null);
   const [multaPlayer, setMultaPlayer] = useState<any>(null);
-  const [myClubId, setMyClubId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [wikiData, setWikiData] = useState<WikiData>({});
   const [editingClub, setEditingClub] = useState<any>(null);
