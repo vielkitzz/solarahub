@@ -583,6 +583,7 @@ export type Database = {
           display_name: string
         }[]
       }
+      get_tv_rights_value: { Args: { _club_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -616,6 +617,7 @@ export type Database = {
           novo_caixa: number
         }[]
       }
+      processar_aposentadorias: { Args: never; Returns: undefined }
       promover_academia: {
         Args: { _academy_player_id: string }
         Returns: string
