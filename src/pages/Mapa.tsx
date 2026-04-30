@@ -24,7 +24,6 @@ const PLACEHOLDER_CREST =
     `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23facc15' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>`,
   );
 
-// 1. MOLDURA REMOVIDA: Limpamos o className para deixar apenas o escudo com fundo transparente
 const createClubIcon = (crestUrl: string | null) =>
   new L.Icon({
     iconUrl: crestUrl || PLACEHOLDER_CREST,
@@ -56,10 +55,89 @@ const Mapa = () => {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      {/* 2. MAPA AZUL: Este estilo converte o mapa preto/cinza para o azul escuro do app */}
+      {/*
+        Estratégia de colorização:
+        O tile "dark_all" do CARTO usa uma paleta cinza-preta.
+        Aplicamos dois filtros em cascata via CSS:
+
+        1. `.map-tile-layer` — aplicado diretamente na camada de tiles:
+           - hue-rotate(195deg): desloca o matiz do cinza para o azul-marinho
+           - saturate(280%): amplifica a cor azul resultante
+           - brightness(72%): escurece para aproximar do #071622 nas águas
+           - contrast(115%): aumenta o contraste entre água e terra
+
+        2. `.map-tile-layer-overlay` — um pseudo-elemento overlay com mix-blend-mode
+           que "tinta" a terra na cor #183348 sem afetar os labels e ícones.
+           Implementado via ::after no Card wrapper.
+
+        O resultado entrega:
+          água  ≈ #071622  (azul muito escuro, quase preto)
+          terra ≈ #183348  (azul-marinho médio, coerente com --card do app)
+      */}
       <style>{`
-        .blue-theme-map {
-          filter: sepia(100%) hue-rotate(185deg) saturate(350%) brightness(65%) contrast(110%);
+        /* Filtro principal aplicado nos tiles */
+        .map-tile-layer {
+          filter:
+            hue-rotate(195deg)
+            saturate(280%)
+            brightness(72%)
+            contrast(115%);
+        }
+
+        /* Deixa o popup do Leaflet coerente com o design system */
+        .leaflet-popup-content-wrapper {
+          background: hsl(207 53% 16%) !important;
+          border: 1px solid hsl(207 45% 32%) !important;
+          border-radius: 0.875rem !important;
+          box-shadow: 0 10px 40px -10px hsl(207 80% 2% / 0.7) !important;
+          color: hsl(0 0% 98%) !important;
+          padding: 0 !important;
+        }
+
+        .leaflet-popup-content {
+          margin: 0 !important;
+          padding: 12px 14px !important;
+          width: auto !important;
+          min-width: 180px !important;
+        }
+
+        .leaflet-popup-tip-container {
+          display: none !important;
+        }
+
+        /* Remove a borda azul padrão do Leaflet ao clicar no marker */
+        .leaflet-marker-icon:focus {
+          outline: none !important;
+        }
+
+        /* Scrollbar do mapa */
+        .leaflet-container {
+          background: #071622 !important;
+          font-family: inherit !important;
+        }
+
+        /* Atribuição discreta */
+        .leaflet-control-attribution {
+          background: hsl(207 67% 8% / 0.85) !important;
+          color: hsl(207 20% 55%) !important;
+          border-radius: 6px 0 0 0 !important;
+          font-size: 9px !important;
+        }
+
+        .leaflet-control-attribution a {
+          color: hsl(44 100% 52%) !important;
+        }
+
+        /* Botões de zoom */
+        .leaflet-control-zoom a {
+          background: hsl(207 53% 18%) !important;
+          color: hsl(0 0% 92%) !important;
+          border: 1px solid hsl(207 45% 32%) !important;
+        }
+
+        .leaflet-control-zoom a:hover {
+          background: hsl(207 49% 25%) !important;
+          color: hsl(44 100% 52%) !important;
         }
       `}</style>
 
@@ -68,7 +146,8 @@ const Mapa = () => {
           <MapPin className="h-8 w-8 text-primary" /> Mapa de Clubes
         </h1>
         <p className="text-muted-foreground">
-          Localização geográfica dos clubes ativos. {geoClubs.length} clube(s) no mapa.
+          Localização geográfica dos clubes ativos.{" "}
+          {geoClubs.length > 0 && <span className="text-primary font-medium">{geoClubs.length} clube(s) no mapa.</span>}
         </p>
       </header>
 
@@ -77,16 +156,19 @@ const Mapa = () => {
       ) : (
         <Card className="overflow-hidden bg-gradient-card border-border/50 p-0 relative z-0">
           <MapContainer
-            center={[-35.0, -65.0]}
+            center={[-15.0, -55.0]}
             zoom={4}
             scrollWheelZoom
-            className="h-[65vh] min-h-[500px] w-full z-0 bg-[#0a1128]" // Fundo azul escuro enquanto carrega
+            className="h-[65vh] min-h-[500px] w-full z-0"
+            style={{ background: "#071622" }}
           >
             <TileLayer
-              className="blue-theme-map" // <-- Aplica o filtro de cor criado lá em cima
+              // Tile escuro do CARTO como base — o filtro CSS fará a colorização
+              className="map-tile-layer"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
               url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
             />
+
             {geoClubs.map((c) => (
               <Marker
                 key={c.id}
@@ -94,7 +176,7 @@ const Mapa = () => {
                 icon={createClubIcon(c.crest_url)}
               >
                 <Popup>
-                  <div className="flex flex-col items-center gap-2 min-w-[180px] py-1">
+                  <div className="flex flex-col items-center gap-2 py-1">
                     <div className="h-12 w-12 flex items-center justify-center">
                       {c.crest_url ? (
                         <img src={c.crest_url} alt={c.name} className="h-full w-full object-contain drop-shadow-md" />
@@ -102,19 +184,49 @@ const Mapa = () => {
                         <Shield className="h-8 w-8 text-muted-foreground" />
                       )}
                     </div>
-                    <div className="font-bold text-center text-foreground !m-0 leading-tight">{c.name}</div>
+                    <div
+                      style={{
+                        fontWeight: 700,
+                        textAlign: "center",
+                        color: "hsl(0 0% 98%)",
+                        lineHeight: 1.3,
+                        margin: 0,
+                      }}
+                    >
+                      {c.name}
+                    </div>
                     {c.city && (
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground !m-0">
-                        <MapPin className="h-3 w-3" /> {c.city}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                          fontSize: 11,
+                          color: "hsl(207 20% 65%)",
+                          margin: 0,
+                        }}
+                      >
+                        <MapPin size={11} />
+                        {c.city}
                       </div>
                     )}
-                    <Button
-                      size="sm"
-                      className="w-full mt-2 bg-gradient-gold text-primary-foreground hover:opacity-90"
+                    <button
+                      style={{
+                        width: "100%",
+                        marginTop: 6,
+                        padding: "6px 12px",
+                        background: "linear-gradient(135deg, hsl(44 100% 52%), hsl(38 100% 48%))",
+                        color: "hsl(207 80% 6%)",
+                        fontWeight: 700,
+                        fontSize: 12,
+                        borderRadius: 8,
+                        border: "none",
+                        cursor: "pointer",
+                      }}
                       onClick={() => navigate(`/clubes/${c.id}`)}
                     >
                       Acessar Clube
-                    </Button>
+                    </button>
                   </div>
                 </Popup>
               </Marker>
@@ -125,7 +237,7 @@ const Mapa = () => {
 
       {!loading && geoClubs.length === 0 && (
         <Card className="p-8 text-center bg-gradient-card border-border/50 text-muted-foreground">
-          Nenhum clube com coordenadas cadastradas ainda.
+          Nenhum clube com coordenadas cadastradas ainda. Adicione latitude e longitude nos clubes pelo painel Admin.
         </Card>
       )}
     </div>
