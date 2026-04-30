@@ -630,16 +630,22 @@ function SquadTable({
   players,
   club,
   canEdit,
+  isAdmin,
   temporadaAtual,
   toggleSale,
   setRenewPlayer,
+  setShirtPlayer,
+  setMultaPlayer,
 }: {
   players: any[];
   club: any;
   canEdit: boolean;
+  isAdmin: boolean;
   temporadaAtual: number;
   toggleSale: (id: string, v: boolean) => void;
   setRenewPlayer: (p: any) => void;
+  setShirtPlayer: (p: any) => void;
+  setMultaPlayer: (p: any) => void;
 }) {
   // ESTADOS
   const [searchTerm, setSearchTerm] = useState("");
