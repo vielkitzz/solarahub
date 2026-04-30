@@ -295,6 +295,42 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          club_id: string | null
+          created_at: string
+          id: string
+          lida: boolean
+          mensagem: string
+          payload: Json
+          tipo: string
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          club_id?: string | null
+          created_at?: string
+          id?: string
+          lida?: boolean
+          mensagem: string
+          payload?: Json
+          tipo: string
+          titulo: string
+          user_id: string
+        }
+        Update: {
+          club_id?: string | null
+          created_at?: string
+          id?: string
+          lida?: boolean
+          mensagem?: string
+          payload?: Json
+          tipo?: string
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       players: {
         Row: {
           a_venda: boolean
@@ -312,6 +348,7 @@ export type Database = {
           potential_max: number | null
           potential_min: number | null
           salario_atual: number
+          shirt_number: number | null
           updated_at: string
           valor_base_calculado: number
         }
@@ -331,6 +368,7 @@ export type Database = {
           potential_max?: number | null
           potential_min?: number | null
           salario_atual?: number
+          shirt_number?: number | null
           updated_at?: string
           valor_base_calculado?: number
         }
@@ -350,6 +388,7 @@ export type Database = {
           potential_max?: number | null
           potential_min?: number | null
           salario_atual?: number
+          shirt_number?: number | null
           updated_at?: string
           valor_base_calculado?: number
         }
@@ -590,6 +629,19 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      liberar_jogador_pagando_multa: {
+        Args: { _jogador_id: string }
+        Returns: Json
+      }
+      pagar_multa_rescisoria: {
+        Args: {
+          _anos_contrato: number
+          _clube_comprador_id: string
+          _jogador_id: string
+          _novo_salario: number
+        }
+        Returns: Json
       }
       premiacao_por_posicao: { Args: { _pos: number }; Returns: number }
       preview_season_turnover: {
