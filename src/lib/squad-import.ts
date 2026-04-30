@@ -1,19 +1,19 @@
 // Mapeia posições do JSON exportado (PT-BR completo) para o enum curto usado no banco
 const POSITION_MAP: Record<string, string> = {
-  "goleiro": "GOL",
-  "zagueiro": "ZAG",
+  goleiro: "GOL",
+  zagueiro: "ZAG",
   "lateral direito": "LD",
   "lateral esquerdo": "LE",
-  "volante": "VOL",
-  "meia": "MEI",
+  volante: "VOL",
+  meia: "MEI",
   "meio campo": "MC",
   "meio-campo": "MC",
   "meia atacante": "MEI",
   "meia-atacante": "MEI",
   "ponta direita": "PD",
   "ponta esquerda": "PE",
-  "centroavante": "ATA",
-  "atacante": "ATA",
+  centroavante: "ATA",
+  atacante: "ATA",
   "segundo atacante": "SA",
 };
 
@@ -29,6 +29,7 @@ export interface ImportedPlayer {
   nationality: string | null;
   market_value: number;
   habilidade: number;
+  shirt_number: number | null; // <-- ADICIONAMOS A COLUNA AQUI
   attributes: Record<string, any>;
 }
 
@@ -58,6 +59,7 @@ export const parseSquadJson = (raw: string): ImportedPlayer[] => {
       nationality: p.nationality || null,
       habilidade: skill,
       market_value: habilidadeToValue(skill),
+      shirt_number: p.shirtNumber ? Number(p.shirtNumber) : null, // <-- MAPEAMOS O JSON DIRETO PARA A COLUNA AQUI
       attributes: {
         shirtNumber: p.shirtNumber ?? null,
         seasonYear: p.seasonYear ?? null,
