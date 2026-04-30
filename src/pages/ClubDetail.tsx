@@ -697,8 +697,11 @@ function SquadTable({
         const modifier = direction === "asc" ? 1 : -1;
 
         switch (key) {
-          case "numero":
-            return (Number(a.attributes?.shirtNumber || 999) - Number(b.attributes?.shirtNumber || 999)) * modifier;
+          case "numero": {
+            const an = Number(a.shirt_number ?? a.attributes?.shirtNumber ?? 999);
+            const bn = Number(b.shirt_number ?? b.attributes?.shirtNumber ?? 999);
+            return (an - bn) * modifier;
+          }
           case "nome":
             return a.name.localeCompare(b.name) * modifier;
           case "posicao":
