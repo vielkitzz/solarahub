@@ -29,6 +29,9 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { ContractRenewalDialog } from "@/components/ContractRenewalDialog";
+import { ShirtNumberDialog } from "@/components/ShirtNumberDialog";
+import { MultaRescisoriaDialog } from "@/components/MultaRescisoriaDialog";
+import { Gavel } from "lucide-react";
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
 import { StarRating } from "@/components/StarRating";
 
@@ -55,6 +58,8 @@ const ClubDetail = () => {
   const [contratosTotal, setContratosTotal] = useState(0);
   const [temporadaAtual, setTemporadaAtual] = useState<number>(2020);
   const [renewPlayer, setRenewPlayer] = useState<any>(null);
+  const [shirtPlayer, setShirtPlayer] = useState<any>(null);
+  const [multaPlayer, setMultaPlayer] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [wikiData, setWikiData] = useState<WikiData>({});
   const [editingClub, setEditingClub] = useState<any>(null);
@@ -376,9 +381,12 @@ const ClubDetail = () => {
               players={players}
               club={club}
               canEdit={canEdit}
+              isAdmin={isAdmin}
               temporadaAtual={temporadaAtual}
               toggleSale={toggleSale}
               setRenewPlayer={setRenewPlayer}
+              setShirtPlayer={setShirtPlayer}
+              setMultaPlayer={setMultaPlayer}
             />
           )}
         </TabsContent>
@@ -543,6 +551,20 @@ const ClubDetail = () => {
           }}
         />
       )}
+      <ShirtNumberDialog
+        player={shirtPlayer}
+        open={!!shirtPlayer}
+        onOpenChange={(v) => !v && setShirtPlayer(null)}
+        onSaved={load}
+      />
+      <MultaRescisoriaDialog
+        player={multaPlayer}
+        open={!!multaPlayer}
+        onOpenChange={(v) => !v && setMultaPlayer(null)}
+        myClubId={user ? (club?.owner_id === user.id ? club.id : null) : null}
+        isAdmin={isAdmin}
+        onDone={load}
+      />
     </div>
   );
 };
@@ -607,16 +629,22 @@ function SquadTable({
   players,
   club,
   canEdit,
+  isAdmin,
   temporadaAtual,
   toggleSale,
   setRenewPlayer,
+  setShirtPlayer,
+  setMultaPlayer,
 }: {
   players: any[];
   club: any;
   canEdit: boolean;
+  isAdmin: boolean;
   temporadaAtual: number;
   toggleSale: (id: string, v: boolean) => void;
   setRenewPlayer: (p: any) => void;
+  setShirtPlayer: (p: any) => void;
+  setMultaPlayer: (p: any) => void;
 }) {
   // ESTADOS
   const [searchTerm, setSearchTerm] = useState("");
@@ -668,8 +696,11 @@ function SquadTable({
         const modifier = direction === "asc" ? 1 : -1;
 
         switch (key) {
-          case "numero":
-            return (Number(a.attributes?.shirtNumber || 999) - Number(b.attributes?.shirtNumber || 999)) * modifier;
+          case "numero": {
+            const an = Number(a.shirt_number ?? a.attributes?.shirtNumber ?? 999);
+            const bn = Number(b.shirt_number ?? b.attributes?.shirtNumber ?? 999);
+            return (an - bn) * modifier;
+          }
           case "nome":
             return a.name.localeCompare(b.name) * modifier;
           case "posicao":
@@ -868,7 +899,7 @@ function SquadTable({
               </TableRow>
             ) : (
               filteredAndSorted.map((p: any) => {
-                const shirt = p.attributes?.shirtNumber;
+                const shirt = p.shirt_number ?? p.attributes?.shirtNumber;
                 const stars = calcStars(p.habilidade, club.rate);
                 const potStars = p.potential_max ? calcStars(p.potential_max, club.rate) : null;
                 const expirando =
@@ -881,7 +912,17 @@ function SquadTable({
                     className={`border-border/30 hover:bg-primary/5 transition-colors text-sm ${p.a_venda ? "bg-primary/5" : ""}`}
                   >
                     <TableCell className="text-[11px] text-center text-muted-foreground/60 py-2">
-                      {shirt ?? "—"}
+                      {canEdit ? (
+                        <button
+                          onClick={() => setShirtPlayer(p)}
+                          className="hover:text-primary transition-colors font-semibold"
+                          title="Alterar número da camisa"
+                        >
+                          {shirt ?? "—"}
+                        </button>
+                      ) : (
+                        shirt ?? "—"
+                      )}
                     </TableCell>
                     <TableCell className="py-2">
                       <span
@@ -937,14 +978,38 @@ function SquadTable({
                     )}
                     {canEdit && (
                       <TableCell className="py-2 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Renovar contrato"
+                            onClick={() => setRenewPlayer(p)}
+                            className="h-7 w-7"
+                          >
+                            <FileSignature className="h-3.5 w-3.5 text-primary" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Pagar multa rescisória (liberar)"
+                            onClick={() => setMultaPlayer(p)}
+                            className="h-7 w-7"
+                          >
+                            <Gavel className="h-3.5 w-3.5 text-amber-400" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
+                    {!canEdit && isAdmin && (
+                      <TableCell className="py-2 text-center">
                         <Button
                           variant="ghost"
                           size="icon"
-                          title="Renovar contrato"
-                          onClick={() => setRenewPlayer(p)}
+                          title="Pagar multa (admin)"
+                          onClick={() => setMultaPlayer(p)}
                           className="h-7 w-7"
                         >
-                          <FileSignature className="h-3.5 w-3.5 text-primary" />
+                          <Gavel className="h-3.5 w-3.5 text-amber-400" />
                         </Button>
                       </TableCell>
                     )}
