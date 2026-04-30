@@ -56,15 +56,29 @@ const Mapa = () => {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      {/* 1. ESTILO DO MAPA: Filtro de cor + Opacidade para absorver o fundo */}
+      {/* ESTILO DO MAPA FORÇADO */}
       <style>{`
-        .solara-map-tiles {
-          filter: sepia(100%) hue-rotate(185deg) saturate(300%) brightness(75%) contrast(110%);
-          opacity: 0.85; 
-        }
-        /* Remove o fundo branco padrão do Leaflet */
+        /* 1. Fundo do mapa (A cor exata da sua Água) */
         .leaflet-container {
           background-color: #071622 !important;
+        }
+
+        /* 2. Filtro agressivo direto nas imagens (A cor da sua Terra) */
+        .leaflet-tile {
+          filter: sepia(100%) hue-rotate(175deg) saturate(400%) brightness(55%) contrast(120%) !important;
+          opacity: 0.70 !important;
+          mix-blend-mode: screen !important;
+        }
+
+        /* 3. Evita que o popup fique distorcido pelo estilo do mapa */
+        .leaflet-popup-content-wrapper {
+          background-color: #0a1128 !important;
+          color: #ffffff !important;
+          border: 1px solid #183348 !important;
+        }
+        .leaflet-popup-tip {
+          background-color: #0a1128 !important;
+          border: 1px solid #183348 !important;
         }
       `}</style>
 
