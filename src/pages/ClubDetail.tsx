@@ -406,6 +406,7 @@ const ClubDetail = () => {
             <TabsTrigger value="financas">Finanças</TabsTrigger>
             <TabsTrigger value="estadio">Estádio</TabsTrigger>
             <TabsTrigger value="base">Base</TabsTrigger>
+            <TabsTrigger value="olheiros">Olheiros</TabsTrigger>
             <TabsTrigger value="wiki">Wiki</TabsTrigger>
             {canEdit && <TabsTrigger value="config">Configurações</TabsTrigger>}
           </TabsList>
