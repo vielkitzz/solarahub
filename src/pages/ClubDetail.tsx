@@ -1049,10 +1049,20 @@ function SquadTable({
                       <StarRating value={stars} />
                     </TableCell>
                     <TableCell className="py-2">
-                      {potStars !== null ? (
-                        <StarRating value={potStars} />
+                      {potDisplay ? (
+                        <div className="flex items-center gap-1.5" title={potDisplay.tooltip}>
+                          <StarRating value={potDisplay.pmaxStars} />
+                          <span className="text-[9px] text-muted-foreground tabular-nums">{potDisplay.label}</span>
+                        </div>
                       ) : (
-                        <span className="text-[10px] text-muted-foreground">—</span>
+                        <div
+                          className="flex items-center gap-1 text-muted-foreground/30"
+                          title="Use a aba Olheiros para descobrir"
+                        >
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Eye key={i} className="h-3 w-3" />
+                          ))}
+                        </div>
                       )}
                     </TableCell>
                     <TableCell className="py-2 text-right text-xs font-semibold text-primary tabular-nums">
