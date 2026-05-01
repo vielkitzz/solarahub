@@ -365,6 +365,7 @@ const ClubDetail = () => {
         <div className="-mx-3 sm:-mx-4 md:mx-0 overflow-x-auto scrollbar-thin">
           <TabsList className="bg-secondary/50 mx-3 sm:mx-4 md:mx-0 w-max">
             <TabsTrigger value="elenco">Elenco</TabsTrigger>
+            <TabsTrigger value="evolucao">Evolução</TabsTrigger>
             <TabsTrigger value="financas">Finanças</TabsTrigger>
             <TabsTrigger value="estadio">Estádio</TabsTrigger>
             <TabsTrigger value="base">Base</TabsTrigger>
