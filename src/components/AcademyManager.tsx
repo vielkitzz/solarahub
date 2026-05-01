@@ -333,7 +333,7 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
                     <div className="flex items-center gap-1">
                       <StarRating value={potStars} />
                       <span className="text-[10px] text-muted-foreground">
-                        ({p.potential_min}–{p.potential_max})
+                        {est ? `(~${est.pmin}–${est.pmax}, ±${est.margem})` : "(?)"}
                       </span>
                     </div>
                   </div>
