@@ -31,9 +31,11 @@ import {
 import { ContractRenewalDialog } from "@/components/ContractRenewalDialog";
 import { ShirtNumberDialog } from "@/components/ShirtNumberDialog";
 import { MultaRescisoriaDialog } from "@/components/MultaRescisoriaDialog";
-import { Gavel } from "lucide-react";
+import { Gavel, Telescope, Eye } from "lucide-react";
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
 import { StarRating } from "@/components/StarRating";
+import ScoutsManager from "@/components/ScoutsManager";
+import { estimarPotencialOwn, type ScoutReport } from "@/lib/scout";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RichEditor } from "@/components/RichEditor";
