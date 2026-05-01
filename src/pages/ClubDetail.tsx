@@ -695,6 +695,8 @@ function SquadTable({
   setRenewPlayer,
   setShirtPlayer,
   setMultaPlayer,
+  myClub,
+  scoutReports,
 }: {
   players: any[];
   club: any;
@@ -705,7 +707,10 @@ function SquadTable({
   setRenewPlayer: (p: any) => void;
   setShirtPlayer: (p: any) => void;
   setMultaPlayer: (p: any) => void;
+  myClub: any | null;
+  scoutReports: Record<string, ScoutReport>;
 }) {
+  const isOwnClub = !!myClub && myClub.id === club.id;
   // ESTADOS
   const [searchTerm, setSearchTerm] = useState("");
   const [positionFilter, setPositionFilter] = useState("todas");
