@@ -14,6 +14,7 @@ import { POSITIONS, formatCurrency, calcStars } from "@/lib/format";
 import { COUNTRIES_DATA } from "@/lib/countries";
 import { StarRating } from "@/components/StarRating";
 import { generateRandomName } from "@/lib/scouting-names";
+import { estimarPotencialOwn } from "@/lib/scout";
 import { toast } from "sonner";
 
 interface Props {
