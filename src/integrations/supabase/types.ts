@@ -112,6 +112,7 @@ export type Database = {
           primary_color: string | null
           rate: number
           reputacao: Database["public"]["Enums"]["club_reputation"] | null
+          scout_searches_used: number
           stadium_capacity: number
           stadium_name: string | null
           status: Database["public"]["Enums"]["club_status"]
@@ -141,6 +142,7 @@ export type Database = {
           primary_color?: string | null
           rate?: number
           reputacao?: Database["public"]["Enums"]["club_reputation"] | null
+          scout_searches_used?: number
           stadium_capacity?: number
           stadium_name?: string | null
           status?: Database["public"]["Enums"]["club_status"]
@@ -170,6 +172,7 @@ export type Database = {
           primary_color?: string | null
           rate?: number
           reputacao?: Database["public"]["Enums"]["club_reputation"] | null
+          scout_searches_used?: number
           stadium_capacity?: number
           stadium_name?: string | null
           status?: Database["public"]["Enums"]["club_status"]
@@ -523,6 +526,39 @@ export type Database = {
         }
         Relationships: []
       }
+      scout_reports: {
+        Row: {
+          created_at: string
+          id: string
+          margem_aplicada: number
+          potential_max_revelado: number
+          potential_min_revelado: number
+          scouter_club_id: string
+          target_player_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          margem_aplicada?: number
+          potential_max_revelado: number
+          potential_min_revelado: number
+          scouter_club_id: string
+          target_player_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          margem_aplicada?: number
+          potential_max_revelado?: number
+          potential_min_revelado?: number
+          scouter_club_id?: string
+          target_player_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       settings: {
         Row: {
           created_at: string
@@ -777,6 +813,10 @@ export type Database = {
           _novos_anos: number
         }
         Returns: undefined
+      }
+      scout_player: {
+        Args: { _scouter_club_id: string; _target_player_id: string }
+        Returns: Json
       }
       sugerir_salario_jogador: {
         Args: { _jogador_id: string }

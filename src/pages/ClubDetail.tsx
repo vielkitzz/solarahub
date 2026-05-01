@@ -31,9 +31,11 @@ import {
 import { ContractRenewalDialog } from "@/components/ContractRenewalDialog";
 import { ShirtNumberDialog } from "@/components/ShirtNumberDialog";
 import { MultaRescisoriaDialog } from "@/components/MultaRescisoriaDialog";
-import { Gavel } from "lucide-react";
+import { Gavel, Telescope, Eye } from "lucide-react";
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
 import { StarRating } from "@/components/StarRating";
+import ScoutsManager from "@/components/ScoutsManager";
+import { estimarPotencialOwn, type ScoutReport } from "@/lib/scout";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RichEditor } from "@/components/RichEditor";
@@ -72,11 +74,20 @@ const ClubDetail = () => {
   const canEdit = !!user && !!club && club.owner_id === user.id;
   const [ownerInfo, setOwnerInfo] = useState<{ display_name: string | null; avatar_url: string | null } | null>(null);
 
+  const handleScoutReportCreated = (rep: ScoutReport, novoUsado: number) => {
+    setScoutReports((prev) => ({ ...prev, [rep.target_player_id]: rep }));
+    setMyClub((prev: any) => (prev ? { ...prev, scout_searches_used: novoUsado } : prev));
+  };
+
   const [direitosTv, setDireitosTv] = useState<number>(0);
   const [imgSettings, setImgSettings] = useState<{ custo_pct: number; receita_pct: number }>({
     custo_pct: 0.03,
     receita_pct: 0.5,
   });
+
+  // Olheiros: clube do usuário observador + relatórios já feitos por ele
+  const [myClub, setMyClub] = useState<any | null>(null);
+  const [scoutReports, setScoutReports] = useState<Record<string, ScoutReport>>({});
 
   const load = async () => {
     if (!id) return;
@@ -152,6 +163,32 @@ const ClubDetail = () => {
     loadOwner();
   }, [club?.owner_id]);
 
+  // Carrega o clube do usuário observador (para o olheiro) e os relatórios já feitos
+  useEffect(() => {
+    const loadMyClubAndReports = async () => {
+      if (!user) {
+        setMyClub(null);
+        setScoutReports({});
+        return;
+      }
+      const { data: mine } = await supabase.from("clubs").select("*").eq("owner_id", user.id).maybeSingle();
+      setMyClub(mine || null);
+      if (mine) {
+        const { data: reps } = await supabase
+          .from("scout_reports" as any)
+          .select("*")
+          .eq("scouter_club_id", mine.id);
+        const map: Record<string, ScoutReport> = {};
+        (reps || []).forEach((r: any) => {
+          map[r.target_player_id] = r as ScoutReport;
+        });
+        setScoutReports(map);
+      } else {
+        setScoutReports({});
+      }
+    };
+    loadMyClubAndReports();
+  }, [user?.id]);
   const saveWiki = async (next: WikiData) => {
     setWikiData(next);
     const { error } = await supabase
@@ -369,6 +406,7 @@ const ClubDetail = () => {
             <TabsTrigger value="financas">Finanças</TabsTrigger>
             <TabsTrigger value="estadio">Estádio</TabsTrigger>
             <TabsTrigger value="base">Base</TabsTrigger>
+            <TabsTrigger value="olheiros">Olheiros</TabsTrigger>
             <TabsTrigger value="wiki">Wiki</TabsTrigger>
             {canEdit && <TabsTrigger value="config">Configurações</TabsTrigger>}
           </TabsList>
@@ -390,8 +428,20 @@ const ClubDetail = () => {
               setRenewPlayer={setRenewPlayer}
               setShirtPlayer={setShirtPlayer}
               setMultaPlayer={setMultaPlayer}
+              myClub={myClub}
+              scoutReports={scoutReports}
             />
           )}
+        </TabsContent>
+
+        <TabsContent value="olheiros" className="mt-4">
+          <ScoutsManager
+            targetClub={club}
+            players={players}
+            myClub={myClub}
+            scoutReports={scoutReports}
+            onReportCreated={handleScoutReportCreated}
+          />
         </TabsContent>
 
         <TabsContent value="financas" className="space-y-4 mt-4">
@@ -645,6 +695,8 @@ function SquadTable({
   setRenewPlayer,
   setShirtPlayer,
   setMultaPlayer,
+  myClub,
+  scoutReports,
 }: {
   players: any[];
   club: any;
@@ -655,7 +707,10 @@ function SquadTable({
   setRenewPlayer: (p: any) => void;
   setShirtPlayer: (p: any) => void;
   setMultaPlayer: (p: any) => void;
+  myClub: any | null;
+  scoutReports: Record<string, ScoutReport>;
 }) {
+  const isOwnClub = !!myClub && myClub.id === club.id;
   // ESTADOS
   const [searchTerm, setSearchTerm] = useState("");
   const [positionFilter, setPositionFilter] = useState("todas");
@@ -911,7 +966,35 @@ function SquadTable({
               filteredAndSorted.map((p: any) => {
                 const shirt = p.shirt_number ?? p.attributes?.shirtNumber;
                 const stars = calcStars(p.habilidade, club.rate);
-                const potStars = p.potential_max ? calcStars(p.potential_max, club.rate) : null;
+                // Potencial exibido: depende se é o próprio clube, se é admin, ou se há scout report
+                let potDisplay: { pmaxStars: number; label: string; tooltip: string } | null = null;
+                if (isAdmin) {
+                  if (p.potential_max) {
+                    potDisplay = {
+                      pmaxStars: calcStars(p.potential_max, club.rate),
+                      label: `${p.potential_min}-${p.potential_max}`,
+                      tooltip: "Visão de admin (real)",
+                    };
+                  }
+                } else if (isOwnClub && myClub) {
+                  const est = estimarPotencialOwn(p, myClub.id, myClub.nivel_base);
+                  if (est) {
+                    potDisplay = {
+                      pmaxStars: calcStars(est.pmax, club.rate),
+                      label: `~${est.pmin}-${est.pmax}`,
+                      tooltip: `Estimativa do seu olheiro (±${est.margem})`,
+                    };
+                  }
+                } else {
+                  const rep = scoutReports[p.id];
+                  if (rep) {
+                    potDisplay = {
+                      pmaxStars: calcStars(rep.potential_max_revelado, club.rate),
+                      label: `~${rep.potential_min_revelado}-${rep.potential_max_revelado}`,
+                      tooltip: `Olheiro analisou (±${rep.margem_aplicada})`,
+                    };
+                  }
+                }
                 const expirando =
                   p.contrato_ate !== null && p.contrato_ate !== undefined && p.contrato_ate - temporadaAtual <= 1;
                 const ps = getPositionStyle(p.position);
@@ -966,10 +1049,20 @@ function SquadTable({
                       <StarRating value={stars} />
                     </TableCell>
                     <TableCell className="py-2">
-                      {potStars !== null ? (
-                        <StarRating value={potStars} />
+                      {potDisplay ? (
+                        <div className="flex items-center gap-1.5" title={potDisplay.tooltip}>
+                          <StarRating value={potDisplay.pmaxStars} />
+                          <span className="text-[9px] text-muted-foreground tabular-nums">{potDisplay.label}</span>
+                        </div>
                       ) : (
-                        <span className="text-[10px] text-muted-foreground">—</span>
+                        <div
+                          className="flex items-center gap-1 text-muted-foreground/30"
+                          title="Use a aba Olheiros para descobrir"
+                        >
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Eye key={i} className="h-3 w-3" />
+                          ))}
+                        </div>
                       )}
                     </TableCell>
                     <TableCell className="py-2 text-right text-xs font-semibold text-primary tabular-nums">

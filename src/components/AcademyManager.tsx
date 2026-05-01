@@ -14,6 +14,7 @@ import { POSITIONS, formatCurrency, calcStars } from "@/lib/format";
 import { COUNTRIES_DATA } from "@/lib/countries";
 import { StarRating } from "@/components/StarRating";
 import { generateRandomName } from "@/lib/scouting-names";
+import { estimarPotencialOwn } from "@/lib/scout";
 import { toast } from "sonner";
 
 interface Props {
@@ -295,7 +296,12 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
           {players.map((p) => {
             const finalizado = pronto(p);
             const stars = calcStars(p.skill, club.rate);
-            const potStars = calcStars(p.potential_max, club.rate);
+            const est = estimarPotencialOwn(
+              { id: p.id, potential_min: p.potential_min, potential_max: p.potential_max },
+              club.id,
+              club.nivel_base,
+            );
+            const potStars = est ? calcStars(est.pmax, club.rate) : 0;
             return (
               <Card
                 key={p.id}
@@ -327,7 +333,7 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
                     <div className="flex items-center gap-1">
                       <StarRating value={potStars} />
                       <span className="text-[10px] text-muted-foreground">
-                        ({p.potential_min}–{p.potential_max})
+                        {est ? `(~${est.pmin}–${est.pmax}, ±${est.margem})` : "(?)"}
                       </span>
                     </div>
                   </div>
