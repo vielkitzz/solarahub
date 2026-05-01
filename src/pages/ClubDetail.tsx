@@ -966,7 +966,35 @@ function SquadTable({
               filteredAndSorted.map((p: any) => {
                 const shirt = p.shirt_number ?? p.attributes?.shirtNumber;
                 const stars = calcStars(p.habilidade, club.rate);
-                const potStars = p.potential_max ? calcStars(p.potential_max, club.rate) : null;
+                // Potencial exibido: depende se é o próprio clube, se é admin, ou se há scout report
+                let potDisplay: { pmaxStars: number; label: string; tooltip: string } | null = null;
+                if (isAdmin) {
+                  if (p.potential_max) {
+                    potDisplay = {
+                      pmaxStars: calcStars(p.potential_max, club.rate),
+                      label: `${p.potential_min}-${p.potential_max}`,
+                      tooltip: "Visão de admin (real)",
+                    };
+                  }
+                } else if (isOwnClub && myClub) {
+                  const est = estimarPotencialOwn(p, myClub.id, myClub.nivel_base);
+                  if (est) {
+                    potDisplay = {
+                      pmaxStars: calcStars(est.pmax, club.rate),
+                      label: `~${est.pmin}-${est.pmax}`,
+                      tooltip: `Estimativa do seu olheiro (±${est.margem})`,
+                    };
+                  }
+                } else {
+                  const rep = scoutReports[p.id];
+                  if (rep) {
+                    potDisplay = {
+                      pmaxStars: calcStars(rep.potential_max_revelado, club.rate),
+                      label: `~${rep.potential_min_revelado}-${rep.potential_max_revelado}`,
+                      tooltip: `Olheiro analisou (±${rep.margem_aplicada})`,
+                    };
+                  }
+                }
                 const expirando =
                   p.contrato_ate !== null && p.contrato_ate !== undefined && p.contrato_ate - temporadaAtual <= 1;
                 const ps = getPositionStyle(p.position);
