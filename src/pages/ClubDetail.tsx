@@ -158,6 +158,32 @@ const ClubDetail = () => {
     loadOwner();
   }, [club?.owner_id]);
 
+  // Carrega o clube do usuário observador (para o olheiro) e os relatórios já feitos
+  useEffect(() => {
+    const loadMyClubAndReports = async () => {
+      if (!user) {
+        setMyClub(null);
+        setScoutReports({});
+        return;
+      }
+      const { data: mine } = await supabase.from("clubs").select("*").eq("owner_id", user.id).maybeSingle();
+      setMyClub(mine || null);
+      if (mine) {
+        const { data: reps } = await supabase
+          .from("scout_reports" as any)
+          .select("*")
+          .eq("scouter_club_id", mine.id);
+        const map: Record<string, ScoutReport> = {};
+        (reps || []).forEach((r: any) => {
+          map[r.target_player_id] = r as ScoutReport;
+        });
+        setScoutReports(map);
+      } else {
+        setScoutReports({});
+      }
+    };
+    loadMyClubAndReports();
+  }, [user?.id]);
   const saveWiki = async (next: WikiData) => {
     setWikiData(next);
     const { error } = await supabase
