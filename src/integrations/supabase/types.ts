@@ -348,6 +348,7 @@ export type Database = {
           habilidade: number | null
           id: string
           market_value: number
+          master_player_id: string | null
           name: string
           nationality: string | null
           position: string
@@ -368,6 +369,7 @@ export type Database = {
           habilidade?: number | null
           id?: string
           market_value?: number
+          master_player_id?: string | null
           name: string
           nationality?: string | null
           position: string
@@ -388,6 +390,7 @@ export type Database = {
           habilidade?: number | null
           id?: string
           market_value?: number
+          master_player_id?: string | null
           name?: string
           nationality?: string | null
           position?: string
@@ -404,6 +407,13 @@ export type Database = {
             columns: ["club_id"]
             isOneToOne: false
             referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "players_master_player_id_fkey"
+            columns: ["master_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
             referencedColumns: ["id"]
           },
         ]
