@@ -9,12 +9,24 @@ import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { GraduationCap, Search, ArrowUp, X, AlertTriangle, Sparkles, Star, ArrowUpCircle } from "lucide-react";
+import {
+  GraduationCap,
+  Search,
+  ArrowUp,
+  X,
+  AlertTriangle,
+  Sparkles,
+  Star,
+  ArrowUpCircle,
+  ArrowUpDown,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 import { POSITIONS, formatCurrency, calcStars } from "@/lib/format";
-import { COUNTRIES_DATA } from "@/lib/countries";
+import { COUNTRIES_DATA, getFlagUrl } from "@/lib/countries";
 import { StarRating } from "@/components/StarRating";
 import { generateRandomName } from "@/lib/scouting-names";
-import { estimarPotencialOwn } from "@/lib/scout";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 
 interface Props {
@@ -52,7 +64,7 @@ interface ScoutResult {
 
 const NIVEL_LABELS = ["—", "Modesto", "Regional", "Profissional", "Premium", "Elite"];
 
-// Custos de upgrade da base (estrutura simétrica ao estádio)
+// Custos de upgrade da base
 const BASE_UPGRADE_CUSTOS: Record<string, number> = {
   "1_2": 800_000,
   "2_3": 4_000_000,
@@ -60,6 +72,328 @@ const BASE_UPGRADE_CUSTOS: Record<string, number> = {
   "4_5": 35_000_000,
 };
 
+// ─── Estilos da Tabela ────────────────────────────────────────────────────────
+const POSITION_COLORS: Record<string, { color: string; bg: string }> = {
+  GOL: { color: "text-yellow-300", bg: "bg-yellow-400/20 border-yellow-400/50" },
+  ZAG: { color: "text-blue-300", bg: "bg-blue-500/20 border-blue-400/50" },
+  LD: { color: "text-sky-300", bg: "bg-sky-500/20 border-sky-400/50" },
+  LE: { color: "text-sky-300", bg: "bg-sky-500/20 border-sky-400/50" },
+  VOL: { color: "text-teal-300", bg: "bg-teal-500/20 border-teal-400/50" },
+  MC: { color: "text-emerald-300", bg: "bg-emerald-500/20 border-emerald-400/50" },
+  MEI: { color: "text-lime-300", bg: "bg-lime-500/20 border-lime-400/50" },
+  PD: { color: "text-orange-300", bg: "bg-orange-500/20 border-orange-400/50" },
+  PE: { color: "text-orange-300", bg: "bg-orange-500/20 border-orange-400/50" },
+  SA: { color: "text-red-300", bg: "bg-red-500/20 border-red-400/50" },
+  ATA: { color: "text-rose-300", bg: "bg-rose-500/20 border-rose-400/50" },
+};
+
+function getPositionStyle(position: string) {
+  return (
+    POSITION_COLORS[(position || "").toUpperCase()] ?? {
+      color: "text-muted-foreground",
+      bg: "bg-secondary/30 border-border/30",
+    }
+  );
+}
+
+function FlagImg({ nationality }: { nationality: string }) {
+  const url = getFlagUrl(nationality);
+  if (!url) return <span className="text-xs text-muted-foreground">—</span>;
+  return (
+    <img
+      src={url}
+      alt={nationality}
+      title={nationality}
+      className="h-6 w-8 object-cover rounded-sm"
+      style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.1)" }}
+    />
+  );
+}
+
+// ─── Componente da Tabela da Base ─────────────────────────────────────────────
+function AcademyTable({
+  players,
+  club,
+  canEdit,
+  promover,
+  dispensar,
+  pronto,
+}: {
+  players: AcademyPlayer[];
+  club: any;
+  canEdit: boolean;
+  promover: (p: AcademyPlayer) => void;
+  dispensar: (p: AcademyPlayer) => void;
+  pronto: (p: AcademyPlayer) => boolean;
+}) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [positionFilter, setPositionFilter] = useState("todas");
+  const [statusFilter, setStatusFilter] = useState("todos");
+
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>({
+    key: "desenvolvimento",
+    direction: "desc",
+  });
+
+  const handleSort = (key: string) => {
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+    if (sortConfig?.key !== columnKey) return <ArrowUpDown className="h-3 w-3 opacity-20 shrink-0" />;
+    return sortConfig.direction === "asc" ? (
+      <ChevronUp className="h-3 w-3 shrink-0" />
+    ) : (
+      <ChevronDown className="h-3 w-3 shrink-0" />
+    );
+  };
+
+  const filteredAndSorted = useMemo(() => {
+    return players
+      .filter((p) => {
+        if (searchTerm && !p.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+        if (positionFilter !== "todas" && p.position !== positionFilter) return false;
+        if (statusFilter === "pronto" && !pronto(p)) return false;
+        if (statusFilter === "desenvolvimento" && pronto(p)) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        if (!sortConfig) return 0;
+        const { key, direction } = sortConfig;
+        const modifier = direction === "asc" ? 1 : -1;
+
+        switch (key) {
+          case "posicao":
+            const ai = POSITIONS.indexOf(a.position);
+            const bi = POSITIONS.indexOf(b.position);
+            const av = ai === -1 ? 999 : ai;
+            const bv = bi === -1 ? 999 : bi;
+            if (av !== bv) return (av - bv) * modifier;
+            return (Number(b.development_progress || 0) - Number(a.development_progress || 0)) * modifier;
+          case "nome":
+            return a.name.localeCompare(b.name) * modifier;
+          case "nacionalidade":
+            return (a.nationality || "").localeCompare(b.nationality || "") * modifier;
+          case "idade":
+            return (Number(a.age || 0) - Number(b.age || 0)) * modifier;
+          case "qualidade":
+            return (Number(a.skill || 0) - Number(b.skill || 0)) * modifier;
+          case "desenvolvimento":
+            return (Number(a.development_progress || 0) - Number(b.development_progress || 0)) * modifier;
+          default:
+            return 0;
+        }
+      });
+  }, [players, searchTerm, positionFilter, statusFilter, sortConfig]);
+
+  return (
+    <div className="space-y-0 rounded-lg overflow-hidden border border-border/50 bg-gradient-card mt-4">
+      <div className="flex items-center gap-4 px-4 py-2.5 bg-secondary/40 border-b border-border/50 text-xs text-muted-foreground flex-wrap">
+        <span className="font-semibold text-foreground">{filteredAndSorted.length} jogadores na base</span>
+      </div>
+
+      <div className="p-3 bg-secondary/10 border-b border-border/50 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar pelo nome..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 h-9 text-xs bg-background/50"
+          />
+        </div>
+
+        <Select value={positionFilter} onValueChange={setPositionFilter}>
+          <SelectTrigger className="h-9 text-xs bg-background/50">
+            <SelectValue placeholder="Todas as posições" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todas">Todas as posições</SelectItem>
+            {POSITIONS.map((pos) => (
+              <SelectItem key={pos} value={pos}>
+                {pos}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-9 text-xs bg-background/50">
+            <SelectValue placeholder="Qualquer status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Qualquer status</SelectItem>
+            <SelectItem value="pronto">Prontos para promover</SelectItem>
+            <SelectItem value="desenvolvimento">Em desenvolvimento</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-border/50 bg-secondary/20">
+              <TableHead
+                className="w-16 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                onClick={() => handleSort("posicao")}
+              >
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                  Posição <SortIcon columnKey="posicao" />
+                </div>
+              </TableHead>
+
+              <TableHead
+                className="cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                onClick={() => handleSort("nome")}
+              >
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                  Nome <SortIcon columnKey="nome" />
+                </div>
+              </TableHead>
+
+              <TableHead
+                className="w-20 hidden sm:table-cell cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                onClick={() => handleSort("nacionalidade")}
+              >
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                  Nacionalidade <SortIcon columnKey="nacionalidade" />
+                </div>
+              </TableHead>
+
+              <TableHead
+                className="w-16 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                onClick={() => handleSort("idade")}
+              >
+                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                  Idade <SortIcon columnKey="idade" />
+                </div>
+              </TableHead>
+
+              <TableHead
+                className="w-28 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                onClick={() => handleSort("qualidade")}
+              >
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                  Qualidade <SortIcon columnKey="qualidade" />
+                </div>
+              </TableHead>
+
+              <TableHead
+                className="w-32 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                onClick={() => handleSort("desenvolvimento")}
+              >
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                  Desenvolvimento <SortIcon columnKey="desenvolvimento" />
+                </div>
+              </TableHead>
+
+              {canEdit && <TableHead className="w-24 text-right" />}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredAndSorted.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={canEdit ? 7 : 6} className="text-center py-8 text-muted-foreground">
+                  Nenhum jogador encontrado.
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredAndSorted.map((p) => {
+                const finalizado = pronto(p);
+                const stars = calcStars(p.skill, club.rate);
+                const ps = getPositionStyle(p.position);
+
+                return (
+                  <TableRow
+                    key={p.id}
+                    className={`border-border/30 hover:bg-primary/5 transition-colors text-sm ${finalizado ? "bg-primary/5" : ""}`}
+                  >
+                    <TableCell className="py-2">
+                      <span
+                        className={`inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded border ${ps.bg} ${ps.color}`}
+                      >
+                        {p.position || "—"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-2 font-medium">
+                      <div className="flex items-center gap-1.5">
+                        <span className="truncate max-w-[160px]">{p.name}</span>
+                        {finalizado && (
+                          <span title="Pronto para promover">
+                            <Sparkles className="h-3 w-3 text-primary shrink-0" />
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-2 hidden sm:table-cell">
+                      <FlagImg nationality={p.nationality || ""} />
+                    </TableCell>
+                    <TableCell className="py-2 text-center text-xs text-muted-foreground tabular-nums">
+                      {p.age ?? "—"}
+                    </TableCell>
+                    <TableCell className="py-2">
+                      <StarRating value={stars} />
+                    </TableCell>
+                    <TableCell className="py-2">
+                      <div className="flex flex-col gap-1 w-24">
+                        <div className="flex justify-between text-[10px] text-muted-foreground">
+                          <span>{Math.round(p.development_progress)}%</span>
+                        </div>
+                        <Progress value={p.development_progress} className="h-1.5" />
+                      </div>
+                    </TableCell>
+                    {canEdit && (
+                      <TableCell className="py-2 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          {finalizado ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Promover"
+                              onClick={() => promover(p)}
+                              className="h-7 w-7 text-primary hover:text-primary/80"
+                            >
+                              <ArrowUp className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Promover já (Aplica penalidade)"
+                              onClick={() => promover(p)}
+                              className="h-7 w-7 text-amber-400 hover:text-amber-500"
+                            >
+                              <AlertTriangle className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Dispensar"
+                            onClick={() => dispensar(p)}
+                            className="h-7 w-7 text-destructive hover:text-destructive/80"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+// ─── Gerenciador Principal ────────────────────────────────────────────────────
 export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
   const [players, setPlayers] = useState<AcademyPlayer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,17 +461,16 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
     });
     setScoutLoading(false);
     if (error) return toast.error(error.message);
-    // Como a geração de nome agora é async (faz requests), precisamos usar Promise.all
+
     const enriched = await Promise.all(
       (data as ScoutResult[]).map(async (p) => {
-        // Se a nacionalidade vier nula (usuário escolheu "Qualquer"), sorteamos uma!
         const finalNationality =
           p.scout_nationality || COUNTRIES_DATA[Math.floor(Math.random() * COUNTRIES_DATA.length)].name;
 
         return {
           ...p,
-          scout_nationality: finalNationality, // Define a nacionalidade sorteada
-          scout_name: await generateRandomName(finalNationality), // Gera o nome com base nela
+          scout_nationality: finalNationality,
+          scout_name: await generateRandomName(finalNationality),
         };
       }),
     );
@@ -156,7 +489,6 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
     if (!scoutResults) return;
     const escolhidos = scoutResults.filter((p) => picked.has(p.scout_id));
     if (escolhidos.length === 0) {
-      // mesmo sem escolha, fechamos (peneira já foi consumida)
       setScoutOpen(false);
       setScoutResults(null);
       return;
@@ -284,116 +616,22 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
         </div>
       </Card>
 
-      {/* Lista da academia */}
+      {/* Lista da academia em formato de tabela */}
       {loading ? (
         <Card className="p-6 bg-gradient-card border-border/50 text-muted-foreground text-sm">Carregando...</Card>
       ) : players.length === 0 ? (
-        <Card className="p-8 bg-gradient-card border-border/50 text-center text-sm text-muted-foreground">
+        <Card className="p-8 bg-gradient-card border-border/50 text-center text-sm text-muted-foreground mt-4">
           Nenhum jogador na base. Realize uma peneira para começar.
         </Card>
       ) : (
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {players.map((p) => {
-            const finalizado = pronto(p);
-            const stars = calcStars(p.skill, club.rate);
-            const est = estimarPotencialOwn(
-              { id: p.id, potential_min: p.potential_min, potential_max: p.potential_max },
-              club.id,
-              club.nivel_base,
-            );
-            const potStars = est ? calcStars(est.pmax, club.rate) : 0;
-            return (
-              <Card
-                key={p.id}
-                className={`p-4 bg-gradient-card border-border/50 space-y-3 ${
-                  finalizado ? "ring-2 ring-primary/60 shadow-gold" : ""
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="font-display font-bold truncate">{p.name}</div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {p.position} · {p.age} anos · {p.nationality || "—"}
-                    </div>
-                  </div>
-                  {finalizado && (
-                    <Badge className="bg-primary text-primary-foreground gap-1">
-                      <Sparkles className="h-3 w-3" /> Pronto
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="space-y-1 text-xs">
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Habilidade</span>
-                    <StarRating value={stars} />
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Potencial</span>
-                    <div className="flex items-center gap-1">
-                      <StarRating value={potStars} />
-                      <span className="text-[10px] text-muted-foreground">
-                        {est ? `(~${est.pmin}–${est.pmax}, ±${est.margem})` : "(?)"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[10px] text-muted-foreground">
-                    <span>Desenvolvimento</span>
-                    <span>{Math.round(p.development_progress)}%</span>
-                  </div>
-                  <Progress value={p.development_progress} className="h-2" />
-                </div>
-
-                {canEdit && (
-                  <div className="flex gap-2 pt-1">
-                    {finalizado ? (
-                      <>
-                        <Button
-                          size="sm"
-                          className="flex-1 bg-gradient-gold text-primary-foreground hover:opacity-90"
-                          onClick={() => promover(p)}
-                        >
-                          <ArrowUp className="h-3.5 w-3.5" /> Promover
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-destructive border-destructive/30"
-                          onClick={() => dispensar(p)}
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1 text-amber-400 border-amber-400/30"
-                          onClick={() => promover(p)}
-                          title="Promover antes do desenvolvimento completo aplica penalidade"
-                        >
-                          <AlertTriangle className="h-3.5 w-3.5" /> Promover já
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-destructive border-destructive/30"
-                          onClick={() => dispensar(p)}
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                )}
-              </Card>
-            );
-          })}
-        </div>
+        <AcademyTable
+          players={players}
+          club={club}
+          canEdit={canEdit}
+          promover={promover}
+          dispensar={dispensar}
+          pronto={pronto}
+        />
       )}
 
       {/* Dialog peneira */}
