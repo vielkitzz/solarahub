@@ -386,7 +386,6 @@ function AcademyTable({
                             <span className="text-[10px] text-muted-foreground w-7">máx</span>
                             <StarRating value={potStarsMax || 0} />
                           </div>
-                          <span className="text-[9px] text-muted-foreground">±{rep.margem_aplicada} pontos</span>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
