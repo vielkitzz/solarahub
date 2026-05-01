@@ -277,6 +277,45 @@ export type Database = {
         }
         Relationships: []
       }
+      loans: {
+        Row: {
+          club_id: string
+          created_at: string
+          id: string
+          installments_paid: number
+          installments_total: number
+          juros_pct: number
+          status: string
+          updated_at: string
+          valor_parcela: number
+          valor_total: number
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          id?: string
+          installments_paid?: number
+          installments_total: number
+          juros_pct?: number
+          status?: string
+          updated_at?: string
+          valor_parcela: number
+          valor_total: number
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          id?: string
+          installments_paid?: number
+          installments_total?: number
+          juros_pct?: number
+          status?: string
+          updated_at?: string
+          valor_parcela?: number
+          valor_total?: number
+        }
+        Relationships: []
+      }
       marcas_bloqueadas: {
         Row: {
           club_id: string
@@ -346,6 +385,7 @@ export type Database = {
           contrato_ate: number | null
           created_at: string
           habilidade: number | null
+          habilidade_anterior: number | null
           id: string
           market_value: number
           master_player_id: string | null
@@ -367,6 +407,7 @@ export type Database = {
           contrato_ate?: number | null
           created_at?: string
           habilidade?: number | null
+          habilidade_anterior?: number | null
           id?: string
           market_value?: number
           master_player_id?: string | null
@@ -388,6 +429,7 @@ export type Database = {
           contrato_ate?: number | null
           created_at?: string
           habilidade?: number | null
+          habilidade_anterior?: number | null
           id?: string
           market_value?: number
           master_player_id?: string | null
