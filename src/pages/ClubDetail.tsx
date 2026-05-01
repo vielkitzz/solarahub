@@ -42,6 +42,8 @@ import { ClubInfobox, InfoboxData } from "@/components/ClubInfobox";
 import { ContractsManager } from "@/components/ContractsManager";
 import { StadiumManager } from "@/components/StadiumManager";
 import { AcademyManager } from "@/components/AcademyManager";
+import { LoanManager } from "@/components/LoanManager";
+import { ChevronsUp, ChevronsDown, Equal, LineChart } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
