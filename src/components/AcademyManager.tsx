@@ -296,7 +296,12 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
           {players.map((p) => {
             const finalizado = pronto(p);
             const stars = calcStars(p.skill, club.rate);
-            const potStars = calcStars(p.potential_max, club.rate);
+            const est = estimarPotencialOwn(
+              { id: p.id, potential_min: p.potential_min, potential_max: p.potential_max },
+              club.id,
+              club.nivel_base,
+            );
+            const potStars = est ? calcStars(est.pmax, club.rate) : 0;
             return (
               <Card
                 key={p.id}
