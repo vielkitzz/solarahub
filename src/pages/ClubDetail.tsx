@@ -460,6 +460,13 @@ const ClubDetail = () => {
             valorBaseFolha={valorBaseFolha}
             onChange={load}
           />
+
+          {/* Empréstimos bancários */}
+          <LoanManager club={club} canEdit={canEdit} onChange={load} />
+        </TabsContent>
+
+        <TabsContent value="evolucao" className="mt-4">
+          <EvolutionTable players={players} />
         </TabsContent>
 
         <TabsContent value="estadio" className="mt-4">
