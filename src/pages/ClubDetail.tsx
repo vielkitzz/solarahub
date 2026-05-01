@@ -1060,7 +1060,7 @@ function SquadTable({
                           title="Use a aba Olheiros para descobrir"
                         >
                           {Array.from({ length: 5 }).map((_, i) => (
-                            <Star key={i} className="h-3 w-3" />
+                            <Star key={i} style={{ width: 14, height: 14 }} />
                           ))}
                         </div>
                       )}
