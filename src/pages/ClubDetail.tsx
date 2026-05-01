@@ -80,6 +80,10 @@ const ClubDetail = () => {
     receita_pct: 0.5,
   });
 
+  // Olheiros: clube do usuário observador + relatórios já feitos por ele
+  const [myClub, setMyClub] = useState<any | null>(null);
+  const [scoutReports, setScoutReports] = useState<Record<string, ScoutReport>>({});
+
   const load = async () => {
     if (!id) return;
     const [
