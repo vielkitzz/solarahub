@@ -1,31 +1,41 @@
+import { Star, StarHalf } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  value: number; // 0 a 5 (em meias estrelas)
+  className?: string;
+  size?: number;
+}
+
+/**
+ * Exibe estrelas (cheias / meias / vazias) de 0 a 5. Não mostra valor numérico.
+ */
 export const StarRating = ({ value, className, size = 14 }: Props) => {
-  const safeValue = Math.max(0, Math.min(5, value || 0));
-  const fullStars = Math.floor(safeValue);
-  const hasHalfStar = safeValue - fullStars >= 0.5;
-  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+  const safe = Math.max(0, Math.min(5, value || 0));
+  const full = Math.floor(safe);
+  const hasHalf = safe - full >= 0.5;
+  const empty = 5 - full - (hasHalf ? 1 : 0);
 
   return (
-    <div
-      className={cn("inline-flex items-center gap-0.5", className)}
-      aria-label={`Avaliação: ${safeValue} de 5 estrelas`}
-    >
-      {/* Estrelas Cheias */}
-      {[...Array(fullStars)].map((_, i) => (
-        <Star key={`f-${i}`} size={size} className="text-primary fill-primary" />
+    <div className={cn("inline-flex items-center gap-0.5", className)} aria-label={`${safe} de 5 estrelas`}>
+           {" "}
+      {Array.from({ length: full }).map((_, i) => (
+        <Star key={`f-${i}`} className="text-primary fill-primary" style={{ width: size, height: size }} />
       ))}
-
-      {/* Estrela Metade */}
-      {hasHalfStar && (
+           {" "}
+      {hasHalf && (
         <span className="relative inline-block" style={{ width: size, height: size }}>
-          <Star size={size} className="absolute inset-0 text-muted-foreground/20" />
-          <StarHalf size={size} className="absolute inset-0 text-primary fill-primary" />
+                    <Star className="absolute inset-0 text-primary/30" style={{ width: size, height: size }} />
+                   {" "}
+          <StarHalf className="absolute inset-0 text-primary fill-primary" style={{ width: size, height: size }} />     
+           {" "}
         </span>
       )}
-
-      {/* Estrelas Vazias */}
-      {[...Array(emptyStars)].map((_, i) => (
-        <Star key={`e-${i}`} size={size} className="text-muted-foreground/20" />
+           {" "}
+      {Array.from({ length: empty }).map((_, i) => (
+        <Star key={`e-${i}`} className="text-primary/25" style={{ width: size, height: size }} />
       ))}
+         {" "}
     </div>
   );
 };
