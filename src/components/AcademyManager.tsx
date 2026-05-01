@@ -21,6 +21,7 @@ import {
   ArrowUpDown,
   ChevronUp,
   ChevronDown,
+  Telescope,
 } from "lucide-react";
 import { POSITIONS, formatCurrency, calcStars } from "@/lib/format";
 import { COUNTRIES_DATA, getFlagUrl } from "@/lib/countries";
@@ -28,6 +29,7 @@ import { StarRating } from "@/components/StarRating";
 import { generateRandomName } from "@/lib/scouting-names";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
+import type { ScoutReport } from "@/lib/scout"; // Certifique-se de que essa exportação exista
 
 interface Props {
   club: any;
@@ -118,6 +120,10 @@ function AcademyTable({
   promover,
   dispensar,
   pronto,
+  scoutReports,
+  pesquisar,
+  scoutingId,
+  searchesRestantes,
 }: {
   players: AcademyPlayer[];
   club: any;
@@ -125,6 +131,10 @@ function AcademyTable({
   promover: (p: AcademyPlayer) => void;
   dispensar: (p: AcademyPlayer) => void;
   pronto: (p: AcademyPlayer) => boolean;
+  scoutReports: Record<string, any>;
+  pesquisar: (playerId: string) => void;
+  scoutingId: string | null;
+  searchesRestantes: number;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [positionFilter, setPositionFilter] = useState("todas");
@@ -182,18 +192,30 @@ function AcademyTable({
             return (Number(a.age || 0) - Number(b.age || 0)) * modifier;
           case "qualidade":
             return (Number(a.skill || 0) - Number(b.skill || 0)) * modifier;
+          case "potencial":
+            const repA = scoutReports[a.id];
+            const repB = scoutReports[b.id];
+            const valA = repA ? repA.potential_max_revelado : 0;
+            const valB = repB ? repB.potential_max_revelado : 0;
+            return (valA - valB) * modifier;
           case "desenvolvimento":
             return (Number(a.development_progress || 0) - Number(b.development_progress || 0)) * modifier;
           default:
             return 0;
         }
       });
-  }, [players, searchTerm, positionFilter, statusFilter, sortConfig]);
+  }, [players, searchTerm, positionFilter, statusFilter, sortConfig, scoutReports]);
 
   return (
     <div className="space-y-0 rounded-lg overflow-hidden border border-border/50 bg-gradient-card mt-4">
       <div className="flex items-center gap-4 px-4 py-2.5 bg-secondary/40 border-b border-border/50 text-xs text-muted-foreground flex-wrap">
         <span className="font-semibold text-foreground">{filteredAndSorted.length} jogadores na base</span>
+        <div className="ml-auto flex items-center gap-3 flex-wrap">
+          <span className="flex items-center gap-1.5 bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
+            <Telescope className="h-3.5 w-3.5" />
+            <span className="font-bold">{searchesRestantes}</span> pesquisas de olheiro restantes
+          </span>
+        </div>
       </div>
 
       <div className="p-3 bg-secondary/10 border-b border-border/50 grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -283,6 +305,15 @@ function AcademyTable({
               </TableHead>
 
               <TableHead
+                className="w-44 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                onClick={() => handleSort("potencial")}
+              >
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                  Potencial <SortIcon columnKey="potencial" />
+                </div>
+              </TableHead>
+
+              <TableHead
                 className="w-32 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("desenvolvimento")}
               >
@@ -297,7 +328,7 @@ function AcademyTable({
           <TableBody>
             {filteredAndSorted.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={canEdit ? 7 : 6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={canEdit ? 8 : 7} className="text-center py-8 text-muted-foreground">
                   Nenhum jogador encontrado.
                 </TableCell>
               </TableRow>
@@ -306,6 +337,11 @@ function AcademyTable({
                 const finalizado = pronto(p);
                 const stars = calcStars(p.skill, club.rate);
                 const ps = getPositionStyle(p.position);
+
+                // Relatório do Olheiro
+                const rep = scoutReports[p.id];
+                const potStarsMin = rep ? calcStars(rep.potential_min_revelado, club.rate) : null;
+                const potStarsMax = rep ? calcStars(rep.potential_max_revelado, club.rate) : null;
 
                 return (
                   <TableRow
@@ -338,6 +374,45 @@ function AcademyTable({
                     <TableCell className="py-2">
                       <StarRating value={stars} />
                     </TableCell>
+
+                    <TableCell className="py-2">
+                      {rep ? (
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-muted-foreground w-7">min</span>
+                            <StarRating value={potStarsMin || 0} />
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-muted-foreground w-7">máx</span>
+                            <StarRating value={potStarsMax || 0} />
+                          </div>
+                          <span className="text-[9px] text-muted-foreground">±{rep.margem_aplicada} pontos</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 text-muted-foreground/40">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star key={i} className="h-3 w-3" />
+                            ))}
+                            <span className="text-[10px] ml-1">desconhecido</span>
+                          </div>
+                          {canEdit && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={searchesRestantes <= 0 || scoutingId === p.id}
+                              onClick={() => pesquisar(p.id)}
+                              className="h-6 text-[10px] px-2"
+                              title="Usar Olheiro para descobrir o potencial"
+                            >
+                              <Telescope className="h-3 w-3 mr-1" />
+                              {scoutingId === p.id ? "..." : "Analisar"}
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </TableCell>
+
                     <TableCell className="py-2">
                       <div className="flex flex-col gap-1 w-24">
                         <div className="flex justify-between text-[10px] text-muted-foreground">
@@ -397,6 +472,8 @@ function AcademyTable({
 export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
   const [players, setPlayers] = useState<AcademyPlayer[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Scout e Peneira
   const [scoutOpen, setScoutOpen] = useState(false);
   const [scoutPositions, setScoutPositions] = useState<string[]>([]);
   const [scoutAgeMin, setScoutAgeMin] = useState(14);
@@ -406,22 +483,59 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
   const [scoutResults, setScoutResults] = useState<ScoutResult[] | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [savingScout, setSavingScout] = useState(false);
+
+  // Olheiro
+  const [scoutReports, setScoutReports] = useState<Record<string, any>>({});
+  const [scoutingId, setScoutingId] = useState<string | null>(null);
+  const [searchesUsed, setSearchesUsed] = useState<number>(club?.scout_searches_used ?? 0);
+
   const [upgradingBase, setUpgradingBase] = useState(false);
 
   const peneirasUsadas = club.academy_scouting_count ?? 0;
   const peneirasRestantes = Math.max(0, 2 - peneirasUsadas);
+  const pesquisasRestantes = Math.max(0, 10 - searchesUsed);
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+
+    // Carregar jogadores da base
+    const { data: playersData, error: playersError } = await supabase
       .from("academy_players")
       .select("*")
       .eq("club_id", club.id)
       .order("development_progress", { ascending: false });
-    if (error) toast.error(error.message);
-    setPlayers((data as AcademyPlayer[]) || []);
+
+    if (playersError) toast.error(playersError.message);
+    setPlayers((playersData as AcademyPlayer[]) || []);
+
+    // Carregar relatórios de olheiro já feitos (opcional, dependendo do seu backend)
+    try {
+      const { data: reportsData } = await supabase
+        .from("scout_reports") // Substitua pelo nome correto da sua tabela de relatórios
+        .select("*")
+        .eq("scouter_club_id", club.id);
+
+      if (reportsData) {
+        const reportsMap: Record<string, any> = {};
+        reportsData.forEach((r) => {
+          reportsMap[r.target_player_id] = {
+            potential_min_revelado: r.potential_min_revelado,
+            potential_max_revelado: r.potential_max_revelado,
+            margem_aplicada: r.margem_aplicada,
+          };
+        });
+        setScoutReports(reportsMap);
+      }
+    } catch (e) {
+      console.warn("Não foi possível carregar relatórios prévios (pode ignorar se não usar persistência).");
+    }
+
     setLoading(false);
   };
+
+  useEffect(() => {
+    setSearchesUsed(club?.scout_searches_used ?? 0);
+  }, [club?.id, club?.scout_searches_used]);
 
   useEffect(() => {
     load();
@@ -479,12 +593,6 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
     onChange();
   };
 
-  const togglePick = (id: string) => {
-    const next = new Set(picked);
-    next.has(id) ? next.delete(id) : next.add(id);
-    setPicked(next);
-  };
-
   const confirmarPicks = async () => {
     if (!scoutResults) return;
     const escolhidos = scoutResults.filter((p) => picked.has(p.scout_id));
@@ -535,6 +643,44 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
     toast.success(`${p.name} foi promovido ao elenco principal!`);
     load();
     onChange();
+  };
+
+  // Função que usa o olheiro para revelar potencial do jogador da base
+  const pesquisarJogadorBase = async (playerId: string) => {
+    if (!club) return;
+    setScoutingId(playerId);
+    try {
+      const { data, error } = await supabase.rpc("scout_academy_player" as any, {
+        _scouter_club_id: club.id,
+        _target_player_id: playerId,
+      });
+      if (error) throw error;
+
+      const res: any = data;
+
+      setScoutReports((prev) => ({
+        ...prev,
+        [playerId]: {
+          potential_min_revelado: res.potential_min,
+          potential_max_revelado: res.potential_max,
+          margem_aplicada: res.margem,
+        },
+      }));
+
+      setSearchesUsed(res.searches_used);
+
+      if (res.ja_existia) {
+        toast.info("Relatório já existia — não consumiu pesquisa.");
+      } else {
+        toast.success(`Olheiro analisou o jogador (margem ±${res.margem}).`);
+      }
+
+      onChange(); // Atualiza contador do clube globalmente
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao pesquisar jogador");
+    } finally {
+      setScoutingId(null);
+    }
   };
 
   const pronto = (p: AcademyPlayer) => p.development_progress >= 100;
@@ -631,6 +777,10 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
           promover={promover}
           dispensar={dispensar}
           pronto={pronto}
+          scoutReports={scoutReports}
+          pesquisar={pesquisarJogadorBase}
+          scoutingId={scoutingId}
+          searchesRestantes={pesquisasRestantes}
         />
       )}
 
