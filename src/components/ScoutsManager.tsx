@@ -171,7 +171,7 @@ const ScoutsManager = ({ targetClub, players, myClub, scoutReports, onReportCrea
                       ) : (
                         <div className="flex items-center gap-1 text-muted-foreground/40">
                           {Array.from({ length: 5 }).map((_, i) => (
-                            <Star key={i} className="h-3 w-3" />
+                            <Star key={i} className="h-4 w-4" />
                           ))}
                           <span className="text-[10px] ml-1">desconhecido</span>
                         </div>
