@@ -72,6 +72,7 @@ export const SPONSORS: Brand[] = [
   { name: "Hyundai", domain: "hyundaiusa.com", setor: "Automóveis", prestige: 1.7 },
   { name: "Intel", domain: "intel.com", setor: "Tecnologia", prestige: 1.75 },
   { name: "Philips", domain: "philips.com", setor: "Tecnologia", prestige: 1.65 },
+  { name: "DHL", domain: "dhl.com", setor: "Serviços", prestige: 1.65 },
 
   // --- Grandes Internacionais ---
   { name: "Spotify", domain: "spotify.com", setor: "Tecnologia", prestige: 1.75 },
