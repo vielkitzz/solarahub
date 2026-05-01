@@ -931,7 +931,7 @@ function SquadTable({
                           {shirt ?? "—"}
                         </button>
                       ) : (
-                        shirt ?? "—"
+                        (shirt ?? "—")
                       )}
                     </TableCell>
                     <TableCell className="py-2">
@@ -1089,19 +1089,17 @@ const EvolutionTable = ({ players }: { players: any[] }) => {
       <div className="p-4 border-b border-border/50 flex items-center gap-2">
         <LineChart className="h-4 w-4 text-primary" />
         <h3 className="font-display font-bold">Evolução do Elenco</h3>
-        <span className="text-[11px] text-muted-foreground ml-auto">
-          Comparativo da habilidade entre temporadas
-        </span>
+        <span className="text-[11px] text-muted-foreground ml-auto">Comparativo da habilidade entre temporadas</span>
       </div>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Jogador</TableHead>
-            <TableHead>Pos.</TableHead>
+            <TableHead>Posição</TableHead>
             <TableHead className="text-center">Idade</TableHead>
             <TableHead className="text-center">Anterior</TableHead>
             <TableHead className="text-center">Atual</TableHead>
-            <TableHead className="text-center">Δ</TableHead>
+            <TableHead className="text-center">Ganho / Perda</TableHead>
             <TableHead className="text-center">Tendência</TableHead>
           </TableRow>
         </TableHeader>
@@ -1112,20 +1110,10 @@ const EvolutionTable = ({ players }: { players: any[] }) => {
             const delta = atual - anterior;
             const tipo = delta > 0 ? "up" : delta < 0 ? "down" : "eq";
 
-            const cls =
-              tipo === "up"
-                ? "text-success"
-                : tipo === "down"
-                  ? "text-destructive"
-                  : "text-muted-foreground";
+            const cls = tipo === "up" ? "text-success" : tipo === "down" ? "text-destructive" : "text-muted-foreground";
 
             const Icon = tipo === "up" ? ChevronsUp : tipo === "down" ? ChevronsDown : Equal;
-            const bgCls =
-              tipo === "up"
-                ? "bg-success/10"
-                : tipo === "down"
-                  ? "bg-destructive/10"
-                  : "bg-muted/30";
+            const bgCls = tipo === "up" ? "bg-success/10" : tipo === "down" ? "bg-destructive/10" : "bg-muted/30";
 
             return (
               <TableRow key={p.id}>
@@ -1135,21 +1123,13 @@ const EvolutionTable = ({ players }: { players: any[] }) => {
                     {p.position}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-center text-xs text-muted-foreground">
-                  {p.age ?? "—"}
-                </TableCell>
-                <TableCell className="text-center text-xs text-muted-foreground">
-                  {anterior}
-                </TableCell>
+                <TableCell className="text-center text-xs text-muted-foreground">{p.age ?? "—"}</TableCell>
+                <TableCell className="text-center text-xs text-muted-foreground">{anterior}</TableCell>
                 <TableCell className="text-center font-display font-bold">{atual}</TableCell>
-                <TableCell className={`text-center font-bold ${cls}`}>
-                  {delta > 0 ? `+${delta}` : delta}
-                </TableCell>
+                <TableCell className={`text-center font-bold ${cls}`}>{delta > 0 ? `+${delta}` : delta}</TableCell>
                 <TableCell>
                   <div className="flex justify-center">
-                    <div
-                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-md ${bgCls} ${cls}`}
-                    >
+                    <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-md ${bgCls} ${cls}`}>
                       <Icon className="h-4 w-4" />
                       <span className="text-[11px] font-bold uppercase">
                         {tipo === "up" ? "Ganho" : tipo === "down" ? "Perda" : "Estável"}
