@@ -74,6 +74,11 @@ const ClubDetail = () => {
   const canEdit = !!user && !!club && club.owner_id === user.id;
   const [ownerInfo, setOwnerInfo] = useState<{ display_name: string | null; avatar_url: string | null } | null>(null);
 
+  const handleScoutReportCreated = (rep: ScoutReport, novoUsado: number) => {
+    setScoutReports((prev) => ({ ...prev, [rep.target_player_id]: rep }));
+    setMyClub((prev: any) => (prev ? { ...prev, scout_searches_used: novoUsado } : prev));
+  };
+
   const [direitosTv, setDireitosTv] = useState<number>(0);
   const [imgSettings, setImgSettings] = useState<{ custo_pct: number; receita_pct: number }>({
     custo_pct: 0.03,
