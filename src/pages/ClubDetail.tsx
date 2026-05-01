@@ -428,8 +428,20 @@ const ClubDetail = () => {
               setRenewPlayer={setRenewPlayer}
               setShirtPlayer={setShirtPlayer}
               setMultaPlayer={setMultaPlayer}
+              myClub={myClub}
+              scoutReports={scoutReports}
             />
           )}
+        </TabsContent>
+
+        <TabsContent value="olheiros" className="mt-4">
+          <ScoutsManager
+            targetClub={club}
+            players={players}
+            myClub={myClub}
+            scoutReports={scoutReports}
+            onReportCreated={handleScoutReportCreated}
+          />
         </TabsContent>
 
         <TabsContent value="financas" className="space-y-4 mt-4">
