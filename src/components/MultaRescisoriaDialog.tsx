@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { NumberInput } from "@/components/ui/number-input";
@@ -39,7 +46,7 @@ export const MultaRescisoriaDialog = ({
   const [clubeCompId, setClubeCompId] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
-  const multa = player ? Number(player.valor_base_calculado || 0) * 10 : 0;
+  const multa = player ? Number(player.valor_base_calculado || 0) * 5 : 0;
   const isOwner = !!myClubId && player?.club_id === myClubId;
 
   useEffect(() => {
@@ -49,12 +56,20 @@ export const MultaRescisoriaDialog = ({
     setSalario(Math.max(50000, Math.round(Number(player.valor_base_calculado || 0) * 0.1)));
     // Buscar clubes do usuário (para escolher quem compra)
     if (isAdmin) {
-      supabase.from("clubs").select("id, name").order("name").then(({ data }) => setMeusClubes(data || []));
+      supabase
+        .from("clubs")
+        .select("id, name")
+        .order("name")
+        .then(({ data }) => setMeusClubes(data || []));
     } else if (myClubId) {
-      supabase.from("clubs").select("id, name").eq("id", myClubId).then(({ data }) => {
-        setMeusClubes(data || []);
-        if (data?.[0]) setClubeCompId(data[0].id);
-      });
+      supabase
+        .from("clubs")
+        .select("id, name")
+        .eq("id", myClubId)
+        .then(({ data }) => {
+          setMeusClubes(data || []);
+          if (data?.[0]) setClubeCompId(data[0].id);
+        });
     }
   }, [open, player?.id]);
 
@@ -67,7 +82,10 @@ export const MultaRescisoriaDialog = ({
       if (error) return toast.error(error.message);
       toast.success(`${player.name} liberado como agente livre. Multa paga: ${formatCurrency(multa)}`);
     } else {
-      if (!clubeCompId) { setLoading(false); return toast.error("Escolha o clube comprador"); }
+      if (!clubeCompId) {
+        setLoading(false);
+        return toast.error("Escolha o clube comprador");
+      }
       const { error } = await supabase.rpc("pagar_multa_rescisoria", {
         _jogador_id: player.id,
         _clube_comprador_id: clubeCompId,
@@ -101,7 +119,9 @@ export const MultaRescisoriaDialog = ({
           <div className="space-y-2">
             <Label>Ação</Label>
             <Select value={mode} onValueChange={(v) => setMode(v as any)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="comprar">Outro clube paga e contrata</SelectItem>
                 {(isOwner || isAdmin) && <SelectItem value="liberar">Clube atual paga e libera</SelectItem>}
@@ -115,11 +135,17 @@ export const MultaRescisoriaDialog = ({
             <div className="space-y-2">
               <Label>Clube comprador</Label>
               <Select value={clubeCompId} onValueChange={setClubeCompId}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
                 <SelectContent>
-                  {meusClubes.filter(c => c.id !== player?.club_id).map(c => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
+                  {meusClubes
+                    .filter((c) => c.id !== player?.club_id)
+                    .map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -146,7 +172,9 @@ export const MultaRescisoriaDialog = ({
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
           <Button onClick={submit} disabled={loading}>
             {loading && <Loader2 className="h-4 w-4 animate-spin" />} Pagar multa
           </Button>
