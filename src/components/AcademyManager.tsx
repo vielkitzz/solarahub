@@ -593,6 +593,12 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
     onChange();
   };
 
+  const togglePick = (id: string) => {
+    const next = new Set(picked);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setPicked(next);
+  };
+
   const confirmarPicks = async () => {
     if (!scoutResults) return;
     const escolhidos = scoutResults.filter((p) => picked.has(p.scout_id));
