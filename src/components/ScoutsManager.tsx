@@ -169,11 +169,11 @@ const ScoutsManager = ({ targetClub, players, myClub, scoutReports, onReportCrea
                           <span className="text-[9px] text-muted-foreground">±{rep.margem_aplicada} pontos</span>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1 text-muted-foreground/40">
+                        <div className="flex items-center gap-0.5 text-muted-foreground/40">
                           {Array.from({ length: 5 }).map((_, i) => (
                             <Star key={i} style={{ width: 14, height: 14 }} />
                           ))}
-                          <span className="text-[10px] ml-1">desconhecido</span>
+                          <span className="text-[10px] ml-1.5">desconhecido</span>
                         </div>
                       )}
                     </TableCell>

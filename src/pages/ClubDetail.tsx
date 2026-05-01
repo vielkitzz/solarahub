@@ -1056,12 +1056,13 @@ function SquadTable({
                         </div>
                       ) : (
                         <div
-                          className="flex items-center gap-1 text-muted-foreground/30"
+                          className="flex items-center gap-0.5 text-muted-foreground/30"
                           title="Use a aba Olheiros para descobrir"
                         >
                           {Array.from({ length: 5 }).map((_, i) => (
                             <Star key={i} style={{ width: 14, height: 14 }} />
                           ))}
+                          <span className="text-[10px] ml-1.5"></span>
                         </div>
                       )}
                     </TableCell>
