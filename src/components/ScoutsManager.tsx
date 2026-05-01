@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Telescope, Sparkles, Eye, AlertCircle } from "lucide-react";
+import { Search, Telescope, Sparkles, Star, AlertCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StarRating } from "@/components/StarRating";
 import { calcStars } from "@/lib/format";
@@ -171,7 +171,7 @@ const ScoutsManager = ({ targetClub, players, myClub, scoutReports, onReportCrea
                       ) : (
                         <div className="flex items-center gap-1 text-muted-foreground/40">
                           {Array.from({ length: 5 }).map((_, i) => (
-                            <Eye key={i} className="h-3 w-3" />
+                            <Star key={i} className="h-3 w-3" />
                           ))}
                           <span className="text-[10px] ml-1">desconhecido</span>
                         </div>
