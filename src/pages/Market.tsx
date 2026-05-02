@@ -304,6 +304,8 @@ const Market = () => {
           <TabsList className="bg-secondary/50 mx-3 sm:mx-4 md:mx-0 w-max">
             <TabsTrigger value="vitrine"><Tag className="h-3.5 w-3.5 mr-1" /> Vitrine</TabsTrigger>
             {hasClub && <TabsTrigger value="negociar"><ArrowRightLeft className="h-3.5 w-3.5 mr-1" /> Negociar</TabsTrigger>}
+            <TabsTrigger value="rumores"><Radio className="h-3.5 w-3.5 mr-1" /> Rumores</TabsTrigger>
+            <TabsTrigger value="temporada"><History className="h-3.5 w-3.5 mr-1" /> Transferências da Temporada</TabsTrigger>
             {hasClub && (
               <TabsTrigger value="inbox">
                 <Inbox className="h-3.5 w-3.5 mr-1" />
