@@ -5,14 +5,53 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Shield } from "lucide-react";
 
-// ... (Interfaces e consts permanecem iguais) ...
+// --- Definição da Interface ---
+interface Club {
+  id: string;
+  name: string;
+  city: string | null;
+  crest_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}
 
+// --- Constantes e Funções Auxiliares ---
+const PLACEHOLDER_CREST =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23facc15' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>`,
+  );
+
+const createClubIcon = (crestUrl: string | null) =>
+  new L.Icon({
+    iconUrl: crestUrl || PLACEHOLDER_CREST,
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -18],
+    className: "bg-transparent border-none shadow-none object-contain hover:scale-110 transition-transform",
+  });
+
+// --- Componente Principal ---
 const Mapa = () => {
-  // ... (Estados e Effects permanecem iguais) ...
+  const [clubs, setClubs] = useState<Club[]>([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = "Mapa de Clubes — Solara Hub";
+    (async () => {
+      const { data } = await supabase
+        .from("clubs")
+        .select("id,name,city,crest_url,latitude,longitude")
+        .eq("status", "ativo")
+        .order("name");
+      setClubs((data as Club[]) || []);
+      setLoading(false);
+    })();
+  }, []);
 
   const geoClubs = clubs.filter((c) => c.latitude !== null && c.longitude !== null);
 
@@ -27,8 +66,8 @@ const Mapa = () => {
            
         2. Terra (Tiles): Recebe filtro CSS agressivo.
            - invert(1): Transforma o preto/cinza escuro do tile em branco/cinza claro.
-           - brightness(60%): Escurece esse branco para um cinza médio.
-           - hue-rotate(...): Desloca esse cinza para o azul.
+           - brightness(55%): Escurece esse branco para um cinza médio.
+           - hue-rotate(180deg): Desloca esse cinza para o azul.
            - Resultado: Uma cor azul clara/desbotada que contrasta com o fundo marinho.
       */}
       <style>{`
@@ -47,7 +86,7 @@ const Mapa = () => {
           font-family: inherit !important;
         }
 
-        /* Estética do Popup (mantendo o padrão) */
+        /* Estética do Popup */
         .leaflet-popup-content-wrapper {
           background: hsl(207 53% 16%) !important;
           border: 1px solid hsl(207 45% 32%) !important;
@@ -104,7 +143,7 @@ const Mapa = () => {
             zoom={4}
             scrollWheelZoom
             className="h-[65vh] min-h-[500px] w-full z-0"
-            // Importante: O style background aqui deve ser idêntico ao do .leaflet-container no CSS
+            // Background sincronizado com o CSS acima
             style={{ background: "#0a1929" }}
           >
             <TileLayer
@@ -119,9 +158,7 @@ const Mapa = () => {
                 position={[c.latitude as number, c.longitude as number]}
                 icon={createClubIcon(c.crest_url)}
               >
-                {/* Popup continua igual */}
                 <Popup>
-                  {/* ... conteúdo do popup ... */}
                   <div className="flex flex-col items-center gap-2 py-1">
                     <div className="h-12 w-12 flex items-center justify-center">
                       {c.crest_url ? (
@@ -181,7 +218,6 @@ const Mapa = () => {
         </Card>
       )}
 
-      {/* Card de "sem clubes" permanece igual */}
       {!loading && geoClubs.length === 0 && (
         <Card className="p-8 text-center bg-gradient-card border-border/50 text-muted-foreground">
           Nenhum clube com coordenadas cadastradas ainda. Adicione latitude e longitude nos clubes pelo painel Admin.
