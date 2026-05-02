@@ -168,6 +168,7 @@ export const SPONSORS: Brand[] = [
   { name: "CATA Internacional", domain: "catainternacional.com", setor: "Automóveis", prestige: 0.7 },
   { name: "Motomel", domain: "motomel.com.ar", setor: "Automóveis", prestige: 0.7 },
   { name: "Universidad Católica de Santa Fe", domain: "ucsf.edu.ar", setor: "Serviços", prestige: 0.62 },
+  { name: "Personal", domain: "personal.com.py", setor: "Serviços", prestige: 0.9 },
 ];
 
 export function getBrandLogoUrl(domain: string, apiKey?: string): string {
