@@ -238,18 +238,13 @@ const ClubDetail = () => {
 
   const toggleSale = async (playerId: string, value: boolean) => {
     const { error } = await supabase.from("players").update({ a_venda: value }).eq("id", playerId);
+
+    console.log("toggleSale error:", error, "playerId:", playerId, "value:", value);
+
     if (error) return toast.error(error.message);
     setPlayers((prev) => prev.map((p) => (p.id === playerId ? { ...p, a_venda: value } : p)));
     toast.success(value ? "Jogador colocado à venda" : "Jogador removido da vitrine");
   };
-
-  if (loading)
-    return (
-      <div className="max-w-6xl mx-auto space-y-4">
-        <Skeleton className="h-40" />
-        <Skeleton className="h-80" />
-      </div>
-    );
   if (!club) return <div className="text-center py-20 text-muted-foreground">Clube não encontrado.</div>;
 
   const folhaSalarial = players.reduce((s, p) => s + Number(p.salario_atual || 0), 0);

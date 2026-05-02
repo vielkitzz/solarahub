@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { NumberInput } from "@/components/ui/number-input";
@@ -32,13 +39,23 @@ export const ShirtNumberDialog = ({
     if (!player) return;
     if (num < 1 || num > 99) return toast.error("Número deve estar entre 1 e 99");
     setSaving(true);
-    // Atualiza coluna nova + mantém em attributes para compat
-    const { data: cur } = await supabase.from("players").select("attributes").eq("id", player.id).single();
-    const newAttrs = { ...(cur?.attributes as any || {}), shirtNumber: num };
+
+    const { data: cur, error: selError } = await supabase
+      .from("players")
+      .select("attributes")
+      .eq("id", player.id)
+      .single();
+
+    console.log("SELECT result:", cur, "SELECT error:", selError);
+
+    const newAttrs = { ...((cur?.attributes as any) || {}), shirtNumber: num };
     const { error } = await supabase
       .from("players")
       .update({ shirt_number: num, attributes: newAttrs })
       .eq("id", player.id);
+
+    console.log("UPDATE error:", error);
+
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success(`Camisa ${num} atribuída a ${player.name}`);
@@ -60,7 +77,9 @@ export const ShirtNumberDialog = ({
           <NumberInput value={num} onChange={setNum} min={1} max={99} thousands={false} />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
           <Button onClick={save} disabled={saving}>
             {saving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
           </Button>
