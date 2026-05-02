@@ -482,6 +482,7 @@ const Market = () => {
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="w-16">Pos.</TableHead>
                     <TableHead>Jogador</TableHead>
+                    <TableHead className="w-12 hidden sm:table-cell"></TableHead>
                     <TableHead>Clube de origem</TableHead>
                     <TableHead className="text-center w-16">OVR</TableHead>
                     <TableHead className="text-center w-16 hidden sm:table-cell">Idade</TableHead>
@@ -502,13 +503,15 @@ const Market = () => {
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span>{p.name}</span>
-                            {p.nationality && <FlagImg nationality={p.nationality} />}
                             {p.a_venda && (
                               <Badge className="bg-primary/20 text-primary border-primary/40 text-[10px] px-1.5 py-0">
                                 <Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA
                               </Badge>
                             )}
                           </div>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          {p.nationality && <FlagImg nationality={p.nationality} />}
                         </TableCell>
                         <TableCell>
                           {club ? (
@@ -548,7 +551,7 @@ const Market = () => {
                   })}
                   {filteredNegociar.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
+                      <TableCell colSpan={8} className="text-center text-muted-foreground py-10">
                         Nenhum jogador disponível.
                       </TableCell>
                     </TableRow>
@@ -660,6 +663,7 @@ const Market = () => {
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead>Jogador</TableHead>
+                  <TableHead className="w-12 hidden sm:table-cell"></TableHead>
                   <TableHead>De</TableHead>
                   <TableHead>Para</TableHead>
                   <TableHead className="text-center">Tipo</TableHead>
@@ -670,7 +674,7 @@ const Market = () => {
               <TableBody>
                 {seasonTransfers.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
                       Nenhuma transferência registrada nesta temporada.
                     </TableCell>
                   </TableRow>
@@ -682,11 +686,9 @@ const Market = () => {
                   const tipoOp = (tx.metadata as any)?.tipo_op || "compra";
                   return (
                     <TableRow key={tx.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span>{player?.name || tx.descricao}</span>
-                          {player?.nationality && <FlagImg nationality={player.nationality} />}
-                        </div>
+                      <TableCell className="font-medium">{player?.name || tx.descricao}</TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        {player?.nationality && <FlagImg nationality={player.nationality} />}
                       </TableCell>
                       <TableCell>
                         {vendedorClub ? (
@@ -1074,7 +1076,7 @@ function FlagImg({ nationality }: { nationality: string }) {
       src={url}
       alt={nationality}
       title={nationality}
-      className="h-4 w-5 object-cover rounded-sm shrink-0"
+      className="h-6 w-8 object-cover rounded-sm shrink-0"
       style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.1)" }}
     />
   );
