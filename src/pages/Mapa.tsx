@@ -151,7 +151,7 @@ const Mapa = () => {
               className="map-tile-layer"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
               // 👇 MUDE ESTA LINHA AQUI 👇
-              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
             />
 
             {geoClubs.map((c) => (
