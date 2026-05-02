@@ -580,6 +580,48 @@ export type Database = {
         }
         Relationships: []
       }
+      transactions: {
+        Row: {
+          categoria: string
+          club_id: string
+          created_at: string
+          descricao: string
+          id: string
+          metadata: Json
+          related_club_id: string | null
+          related_player_id: string | null
+          temporada: number | null
+          tipo: string
+          valor: number
+        }
+        Insert: {
+          categoria: string
+          club_id: string
+          created_at?: string
+          descricao: string
+          id?: string
+          metadata?: Json
+          related_club_id?: string | null
+          related_player_id?: string | null
+          temporada?: number | null
+          tipo: string
+          valor?: number
+        }
+        Update: {
+          categoria?: string
+          club_id?: string
+          created_at?: string
+          descricao?: string
+          id?: string
+          metadata?: Json
+          related_club_id?: string | null
+          related_player_id?: string | null
+          temporada?: number | null
+          tipo?: string
+          valor?: number
+        }
+        Relationships: []
+      }
       transferencias: {
         Row: {
           clube_comprador_id: string
