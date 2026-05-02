@@ -56,23 +56,11 @@ const Mapa = () => {
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/*
-        Estratégia de colorização:
-        O tile "dark_all" do CARTO usa uma paleta cinza-preta.
-        Aplicamos dois filtros em cascata via CSS:
-
-        1. `.map-tile-layer` — aplicado diretamente na camada de tiles:
-           - hue-rotate(195deg): desloca o matiz do cinza para o azul-marinho
-           - saturate(280%): amplifica a cor azul resultante
-           - brightness(72%): escurece para aproximar do #071622 nas águas
-           - contrast(115%): aumenta o contraste entre água e terra
-
-        2. `.map-tile-layer-overlay` — um pseudo-elemento overlay com mix-blend-mode
-           que "tinta" a terra na cor #183348 sem afetar os labels e ícones.
-           Implementado via ::after no Card wrapper.
-
-        O resultado entrega:
-          água  ≈ #071622  (azul muito escuro, quase preto)
-          terra ≈ #183348  (azul-marinho médio, coerente com --card do app)
+        Estratégia de colorização AJUSTADA:
+        Aumentamos o brightness para 95% (era 72%) para que os detalhes
+        das ruas e áreas fiquem visíveis contra o fundo escuro.
+        O background do container foi alterado para um azul marinho médio (#0c2d4b)
+        para evitar que o fundo pareça "preto total".
       */}
       <style>{`
         /* Filtro principal aplicado nos tiles */
@@ -80,8 +68,8 @@ const Mapa = () => {
           filter:
             hue-rotate(195deg)
             saturate(280%)
-            brightness(72%)
-            contrast(115%);
+            brightness(95%) 
+            contrast(110%);
         }
 
         /* Deixa o popup do Leaflet coerente com o design system */
@@ -112,7 +100,8 @@ const Mapa = () => {
 
         /* Scrollbar do mapa */
         .leaflet-container {
-          background: #071622 !important;
+          /* Cor de fundo mais clara para combinar com o tile filtrado */
+          background: #0c2d4b !important; 
           font-family: inherit !important;
         }
 
@@ -160,10 +149,10 @@ const Mapa = () => {
             zoom={4}
             scrollWheelZoom
             className="h-[65vh] min-h-[500px] w-full z-0"
-            style={{ background: "#071622" }}
+            // Background sincronizado com o CSS acima
+            style={{ background: "#0c2d4b" }}
           >
             <TileLayer
-              // Tile escuro do CARTO como base — o filtro CSS fará a colorização
               className="map-tile-layer"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
               url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
