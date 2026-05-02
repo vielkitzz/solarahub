@@ -1072,7 +1072,13 @@ function SquadTable({
                     </TableCell>
                     {canEdit && (
                       <TableCell className="py-2 text-center">
-                        <Switch checked={!!p.a_venda} onCheckedChange={(v) => toggleSale(p.id, v)} />
+                        <Switch
+                          checked={!!p.a_venda}
+                          onCheckedChange={(v) => {
+                            if (v === !!p.a_venda) return;
+                            toggleSale(p.id, v);
+                          }}
+                        />
                       </TableCell>
                     )}
                     {canEdit && (
