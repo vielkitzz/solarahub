@@ -8,13 +8,12 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Shield } from "lucide-react";
 
-// Interface aprimorada
 interface Club {
   id: string;
   name: string;
   city: string | null;
   crest_url: string | null;
-  latitude: number; // Mudado para number para facilitar o map
+  latitude: number;
   longitude: number;
 }
 
@@ -30,7 +29,7 @@ const createClubIcon = (crestUrl: string | null) =>
     iconSize: [36, 36],
     iconAnchor: [18, 18],
     popupAnchor: [0, -18],
-    className: "custom-club-icon", // Classe para CSS externo
+    className: "hover:scale-110 transition-transform duration-200",
   });
 
 const Mapa = () => {
@@ -39,118 +38,102 @@ const Mapa = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    let isMounted = true;
     document.title = "Mapa de Clubes — Solara Hub";
-
     const fetchClubs = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("clubs")
-        .select("id, name, city, crest_url, latitude, longitude")
+        .select("id,name,city,crest_url,latitude,longitude")
         .eq("status", "ativo")
-        .not("latitude", "is", null) // Filtro direto no banco para performance
+        .not("latitude", "is", null)
         .not("longitude", "is", null)
         .order("name");
 
-      if (error) {
-        console.error("Erro ao buscar clubes:", error);
-      } else if (isMounted) {
-        setClubs((data as unknown as Club[]) || []);
-      }
-
-      if (isMounted) setLoading(false);
+      setClubs((data as Club[]) || []);
+      setLoading(false);
     };
-
     fetchClubs();
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto p-4">
+    <div className="space-y-6 max-w-6xl mx-auto">
       <style>{`
-        /* Removido o filtro .map-tile-layer para mostrar as cores reais da nova API */
-      
+        /* Removemos todos os filtros de cor para preservar o estilo do MapTiler */
         .leaflet-container {
-          /* Ajustado para um tom que combine com mapas claros de tons azuis */
-          background: #f8fafc !important; 
+          background: #eef2ff !important; /* Fundo suave enquanto o mapa carrega */
           font-family: inherit !important;
         }
-      
-        /* Estética do Popup (Mantida, pois ajuda na leitura sobre o mapa claro) */
+
+        /* Popups modernos e limpos para mapas claros */
         .leaflet-popup-content-wrapper {
           background: #ffffff !important;
           border: 1px solid #e2e8f0 !important;
           border-radius: 12px !important;
-          color: #0f172a !important;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+          color: #1e293b !important;
+          padding: 0 !important;
         }
-      
-        .leaflet-popup-content {
-          margin: 0 !important;
-          padding: 12px !important;
-        }
-        
-        .leaflet-popup-tip {
+        .leaflet-popup-content { margin: 0 !important; padding: 12px !important; }
+        .leaflet-popup-tip { background: white !important; }
+
+        /* Controles de zoom discretos */
+        .leaflet-control-zoom a {
           background: white !important;
+          color: #64748b !important;
+          border: 1px solid #e2e8f0 !important;
         }
       `}</style>
 
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <MapPin className="h-8 w-8 text-yellow-500" /> Mapa de Clubes
-          </h1>
-          <p className="text-muted-foreground mt-1">Localização geográfica das unidades ativas do Solara Hub.</p>
-        </div>
-        {clubs.length > 0 && (
-          <div className="bg-secondary/50 px-4 py-2 rounded-full text-sm font-semibold border border-border">
-            {clubs.length} Clubes Detectados
-          </div>
-        )}
+      <header className="space-y-2">
+        <h1 className="text-3xl md:text-4xl font-bold flex items-center gap-3">
+          <MapPin className="h-8 w-8 text-primary" /> Mapa de Clubes
+        </h1>
+        <p className="text-muted-foreground">
+          Localização dos clubes ativos no Solara Hub.
+          {clubs.length > 0 && (
+            <span className="ml-2 text-primary font-medium">{clubs.length} clubes encontrados.</span>
+          )}
+        </p>
       </header>
 
       {loading ? (
-        <Skeleton className="h-[65vh] w-full rounded-xl" />
+        <Skeleton className="h-[65vh] min-h-[500px] w-full rounded-xl" />
       ) : (
-        <Card className="relative overflow-hidden border-border/40 shadow-2xl">
+        <Card className="overflow-hidden border-border/50 p-0 relative z-0">
           <MapContainer
-            center={[-15.78, -47.92]} // Centralizado em Brasília
+            center={[-15.78, -47.92]} // Centralizado no Brasil
             zoom={4}
-            minZoom={3}
-            scrollWheelZoom={true}
-            className="h-[65vh] w-full"
+            scrollWheelZoom
+            className="h-[65vh] min-h-[500px] w-full"
           >
             <TileLayer
               attribution='&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://api.maptiler.com/maps/019de970-289e-7f79-bb68-c4b9157a1883/256/{z}/{x}/{y}.png?key=sdVnwJsKQCBIwTIHo8uZ"
+              url="https://api.maptiler.com/maps/019de970-289e-7f79-bb68-c4b9157a1883/256/{z}/{x}/{y}@2x.png?key=wkMSZlh7Ayi2MJyMxrJ4"
             />
 
-            {clubs.map((club) => (
-              <Marker key={club.id} position={[club.latitude, club.longitude]} icon={createClubIcon(club.crest_url)}>
-                <Popup closeButton={false}>
-                  <div className="flex flex-col items-center p-2 min-w-[160px]">
-                    <div className="w-16 h-16 mb-2 flex items-center justify-center bg-white/5 rounded-lg p-2">
-                      {club.crest_url ? (
-                        <img src={club.crest_url} alt={club.name} className="max-h-full max-w-full object-contain" />
+            {clubs.map((c) => (
+              <Marker key={c.id} position={[c.latitude, c.longitude]} icon={createClubIcon(c.crest_url)}>
+                <Popup>
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="h-16 w-16 bg-slate-50 rounded-lg p-2 flex items-center justify-center border border-slate-100">
+                      {c.crest_url ? (
+                        <img src={c.crest_url} alt={c.name} className="h-full w-full object-contain" />
                       ) : (
-                        <Shield className="h-10 w-10 text-yellow-500/50" />
+                        <Shield className="h-10 w-10 text-slate-300" />
                       )}
                     </div>
-
-                    <span className="font-bold text-center text-sm leading-tight mb-1">{club.name}</span>
-
-                    {club.city && (
-                      <div className="flex items-center gap-1 text-[10px] text-slate-400 mb-3 uppercase tracking-wider">
-                        <MapPin size={10} /> {club.city}
-                      </div>
-                    )}
-
+                    <div className="text-center">
+                      <div className="font-bold text-slate-900">{c.name}</div>
+                      {c.city && (
+                        <div className="text-xs text-slate-500 flex items-center justify-center gap-1">
+                          <MapPin size={10} /> {c.city}
+                        </div>
+                      )}
+                    </div>
                     <button
-                      className="access-button w-full py-2 bg-yellow-500 text-black text-[11px] font-bold rounded-md"
-                      onClick={() => navigate(`/clubes/${club.id}`)}
+                      className="w-full py-2 bg-primary text-primary-foreground text-xs font-bold rounded-lg hover:brightness-110 transition-all"
+                      onClick={() => navigate(`/clubes/${c.id}`)}
                     >
-                      VISITAR PERFIL
+                      ACESSAR CLUBE
                     </button>
                   </div>
                 </Popup>
@@ -158,12 +141,6 @@ const Mapa = () => {
             ))}
           </MapContainer>
         </Card>
-      )}
-
-      {!loading && clubs.length === 0 && (
-        <div className="p-12 text-center border-2 border-dashed border-border rounded-xl">
-          <p className="text-muted-foreground">Nenhum clube com coordenadas geográficas encontrado.</p>
-        </div>
       )}
     </div>
   );
