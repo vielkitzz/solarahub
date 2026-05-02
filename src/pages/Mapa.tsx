@@ -108,7 +108,7 @@ const Mapa = () => {
             <TileLayer
               className="map-tile-layer"
               attribution="&copy; OpenStreetMap &copy; CARTO"
-              url="mapbox://styles/mapbox/navigation-night-v1/{z}/{x}/{y}.png"
+              url="https://api.mapbox.com/styles/v1/{z}/{x}/{y}.png"
             />
 
             {clubs.map((c) => (
