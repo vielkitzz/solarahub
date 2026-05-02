@@ -1076,7 +1076,7 @@ function FlagImg({ nationality }: { nationality: string }) {
       src={url}
       alt={nationality}
       title={nationality}
-      className="h-7 w-10 object-cover rounded-sm shrink-0"
+      className="h-6 w-8 object-cover rounded-sm shrink-0"
       style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.1)" }}
     />
   );
