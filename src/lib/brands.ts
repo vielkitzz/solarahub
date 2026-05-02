@@ -137,6 +137,7 @@ export const SPONSORS: Brand[] = [
   { name: "La Nueva Seguros", domain: "lanuevaseguros.com.ar", setor: "Seguros", prestige: 0.7 },
   { name: "Rapipago", domain: "rapipago.com.ar", setor: "Finanças", prestige: 0.68 },
   { name: "Pago Fácil", domain: "pagofacil.com.ar", setor: "Finanças", prestige: 0.68 },
+  { name: "Sancor Seguros", domain: "sancorseguros.com.br", setor: "Finanças", prestige: 0.85 },
 
   // --- Solara: Energia ---
   { name: "YPF", domain: "ypf.com", setor: "Energia", prestige: 1.25 },
