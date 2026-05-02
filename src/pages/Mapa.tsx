@@ -143,7 +143,7 @@ const Mapa = () => {
             <TileLayer
               className="map-tile-layer"
               attribution="&copy; CARTO"
-              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+              url="https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png"
             />
 
             {clubs.map((club) => (
