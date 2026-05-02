@@ -69,7 +69,7 @@ const Mapa = () => {
             hue-rotate(195deg)
             saturate(280%)
             brightness(95%) 
-            contrast(110%);
+            contrast(100%);
         }
 
         /* Deixa o popup do Leaflet coerente com o design system */
