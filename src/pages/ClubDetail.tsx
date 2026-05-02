@@ -536,7 +536,7 @@ const ClubDetail = () => {
               onSave={saveInfobox}
             />
             <div className="flex-1 min-w-0 w-full">
-              <WikiSectionsView wiki={wikiData} title={club.name} canEdit={canEdit} onSaveSection={saveSection} />
+              <WikiSectionsView wiki={wikiData} title={club.name} canEdit={canEdit} onSaveWiki={saveWiki} />
             </div>
           </div>
         </TabsContent>
