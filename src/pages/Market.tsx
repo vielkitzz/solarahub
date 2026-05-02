@@ -220,7 +220,7 @@ const Market = () => {
       if (error) return toast.error(error.message);
       toast.success("Proposta recusada");
     }
-    await Promise.all([loadAll(), loadProposals()]);
+    await Promise.all([loadAll(), loadProposals(), loadSeasonAndRumors()]);
   };
 
   const openCounter = (proposal: any) => {
