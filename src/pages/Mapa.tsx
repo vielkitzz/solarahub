@@ -107,7 +107,7 @@ const Mapa = () => {
           >
             <TileLayer
               attribution='&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a>'
-              url="https://api.maptiler.com/maps/019de970-289e-7f79-bb68-c4b9157a1883/{z}/{x}/{y}.png?key=wkMSZlh7Ayi2MJyMxrJ4"
+              url="[https://api.maptiler.com/maps/019de970-289e-7f79-bb68-c4b9157a1883/256/](https://api.maptiler.com/maps/019de970-289e-7f79-bb68-c4b9157a1883/256/){z}/{x}/{y}.png?key=wkMSZlh7Ayi2MJyMxrj4"
             />
 
             {clubs.map((c) => (
