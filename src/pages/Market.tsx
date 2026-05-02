@@ -208,6 +208,7 @@ const Market = () => {
     toast.success("Proposta enviada!");
     setTarget(null);
     loadProposals();
+    loadSeasonAndRumors();
   };
 
   const respond = async (id: string, accept: boolean) => {
