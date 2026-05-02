@@ -407,7 +407,7 @@ const Market = () => {
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
-                        {p.age ? `${p.age}a` : ""}
+                        {p.age ? `${p.age} anos` : ""}
                         {p.nationality && <FlagImg nationality={p.nationality} />}
                       </div>
                     </div>
