@@ -107,7 +107,6 @@ const Mapa = () => {
           >
             <TileLayer
               className="map-tile-layer"
-              attribution='&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://api.maptiler.com/maps/019de970-289e-7f79-bb68-c4b9157a1883/{z}/{x}/{y}.png?key=wkMSZlh7Ayi2MJyMxrJ4"
             />
 
