@@ -379,8 +379,8 @@ const Market = () => {
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="w-16">Pos.</TableHead>
-                    <TableHead>Nome</TableHead>
-                    <TableHead className="hidden md:table-cell">Clube</TableHead>
+                    <TableHead>Jogador</TableHead>
+                    <TableHead>Clube de origem</TableHead>
                     <TableHead className="text-center w-16">OVR</TableHead>
                     <TableHead className="text-center w-16 hidden sm:table-cell">Idade</TableHead>
                     <TableHead className="text-right">Valor base</TableHead>
@@ -394,13 +394,25 @@ const Market = () => {
                       <TableRow key={p.id} className={p.a_venda ? "bg-primary/5" : ""}>
                         <TableCell><Badge variant="outline" className="border-primary/40 text-primary">{p.position}</Badge></TableCell>
                         <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            {p.name}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span>{p.name}</span>
+                            {p.nationality && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal text-muted-foreground border-border/60">
+                                {p.nationality}
+                              </Badge>
+                            )}
                             {p.a_venda && <Badge className="bg-primary/20 text-primary border-primary/40 text-[10px] px-1.5 py-0"><Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA</Badge>}
                           </div>
                         </TableCell>
-                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                          {club && <Link to={`/clubes/${club.id}`} className="hover:text-primary">{club.name}</Link>}
+                        <TableCell>
+                          {club ? (
+                            <Link to={`/clubes/${club.id}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                              <div className="h-7 w-7 shrink-0 flex items-center justify-center bg-background/40 rounded">
+                                {club.crest_url && <img src={club.crest_url} alt={club.name} className="w-full h-full object-contain" />}
+                              </div>
+                              <span className="text-sm hidden md:inline">{club.name}</span>
+                            </Link>
+                          ) : <span className="text-xs text-muted-foreground">—</span>}
                         </TableCell>
                         <TableCell className="text-center"><StarRating value={calcStars(p.habilidade, club?.rate)} /></TableCell>
                         <TableCell className="text-center hidden sm:table-cell text-sm">{p.age || "—"}</TableCell>
