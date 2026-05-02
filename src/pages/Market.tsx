@@ -531,7 +531,7 @@ const Market = () => {
                           )}
                         </TableCell>
                         <TableCell className="text-center">
-                          <StarRating value={calcStars(p.habilidade, club?.rate ?? 2.8)} />
+                          <StarRating value={calcStars(p.habilidade, activeClub?.rate ?? 3.0)} />
                         </TableCell>
                         <TableCell className="text-center hidden sm:table-cell text-sm">{p.age || "—"}</TableCell>
                         <TableCell className="text-right font-display font-bold text-primary">
