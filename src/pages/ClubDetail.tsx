@@ -106,7 +106,7 @@ const ClubDetail = () => {
       supabase.from("settings").select("key, value").in("key", ["temporada_atual", "direitos_imagem"]),
       supabase
         .from("contratos_clube")
-        .select("empresa_nome, categoria")
+        .select("empresa:empresas(nome), categoria")
         .eq("club_id", id)
         .eq("ativo", true)
         .in("categoria", ["master", "patrocinio_master"])
@@ -114,7 +114,7 @@ const ClubDetail = () => {
         .maybeSingle(),
       supabase
         .from("contratos_clube")
-        .select("empresa_nome, categoria")
+        .select("empresa:empresas(nome), categoria")
         .eq("club_id", id)
         .eq("ativo", true)
         .eq("categoria", "fornecedora")
@@ -124,8 +124,8 @@ const ClubDetail = () => {
     ]);
 
     setClub(c);
-    setMasterSponsor((masterContract as any)?.empresa_nome ?? null);
-    setKitSupplier((kitContract as any)?.empresa_nome ?? null);
+    setMasterSponsor((masterContract as any)?.empresa?.nome ?? null);
+    setKitSupplier((kitContract as any)?.empresa?.nome ?? null);
     setPlayers(p || []);
     setContratosTotal((ct || []).reduce((s, r: any) => s + Number(r.valor_anual || 0), 0));
 
