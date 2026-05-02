@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RichEditor } from "./RichEditor";
-import { Pencil, Plus, GripVertical, ChevronUp, ChevronDown, Trash2, Settings2 } from "lucide-react";
+import { Pencil, Plus, ChevronUp, ChevronDown, Trash2, Settings2 } from "lucide-react";
 import type { InfoboxData } from "./ClubInfobox";
 
 // --- COMPATIBILIDADE E TIPAGEM ---
@@ -12,6 +12,8 @@ export interface WikiData {
   content?: string;
   sections?: Record<string, string>;
   sectionOrder?: string[];
+  // FIX: campo novo para persistir títulos de seções customizadas
+  customTitles?: Record<string, string>;
   infobox?: InfoboxData;
 }
 
@@ -41,6 +43,20 @@ export function hasAnyContent(wiki: WikiData | null | undefined): boolean {
   return Object.values(wiki.sections ?? {}).some((content) => content.trim().length > 0);
 }
 
+// Reconstrói SectionMeta[] a partir de WikiData, respeitando títulos customizados salvos
+function buildSectionsFromWiki(wiki: WikiData | null | undefined): SectionMeta[] {
+  if (wiki?.sectionOrder && wiki.sectionOrder.length > 0) {
+    return wiki.sectionOrder.map((key) => {
+      const fixed = WIKI_SECTIONS.find((s) => s.key === key);
+      if (fixed) return fixed;
+      // FIX: usa customTitles para recuperar o título real, não faz parse da key
+      const savedTitle = wiki.customTitles?.[key] ?? key.replace("custom-", "").replace(/-/g, " ");
+      return { key, title: savedTitle, placeholder: "Escreva aqui..." };
+    });
+  }
+  return WIKI_SECTIONS;
+}
+
 interface ViewProps {
   wiki: WikiData | null | undefined;
   canEdit?: boolean;
@@ -50,85 +66,111 @@ interface ViewProps {
 }
 
 export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, onSaveSection, title }: ViewProps) {
-  const [sections, setSections] = useState<SectionMeta[]>([]);
+  const [sections, setSections] = useState<SectionMeta[]>(() => buildSectionsFromWiki(wiki));
   const [isAddingSection, setIsAddingSection] = useState(false);
   const [newSectionTitle, setNewSectionTitle] = useState("");
 
+  // FIX: flag para ignorar o próximo ciclo do useEffect causado por uma mudança local.
+  // Sem isso, após salvar, o pai atualiza `wiki`, o effect dispara e reconstrói
+  // `sections` a partir da prop ainda "velha", revertendo a mudança na UI.
+  const skipNextEffectRef = useRef(false);
+
   useEffect(() => {
-    if (wiki?.sectionOrder && wiki.sectionOrder.length > 0) {
-      const ordered = wiki.sectionOrder.map((key) => {
-        const existing = WIKI_SECTIONS.find((s) => s.key === key);
-        // Se não existir nas fixas, tenta recriar o meta básico
-        return (
-          existing || { key, title: key.replace("custom-", "").replace(/-/g, " "), placeholder: "Escreva aqui..." }
-        );
-      });
-      setSections(ordered);
-    } else {
-      setSections(WIKI_SECTIONS);
+    if (skipNextEffectRef.current) {
+      skipNextEffectRef.current = false;
+      return;
     }
+    setSections(buildSectionsFromWiki(wiki));
   }, [wiki]);
 
-  const updateWikiState = async (newSections: SectionMeta[], updatedContent?: Record<string, string>) => {
+  // FIX: recebe as sections já atualizadas como parâmetro em vez de depender do
+  // closure (que poderia capturar um valor stale de `sections`).
+  const updateWikiState = async (
+    newSections: SectionMeta[],
+    updatedContent?: Record<string, string>,
+    updatedCustomTitles?: Record<string, string>,
+  ) => {
     if (!onSaveWiki && !onSaveSection) return;
 
     const newOrder = newSections.map((s) => s.key);
-    const newSectionsContent = updatedContent || wiki?.sections || {};
+    const newSectionsContent = updatedContent ?? wiki?.sections ?? {};
+    // Mescla títulos customizados antigos com os novos
+    const newCustomTitles = { ...(wiki?.customTitles ?? {}), ...(updatedCustomTitles ?? {}) };
 
     if (onSaveWiki) {
+      skipNextEffectRef.current = true; // ignora o re-render causado por esta chamada
       await onSaveWiki({
         ...wiki,
         sections: newSectionsContent,
         sectionOrder: newOrder,
+        customTitles: newCustomTitles,
       });
     }
   };
 
   const handleInternalSave = async (key: string, html: string) => {
     if (onSaveWiki) {
+      skipNextEffectRef.current = true;
       await onSaveWiki({
         ...wiki,
         sections: { ...wiki?.sections, [key]: html },
         sectionOrder: sections.map((s) => s.key),
+        customTitles: wiki?.customTitles,
       });
     } else if (onSaveSection) {
       await onSaveSection(key, html);
     }
   };
 
-  const addNewSection = () => {
+  // FIX: await no updateWikiState e passa o título customizado para ser persistido
+  const addNewSection = async () => {
     if (!newSectionTitle.trim()) return;
     const key = `custom-${Date.now()}`;
     const newMeta: SectionMeta = { key, title: newSectionTitle, placeholder: "Conteúdo..." };
     const updated = [...sections, newMeta];
     setSections(updated);
-    updateWikiState(updated);
     setNewSectionTitle("");
     setIsAddingSection(false);
+    await updateWikiState(updated, undefined, { [key]: newSectionTitle });
   };
 
-  const removeSection = (key: string) => {
+  // FIX: passa o conteúdo já sem a seção deletada para evitar leitura stale de wiki.sections
+  const removeSection = async (key: string) => {
     const updated = sections.filter((s) => s.key !== key);
     setSections(updated);
 
     const newContent = { ...wiki?.sections };
     delete newContent[key];
-    updateWikiState(updated, newContent);
+
+    // Remove também o título customizado
+    const newCustomTitles = { ...(wiki?.customTitles ?? {}) };
+    delete newCustomTitles[key];
+
+    skipNextEffectRef.current = true;
+    if (onSaveWiki) {
+      await onSaveWiki({
+        ...wiki,
+        sections: newContent,
+        sectionOrder: updated.map((s) => s.key),
+        customTitles: newCustomTitles,
+      });
+    }
   };
 
-  const renameSection = (key: string, newTitle: string) => {
+  // FIX: persiste o novo título em customTitles
+  const renameSection = async (key: string, newTitle: string) => {
     const updated = sections.map((s) => (s.key === key ? { ...s, title: newTitle } : s));
     setSections(updated);
-    updateWikiState(updated);
+    await updateWikiState(updated, undefined, { [key]: newTitle });
   };
 
-  const moveSection = (index: number, direction: "up" | "down") => {
+  const moveSection = async (index: number, direction: "up" | "down") => {
     const newSections = [...sections];
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newSections.length) return;
     [newSections[index], newSections[targetIndex]] = [newSections[targetIndex], newSections[index]];
     setSections(newSections);
-    updateWikiState(newSections);
+    await updateWikiState(newSections);
   };
 
   return (
@@ -183,6 +225,7 @@ export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, onSaveSect
               value={newSectionTitle}
               onChange={(e) => setNewSectionTitle(e.target.value)}
               placeholder="Título da seção"
+              onKeyDown={(e) => e.key === "Enter" && addNewSection()}
             />
           </div>
           <DialogFooter>
@@ -219,6 +262,16 @@ function Section({
   const [newTitle, setNewTitle] = useState(meta.title);
   const [draft, setDraft] = useState(html);
   const [saving, setSaving] = useState(false);
+
+  // FIX: sincroniza newTitle se meta.title mudar externamente (ex: após renomear e recarregar)
+  useEffect(() => {
+    setNewTitle(meta.title);
+  }, [meta.title]);
+
+  // FIX: sincroniza draft com html externo quando o dialog de edição não está aberto
+  useEffect(() => {
+    if (!open) setDraft(html);
+  }, [html, open]);
 
   return (
     <section className="scroll-mt-20 mb-10" id={`wiki-${meta.key}`}>
@@ -267,6 +320,12 @@ function Section({
                   className="flex-1 p-2 border rounded-md text-sm"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      onRename(newTitle);
+                      setIsSettingsOpen(false);
+                    }
+                  }}
                 />
                 <Button
                   size="sm"
