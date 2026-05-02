@@ -63,15 +63,6 @@ const Mapa = () => {
         para evitar que o fundo pareça "preto total".
       */}
       <style>{`
-        /* Filtro principal aplicado nos tiles */
-        .map-tile-layer {
-          filter:
-            hue-rotate(195deg)
-            saturate(280%)
-            brightness(95%) 
-            contrast(100%);
-        }
-
         /* Deixa o popup do Leaflet coerente com o design system */
         .leaflet-popup-content-wrapper {
           background: hsl(207 53% 16%) !important;
