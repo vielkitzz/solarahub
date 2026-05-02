@@ -107,7 +107,8 @@ const Mapa = () => {
           >
             <TileLayer
               className="map-tile-layer"
-              url="https://api.maptiler.com/maps/019de970-289e-7f79-bb68-c4b9157a1883/{z}/{x}/{y}.png?key=FIKusY4gCsslIzv3b1Jn"
+              attribution="&copy; OpenStreetMap &copy; CARTO"
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
             />
 
             {clubs.map((c) => (
