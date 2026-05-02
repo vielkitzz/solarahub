@@ -480,9 +480,9 @@ const Market = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-16">Pos.</TableHead>
+                    <TableHead className="w-16">Posição</TableHead>
                     <TableHead>Jogador</TableHead>
-                    <TableHead className="w-12 hidden sm:table-cell"></TableHead>
+                    <TableHead className="w-14 hidden sm:table-cell"></TableHead>
                     <TableHead>Clube</TableHead>
                     <TableHead className="text-center w-16">Overall</TableHead>
                     <TableHead className="text-center w-16 hidden sm:table-cell">Idade</TableHead>
@@ -510,7 +510,7 @@ const Market = () => {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="hidden sm:table-cell">
+                        <TableCell className="hidden sm:table-cell py-2">
                           {p.nationality && <FlagImg nationality={p.nationality} />}
                         </TableCell>
                         <TableCell>
@@ -687,7 +687,7 @@ const Market = () => {
                   return (
                     <TableRow key={tx.id}>
                       <TableCell className="font-medium">{player?.name || tx.descricao}</TableCell>
-                      <TableCell className="hidden sm:table-cell">
+                      <TableCell className="hidden sm:table-cell py-2">
                         {player?.nationality && <FlagImg nationality={player.nationality} />}
                       </TableCell>
                       <TableCell>
