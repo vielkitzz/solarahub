@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Search, Tag, ArrowRightLeft, Inbox, Send, AlertTriangle, LogIn, MessageSquare } from "lucide-react";
+import { Users, Search, Tag, ArrowRightLeft, Inbox, Send, AlertTriangle, LogIn, MessageSquare, History, Radio, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
 import { StarRating } from "@/components/StarRating";
 import { toast } from "sonner";
@@ -26,6 +26,9 @@ const Market = () => {
   const [myClubs, setMyClubs] = useState<any[]>([]);
   const [activeClubId, setActiveClubId] = useState<string>("");
   const [proposals, setProposals] = useState<any[]>([]);
+  const [seasonTransfers, setSeasonTransfers] = useState<any[]>([]);
+  const [rumores, setRumores] = useState<any[]>([]);
+  const [temporadaAtual, setTemporadaAtual] = useState<number>(new Date().getFullYear());
 
   // filtros
   const [q, setQ] = useState("");
@@ -78,7 +81,35 @@ const Market = () => {
     setProposals(data || []);
   };
 
-  useEffect(() => { loadAll(); }, []);
+  const loadSeasonAndRumors = async () => {
+    // Temporada atual
+    const { data: cfg } = await supabase.from("settings").select("value").eq("key", "temporada_atual").maybeSingle();
+    const temp = Number((cfg?.value as any)?.ano) || new Date().getFullYear();
+    setTemporadaAtual(temp);
+
+    // Transferências aceitas (todas globais — usamos transactions categoria=transferencia tipo=entrada para deduplicar por op)
+    const { data: tx } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("categoria", "transferencia")
+      .eq("tipo", "entrada")
+      .eq("temporada", temp)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    setSeasonTransfers(tx || []);
+
+    // Rumores: pendentes + aceitas/recusadas das últimas 48h
+    const since = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
+    const { data: rs } = await supabase
+      .from("transferencias")
+      .select("*")
+      .or(`status.eq.pendente,and(status.in.(aceita,recusada,contraproposta),created_at.gte.${since})`)
+      .order("created_at", { ascending: false })
+      .limit(150);
+    setRumores(rs || []);
+  };
+
+  useEffect(() => { loadAll(); loadSeasonAndRumors(); }, []);
   useEffect(() => { loadMine(); }, [user]);
   useEffect(() => { loadProposals(); }, [activeClubId]);
 
@@ -177,6 +208,7 @@ const Market = () => {
     toast.success("Proposta enviada!");
     setTarget(null);
     loadProposals();
+    loadSeasonAndRumors();
   };
 
   const respond = async (id: string, accept: boolean) => {
@@ -189,7 +221,7 @@ const Market = () => {
       if (error) return toast.error(error.message);
       toast.success("Proposta recusada");
     }
-    await Promise.all([loadAll(), loadProposals()]);
+    await Promise.all([loadAll(), loadProposals(), loadSeasonAndRumors()]);
   };
 
   const openCounter = (proposal: any) => {
@@ -211,6 +243,7 @@ const Market = () => {
     toast.success("Contraproposta enviada!");
     setCounterTarget(null);
     loadProposals();
+    loadSeasonAndRumors();
   };
 
   const inbox = useMemo(() => {
@@ -273,6 +306,8 @@ const Market = () => {
           <TabsList className="bg-secondary/50 mx-3 sm:mx-4 md:mx-0 w-max">
             <TabsTrigger value="vitrine"><Tag className="h-3.5 w-3.5 mr-1" /> Vitrine</TabsTrigger>
             {hasClub && <TabsTrigger value="negociar"><ArrowRightLeft className="h-3.5 w-3.5 mr-1" /> Negociar</TabsTrigger>}
+            <TabsTrigger value="rumores"><Radio className="h-3.5 w-3.5 mr-1" /> Rumores</TabsTrigger>
+            <TabsTrigger value="temporada"><History className="h-3.5 w-3.5 mr-1" /> Transferências da Temporada</TabsTrigger>
             {hasClub && (
               <TabsTrigger value="inbox">
                 <Inbox className="h-3.5 w-3.5 mr-1" />
@@ -346,8 +381,8 @@ const Market = () => {
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="w-16">Pos.</TableHead>
-                    <TableHead>Nome</TableHead>
-                    <TableHead className="hidden md:table-cell">Clube</TableHead>
+                    <TableHead>Jogador</TableHead>
+                    <TableHead>Clube de origem</TableHead>
                     <TableHead className="text-center w-16">OVR</TableHead>
                     <TableHead className="text-center w-16 hidden sm:table-cell">Idade</TableHead>
                     <TableHead className="text-right">Valor base</TableHead>
@@ -361,13 +396,25 @@ const Market = () => {
                       <TableRow key={p.id} className={p.a_venda ? "bg-primary/5" : ""}>
                         <TableCell><Badge variant="outline" className="border-primary/40 text-primary">{p.position}</Badge></TableCell>
                         <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            {p.name}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span>{p.name}</span>
+                            {p.nationality && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal text-muted-foreground border-border/60">
+                                {p.nationality}
+                              </Badge>
+                            )}
                             {p.a_venda && <Badge className="bg-primary/20 text-primary border-primary/40 text-[10px] px-1.5 py-0"><Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA</Badge>}
                           </div>
                         </TableCell>
-                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                          {club && <Link to={`/clubes/${club.id}`} className="hover:text-primary">{club.name}</Link>}
+                        <TableCell>
+                          {club ? (
+                            <Link to={`/clubes/${club.id}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                              <div className="h-7 w-7 shrink-0 flex items-center justify-center bg-background/40 rounded">
+                                {club.crest_url && <img src={club.crest_url} alt={club.name} className="w-full h-full object-contain" />}
+                              </div>
+                              <span className="text-sm hidden md:inline">{club.name}</span>
+                            </Link>
+                          ) : <span className="text-xs text-muted-foreground">—</span>}
                         </TableCell>
                         <TableCell className="text-center"><StarRating value={calcStars(p.habilidade, club?.rate)} /></TableCell>
                         <TableCell className="text-center hidden sm:table-cell text-sm">{p.age || "—"}</TableCell>
@@ -384,6 +431,143 @@ const Market = () => {
             </Card>
           </TabsContent>
         )}
+
+        {/* RUMORES */}
+        <TabsContent value="rumores" className="space-y-2 mt-4">
+          <Card className="p-3 bg-gradient-card border-border/50 text-xs text-muted-foreground flex items-center gap-2">
+            <Radio className="h-4 w-4 text-primary" />
+            Feed de propostas em andamento e movimentações recentes (últimas 48h).
+          </Card>
+          {rumores.length === 0 && (
+            <Card className="p-10 text-center text-muted-foreground bg-gradient-card border-border/50">
+              Sem movimentações no momento.
+            </Card>
+          )}
+          {rumores.map((t) => {
+            const player = players.find((p) => p.id === t.jogador_id);
+            const comp = clubs[t.clube_comprador_id];
+            const vend = clubs[t.clube_vendedor_id];
+            const statusBadge = t.status === "pendente"
+              ? { icon: Clock, cls: "bg-amber-500/20 text-amber-400 border-amber-500/40", label: "Em negociação" }
+              : t.status === "aceita"
+              ? { icon: CheckCircle2, cls: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40", label: "Acordo fechado" }
+              : t.status === "contraproposta"
+              ? { icon: MessageSquare, cls: "bg-primary/20 text-primary border-primary/40", label: "Contraproposta" }
+              : { icon: XCircle, cls: "bg-destructive/20 text-destructive border-destructive/40", label: "Recusada" };
+            const StatusIcon = statusBadge.icon;
+            return (
+              <Card key={t.id} className="p-3 sm:p-4 bg-gradient-card border-border/50">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Badge variant="outline" className={`text-[10px] ${statusBadge.cls}`}>
+                    <StatusIcon className="h-3 w-3 mr-1" /> {statusBadge.label}
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] uppercase border-primary/40 text-primary">{tipoLabel(t.tipo)}</Badge>
+                  {comp && (
+                    <Link to={`/clubes/${comp.id}`} className="flex items-center gap-1.5 hover:text-primary">
+                      <div className="h-6 w-6 flex items-center justify-center">
+                        {comp.crest_url && <img src={comp.crest_url} alt={comp.name} className="w-full h-full object-contain" />}
+                      </div>
+                      <span className="text-sm font-medium">{comp.name}</span>
+                    </Link>
+                  )}
+                  <ArrowRightLeft className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-sm font-bold">{player?.name || "—"}</span>
+                  <span className="text-xs text-muted-foreground">de</span>
+                  {vend && (
+                    <Link to={`/clubes/${vend.id}`} className="flex items-center gap-1.5 hover:text-primary">
+                      <div className="h-6 w-6 flex items-center justify-center">
+                        {vend.crest_url && <img src={vend.crest_url} alt={vend.name} className="w-full h-full object-contain" />}
+                      </div>
+                      <span className="text-sm font-medium">{vend.name}</span>
+                    </Link>
+                  )}
+                  <div className="ml-auto text-right">
+                    {t.tipo !== "emprestimo" && Number(t.valor_ofertado) > 0 && (
+                      <div className="font-display font-bold text-primary text-sm">{formatCurrency(Number(t.valor_ofertado))}</div>
+                    )}
+                    <div className="text-[10px] text-muted-foreground">
+                      {new Date(t.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
+        </TabsContent>
+
+        {/* TRANSFERÊNCIAS DA TEMPORADA */}
+        <TabsContent value="temporada" className="space-y-3 mt-4">
+          <Card className="p-3 bg-gradient-card border-border/50 text-xs text-muted-foreground flex items-center gap-2">
+            <History className="h-4 w-4 text-primary" />
+            Negócios fechados na temporada {temporadaAtual} ({seasonTransfers.length} {seasonTransfers.length === 1 ? "operação" : "operações"}).
+          </Card>
+          <Card className="bg-gradient-card border-border/50 overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead>Jogador</TableHead>
+                  <TableHead>De</TableHead>
+                  <TableHead>Para</TableHead>
+                  <TableHead className="text-center">Tipo</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
+                  <TableHead className="text-right">Data</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {seasonTransfers.length === 0 && (
+                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-10">
+                    Nenhuma transferência registrada nesta temporada.
+                  </TableCell></TableRow>
+                )}
+                {seasonTransfers.map((tx) => {
+                  const player = players.find((p) => p.id === tx.related_player_id);
+                  const compradorClub = clubs[tx.related_club_id];
+                  const vendedorClub = clubs[tx.club_id];
+                  const tipoOp = (tx.metadata as any)?.tipo_op || "compra";
+                  return (
+                    <TableRow key={tx.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span>{player?.name || tx.descricao}</span>
+                          {player?.nationality && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal text-muted-foreground border-border/60">
+                              {player.nationality}
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {vendedorClub ? (
+                          <Link to={`/clubes/${vendedorClub.id}`} className="flex items-center gap-2 hover:text-primary">
+                            <div className="h-6 w-6 shrink-0">{vendedorClub.crest_url && <img src={vendedorClub.crest_url} className="w-full h-full object-contain" alt="" />}</div>
+                            <span className="text-sm hidden md:inline">{vendedorClub.name}</span>
+                          </Link>
+                        ) : "—"}
+                      </TableCell>
+                      <TableCell>
+                        {compradorClub ? (
+                          <Link to={`/clubes/${compradorClub.id}`} className="flex items-center gap-2 hover:text-primary">
+                            <div className="h-6 w-6 shrink-0">{compradorClub.crest_url && <img src={compradorClub.crest_url} className="w-full h-full object-contain" alt="" />}</div>
+                            <span className="text-sm hidden md:inline">{compradorClub.name}</span>
+                          </Link>
+                        ) : "—"}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="text-[10px] uppercase border-primary/40 text-primary">{tipoOp}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-display font-bold text-primary">
+                        {Number(tx.valor) > 0 ? formatCurrency(Number(tx.valor)) : <span className="text-muted-foreground">—</span>}
+                      </TableCell>
+                      <TableCell className="text-right text-xs text-muted-foreground">
+                        {new Date(tx.created_at).toLocaleDateString("pt-BR")}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </Card>
+        </TabsContent>
 
         {/* INBOX */}
         {hasClub && (
