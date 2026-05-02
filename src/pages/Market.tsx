@@ -483,8 +483,8 @@ const Market = () => {
                     <TableHead className="w-16">Pos.</TableHead>
                     <TableHead>Jogador</TableHead>
                     <TableHead className="w-12 hidden sm:table-cell"></TableHead>
-                    <TableHead>Clube de origem</TableHead>
-                    <TableHead className="text-center w-16">OVR</TableHead>
+                    <TableHead>Clube</TableHead>
+                    <TableHead className="text-center w-16">Overall</TableHead>
                     <TableHead className="text-center w-16 hidden sm:table-cell">Idade</TableHead>
                     <TableHead className="text-right">Valor base</TableHead>
                     <TableHead className="w-24"></TableHead>
@@ -1076,7 +1076,7 @@ function FlagImg({ nationality }: { nationality: string }) {
       src={url}
       alt={nationality}
       title={nationality}
-      className="h-6 w-8 object-cover rounded-sm"
+      className="h-7 w-10 object-cover rounded-sm shrink-0"
       style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.1)" }}
     />
   );
