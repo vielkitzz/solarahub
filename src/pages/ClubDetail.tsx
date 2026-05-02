@@ -239,9 +239,8 @@ const ClubDetail = () => {
   const toggleSale = async (playerId: string, value: boolean) => {
     const { error } = await supabase.from("players").update({ a_venda: value }).eq("id", playerId);
 
-    console.log("toggleSale error:", error, "playerId:", playerId, "value:", value);
-
     if (error) return toast.error(error.message);
+    // só atualiza o estado local após confirmar o save
     setPlayers((prev) => prev.map((p) => (p.id === playerId ? { ...p, a_venda: value } : p)));
     toast.success(value ? "Jogador colocado à venda" : "Jogador removido da vitrine");
   };
