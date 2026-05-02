@@ -80,7 +80,7 @@ const Market = () => {
 
   const loadAll = async () => {
     const [{ data: cs }, { data: ps }] = await Promise.all([
-      supabase.from("clubs").select("id, name, crest_url, owner_id").order("name"),
+      supabase.from("clubs").select("id, name, crest_url, owner_id, rate").order("name"),
       supabase.from("players").select("*"),
     ]);
     const map: Record<string, any> = {};
@@ -531,7 +531,7 @@ const Market = () => {
                           )}
                         </TableCell>
                         <TableCell className="text-center">
-                          <StarRating value={calcStars(p.habilidade, activeClub?.rate ?? 2.8)} />
+                          <StarRating value={calcStars(p.habilidade, club?.rate ?? 2.8)} />
                         </TableCell>
                         <TableCell className="text-center hidden sm:table-cell text-sm">{p.age || "—"}</TableCell>
                         <TableCell className="text-right font-display font-bold text-primary">
