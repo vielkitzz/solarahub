@@ -5,10 +5,10 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Shield } from "lucide-react";
 
-// --- Definição da Interface ---
 interface Club {
   id: string;
   name: string;
@@ -18,7 +18,6 @@ interface Club {
   longitude: number | null;
 }
 
-// --- Constantes e Funções Auxiliares ---
 const PLACEHOLDER_CREST =
   "data:image/svg+xml;utf8," +
   encodeURIComponent(
@@ -34,7 +33,6 @@ const createClubIcon = (crestUrl: string | null) =>
     className: "bg-transparent border-none shadow-none object-contain hover:scale-110 transition-transform",
   });
 
-// --- Componente Principal ---
 const Mapa = () => {
   const [clubs, setClubs] = useState<Club[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,35 +56,23 @@ const Mapa = () => {
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/*
-        Estratégia "Água vs Terra":
-        
-        1. Água (Fundo): Definida via CSS no .leaflet-container.
-           - Cor sólida azul marinho escuro (#0a1929).
-           - Não recebe filtro, então fica com a cor pura e escura desejada.
-           
-        2. Terra (Tiles): Recebe filtro CSS agressivo.
-           - invert(1): Transforma o preto/cinza escuro do tile em branco/cinza claro.
-           - brightness(55%): Escurece esse branco para um cinza médio.
-           - hue-rotate(180deg): Desloca esse cinza para o azul.
-           - Resultado: Uma cor azul clara/desbotada que contrasta com o fundo marinho.
+        Estratégia de colorização AJUSTADA:
+        Aumentamos o brightness para 95% (era 72%) para que os detalhes
+        das ruas e áreas fiquem visíveis contra o fundo escuro.
+        O background do container foi alterado para um azul marinho médio (#0c2d4b)
+        para evitar que o fundo pareça "preto total".
       */}
       <style>{`
-        /* Filtro aplicado APENAS nas imagens do mapa (terra/ruas) */
+        /* Filtro principal aplicado nos tiles */
         .map-tile-layer {
           filter:
-            invert(1) 
-            brightness(55%)
-            hue-rotate(180deg)
-            saturate(150%);
+            hue-rotate(195deg)
+            saturate(280%)
+            brightness(95%) 
+            contrast(100%);
         }
 
-        /* O container define a cor da ÁGUA */
-        .leaflet-container {
-          background: #0a1929 !important; /* Azul marinho profundo */
-          font-family: inherit !important;
-        }
-
-        /* Estética do Popup */
+        /* Deixa o popup do Leaflet coerente com o design system */
         .leaflet-popup-content-wrapper {
           background: hsl(207 53% 16%) !important;
           border: 1px solid hsl(207 45% 32%) !important;
@@ -95,29 +81,49 @@ const Mapa = () => {
           color: hsl(0 0% 98%) !important;
           padding: 0 !important;
         }
+
         .leaflet-popup-content {
           margin: 0 !important;
           padding: 12px 14px !important;
           width: auto !important;
           min-width: 180px !important;
         }
-        .leaflet-popup-tip-container { display: none !important; }
-        .leaflet-marker-icon:focus { outline: none !important; }
-        
-        /* Atribuição e Controles */
+
+        .leaflet-popup-tip-container {
+          display: none !important;
+        }
+
+        /* Remove a borda azul padrão do Leaflet ao clicar no marker */
+        .leaflet-marker-icon:focus {
+          outline: none !important;
+        }
+
+        /* Scrollbar do mapa */
+        .leaflet-container {
+          /* Cor de fundo mais clara para combinar com o tile filtrado */
+          background: #0c2d4b !important; 
+          font-family: inherit !important;
+        }
+
+        /* Atribuição discreta */
         .leaflet-control-attribution {
-          background: hsl(207 67% 8% / 0.9) !important;
+          background: hsl(207 67% 8% / 0.85) !important;
           color: hsl(207 20% 55%) !important;
           border-radius: 6px 0 0 0 !important;
           font-size: 9px !important;
         }
-        .leaflet-control-attribution a { color: hsl(44 100% 52%) !important; }
-        
+
+        .leaflet-control-attribution a {
+          color: hsl(44 100% 52%) !important;
+        }
+
+        /* Botões de zoom */
         .leaflet-control-zoom a {
           background: hsl(207 53% 18%) !important;
           color: hsl(0 0% 92%) !important;
           border: 1px solid hsl(207 45% 32%) !important;
         }
+
         .leaflet-control-zoom a:hover {
           background: hsl(207 49% 25%) !important;
           color: hsl(44 100% 52%) !important;
@@ -144,7 +150,7 @@ const Mapa = () => {
             scrollWheelZoom
             className="h-[65vh] min-h-[500px] w-full z-0"
             // Background sincronizado com o CSS acima
-            style={{ background: "#0a1929" }}
+            style={{ background: "#0c2d4b" }}
           >
             <TileLayer
               className="map-tile-layer"
