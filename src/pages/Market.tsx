@@ -26,6 +26,9 @@ const Market = () => {
   const [myClubs, setMyClubs] = useState<any[]>([]);
   const [activeClubId, setActiveClubId] = useState<string>("");
   const [proposals, setProposals] = useState<any[]>([]);
+  const [seasonTransfers, setSeasonTransfers] = useState<any[]>([]);
+  const [rumores, setRumores] = useState<any[]>([]);
+  const [temporadaAtual, setTemporadaAtual] = useState<number>(new Date().getFullYear());
 
   // filtros
   const [q, setQ] = useState("");
