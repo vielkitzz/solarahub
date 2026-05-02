@@ -81,7 +81,35 @@ const Market = () => {
     setProposals(data || []);
   };
 
-  useEffect(() => { loadAll(); }, []);
+  const loadSeasonAndRumors = async () => {
+    // Temporada atual
+    const { data: cfg } = await supabase.from("settings").select("value").eq("key", "temporada_atual").maybeSingle();
+    const temp = Number((cfg?.value as any)?.ano) || new Date().getFullYear();
+    setTemporadaAtual(temp);
+
+    // Transferências aceitas (todas globais — usamos transactions categoria=transferencia tipo=entrada para deduplicar por op)
+    const { data: tx } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("categoria", "transferencia")
+      .eq("tipo", "entrada")
+      .eq("temporada", temp)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    setSeasonTransfers(tx || []);
+
+    // Rumores: pendentes + aceitas/recusadas das últimas 48h
+    const since = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
+    const { data: rs } = await supabase
+      .from("transferencias")
+      .select("*")
+      .or(`status.eq.pendente,and(status.in.(aceita,recusada,contraproposta),created_at.gte.${since})`)
+      .order("created_at", { ascending: false })
+      .limit(150);
+    setRumores(rs || []);
+  };
+
+  useEffect(() => { loadAll(); loadSeasonAndRumors(); }, []);
   useEffect(() => { loadMine(); }, [user]);
   useEffect(() => { loadProposals(); }, [activeClubId]);
 
