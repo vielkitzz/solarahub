@@ -8,17 +8,16 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Shield } from "lucide-react";
 
-// --- Definição da Interface ---
+// Interface aprimorada
 interface Club {
   id: string;
   name: string;
   city: string | null;
   crest_url: string | null;
-  latitude: number | null;
-  longitude: number | null;
+  latitude: number; // Mudado para number para facilitar o map
+  longitude: number;
 }
 
-// --- Constantes e Funções Auxiliares ---
 const PLACEHOLDER_CREST =
   "data:image/svg+xml;utf8," +
   encodeURIComponent(
@@ -31,187 +30,136 @@ const createClubIcon = (crestUrl: string | null) =>
     iconSize: [36, 36],
     iconAnchor: [18, 18],
     popupAnchor: [0, -18],
-    className: "bg-transparent border-none shadow-none object-contain hover:scale-110 transition-transform",
+    className: "custom-club-icon", // Classe para CSS externo
   });
 
-// --- Componente Principal ---
 const Mapa = () => {
   const [clubs, setClubs] = useState<Club[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
+    let isMounted = true;
     document.title = "Mapa de Clubes — Solara Hub";
-    (async () => {
-      const { data } = await supabase
+
+    const fetchClubs = async () => {
+      const { data, error } = await supabase
         .from("clubs")
-        .select("id,name,city,crest_url,latitude,longitude")
+        .select("id, name, city, crest_url, latitude, longitude")
         .eq("status", "ativo")
+        .not("latitude", "is", null) // Filtro direto no banco para performance
+        .not("longitude", "is", null)
         .order("name");
-      setClubs((data as Club[]) || []);
-      setLoading(false);
-    })();
+
+      if (error) {
+        console.error("Erro ao buscar clubes:", error);
+      } else if (isMounted) {
+        setClubs((data as unknown as Club[]) || []);
+      }
+
+      if (isMounted) setLoading(false);
+    };
+
+    fetchClubs();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const geoClubs = clubs.filter((c) => c.latitude !== null && c.longitude !== null);
-
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      {/*
-        Estratégia "Água vs Terra":
-        
-        1. Água (Fundo): Definida via CSS no .leaflet-container.
-           - Cor sólida azul marinho escuro (#0a1929).
-           - Não recebe filtro, então fica com a cor pura e escura desejada.
-           
-        2. Terra (Tiles): Recebe filtro CSS agressivo.
-           - invert(1): Transforma o preto/cinza escuro do tile em branco/cinza claro.
-           - brightness(55%): Escurece esse branco para um cinza médio.
-           - hue-rotate(180deg): Desloca esse cinza para o azul.
-           - Resultado: Uma cor azul clara/desbotada que contrasta com o fundo marinho.
-      */}
+    <div className="space-y-6 max-w-6xl mx-auto p-4">
       <style>{`
-        /* Filtro aplicado APENAS nas imagens do mapa (terra/ruas) */
-        /* Sugestão para combinar com o mapa Voyager */
+        .custom-club-icon {
+          background: transparent;
+          border: none;
+          object-fit: contain;
+          transition: transform 0.2s;
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+        .custom-club-icon:hover { transform: scale(1.2); }
+
         .map-tile-layer {
-          filter:
-            hue-rotate(215deg) /* Gira as cores para o espectro do azul */
-            brightness(75%)    /* Escurece o mapa (necessário pois o voyager é claro) */
-            saturate(1.5)      /* Mantém as cores vivas */
-            contrast(1.1);     /* Aumenta o contraste */
+          filter: hue-rotate(215deg) brightness(70%) saturate(1.2) contrast(1.1);
         }
 
-        /* O container define a cor da ÁGUA */
         .leaflet-container {
-          /* Tente este hex para um Navy Blue mais clássico/escuro */
-          background: #001f3f !important; 
-          font-family: inherit !important;
+          background: #001226 !important; /* Cor Navy Blue mais profunda */
+          outline: none;
         }
 
-        /* Estética do Popup */
+        /* Melhoria nos Popups para evitar conflitos de estilo */
         .leaflet-popup-content-wrapper {
-          background: hsl(207 53% 16%) !important;
-          border: 1px solid hsl(207 45% 32%) !important;
-          border-radius: 0.875rem !important;
-          box-shadow: 0 10px 40px -10px hsl(207 80% 2% / 0.7) !important;
-          color: hsl(0 0% 98%) !important;
-          padding: 0 !important;
+          background: #0f172a !important;
+          color: white !important;
+          border: 1px solid #1e293b !important;
+          border-radius: 12px !important;
         }
-        .leaflet-popup-content {
-          margin: 0 !important;
-          padding: 12px 14px !important;
-          width: auto !important;
-          min-width: 180px !important;
-        }
-        .leaflet-popup-tip-container { display: none !important; }
-        .leaflet-marker-icon:focus { outline: none !important; }
         
-        /* Atribuição e Controles */
-        .leaflet-control-attribution {
-          background: hsl(207 67% 8% / 0.9) !important;
-          color: hsl(207 20% 55%) !important;
-          border-radius: 6px 0 0 0 !important;
-          font-size: 9px !important;
+        .access-button {
+          transition: all 0.2s ease;
         }
-        .leaflet-control-attribution a { color: hsl(44 100% 52%) !important; }
-        
-        .leaflet-control-zoom a {
-          background: hsl(207 53% 18%) !important;
-          color: hsl(0 0% 92%) !important;
-          border: 1px solid hsl(207 45% 32%) !important;
-        }
-        .leaflet-control-zoom a:hover {
-          background: hsl(207 49% 25%) !important;
-          color: hsl(44 100% 52%) !important;
+        .access-button:hover {
+          filter: brightness(1.1);
+          transform: translateY(-1px);
         }
       `}</style>
 
-      <header className="space-y-2">
-        <h1 className="text-3xl md:text-4xl font-bold flex items-center gap-3">
-          <MapPin className="h-8 w-8 text-primary" /> Mapa de Clubes
-        </h1>
-        <p className="text-muted-foreground">
-          Localização geográfica dos clubes ativos.{" "}
-          {geoClubs.length > 0 && <span className="text-primary font-medium">{geoClubs.length} clube(s) no mapa.</span>}
-        </p>
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-3">
+            <MapPin className="h-8 w-8 text-yellow-500" /> Mapa de Clubes
+          </h1>
+          <p className="text-muted-foreground mt-1">Localização geográfica das unidades ativas do Solara Hub.</p>
+        </div>
+        {clubs.length > 0 && (
+          <div className="bg-secondary/50 px-4 py-2 rounded-full text-sm font-semibold border border-border">
+            {clubs.length} Clubes Detectados
+          </div>
+        )}
       </header>
 
       {loading ? (
-        <Skeleton className="h-[65vh] min-h-[500px] w-full rounded-[var(--radius)]" />
+        <Skeleton className="h-[65vh] w-full rounded-xl" />
       ) : (
-        <Card className="overflow-hidden bg-gradient-card border-border/50 p-0 relative z-0">
+        <Card className="relative overflow-hidden border-border/40 shadow-2xl">
           <MapContainer
-            center={[-15.0, -55.0]}
+            center={[-15.78, -47.92]} // Centralizado em Brasília
             zoom={4}
-            scrollWheelZoom
-            className="h-[65vh] min-h-[500px] w-full z-0"
-            /* Certifique-se de que este estilo inline corresponde ao CSS acima */
-            style={{ background: "#001f3f" }}
+            minZoom={3}
+            scrollWheelZoom={true}
+            className="h-[65vh] w-full"
           >
             <TileLayer
               className="map-tile-layer"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-              // 👇 MUDE ESTA LINHA AQUI 👇
+              attribution="&copy; CARTO"
               url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
             />
 
-            {geoClubs.map((c) => (
-              <Marker
-                key={c.id}
-                position={[c.latitude as number, c.longitude as number]}
-                icon={createClubIcon(c.crest_url)}
-              >
-                <Popup>
-                  <div className="flex flex-col items-center gap-2 py-1">
-                    <div className="h-12 w-12 flex items-center justify-center">
-                      {c.crest_url ? (
-                        <img src={c.crest_url} alt={c.name} className="h-full w-full object-contain drop-shadow-md" />
+            {clubs.map((club) => (
+              <Marker key={club.id} position={[club.latitude, club.longitude]} icon={createClubIcon(club.crest_url)}>
+                <Popup closeButton={false}>
+                  <div className="flex flex-col items-center p-2 min-w-[160px]">
+                    <div className="w-16 h-16 mb-2 flex items-center justify-center bg-white/5 rounded-lg p-2">
+                      {club.crest_url ? (
+                        <img src={club.crest_url} alt={club.name} className="max-h-full max-w-full object-contain" />
                       ) : (
-                        <Shield className="h-8 w-8 text-muted-foreground" />
+                        <Shield className="h-10 w-10 text-yellow-500/50" />
                       )}
                     </div>
-                    <div
-                      style={{
-                        fontWeight: 700,
-                        textAlign: "center",
-                        color: "hsl(0 0% 98%)",
-                        lineHeight: 1.3,
-                        margin: 0,
-                      }}
-                    >
-                      {c.name}
-                    </div>
-                    {c.city && (
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 4,
-                          fontSize: 11,
-                          color: "hsl(207 20% 65%)",
-                          margin: 0,
-                        }}
-                      >
-                        <MapPin size={11} />
-                        {c.city}
+
+                    <span className="font-bold text-center text-sm leading-tight mb-1">{club.name}</span>
+
+                    {club.city && (
+                      <div className="flex items-center gap-1 text-[10px] text-slate-400 mb-3 uppercase tracking-wider">
+                        <MapPin size={10} /> {club.city}
                       </div>
                     )}
+
                     <button
-                      style={{
-                        width: "100%",
-                        marginTop: 6,
-                        padding: "6px 12px",
-                        background: "linear-gradient(135deg, hsl(44 100% 52%), hsl(38 100% 48%))",
-                        color: "hsl(207 80% 6%)",
-                        fontWeight: 700,
-                        fontSize: 12,
-                        borderRadius: 8,
-                        border: "none",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => navigate(`/clubes/${c.id}`)}
+                      className="access-button w-full py-2 bg-yellow-500 text-black text-[11px] font-bold rounded-md"
+                      onClick={() => navigate(`/clubes/${club.id}`)}
                     >
-                      Acessar Clube
+                      VISITAR PERFIL
                     </button>
                   </div>
                 </Popup>
@@ -221,10 +169,10 @@ const Mapa = () => {
         </Card>
       )}
 
-      {!loading && geoClubs.length === 0 && (
-        <Card className="p-8 text-center bg-gradient-card border-border/50 text-muted-foreground">
-          Nenhum clube com coordenadas cadastradas ainda. Adicione latitude e longitude nos clubes pelo painel Admin.
-        </Card>
+      {!loading && clubs.length === 0 && (
+        <div className="p-12 text-center border-2 border-dashed border-border rounded-xl">
+          <p className="text-muted-foreground">Nenhum clube com coordenadas geográficas encontrado.</p>
+        </div>
       )}
     </div>
   );
