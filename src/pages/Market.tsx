@@ -243,6 +243,7 @@ const Market = () => {
     toast.success("Contraproposta enviada!");
     setCounterTarget(null);
     loadProposals();
+    loadSeasonAndRumors();
   };
 
   const inbox = useMemo(() => {
