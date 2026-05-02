@@ -814,6 +814,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      scout_academy_player: {
+        Args: { _scouter_club_id: string; _target_player_id: string }
+        Returns: Json
+      }
       scout_player: {
         Args: { _scouter_club_id: string; _target_player_id: string }
         Returns: Json
