@@ -9,11 +9,34 @@ import { Input } from "@/components/ui/input";
 import { NumberInput } from "@/components/ui/number-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Search, Tag, ArrowRightLeft, Inbox, Send, AlertTriangle, LogIn, MessageSquare, History, Radio, CheckCircle2, XCircle, Clock } from "lucide-react";
+import {
+  Users,
+  Search,
+  Tag,
+  ArrowRightLeft,
+  Inbox,
+  Send,
+  AlertTriangle,
+  LogIn,
+  MessageSquare,
+  History,
+  Radio,
+  CheckCircle2,
+  XCircle,
+  Clock,
+} from "lucide-react";
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
+import { getFlagUrl } from "@/lib/countries";
 import { StarRating } from "@/components/StarRating";
 import { toast } from "sonner";
 
@@ -51,7 +74,9 @@ const Market = () => {
   const [cSalario, setCSalario] = useState("");
   const [cLuvas, setCLuvas] = useState("");
 
-  useEffect(() => { document.title = "Mercado — Solara Hub"; }, []);
+  useEffect(() => {
+    document.title = "Mercado — Solara Hub";
+  }, []);
 
   const loadAll = async () => {
     const [{ data: cs }, { data: ps }] = await Promise.all([
@@ -59,7 +84,9 @@ const Market = () => {
       supabase.from("players").select("*"),
     ]);
     const map: Record<string, any> = {};
-    (cs || []).forEach((c) => { map[c.id] = c; });
+    (cs || []).forEach((c) => {
+      map[c.id] = c;
+    });
     setClubs(map);
     setPlayers(ps || []);
   };
@@ -72,7 +99,10 @@ const Market = () => {
   };
 
   const loadProposals = async () => {
-    if (!activeClubId) { setProposals([]); return; }
+    if (!activeClubId) {
+      setProposals([]);
+      return;
+    }
     const { data } = await supabase
       .from("transferencias")
       .select("*")
@@ -109,9 +139,16 @@ const Market = () => {
     setRumores(rs || []);
   };
 
-  useEffect(() => { loadAll(); loadSeasonAndRumors(); }, []);
-  useEffect(() => { loadMine(); }, [user]);
-  useEffect(() => { loadProposals(); }, [activeClubId]);
+  useEffect(() => {
+    loadAll();
+    loadSeasonAndRumors();
+  }, []);
+  useEffect(() => {
+    loadMine();
+  }, [user]);
+  useEffect(() => {
+    loadProposals();
+  }, [activeClubId]);
 
   // Vitrine pública: jogadores à venda + livres + filtros
   const filteredVitrine = useMemo(() => {
@@ -138,17 +175,14 @@ const Market = () => {
       });
   }, [players, activeClubId, q, pos, onlyForSale]);
 
-  const myPlayers = useMemo(
-    () => players.filter((p) => p.club_id === activeClubId),
-    [players, activeClubId]
-  );
+  const myPlayers = useMemo(() => players.filter((p) => p.club_id === activeClubId), [players, activeClubId]);
 
   const openProposal = async (player: any) => {
     setTarget(player);
     setTipo("compra");
     setValor(String(Math.round(Number(player.valor_base_calculado))));
     // Sugere salário coerente: 10% do valor base / ano (via RPC)
-    let sugerido = Math.round(Number(player.valor_base_calculado || 0) * 0.10);
+    let sugerido = Math.round(Number(player.valor_base_calculado || 0) * 0.1);
     try {
       const { data } = await supabase.rpc("sugerir_salario_jogador", { _jogador_id: player.id });
       if (data) sugerido = Math.round(Number(data));
@@ -172,15 +206,12 @@ const Market = () => {
   const luvasNum = parseFloat(luvas) || 0;
   const totalDevido = valorNum + luvasNum;
 
-  const fpError = target && tipo === "compra"
-    ? fairPlayCheck(valorNum, Number(target.valor_base_calculado))
-    : null;
-  const caixaError = target && totalDevido > caixaComprador
-    ? `Caixa insuficiente: necessário ${formatCurrency(totalDevido)}, disponível ${formatCurrency(caixaComprador)}`
-    : null;
-  const trocaError = tipo === "troca" && !jogadorTrocado
-    ? "Selecione um jogador para oferecer na troca"
-    : null;
+  const fpError = target && tipo === "compra" ? fairPlayCheck(valorNum, Number(target.valor_base_calculado)) : null;
+  const caixaError =
+    target && totalDevido > caixaComprador
+      ? `Caixa insuficiente: necessário ${formatCurrency(totalDevido)}, disponível ${formatCurrency(caixaComprador)}`
+      : null;
+  const trocaError = tipo === "troca" && !jogadorTrocado ? "Selecione um jogador para oferecer na troca" : null;
 
   const submit = async () => {
     if (!target || !activeClubId || !user) return;
@@ -268,7 +299,7 @@ const Market = () => {
   }, [proposals, activeClubId]);
 
   const playerById = (id: string) => players.find((p) => p.id === id);
-  const tipoLabel = (t: TransferType) => t === "compra" ? "Compra" : t === "emprestimo" ? "Empréstimo" : "Troca";
+  const tipoLabel = (t: TransferType) => (t === "compra" ? "Compra" : t === "emprestimo" ? "Empréstimo" : "Troca");
 
   if (loading) return null;
 
@@ -286,16 +317,23 @@ const Market = () => {
             <p className="text-xs sm:text-sm text-muted-foreground">
               Vitrine, rumores e negociações.{" "}
               <Badge variant="outline" className="border-primary/40 text-primary ml-1 text-[10px]">
-                <Tag className="h-2.5 w-2.5 mr-1" />{forSaleCount} à venda
+                <Tag className="h-2.5 w-2.5 mr-1" />
+                {forSaleCount} à venda
               </Badge>
             </p>
           </div>
         </div>
         {hasClub && myClubs.length > 1 && (
           <Select value={activeClubId} onValueChange={setActiveClubId}>
-            <SelectTrigger className="md:w-64"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="md:w-64">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
-              {myClubs.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              {myClubs.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         )}
@@ -304,10 +342,20 @@ const Market = () => {
       <Tabs defaultValue="vitrine">
         <div className="-mx-3 sm:-mx-4 md:mx-0 overflow-x-auto scrollbar-thin">
           <TabsList className="bg-secondary/50 mx-3 sm:mx-4 md:mx-0 w-max">
-            <TabsTrigger value="vitrine"><Tag className="h-3.5 w-3.5 mr-1" /> Vitrine</TabsTrigger>
-            {hasClub && <TabsTrigger value="negociar"><ArrowRightLeft className="h-3.5 w-3.5 mr-1" /> Negociar</TabsTrigger>}
-            <TabsTrigger value="rumores"><Radio className="h-3.5 w-3.5 mr-1" /> Rumores</TabsTrigger>
-            <TabsTrigger value="temporada"><History className="h-3.5 w-3.5 mr-1" /> Transferências da Temporada</TabsTrigger>
+            <TabsTrigger value="vitrine">
+              <Tag className="h-3.5 w-3.5 mr-1" /> Vitrine
+            </TabsTrigger>
+            {hasClub && (
+              <TabsTrigger value="negociar">
+                <ArrowRightLeft className="h-3.5 w-3.5 mr-1" /> Negociar
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="rumores">
+              <Radio className="h-3.5 w-3.5 mr-1" /> Rumores
+            </TabsTrigger>
+            <TabsTrigger value="temporada">
+              <History className="h-3.5 w-3.5 mr-1" /> Transferências da Temporada
+            </TabsTrigger>
             {hasClub && (
               <TabsTrigger value="inbox">
                 <Inbox className="h-3.5 w-3.5 mr-1" />
@@ -316,43 +364,82 @@ const Market = () => {
                 {inboxCount > 0 && <Badge className="ml-2 bg-primary text-primary-foreground">{inboxCount}</Badge>}
               </TabsTrigger>
             )}
-            {hasClub && <TabsTrigger value="sent"><Send className="h-3.5 w-3.5 mr-1" /> Enviadas</TabsTrigger>}
+            {hasClub && (
+              <TabsTrigger value="sent">
+                <Send className="h-3.5 w-3.5 mr-1" /> Enviadas
+              </TabsTrigger>
+            )}
           </TabsList>
         </div>
 
         {/* VITRINE PÚBLICA - aparece pra todos */}
         <TabsContent value="vitrine" className="mt-4 space-y-3">
-          <Filters q={q} setQ={setQ} pos={pos} setPos={setPos} onlyForSale={onlyForSale} setOnlyForSale={setOnlyForSale} />
+          <Filters
+            q={q}
+            setQ={setQ}
+            pos={pos}
+            setPos={setPos}
+            onlyForSale={onlyForSale}
+            setOnlyForSale={setOnlyForSale}
+          />
           <div className="space-y-2">
             {filteredVitrine.map((p) => {
               const club = p.club_id ? clubs[p.club_id] : null;
               return (
-                <Card key={p.id} className={`p-3 sm:p-4 bg-gradient-card border-border/50 transition-all ${p.a_venda ? "border-primary/40 shadow-gold/20" : ""}`}>
+                <Card
+                  key={p.id}
+                  className={`p-3 sm:p-4 bg-gradient-card border-border/50 transition-all ${p.a_venda ? "border-primary/40 shadow-gold/20" : ""}`}
+                >
                   <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
-                    <Badge variant="outline" className="font-bold w-12 sm:w-14 justify-center border-primary/40 text-primary shrink-0 text-xs">{p.position}</Badge>
+                    <Badge
+                      variant="outline"
+                      className="font-bold w-12 sm:w-14 justify-center border-primary/40 text-primary shrink-0 text-xs"
+                    >
+                      {p.position}
+                    </Badge>
                     <div className="flex-1 min-w-0 order-1 sm:order-none basis-full sm:basis-auto">
                       <div className="font-bold truncate flex items-center gap-2">
                         {p.name}
-                        {p.a_venda && <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0 shrink-0"><Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA</Badge>}
+                        {p.a_venda && (
+                          <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0 shrink-0">
+                            <Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA
+                          </Badge>
+                        )}
                       </div>
-                      <div className="text-xs text-muted-foreground truncate">{p.age ? `${p.age}a` : ""} {p.nationality && `· ${p.nationality}`}</div>
+                      <div className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
+                        {p.age ? `${p.age}a` : ""}
+                        {p.nationality && <FlagImg nationality={p.nationality} />}
+                      </div>
                     </div>
                     {club ? (
-                      <Link to={`/clubes/${club.id}`} className="flex items-center gap-2 text-xs hover:text-primary transition-colors shrink-0">
+                      <Link
+                        to={`/clubes/${club.id}`}
+                        className="flex items-center gap-2 text-xs hover:text-primary transition-colors shrink-0"
+                      >
                         <div className="h-7 w-7 sm:h-8 sm:w-8 flex items-center justify-center">
-                          {club.crest_url && <img src={club.crest_url} alt={club.name} className="w-full h-full object-contain" />}
+                          {club.crest_url && (
+                            <img src={club.crest_url} alt={club.name} className="w-full h-full object-contain" />
+                          )}
                         </div>
                         <span className="hidden md:inline">{club.name}</span>
                       </Link>
                     ) : (
-                      <Badge variant="secondary" className="text-xs">Sem clube</Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        Sem clube
+                      </Badge>
                     )}
                     <div className="text-right shrink-0 ml-auto sm:ml-0">
                       <div className="text-[10px] text-muted-foreground uppercase">Valor</div>
-                      <div className="font-display font-bold text-primary text-sm sm:text-base">{formatCurrency(Number(p.market_value))}</div>
+                      <div className="font-display font-bold text-primary text-sm sm:text-base">
+                        {formatCurrency(Number(p.market_value))}
+                      </div>
                     </div>
                     {p.a_venda && hasClub && p.club_id !== activeClubId && (
-                      <Button size="sm" onClick={() => openProposal(p)} className="bg-gradient-gold text-primary-foreground hover:opacity-90 shrink-0">
+                      <Button
+                        size="sm"
+                        onClick={() => openProposal(p)}
+                        className="bg-gradient-gold text-primary-foreground hover:opacity-90 shrink-0"
+                      >
                         <ArrowRightLeft className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Negociar</span>
                       </Button>
                     )}
@@ -360,10 +447,16 @@ const Market = () => {
                 </Card>
               );
             })}
-            {filteredVitrine.length === 0 && <Card className="p-12 text-center bg-gradient-card border-border/50 text-muted-foreground">Nenhum jogador encontrado.</Card>}
+            {filteredVitrine.length === 0 && (
+              <Card className="p-12 text-center bg-gradient-card border-border/50 text-muted-foreground">
+                Nenhum jogador encontrado.
+              </Card>
+            )}
             {!user && (
               <Card className="p-6 text-center bg-gradient-card border-primary/30 mt-4">
-                <p className="text-sm text-muted-foreground mb-3">Quer enviar propostas? Entre com Discord para acessar negociações.</p>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Quer enviar propostas? Entre com Discord para acessar negociações.
+                </p>
                 <Button onClick={signInWithDiscord} className="bg-[#5865F2] hover:bg-[#4752c4] text-white">
                   <LogIn className="h-4 w-4" /> Entrar com Discord
                 </Button>
@@ -375,7 +468,14 @@ const Market = () => {
         {/* NEGOCIAR */}
         {hasClub && (
           <TabsContent value="negociar" className="space-y-3 mt-4">
-            <Filters q={q} setQ={setQ} pos={pos} setPos={setPos} onlyForSale={onlyForSale} setOnlyForSale={setOnlyForSale} />
+            <Filters
+              q={q}
+              setQ={setQ}
+              pos={pos}
+              setPos={setPos}
+              onlyForSale={onlyForSale}
+              setOnlyForSale={setOnlyForSale}
+            />
             <Card className="bg-gradient-card border-border/50 overflow-hidden">
               <Table>
                 <TableHeader>
@@ -394,37 +494,64 @@ const Market = () => {
                     const club = clubs[p.club_id];
                     return (
                       <TableRow key={p.id} className={p.a_venda ? "bg-primary/5" : ""}>
-                        <TableCell><Badge variant="outline" className="border-primary/40 text-primary">{p.position}</Badge></TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="border-primary/40 text-primary">
+                            {p.position}
+                          </Badge>
+                        </TableCell>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span>{p.name}</span>
-                            {p.nationality && (
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal text-muted-foreground border-border/60">
-                                {p.nationality}
+                            {p.nationality && <FlagImg nationality={p.nationality} />}
+                            {p.a_venda && (
+                              <Badge className="bg-primary/20 text-primary border-primary/40 text-[10px] px-1.5 py-0">
+                                <Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA
                               </Badge>
                             )}
-                            {p.a_venda && <Badge className="bg-primary/20 text-primary border-primary/40 text-[10px] px-1.5 py-0"><Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA</Badge>}
                           </div>
                         </TableCell>
                         <TableCell>
                           {club ? (
-                            <Link to={`/clubes/${club.id}`} className="flex items-center gap-2 hover:text-primary transition-colors">
-                              <div className="h-7 w-7 shrink-0 flex items-center justify-center bg-background/40 rounded">
-                                {club.crest_url && <img src={club.crest_url} alt={club.name} className="w-full h-full object-contain" />}
+                            <Link
+                              to={`/clubes/${club.id}`}
+                              className="flex items-center gap-2 hover:text-primary transition-colors"
+                            >
+                              <div className="h-7 w-7 shrink-0 flex items-center justify-center">
+                                {club.crest_url && (
+                                  <img src={club.crest_url} alt={club.name} className="w-full h-full object-contain" />
+                                )}
                               </div>
                               <span className="text-sm hidden md:inline">{club.name}</span>
                             </Link>
-                          ) : <span className="text-xs text-muted-foreground">—</span>}
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
                         </TableCell>
-                        <TableCell className="text-center"><StarRating value={calcStars(p.habilidade, club?.rate)} /></TableCell>
+                        <TableCell className="text-center">
+                          <StarRating value={calcStars(p.habilidade, club?.rate)} />
+                        </TableCell>
                         <TableCell className="text-center hidden sm:table-cell text-sm">{p.age || "—"}</TableCell>
-                        <TableCell className="text-right font-display font-bold text-primary">{formatCurrency(Number(p.valor_base_calculado))}</TableCell>
-                        <TableCell><Button size="sm" onClick={() => openProposal(p)} className="bg-gradient-gold text-primary-foreground hover:opacity-90">Negociar</Button></TableCell>
+                        <TableCell className="text-right font-display font-bold text-primary">
+                          {formatCurrency(Number(p.valor_base_calculado))}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            onClick={() => openProposal(p)}
+                            className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+                          >
+                            Negociar
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     );
                   })}
                   {filteredNegociar.length === 0 && (
-                    <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-10">Nenhum jogador disponível.</TableCell></TableRow>
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
+                        Nenhum jogador disponível.
+                      </TableCell>
+                    </TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -447,13 +574,26 @@ const Market = () => {
             const player = players.find((p) => p.id === t.jogador_id);
             const comp = clubs[t.clube_comprador_id];
             const vend = clubs[t.clube_vendedor_id];
-            const statusBadge = t.status === "pendente"
-              ? { icon: Clock, cls: "bg-amber-500/20 text-amber-400 border-amber-500/40", label: "Em negociação" }
-              : t.status === "aceita"
-              ? { icon: CheckCircle2, cls: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40", label: "Acordo fechado" }
-              : t.status === "contraproposta"
-              ? { icon: MessageSquare, cls: "bg-primary/20 text-primary border-primary/40", label: "Contraproposta" }
-              : { icon: XCircle, cls: "bg-destructive/20 text-destructive border-destructive/40", label: "Recusada" };
+            const statusBadge =
+              t.status === "pendente"
+                ? { icon: Clock, cls: "bg-amber-500/20 text-amber-400 border-amber-500/40", label: "Em negociação" }
+                : t.status === "aceita"
+                  ? {
+                      icon: CheckCircle2,
+                      cls: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
+                      label: "Acordo fechado",
+                    }
+                  : t.status === "contraproposta"
+                    ? {
+                        icon: MessageSquare,
+                        cls: "bg-primary/20 text-primary border-primary/40",
+                        label: "Contraproposta",
+                      }
+                    : {
+                        icon: XCircle,
+                        cls: "bg-destructive/20 text-destructive border-destructive/40",
+                        label: "Recusada",
+                      };
             const StatusIcon = statusBadge.icon;
             return (
               <Card key={t.id} className="p-3 sm:p-4 bg-gradient-card border-border/50">
@@ -461,11 +601,15 @@ const Market = () => {
                   <Badge variant="outline" className={`text-[10px] ${statusBadge.cls}`}>
                     <StatusIcon className="h-3 w-3 mr-1" /> {statusBadge.label}
                   </Badge>
-                  <Badge variant="outline" className="text-[10px] uppercase border-primary/40 text-primary">{tipoLabel(t.tipo)}</Badge>
+                  <Badge variant="outline" className="text-[10px] uppercase border-primary/40 text-primary">
+                    {tipoLabel(t.tipo)}
+                  </Badge>
                   {comp && (
                     <Link to={`/clubes/${comp.id}`} className="flex items-center gap-1.5 hover:text-primary">
                       <div className="h-6 w-6 flex items-center justify-center">
-                        {comp.crest_url && <img src={comp.crest_url} alt={comp.name} className="w-full h-full object-contain" />}
+                        {comp.crest_url && (
+                          <img src={comp.crest_url} alt={comp.name} className="w-full h-full object-contain" />
+                        )}
                       </div>
                       <span className="text-sm font-medium">{comp.name}</span>
                     </Link>
@@ -476,17 +620,26 @@ const Market = () => {
                   {vend && (
                     <Link to={`/clubes/${vend.id}`} className="flex items-center gap-1.5 hover:text-primary">
                       <div className="h-6 w-6 flex items-center justify-center">
-                        {vend.crest_url && <img src={vend.crest_url} alt={vend.name} className="w-full h-full object-contain" />}
+                        {vend.crest_url && (
+                          <img src={vend.crest_url} alt={vend.name} className="w-full h-full object-contain" />
+                        )}
                       </div>
                       <span className="text-sm font-medium">{vend.name}</span>
                     </Link>
                   )}
                   <div className="ml-auto text-right">
                     {t.tipo !== "emprestimo" && Number(t.valor_ofertado) > 0 && (
-                      <div className="font-display font-bold text-primary text-sm">{formatCurrency(Number(t.valor_ofertado))}</div>
+                      <div className="font-display font-bold text-primary text-sm">
+                        {formatCurrency(Number(t.valor_ofertado))}
+                      </div>
                     )}
                     <div className="text-[10px] text-muted-foreground">
-                      {new Date(t.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                      {new Date(t.created_at).toLocaleString("pt-BR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </div>
                   </div>
                 </div>
@@ -499,7 +652,8 @@ const Market = () => {
         <TabsContent value="temporada" className="space-y-3 mt-4">
           <Card className="p-3 bg-gradient-card border-border/50 text-xs text-muted-foreground flex items-center gap-2">
             <History className="h-4 w-4 text-primary" />
-            Negócios fechados na temporada {temporadaAtual} ({seasonTransfers.length} {seasonTransfers.length === 1 ? "operação" : "operações"}).
+            Negócios fechados na temporada {temporadaAtual} ({seasonTransfers.length}{" "}
+            {seasonTransfers.length === 1 ? "operação" : "operações"}).
           </Card>
           <Card className="bg-gradient-card border-border/50 overflow-hidden">
             <Table>
@@ -515,9 +669,11 @@ const Market = () => {
               </TableHeader>
               <TableBody>
                 {seasonTransfers.length === 0 && (
-                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-10">
-                    Nenhuma transferência registrada nesta temporada.
-                  </TableCell></TableRow>
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
+                      Nenhuma transferência registrada nesta temporada.
+                    </TableCell>
+                  </TableRow>
                 )}
                 {seasonTransfers.map((tx) => {
                   const player = players.find((p) => p.id === tx.related_player_id);
@@ -529,34 +685,54 @@ const Market = () => {
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span>{player?.name || tx.descricao}</span>
-                          {player?.nationality && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal text-muted-foreground border-border/60">
-                              {player.nationality}
-                            </Badge>
-                          )}
+                          {player?.nationality && <FlagImg nationality={player.nationality} />}
                         </div>
                       </TableCell>
                       <TableCell>
                         {vendedorClub ? (
-                          <Link to={`/clubes/${vendedorClub.id}`} className="flex items-center gap-2 hover:text-primary">
-                            <div className="h-6 w-6 shrink-0">{vendedorClub.crest_url && <img src={vendedorClub.crest_url} className="w-full h-full object-contain" alt="" />}</div>
+                          <Link
+                            to={`/clubes/${vendedorClub.id}`}
+                            className="flex items-center gap-2 hover:text-primary"
+                          >
+                            <div className="h-6 w-6 shrink-0">
+                              {vendedorClub.crest_url && (
+                                <img src={vendedorClub.crest_url} className="w-full h-full object-contain" alt="" />
+                              )}
+                            </div>
                             <span className="text-sm hidden md:inline">{vendedorClub.name}</span>
                           </Link>
-                        ) : "—"}
+                        ) : (
+                          "—"
+                        )}
                       </TableCell>
                       <TableCell>
                         {compradorClub ? (
-                          <Link to={`/clubes/${compradorClub.id}`} className="flex items-center gap-2 hover:text-primary">
-                            <div className="h-6 w-6 shrink-0">{compradorClub.crest_url && <img src={compradorClub.crest_url} className="w-full h-full object-contain" alt="" />}</div>
+                          <Link
+                            to={`/clubes/${compradorClub.id}`}
+                            className="flex items-center gap-2 hover:text-primary"
+                          >
+                            <div className="h-6 w-6 shrink-0">
+                              {compradorClub.crest_url && (
+                                <img src={compradorClub.crest_url} className="w-full h-full object-contain" alt="" />
+                              )}
+                            </div>
                             <span className="text-sm hidden md:inline">{compradorClub.name}</span>
                           </Link>
-                        ) : "—"}
+                        ) : (
+                          "—"
+                        )}
                       </TableCell>
                       <TableCell className="text-center">
-                        <Badge variant="outline" className="text-[10px] uppercase border-primary/40 text-primary">{tipoOp}</Badge>
+                        <Badge variant="outline" className="text-[10px] uppercase border-primary/40 text-primary">
+                          {tipoOp}
+                        </Badge>
                       </TableCell>
                       <TableCell className="text-right font-display font-bold text-primary">
-                        {Number(tx.valor) > 0 ? formatCurrency(Number(tx.valor)) : <span className="text-muted-foreground">—</span>}
+                        {Number(tx.valor) > 0 ? (
+                          formatCurrency(Number(tx.valor))
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-right text-xs text-muted-foreground">
                         {new Date(tx.created_at).toLocaleDateString("pt-BR")}
@@ -572,7 +748,11 @@ const Market = () => {
         {/* INBOX */}
         {hasClub && (
           <TabsContent value="inbox" className="space-y-2 mt-4">
-            {inbox.length === 0 && <Card className="p-10 text-center text-muted-foreground bg-gradient-card border-border/50">Nenhuma proposta para responder.</Card>}
+            {inbox.length === 0 && (
+              <Card className="p-10 text-center text-muted-foreground bg-gradient-card border-border/50">
+                Nenhuma proposta para responder.
+              </Card>
+            )}
             {inbox.map((t) => {
               const player = playerById(t.jogador_id);
               const oferecido = t.jogador_trocado_id ? playerById(t.jogador_trocado_id) : null;
@@ -583,15 +763,30 @@ const Market = () => {
                 <Card key={t.id} className="p-4 bg-gradient-card border-border/50">
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-2 flex-wrap">
-                      {isCounter && <Badge className="bg-primary/30 text-primary border-primary/50 text-[10px]"><MessageSquare className="h-2.5 w-2.5 mr-1" />CONTRAPROPOSTA</Badge>}
-                      <Badge variant="outline" className="border-primary/40 text-primary uppercase text-[10px]">{tipoLabel(t.tipo)}</Badge>
-                      <Badge variant="outline" className="text-[10px]">{player?.position}</Badge>
+                      {isCounter && (
+                        <Badge className="bg-primary/30 text-primary border-primary/50 text-[10px]">
+                          <MessageSquare className="h-2.5 w-2.5 mr-1" />
+                          CONTRAPROPOSTA
+                        </Badge>
+                      )}
+                      <Badge variant="outline" className="border-primary/40 text-primary uppercase text-[10px]">
+                        {tipoLabel(t.tipo)}
+                      </Badge>
+                      <Badge variant="outline" className="text-[10px]">
+                        {player?.position}
+                      </Badge>
                       <div className="flex-1 min-w-0">
                         <div className="font-bold truncate">{player?.name || "Jogador"}</div>
                         <div className="text-xs text-muted-foreground">
-                          {isCounter ? "Contraproposta de" : "Oferta de"} <strong>{fromClub?.name || "?"}</strong> · base {formatCurrency(base)}
+                          {isCounter ? "Contraproposta de" : "Oferta de"} <strong>{fromClub?.name || "?"}</strong> ·
+                          base {formatCurrency(base)}
                           {t.tipo === "emprestimo" && t.duracao_emprestimo && <> · {t.duracao_emprestimo} temp.</>}
-                          {t.tipo === "troca" && oferecido && <> · oferece <strong>{oferecido.name}</strong></>}
+                          {t.tipo === "troca" && oferecido && (
+                            <>
+                              {" "}
+                              · oferece <strong>{oferecido.name}</strong>
+                            </>
+                          )}
                           {Number(t.luvas) > 0 && <> · luvas {formatCurrency(Number(t.luvas))}</>}
                         </div>
                       </div>
@@ -601,22 +796,39 @@ const Market = () => {
                         {t.tipo !== "emprestimo" && (
                           <div>
                             <div className="text-[10px] uppercase text-muted-foreground">Valor</div>
-                            <div className="font-display font-bold text-primary text-sm">{formatCurrency(Number(t.valor_ofertado))}</div>
+                            <div className="font-display font-bold text-primary text-sm">
+                              {formatCurrency(Number(t.valor_ofertado))}
+                            </div>
                           </div>
                         )}
                         <div>
                           <div className="text-[10px] uppercase text-muted-foreground">Salário</div>
-                          <div className="font-display font-bold text-sm">{formatCurrency(Number(t.salario_ofertado))}</div>
+                          <div className="font-display font-bold text-sm">
+                            {formatCurrency(Number(t.salario_ofertado))}
+                          </div>
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => respond(t.id, false)}>Recusar</Button>
+                        <Button size="sm" variant="outline" onClick={() => respond(t.id, false)}>
+                          Recusar
+                        </Button>
                         {!isCounter && (
-                          <Button size="sm" variant="outline" onClick={() => openCounter(t)} className="border-primary/40 text-primary hover:bg-primary/10">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openCounter(t)}
+                            className="border-primary/40 text-primary hover:bg-primary/10"
+                          >
                             <MessageSquare className="h-3.5 w-3.5" /> Contra-propor
                           </Button>
                         )}
-                        <Button size="sm" onClick={() => respond(t.id, true)} className="bg-gradient-gold text-primary-foreground hover:opacity-90">Aceitar</Button>
+                        <Button
+                          size="sm"
+                          onClick={() => respond(t.id, true)}
+                          className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+                        >
+                          Aceitar
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -629,7 +841,11 @@ const Market = () => {
         {/* SENT */}
         {hasClub && (
           <TabsContent value="sent" className="space-y-2 mt-4">
-            {sent.length === 0 && <Card className="p-10 text-center text-muted-foreground bg-gradient-card border-border/50">Você ainda não enviou propostas.</Card>}
+            {sent.length === 0 && (
+              <Card className="p-10 text-center text-muted-foreground bg-gradient-card border-border/50">
+                Você ainda não enviou propostas.
+              </Card>
+            )}
             {sent.map((t) => {
               const player = playerById(t.jogador_id);
               const isCounter = !!t.proposta_pai_id;
@@ -637,18 +853,38 @@ const Market = () => {
               return (
                 <Card key={t.id} className="p-4 bg-gradient-card border-border/50">
                   <div className="flex items-center gap-3 flex-wrap">
-                    {isCounter && <Badge className="bg-primary/30 text-primary border-primary/50 text-[10px]"><MessageSquare className="h-2.5 w-2.5 mr-1" />CONTRAPROPOSTA</Badge>}
-                    <Badge variant="outline" className="border-primary/40 text-primary uppercase text-[10px]">{tipoLabel(t.tipo)}</Badge>
-                    <Badge variant="outline" className="text-[10px]">{player?.position}</Badge>
+                    {isCounter && (
+                      <Badge className="bg-primary/30 text-primary border-primary/50 text-[10px]">
+                        <MessageSquare className="h-2.5 w-2.5 mr-1" />
+                        CONTRAPROPOSTA
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="border-primary/40 text-primary uppercase text-[10px]">
+                      {tipoLabel(t.tipo)}
+                    </Badge>
+                    <Badge variant="outline" className="text-[10px]">
+                      {player?.position}
+                    </Badge>
                     <div className="flex-1 min-w-0 basis-full sm:basis-auto">
                       <div className="font-bold truncate">{player?.name || "Jogador"}</div>
-                      <div className="text-xs text-muted-foreground truncate">Para <strong>{otherClub?.name || "?"}</strong></div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        Para <strong>{otherClub?.name || "?"}</strong>
+                      </div>
                     </div>
                     <div className="text-right">
                       <div className="text-[10px] uppercase text-muted-foreground">Valor</div>
-                      <div className="font-display font-bold text-primary text-sm">{formatCurrency(Number(t.valor_ofertado))}</div>
+                      <div className="font-display font-bold text-primary text-sm">
+                        {formatCurrency(Number(t.valor_ofertado))}
+                      </div>
                     </div>
-                    <Badge variant={t.status === "aceita" ? "default" : t.status === "recusada" ? "destructive" : "secondary"} className={t.status === "aceita" ? "bg-primary text-primary-foreground" : ""}>{t.status}</Badge>
+                    <Badge
+                      variant={
+                        t.status === "aceita" ? "default" : t.status === "recusada" ? "destructive" : "secondary"
+                      }
+                      className={t.status === "aceita" ? "bg-primary text-primary-foreground" : ""}
+                    >
+                      {t.status}
+                    </Badge>
                   </div>
                 </Card>
               );
@@ -663,7 +899,11 @@ const Market = () => {
           <DialogHeader>
             <DialogTitle>Negociar jogador</DialogTitle>
             <DialogDescription>
-              {target && <>Por <strong>{target.name}</strong> · valor base {formatCurrency(Number(target.valor_base_calculado))}</>}
+              {target && (
+                <>
+                  Por <strong>{target.name}</strong> · valor base {formatCurrency(Number(target.valor_base_calculado))}
+                </>
+              )}
             </DialogDescription>
           </DialogHeader>
           {target && (
@@ -684,21 +924,29 @@ const Market = () => {
                     max={Math.round(Number(target.valor_base_calculado) * 3.0)}
                   />
                   <div className="text-[11px] text-muted-foreground mt-1">
-                    Faixa Fair Play: {formatCurrency(Number(target.valor_base_calculado) * 0.5)} – {formatCurrency(Number(target.valor_base_calculado) * 3.0)}
+                    Faixa Fair Play: {formatCurrency(Number(target.valor_base_calculado) * 0.5)} –{" "}
+                    {formatCurrency(Number(target.valor_base_calculado) * 3.0)}
                   </div>
                 </div>
                 <div>
                   <Label>Salário ofertado (€/ano)</Label>
                   <NumberInput value={salario} onChange={(v) => setSalario(String(v))} min={0} />
                   <div className="text-[11px] text-muted-foreground mt-1">
-                    Sugerido: {formatCurrency(Math.round(Number(target.valor_base_calculado || 0) * 0.10))}/ano (10% do valor base)
+                    Sugerido: {formatCurrency(Math.round(Number(target.valor_base_calculado || 0) * 0.1))}/ano (10% do
+                    valor base)
                   </div>
                 </div>
                 <div>
                   <Label>Luvas (€)</Label>
-                  <NumberInput value={luvas} onChange={(v) => setLuvas(String(v))} min={0} max={Math.max(0, caixaComprador)} />
+                  <NumberInput
+                    value={luvas}
+                    onChange={(v) => setLuvas(String(v))}
+                    min={0}
+                    max={Math.max(0, caixaComprador)}
+                  />
                   <div className="text-[11px] text-muted-foreground mt-1">
-                    Total à vista: <strong>{formatCurrency(totalDevido)}</strong> · Caixa: {formatCurrency(caixaComprador)}
+                    Total à vista: <strong>{formatCurrency(totalDevido)}</strong> · Caixa:{" "}
+                    {formatCurrency(caixaComprador)}
                   </div>
                 </div>
               </TabsContent>
@@ -706,7 +954,13 @@ const Market = () => {
               <TabsContent value="emprestimo" className="space-y-3 mt-3">
                 <div>
                   <Label>Duração (temporadas)</Label>
-                  <NumberInput value={duracao} onChange={(v) => setDuracao(String(v))} min={1} max={3} thousands={false} />
+                  <NumberInput
+                    value={duracao}
+                    onChange={(v) => setDuracao(String(v))}
+                    min={1}
+                    max={3}
+                    thousands={false}
+                  />
                 </div>
                 <div>
                   <Label>Salário pago pelo empréstimo (€/ano)</Label>
@@ -718,10 +972,14 @@ const Market = () => {
                 <div>
                   <Label>Jogador que você oferece</Label>
                   <Select value={jogadorTrocado} onValueChange={setJogadorTrocado}>
-                    <SelectTrigger><SelectValue placeholder="Selecione do seu elenco..." /></SelectTrigger>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione do seu elenco..." />
+                    </SelectTrigger>
                     <SelectContent>
                       {myPlayers.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>{p.position} · {p.name} ({formatCurrency(Number(p.valor_base_calculado))})</SelectItem>
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.position} · {p.name} ({formatCurrency(Number(p.valor_base_calculado))})
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -754,8 +1012,14 @@ const Market = () => {
             </Tabs>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTarget(null)}>Cancelar</Button>
-            <Button onClick={submit} disabled={!!fpError || !!caixaError || !!trocaError || submitting} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+            <Button variant="outline" onClick={() => setTarget(null)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={submit}
+              disabled={!!fpError || !!caixaError || !!trocaError || submitting}
+              className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+            >
               {submitting ? "Enviando..." : "Enviar proposta"}
             </Button>
           </DialogFooter>
@@ -770,7 +1034,8 @@ const Market = () => {
               <MessageSquare className="h-5 w-5 text-primary" /> Enviar contraproposta
             </DialogTitle>
             <DialogDescription>
-              Edite os valores e devolva. A proposta original será encerrada e a nova vai pra caixa de entrada do comprador.
+              Edite os valores e devolva. A proposta original será encerrada e a nova vai pra caixa de entrada do
+              comprador.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -788,7 +1053,9 @@ const Market = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCounterTarget(null)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setCounterTarget(null)}>
+              Cancelar
+            </Button>
             <Button onClick={sendCounter} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
               Enviar contraproposta
             </Button>
@@ -799,10 +1066,27 @@ const Market = () => {
   );
 };
 
+function FlagImg({ nationality }: { nationality: string }) {
+  const url = getFlagUrl(nationality);
+  if (!url) return null;
+  return (
+    <img
+      src={url}
+      alt={nationality}
+      title={nationality}
+      className="h-4 w-5 object-cover rounded-sm shrink-0"
+      style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.1)" }}
+    />
+  );
+}
+
 interface FiltersProps {
-  q: string; setQ: (s: string) => void;
-  pos: string; setPos: (s: string) => void;
-  onlyForSale: boolean; setOnlyForSale: (v: boolean | ((p: boolean) => boolean)) => void;
+  q: string;
+  setQ: (s: string) => void;
+  pos: string;
+  setPos: (s: string) => void;
+  onlyForSale: boolean;
+  setOnlyForSale: (v: boolean | ((p: boolean) => boolean)) => void;
 }
 const Filters = ({ q, setQ, pos, setPos, onlyForSale, setOnlyForSale }: FiltersProps) => (
   <div className="flex flex-col sm:flex-row gap-3">
@@ -812,10 +1096,16 @@ const Filters = ({ q, setQ, pos, setPos, onlyForSale, setOnlyForSale }: FiltersP
     </div>
     <div className="flex gap-3">
       <Select value={pos} onValueChange={setPos}>
-        <SelectTrigger className="flex-1 sm:w-48"><SelectValue placeholder="Posição" /></SelectTrigger>
+        <SelectTrigger className="flex-1 sm:w-48">
+          <SelectValue placeholder="Posição" />
+        </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Todas posições</SelectItem>
-          {POSITIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+          {POSITIONS.map((p) => (
+            <SelectItem key={p} value={p}>
+              {p}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
       <Button
@@ -823,7 +1113,8 @@ const Filters = ({ q, setQ, pos, setPos, onlyForSale, setOnlyForSale }: FiltersP
         onClick={() => setOnlyForSale((v) => !v)}
         className={onlyForSale ? "bg-gradient-gold text-primary-foreground shrink-0" : "shrink-0"}
       >
-        <Tag className="h-4 w-4" /> <span className="hidden sm:inline">{onlyForSale ? "Mostrando à venda" : "Só à venda"}</span>
+        <Tag className="h-4 w-4" />{" "}
+        <span className="hidden sm:inline">{onlyForSale ? "Mostrando à venda" : "Só à venda"}</span>
       </Button>
     </div>
   </div>
