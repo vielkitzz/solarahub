@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Search, Tag, ArrowRightLeft, Inbox, Send, AlertTriangle, LogIn, MessageSquare } from "lucide-react";
+import { Users, Search, Tag, ArrowRightLeft, Inbox, Send, AlertTriangle, LogIn, MessageSquare, History, Radio, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
 import { StarRating } from "@/components/StarRating";
 import { toast } from "sonner";
