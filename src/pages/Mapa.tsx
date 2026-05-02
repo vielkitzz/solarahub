@@ -78,13 +78,24 @@ const Mapa = () => {
         }
         .custom-club-icon:hover { transform: scale(1.2); }
 
+        /* Filtro para transformar mapa claro em tons de Azul Suave */
         .map-tile-layer {
-          filter: hue-rotate(215deg) brightness(70%) saturate(1.2) contrast(1.1);
+          filter: 
+            brightness(1.05)    /* Mantém o mapa bem claro */
+            contrast(1.05)      /* Melhora a definição das ruas */
+            sepia(1)            /* Unifica as cores para uma base quente */
+            hue-rotate(185deg)  /* Gira o sepia exatamente para o Azul Solara */
+            saturate(0.6);      /* Deixa o azul elegante, não muito "neon" */
         }
-
+        
+        /* O fundo do container deve ser o azul da água desejado */
         .leaflet-container {
-          background: #001226 !important; /* Cor Navy Blue mais profunda */
-          outline: none;
+          background: #e0f2fe !important; /* Um azul bem clarinho para o fundo do mar */
+        }
+        
+        /* Garanta que o ícone do clube não seja afetado pelo filtro do mapa */
+        .leaflet-marker-pane {
+          filter: none !important;
         }
 
         /* Melhoria nos Popups para evitar conflitos de estilo */
