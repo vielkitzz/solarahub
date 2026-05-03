@@ -979,6 +979,8 @@ function SquadTable({
                       tooltip: `Estimativa do seu olheiro (±${est.margem})`,
                     };
                   }
+                }
+                // bloco else com scoutReports removido — adversários não veem potencial
                 } else {
                   const rep = scoutReports[p.id];
                   if (rep) {
