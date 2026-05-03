@@ -605,6 +605,7 @@ const Admin = () => {
             </div>
           </div>
 
+          <SquadGenerator onGenerated={load} />
           <PlayerBulkActions onChanged={load} />
         </TabsContent>
 
