@@ -979,17 +979,8 @@ function SquadTable({
                       tooltip: `Estimativa do seu olheiro (±${est.margem})`,
                     };
                   }
-                  // bloco else com scoutReports removido — adversários não veem potencial
-                } else {
-                  const rep = scoutReports[p.id];
-                  if (rep) {
-                    potDisplay = {
-                      pmaxStars: calcStars(rep.potential_max_revelado, club.rate),
-                      label: `~${rep.potential_min_revelado}-${rep.potential_max_revelado}`,
-                      tooltip: `Olheiro analisou (±${rep.margem_aplicada})`,
-                    };
-                  }
                 }
+                // adversários não veem potencial — devem usar a aba Olheiros
                 const expirando =
                   p.contrato_ate !== null && p.contrato_ate !== undefined && p.contrato_ate - temporadaAtual <= 1;
                 const ps = getPositionStyle(p.position);
@@ -1047,7 +1038,6 @@ function SquadTable({
                       {potDisplay ? (
                         <div className="flex items-center gap-1.5" title={potDisplay.tooltip}>
                           <StarRating value={potDisplay.pmaxStars} />
-                          <span className="text-[9px] text-muted-foreground tabular-nums">{potDisplay.label}</span>
                         </div>
                       ) : (
                         <div
