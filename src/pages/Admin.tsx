@@ -35,6 +35,7 @@ import { EconomyParams } from "@/components/admin/EconomyParams";
 import { BulkBudgetAdjuster } from "@/components/admin/BulkBudgetAdjuster";
 import { PlayerBulkActions } from "@/components/admin/PlayerBulkActions";
 import { CampanhasManager } from "@/components/admin/CampanhasManager";
+import { SquadGenerator } from "@/components/admin/SquadGenerator";
 import { parseSquadJson, ImportedPlayer } from "@/lib/squad-import";
 import { useSeason } from "@/contexts/SeasonContext";
 
@@ -604,6 +605,7 @@ const Admin = () => {
             </div>
           </div>
 
+          <SquadGenerator onGenerated={load} />
           <PlayerBulkActions onChanged={load} />
         </TabsContent>
 
