@@ -750,6 +750,10 @@ export type Database = {
       }
       current_discord_id: { Args: never; Returns: string }
       envelhecer_todos_jogadores: { Args: never; Returns: number }
+      gerar_elenco_para_clube: {
+        Args: { _club_id: string; _quantidade: number }
+        Returns: number
+      }
       gerar_potenciais_em_massa: { Args: never; Returns: number }
       get_owner_display_info: {
         Args: { _user_id: string }
@@ -867,6 +871,10 @@ export type Database = {
       sugerir_salario_jogador: {
         Args: { _jogador_id: string }
         Returns: number
+      }
+      upgrade_academia: {
+        Args: { _club_id: string; _novo_nivel: number }
+        Returns: undefined
       }
       upgrade_estadio: {
         Args: {
