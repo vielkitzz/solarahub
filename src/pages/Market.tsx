@@ -919,12 +919,7 @@ const Market = () => {
               <TabsContent value="compra" className="space-y-3 mt-3">
                 <div>
                   <Label>Valor da transferência (€)</Label>
-                  <NumberInput
-                    value={valor}
-                    onChange={(v) => setValor(String(v))}
-                    min={Math.round(Number(target.valor_base_calculado) * 0.5)}
-                    max={Math.round(Number(target.valor_base_calculado) * 3.0)}
-                  />
+                  <NumberInput value={valor} onChange={(v) => setValor(String(v))} />
                   <div className="text-[11px] text-muted-foreground mt-1">
                     Faixa Fair Play: {formatCurrency(Number(target.valor_base_calculado) * 0.5)} –{" "}
                     {formatCurrency(Number(target.valor_base_calculado) * 3.0)}
