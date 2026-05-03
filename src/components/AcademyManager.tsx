@@ -550,10 +550,10 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
     }
     if (!confirm(`Subir a base para nível ${proximoNivel} por ${formatCurrency(custoUpgrade)}?`)) return;
     setUpgradingBase(true);
-    const { error } = await supabase
-      .from("clubs")
-      .update({ nivel_base: proximoNivel, budget: Number(club.budget) - custoUpgrade })
-      .eq("id", club.id);
+    const { error } = await supabase.rpc("upgrade_academia" as any, {
+      _club_id: club.id,
+      _novo_nivel: proximoNivel,
+    });
     setUpgradingBase(false);
     if (error) return toast.error(error.message);
     toast.success(`Base evoluiu para nível ${proximoNivel}!`);
