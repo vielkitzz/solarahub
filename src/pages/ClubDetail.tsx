@@ -51,6 +51,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getFlagUrl } from "@/lib/countries";
+import { PlayerProfileDialog } from "@/components/PlayerProfileDialog";
+import { SkillDisplay } from "@/components/SkillDisplay";
 
 const ClubDetail = () => {
   const { id } = useParams<{ id: string }>();
