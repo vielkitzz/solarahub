@@ -177,13 +177,15 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                       </span>
                       <div className="flex items-center gap-2">
                         {potDisplay ? (
-                          <SkillDisplay
-                            value={potDisplay.value}
-                            valueMin={potDisplay.min}
-                            rate={player.clubs?.rate}
-                            kind="potential"
-                            numericLabel={potDisplay.label}
-                          />
+                          <div title={potDisplay.tooltip}>
+                            <SkillDisplay
+                              value={potDisplay.value}
+                              valueMin={potDisplay.min} // undefined para dono → usa StarRating normal
+                              rate={player.clubs?.rate}
+                              kind="potential"
+                              numericLabel={potDisplay.label}
+                            />
+                          </div>
                         ) : (
                           <div
                             className="flex items-center gap-0.5 text-muted-foreground/20"
