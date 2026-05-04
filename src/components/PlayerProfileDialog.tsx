@@ -32,7 +32,6 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
   const [renewOpen, setRenewOpen] = useState(false);
   const [multaOpen, setMultaOpen] = useState(false);
 
-  // CORREÇÃO: Usando os nomes corretos do hook exportado
   const { has, toggle } = useInterestList();
 
   useEffect(() => {
@@ -47,12 +46,15 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
   const fetchData = async () => {
     setLoading(true);
     try {
-      // 1. Busca dados do jogador
+      // 1. Busca dados do jogador — inclui rate explicitamente no join
       const { data: p, error } = await supabase
         .from("players")
         .select(
           `
-          *,
+          id, name, position, age, nationality,
+          habilidade, potential,
+          market_value, salary, contract_end, release_clause,
+          transfer_listed, club_id,
           clubs (
             id, name, crest_url, rate, owner_id
           )
@@ -70,11 +72,11 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
         setMyClub(c);
 
         // 3. Busca relatório de olheiro se não for o dono
-        if (c && c.id !== p.club_id) {
+        if (c && p && c.id !== p.club_id) {
           const { data: r } = await supabase
             .from("scout_reports")
             .select("*")
-            .eq("scouter_club_id", c.id) // CORREÇÃO: scouter_club_id ao invés de club_id
+            .eq("scouter_club_id", c.id)
             .eq("target_player_id", playerId)
             .maybeSingle();
           setReport(r);
@@ -87,24 +89,27 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
     }
   };
 
-  const isOwn = player?.club_id && myClub?.id === player.club_id;
-  const isAdmin = false; // Implementar lógica de admin se necessário
+  const isOwn = !!(player?.club_id && myClub?.id === player.club_id);
+  const isAdmin = false;
+
+  // rate do clube — usado em ambas as colunas de estrelas
+  const clubRate = player?.clubs?.rate ?? null;
 
   // Lógica de exibição do Potencial
   const potDisplay = useMemo(() => {
     if (!player) return null;
 
-    // Se for o dono, vê o real
+    // Dono vê o potencial real exato (mesma escala da habilidade → passa clubRate)
     if (isOwn) {
       return {
         value: player.potential,
-        min: player.potential,
+        min: undefined, // sem range → StarRating normal
         label: String(player.potential),
         tooltip: "Potencial real (visto apenas pelo dono)",
       };
     }
 
-    // Se tiver relatório de olheiro
+    // Outros clubes só veem se tiverem relatório de olheiro
     if (report) {
       return {
         value: report.potential_max_revelado,
@@ -114,7 +119,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
       };
     }
 
-    // Caso contrário, oculto
+    // Sem relatório e não é dono → oculto
     return null;
   }, [player, isOwn, report]);
 
@@ -167,7 +172,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                         Habilidade Atual
                       </span>
                       <div className="flex items-center gap-2">
-                        <SkillDisplay value={player.habilidade} rate={player.clubs?.rate} kind="skill" />
+                        <SkillDisplay value={player.habilidade} rate={clubRate} kind="skill" />
                       </div>
                     </div>
 
@@ -180,8 +185,8 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                           <div title={potDisplay.tooltip}>
                             <SkillDisplay
                               value={potDisplay.value}
-                              valueMin={potDisplay.min} // undefined para dono → usa StarRating normal
-                              rate={player.clubs?.rate}
+                              valueMin={potDisplay.min}
+                              rate={clubRate}
                               kind="potential"
                               numericLabel={potDisplay.label}
                             />
@@ -218,7 +223,9 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Salário</span>
-                      <span className="font-medium">{formatCurrency(player.salary)}/mês</span>
+                      <span className="font-medium">
+                        {player.salary != null ? `${formatCurrency(player.salary)}/mês` : "—"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -232,13 +239,23 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Fim do Contrato</span>
-                      <span className={player.contract_end < 3 ? "text-destructive font-bold" : ""}>
-                        {player.contract_end} {player.contract_end === 1 ? "temporada" : "temporadas"}
+                      <span
+                        className={
+                          player.contract_end != null && player.contract_end < 3 ? "text-destructive font-bold" : ""
+                        }
+                      >
+                        {player.contract_end != null
+                          ? `${player.contract_end} ${player.contract_end === 1 ? "temporada" : "temporadas"}`
+                          : "—"}
                       </span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Multa Rescisória</span>
-                      <span className="font-bold text-amber-500">{formatCurrency(player.release_clause)}</span>
+                      <span className="font-bold text-amber-500">
+                        {player.release_clause != null && player.release_clause > 0
+                          ? formatCurrency(player.release_clause)
+                          : "Sem multa"}
+                      </span>
                     </div>
                   </div>
 
@@ -269,16 +286,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                 </Button>
 
                 <div className="flex gap-2">
-                  {!isOwn && (
-                    <Button
-                      size="sm"
-                      className="bg-primary text-primary-foreground"
-                      onClick={() => (onNegotiate ? onNegotiate(player) : navigate("/mercado"))}
-                    >
-                      <ArrowRightLeft className="h-3.5 w-3.5 mr-2" /> Fazer proposta
-                    </Button>
-                  )}
-                  {isOwn && (
+                  {isOwn ? (
                     <>
                       <Button size="sm" variant="outline" onClick={() => setRenewOpen(true)}>
                         <FileSignature className="h-3.5 w-3.5 mr-2 text-primary" /> Renovar
@@ -286,6 +294,28 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                       <Button size="sm" variant="outline" onClick={() => setMultaOpen(true)}>
                         <Gavel className="h-3.5 w-3.5 mr-2 text-amber-400" /> Multa
                       </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        size="sm"
+                        className="bg-primary text-primary-foreground"
+                        onClick={() => (onNegotiate ? onNegotiate(player) : navigate("/mercado"))}
+                      >
+                        <ArrowRightLeft className="h-3.5 w-3.5 mr-2" /> Fazer proposta
+                      </Button>
+
+                      {/* Pagar multa rescisória — visível para clubes rivais */}
+                      {player.release_clause != null && player.release_clause > 0 && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+                          onClick={() => setMultaOpen(true)}
+                        >
+                          <Gavel className="h-3.5 w-3.5 mr-2" /> Pagar Multa
+                        </Button>
+                      )}
                     </>
                   )}
                 </div>
