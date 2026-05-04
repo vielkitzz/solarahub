@@ -245,10 +245,10 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
               <TableRow>
                 <TableHead>Jogador</TableHead>
                 <TableHead className="hidden sm:table-cell w-16">Nac.</TableHead>
-                <TableHead>Clube / Origem</TableHead>
+                <TableHead>Clube</TableHead>
                 <TableHead className="text-center w-16">Pos</TableHead>
                 <TableHead className="text-center w-16">Idade</TableHead>
-                <TableHead className="text-center w-32">Hab.</TableHead>
+                <TableHead className="text-center w-32">Habilidade</TableHead>
                 <TableHead className="w-44">Potencial</TableHead>
                 <TableHead className="text-right w-24"></TableHead>
               </TableRow>
@@ -291,12 +291,6 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
                               </div>
                               <span className="text-sm hidden md:inline">{club.name}</span>
                             </Link>
-                            <Badge
-                              variant={p.source === "Base" ? "outline" : "secondary"}
-                              className="text-[9px] h-4 leading-none py-0"
-                            >
-                              {p.source}
-                            </Badge>
                           </div>
                         ) : (
                           <span className="text-xs text-muted-foreground">—</span>
