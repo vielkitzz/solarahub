@@ -303,7 +303,7 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
                         </Badge>
                       </TableCell>
 
-                      <TableCell className="text-center text-xs tabular-nums">{p.age}a</TableCell>
+                      <TableCell className="text-center text-xs tabular-nums">{p.age}</TableCell>
 
                       <TableCell className="text-center">
                         <SkillDisplay value={p.skill} rate={undefined} kind="skill" />
