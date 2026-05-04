@@ -29,6 +29,13 @@ const StarRatingRange = ({
         const isFullYellow = v <= Math.floor(starsMin);
         const isFullWhite = !isFullYellow && !isHalfMin && !isHalfMax && v <= Math.floor(starsMax);
 
+        // cor do stroke igual ao fill de cada estado
+        const strokeColor = isFullYellow
+          ? "var(--color-primary, #f59e0b)"
+          : isFullWhite
+            ? "rgba(255,255,255,0.8)"
+            : "rgba(255,255,255,0.15)";
+
         return (
           <svg key={i} viewBox="0 0 24 24" style={{ width: size, height: size }} fill="none">
             <defs>
@@ -40,28 +47,50 @@ const StarRatingRange = ({
               </clipPath>
             </defs>
 
-            {/* Fundo apagado sempre */}
-            <path d={path} fill="currentColor" className="text-primary/20" />
+            {/* Fundo apagado com stroke */}
+            <path
+              d={path}
+              fill="currentColor"
+              stroke="rgba(255,255,255,0.15)"
+              strokeWidth="1"
+              className="text-primary/20"
+            />
 
-            {/* Amarela cheia */}
-            {isFullYellow && <path d={path} fill="currentColor" className="text-primary" />}
+            {isFullYellow && (
+              <path
+                d={path}
+                fill="currentColor"
+                stroke="rgba(255,255,255,0.15)"
+                strokeWidth="1"
+                className="text-primary"
+              />
+            )}
 
-            {/* Branca cheia */}
-            {isFullWhite && <path d={path} fill="currentColor" className="text-foreground/80" />}
+            {isFullWhite && (
+              <path
+                d={path}
+                fill="currentColor"
+                stroke="rgba(255,255,255,0.15)"
+                strokeWidth="1"
+                className="text-foreground/80"
+              />
+            )}
 
-            {/* Meia amarela (esquerda amarela, direita branca se dentro do max) */}
             {isHalfMin && (
               <>
                 <path d={path} clipPath={`url(#left-${i})`} fill="currentColor" className="text-primary" />
                 {v <= Math.ceil(starsMax) && (
                   <path d={path} clipPath={`url(#right-${i})`} fill="currentColor" className="text-foreground/80" />
                 )}
+                <path d={path} fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
               </>
             )}
 
-            {/* Meia branca (esquerda branca, direita apagada) */}
             {isHalfMax && (
-              <path d={path} clipPath={`url(#left-${i})`} fill="currentColor" className="text-foreground/80" />
+              <>
+                <path d={path} clipPath={`url(#left-${i})`} fill="currentColor" className="text-foreground/80" />
+                <path d={path} fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+              </>
             )}
           </svg>
         );
