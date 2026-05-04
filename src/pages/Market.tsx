@@ -908,6 +908,69 @@ const Market = () => {
             })}
           </TabsContent>
         )}
+
+        {/* INTERESSES */}
+        {user && (
+          <TabsContent value="interesses" className="space-y-2 mt-4">
+            <Card className="p-3 bg-gradient-card border-border/50 text-xs text-muted-foreground flex items-center gap-2">
+              <Heart className="h-4 w-4 text-primary" />
+              Sua lista pessoal de jogadores observados. Clique em qualquer um para abrir o perfil.
+            </Card>
+            {interestItems.length === 0 && (
+              <Card className="p-10 text-center text-muted-foreground bg-gradient-card border-border/50">
+                Sua lista está vazia. Clique no coração no perfil de um jogador para adicioná-lo.
+              </Card>
+            )}
+            {interestItems.map((entry) => {
+              const p = players.find((pl) => pl.id === entry.player_id);
+              if (!p) return null;
+              const c = p.club_id ? clubs[p.club_id] : null;
+              return (
+                <Card key={entry.id} className="p-3 bg-gradient-card border-border/50">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <Badge variant="outline" className="border-primary/40 text-primary">{p.position}</Badge>
+                    <button
+                      onClick={() => setProfilePlayerId(p.id)}
+                      className="font-bold hover:text-primary transition-colors text-left flex items-center gap-2"
+                    >
+                      {p.name}
+                      {p.nationality && <FlagImg nationality={p.nationality} />}
+                    </button>
+                    {p.a_venda && (
+                      <Badge className="bg-primary/20 text-primary border-primary/40 text-[10px]">
+                        <Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA
+                      </Badge>
+                    )}
+                    {c && (
+                      <Link to={`/clubes/${c.id}`} className="flex items-center gap-1.5 hover:text-primary text-xs">
+                        <div className="h-6 w-6">
+                          {c.crest_url && <img src={c.crest_url} className="w-full h-full object-contain" alt="" />}
+                        </div>
+                        <span className="hidden md:inline">{c.name}</span>
+                      </Link>
+                    )}
+                    <div className="ml-auto text-right">
+                      <div className="text-[10px] uppercase text-muted-foreground">Valor</div>
+                      <div className="font-display font-bold text-primary text-sm">
+                        {formatCurrency(Number(p.valor_base_calculado))}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      {hasClub && p.club_id && p.club_id !== activeClubId && (
+                        <Button size="sm" onClick={() => openProposal(p)} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+                          <ArrowRightLeft className="h-3.5 w-3.5" /> Negociar
+                        </Button>
+                      )}
+                      <Button size="sm" variant="outline" onClick={() => toggleInterest(p.id)}>
+                        <Heart className="h-3.5 w-3.5 fill-current text-primary" />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* PROPOSAL MODAL */}
