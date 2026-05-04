@@ -1,6 +1,6 @@
 import { StarRating } from "@/components/StarRating";
 import { calcStars } from "@/lib/format";
-import { useUserPreferences } from "@/hooks/useUserPreferences";
+import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 
 interface Props {
   /** Habilidade real (45-99) */
@@ -18,16 +18,13 @@ interface Props {
 export const SkillDisplay = ({ value, rate, mode, kind = "skill", numericLabel }: Props) => {
   const { prefs } = useUserPreferences();
   const useNumber =
-    mode === "numeric" || (mode === undefined && (kind === "skill" ? prefs.show_numeric_skill : prefs.show_numeric_potential));
+    mode === "numeric" ||
+    (mode === undefined && (kind === "skill" ? prefs.show_numeric_skill : prefs.show_numeric_potential));
 
   if (value == null && !numericLabel) return <span className="text-muted-foreground">—</span>;
 
   if (useNumber) {
-    return (
-      <span className="font-display font-bold tabular-nums text-sm">
-        {numericLabel ?? value}
-      </span>
-    );
+    return <span className="font-display font-bold tabular-nums text-sm">{numericLabel ?? value}</span>;
   }
   return <StarRating value={calcStars(value ?? 0, rate)} />;
 };
