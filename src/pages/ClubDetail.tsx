@@ -1040,13 +1040,8 @@ function SquadTable({
                       {p.age ?? "—"}
                     </TableCell>
                     <TableCell className="py-2">
-                      <SkillDisplay
-                        value={potDisplay.value} // pmax
-                        valueMin={potDisplay.min} // pmin ← novo
-                        rate={club.rate}
-                        kind="potential"
-                        numericLabel={potDisplay.label}
-                      />
+                      <SkillDisplay value={p.habilidade} rate={club.rate} kind="skill" />
+                    </TableCell>
                     </TableCell>
                     <TableCell className="py-2">
                       {potDisplay ? (
