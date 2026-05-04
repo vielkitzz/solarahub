@@ -519,7 +519,7 @@ const Market = () => {
                         </TableCell>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span>{p.name}</span>
+                            <button onClick={() => setProfilePlayerId(p.id)} className="hover:text-primary transition-colors">{p.name}</button>
                             {p.a_venda && (
                               <Badge className="bg-primary/20 text-primary border-primary/40 text-[10px] px-1.5 py-0">
                                 <Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA
