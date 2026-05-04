@@ -76,8 +76,8 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
 
       // Junta os resultados identificando a origem de cada um
       const combined = [
-        ...(pRes.data || []).map((p) => ({ ...p, source: "Profissional" })),
-        ...(aRes.data || []).map((p) => ({ ...p, source: "Base" })),
+        ...(pRes.data || []).map((p: any) => ({ ...p, source: "Profissional" })),
+        ...(aRes.data || []).map((p: any) => ({ ...p, source: "Base" })),
       ];
 
       // Ordena por habilidade decrescente
