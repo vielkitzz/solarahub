@@ -232,10 +232,10 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
             <TableHeader className="bg-secondary/40">
               <TableRow>
                 <TableHead>Jogador</TableHead>
-                <TableHead className="text-center">Clube / Origem</TableHead>
-                <TableHead className="text-center w-16">Pos</TableHead>
+                <TableHead className="text-center">Clube</TableHead>
+                <TableHead className="text-center w-16">Posição</TableHead>
                 <TableHead className="text-center w-16">Idade</TableHead>
-                <TableHead className="text-center w-32">Hab.</TableHead>
+                <TableHead className="text-center w-32">Habilidade</TableHead>
                 <TableHead className="text-right w-44">Potencial</TableHead>
               </TableRow>
             </TableHeader>
