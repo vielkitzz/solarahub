@@ -2,10 +2,9 @@ import { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { formatCurrency } from "@/lib/format";
 import { SkillDisplay } from "@/components/SkillDisplay";
@@ -46,15 +45,15 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
   const fetchData = async () => {
     setLoading(true);
     try {
-      // 1. Busca dados do jogador — inclui rate explicitamente no join
       const { data: p, error } = await supabase
         .from("players")
         .select(
           `
           id, name, position, age, nationality,
-          habilidade, potential,
-          market_value, salary, contract_end, release_clause,
-          transfer_listed, club_id,
+          habilidade, habilidade_anterior,
+          potential_min, potential_max,
+          market_value, salario_atual,
+          contrato_ate, a_venda, club_id,
           clubs (
             id, name, crest_url, rate, owner_id
           )
@@ -66,12 +65,10 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
       if (error) throw error;
       setPlayer(p);
 
-      // 2. Busca clube do usuário logado
       if (user) {
         const { data: c } = await supabase.from("clubs").select("*").eq("owner_id", user.id).maybeSingle();
         setMyClub(c);
 
-        // 3. Busca relatório de olheiro se não for o dono
         if (c && p && c.id !== p.club_id) {
           const { data: r } = await supabase
             .from("scout_reports")
@@ -90,26 +87,26 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
   };
 
   const isOwn = !!(player?.club_id && myClub?.id === player.club_id);
-  const isAdmin = false;
-
-  // rate do clube — usado em ambas as colunas de estrelas
   const clubRate = player?.clubs?.rate ?? null;
 
-  // Lógica de exibição do Potencial
+  // Potencial: dono vê real (min e max), outros só com relatório de olheiro
   const potDisplay = useMemo(() => {
     if (!player) return null;
 
-    // Dono vê o potencial real exato (mesma escala da habilidade → passa clubRate)
     if (isOwn) {
+      // Dono vê o range real do jogador
+      const min = player.potential_min;
+      const max = player.potential_max;
+      if (min == null || max == null) return null;
+      const sameValue = min === max;
       return {
-        value: player.potential,
-        min: undefined, // sem range → StarRating normal
-        label: String(player.potential),
+        value: max,
+        min: sameValue ? undefined : min,
+        label: sameValue ? String(max) : `${min}-${max}`,
         tooltip: "Potencial real (visto apenas pelo dono)",
       };
     }
 
-    // Outros clubes só veem se tiverem relatório de olheiro
     if (report) {
       return {
         value: report.potential_max_revelado,
@@ -119,9 +116,18 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
       };
     }
 
-    // Sem relatório e não é dono → oculto
     return null;
   }, [player, isOwn, report]);
+
+  // Contrato: contrato_ate é a temporada de término (número absoluto)
+  const contratoLabel = useMemo(() => {
+    if (player?.contrato_ate == null) return "—";
+    return `até temp. ${player.contrato_ate}`;
+  }, [player]);
+
+  // Contrato expirando: considera "curto" se faltar ≤ 2 temporadas
+  // Como não temos a temporada atual aqui, apenas exibimos o valor
+  const contratoUrgente = false; // ajuste se tiver acesso à temporada atual
 
   return (
     <>
@@ -135,7 +141,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
             <div className="p-8 text-center text-muted-foreground">Jogador não encontrado.</div>
           ) : (
             <>
-              {/* Header com Escudo e Nome */}
+              {/* Header */}
               <div className="relative h-32 bg-gradient-to-br from-secondary to-background p-6 flex items-end gap-4">
                 <div className="h-20 w-20 bg-card rounded-xl border border-border/50 flex items-center justify-center p-2 shadow-xl">
                   {player.clubs?.crest_url ? (
@@ -164,44 +170,40 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
               </div>
 
               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Coluna Esquerda: Atributos principais */}
+                {/* Coluna Esquerda */}
                 <div className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
                         Habilidade Atual
                       </span>
-                      <div className="flex items-center gap-2">
-                        <SkillDisplay value={player.habilidade} rate={clubRate} kind="skill" />
-                      </div>
+                      <SkillDisplay value={player.habilidade} rate={clubRate} kind="skill" />
                     </div>
 
                     <div className="space-y-1">
                       <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
                         Potencial
                       </span>
-                      <div className="flex items-center gap-2">
-                        {potDisplay ? (
-                          <div title={potDisplay.tooltip}>
-                            <SkillDisplay
-                              value={potDisplay.value}
-                              valueMin={potDisplay.min}
-                              rate={clubRate}
-                              kind="potential"
-                              numericLabel={potDisplay.label}
-                            />
-                          </div>
-                        ) : (
-                          <div
-                            className="flex items-center gap-0.5 text-muted-foreground/20"
-                            title="Use a aba Olheiros para descobrir"
-                          >
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <Star key={i} style={{ width: 16, height: 16 }} />
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      {potDisplay ? (
+                        <div title={potDisplay.tooltip}>
+                          <SkillDisplay
+                            value={potDisplay.value}
+                            valueMin={potDisplay.min}
+                            rate={clubRate}
+                            kind="potential"
+                            numericLabel={potDisplay.label}
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          className="flex items-center gap-0.5 text-muted-foreground/20"
+                          title="Use a aba Olheiros para descobrir"
+                        >
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star key={i} style={{ width: 16, height: 16 }} />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -224,13 +226,13 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Salário</span>
                       <span className="font-medium">
-                        {player.salary != null ? `${formatCurrency(player.salary)}/mês` : "—"}
+                        {player.salario_atual != null ? `${formatCurrency(player.salario_atual)}/mês` : "—"}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Coluna Direita: Detalhes do Contrato */}
+                {/* Coluna Direita: Contrato */}
                 <div className="bg-secondary/20 rounded-xl p-4 border border-border/50 space-y-4">
                   <h4 className="text-xs font-bold uppercase tracking-tighter text-muted-foreground flex items-center gap-2">
                     <FileSignature className="h-3 w-3" /> Situação Contratual
@@ -239,28 +241,13 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Fim do Contrato</span>
-                      <span
-                        className={
-                          player.contract_end != null && player.contract_end < 3 ? "text-destructive font-bold" : ""
-                        }
-                      >
-                        {player.contract_end != null
-                          ? `${player.contract_end} ${player.contract_end === 1 ? "temporada" : "temporadas"}`
-                          : "—"}
-                      </span>
+                      <span className={contratoUrgente ? "text-destructive font-bold" : ""}>{contratoLabel}</span>
                     </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Multa Rescisória</span>
-                      <span className="font-bold text-amber-500">
-                        {player.release_clause != null && player.release_clause > 0
-                          ? formatCurrency(player.release_clause)
-                          : "Sem multa"}
-                      </span>
-                    </div>
+                    {/* Multa rescisória não existe na tabela players — omitida */}
                   </div>
 
                   <div className="pt-2">
-                    {player.transfer_listed ? (
+                    {player.a_venda ? (
                       <Badge className="w-full justify-center bg-destructive/10 text-destructive border-destructive/20 py-1">
                         Listado para Transferência
                       </Badge>
@@ -273,7 +260,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                 </div>
               </div>
 
-              {/* Footer com Ações */}
+              {/* Footer */}
               <div className="p-4 bg-secondary/10 border-t border-border/50 flex flex-wrap gap-2 justify-between items-center">
                 <Button
                   variant="ghost"
@@ -304,18 +291,14 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                       >
                         <ArrowRightLeft className="h-3.5 w-3.5 mr-2" /> Fazer proposta
                       </Button>
-
-                      {/* Pagar multa rescisória — visível para clubes rivais */}
-                      {player.release_clause != null && player.release_clause > 0 && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
-                          onClick={() => setMultaOpen(true)}
-                        >
-                          <Gavel className="h-3.5 w-3.5 mr-2" /> Pagar Multa
-                        </Button>
-                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+                        onClick={() => setMultaOpen(true)}
+                      >
+                        <Gavel className="h-3.5 w-3.5 mr-2" /> Pagar Multa
+                      </Button>
                     </>
                   )}
                 </div>
@@ -338,7 +321,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
             open={multaOpen}
             onOpenChange={setMultaOpen}
             myClubId={myClub?.id || null}
-            isAdmin={isAdmin}
+            isAdmin={false}
             onDone={() => fetchData()}
           />
         </>
