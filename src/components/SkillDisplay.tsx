@@ -23,11 +23,16 @@ const StarRatingRange = ({
     <div className="inline-flex items-center gap-0.5" aria-label={`Potencial de ${starsMin} a ${starsMax} estrelas`}>
       {Array.from({ length: 5 }).map((_, i) => {
         const v = i + 1;
+
+        // Amarela cheia (dentro do mínimo)
         if (v <= Math.floor(starsMin))
           return <Star key={i} className="text-primary fill-primary" style={{ width: size, height: size }} />;
+
+        // Meia amarela (borda do mínimo)
         if (v === Math.ceil(starsMin) && starsMin % 1 >= 0.5)
           return (
             <span key={i} className="relative inline-block" style={{ width: size, height: size }}>
+              {/* fundo: branca se dentro do máximo, apagada se fora */}
               <Star
                 className={
                   v <= Math.ceil(starsMax)
@@ -36,6 +41,7 @@ const StarRatingRange = ({
                 }
                 style={{ width: size, height: size }}
               />
+              {/* metade esquerda amarela */}
               <svg
                 viewBox="0 0 24 24"
                 className="absolute inset-0 text-primary fill-primary"
@@ -53,10 +59,39 @@ const StarRatingRange = ({
               </svg>
             </span>
           );
-        if (v <= Math.ceil(starsMax))
+
+        // Meia branca (borda do máximo)
+        if (v === Math.ceil(starsMax) && starsMax % 1 >= 0.5)
+          return (
+            <span key={i} className="relative inline-block" style={{ width: size, height: size }}>
+              {/* fundo apagado */}
+              <Star className="absolute inset-0 text-primary/20" style={{ width: size, height: size }} />
+              {/* metade esquerda branca */}
+              <svg
+                viewBox="0 0 24 24"
+                className="absolute inset-0 text-foreground/80 fill-foreground/80"
+                style={{ width: size, height: size }}
+              >
+                <defs>
+                  <clipPath id={`wp-${i}`}>
+                    <rect x="0" y="0" width="12" height="24" />
+                  </clipPath>
+                </defs>
+                <path
+                  clipPath={`url(#wp-${i})`}
+                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                />
+              </svg>
+            </span>
+          );
+
+        // Branca cheia (entre mínimo e máximo)
+        if (v <= Math.floor(starsMax))
           return (
             <Star key={i} className="text-foreground/80 fill-foreground/80" style={{ width: size, height: size }} />
           );
+
+        // Apagada (fora do máximo)
         return <Star key={i} className="text-primary/20" style={{ width: size, height: size }} />;
       })}
     </div>
