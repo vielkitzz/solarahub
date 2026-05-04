@@ -1042,7 +1042,6 @@ function SquadTable({
                     <TableCell className="py-2">
                       <SkillDisplay value={p.habilidade} rate={club.rate} kind="skill" />
                     </TableCell>
-                    </TableCell>
                     <TableCell className="py-2">
                       {potDisplay ? (
                         <div className="flex items-center gap-1.5" title={potDisplay.tooltip}>
