@@ -12,7 +12,6 @@ import { SkillDisplay } from "@/components/SkillDisplay";
 import { getFlagUrl } from "@/lib/countries";
 import { Heart, ArrowRightLeft, FileSignature, Gavel, Shield, ExternalLink, Star, Loader2 } from "lucide-react";
 import { useInterestList } from "@/hooks/useInterestList";
-import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 import { ContractRenewalDialog } from "@/components/ContractRenewalDialog";
 import { MultaRescisoriaDialog } from "@/components/MultaRescisoriaDialog";
 
@@ -33,7 +32,8 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
   const [renewOpen, setRenewOpen] = useState(false);
   const [multaOpen, setMultaOpen] = useState(false);
 
-  const { isInInterestList, toggleInterest } = useInterestList();
+  // CORREÇÃO: Usando os nomes corretos do hook exportado
+  const { has, toggle } = useInterestList();
 
   useEffect(() => {
     if (open && playerId) {
@@ -74,7 +74,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
           const { data: r } = await supabase
             .from("scout_reports")
             .select("*")
-            .eq("club_id", c.id)
+            .eq("scouter_club_id", c.id) // CORREÇÃO: scouter_club_id ao invés de club_id
             .eq("target_player_id", playerId)
             .maybeSingle();
           setReport(r);
@@ -259,11 +259,11 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={isInInterestList(player.id) ? "text-primary" : "text-muted-foreground"}
-                  onClick={() => toggleInterest(player.id)}
+                  className={has(player.id) ? "text-primary" : "text-muted-foreground"}
+                  onClick={() => toggle(player.id)}
                 >
-                  <Heart className={`h-4 w-4 mr-2 ${isInInterestList(player.id) ? "fill-primary" : ""}`} />
-                  {isInInterestList(player.id) ? "Na lista" : "Interesse"}
+                  <Heart className={`h-4 w-4 mr-2 ${has(player.id) ? "fill-primary" : ""}`} />
+                  {has(player.id) ? "Na lista" : "Interesse"}
                 </Button>
 
                 <div className="flex gap-2">
