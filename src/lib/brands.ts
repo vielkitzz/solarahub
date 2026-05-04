@@ -95,7 +95,7 @@ export const SPONSORS: Brand[] = [
   { name: "Yamaha", domain: "yamaha-motor.eu", setor: "Automóveis", prestige: 1.3 },
   { name: "Vodafone", domain: "vodafone-us.com", setor: "Telecomunicações", prestige: 1.55 },
   { name: "Deutsche Telekom", domain: "telekom.de", setor: "Telecomunicações", prestige: 1.5 },
-  { name: "Claro", domain: "claro.com.br", setor: "Telecomunicações", prestige: 1.3 },
+  { name: "Claro", domain: "claro.com.br", setor: "Telecomunicações", prestige: 0.9 },
   { name: "Movistar", domain: "movistar.com.ar", setor: "Telecomunicações", prestige: 1.25 },
   { name: "Estrella Galicia", domain: "estrellagalicia00.es", setor: "Alimentação", prestige: 1.25 },
   { name: "DirecTV", domain: "directv.com", setor: "Telecomunicações", prestige: 1.2 },
