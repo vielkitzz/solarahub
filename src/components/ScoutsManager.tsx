@@ -54,14 +54,15 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
 
     try {
       // 1. Query para os jogadores profissionais
-      let pQuery = supabase.from("players").select("id, name, position, age, skill, nationality, club_id");
+      // ATENÇÃO: Troque 'overall' pelo nome correto da coluna de habilidade na sua tabela 'players'
+      let pQuery = supabase.from("players").select("id, name, position, age, overall, nationality, club_id");
       if (searchTerm) pQuery = pQuery.ilike("name", `%${searchTerm}%`);
       if (positionFilter !== "todas") pQuery = pQuery.eq("position", positionFilter);
       if (ageMin) pQuery = pQuery.gte("age", parseInt(ageMin) || 0);
       if (ageMax) pQuery = pQuery.lte("age", parseInt(ageMax) || 99);
       if (myClub) pQuery = pQuery.neq("club_id", myClub.id);
 
-      // 2. Query para os jogadores da base
+      // 2. Query para os jogadores da base (aqui sabemos que a coluna se chama 'skill')
       let aQuery = supabase.from("academy_players").select("id, name, position, age, skill, nationality, club_id");
       if (searchTerm) aQuery = aQuery.ilike("name", `%${searchTerm}%`);
       if (positionFilter !== "todas") aQuery = aQuery.eq("position", positionFilter);
@@ -76,7 +77,8 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
 
       // Junta os resultados identificando a origem de cada um
       const combined = [
-        ...(pRes.data || []).map((p: any) => ({ ...p, source: "Profissional" })),
+        // Mapeamos a coluna do profissional (ex: p.overall) para 'skill' para que o componente SkillDisplay funcione
+        ...(pRes.data || []).map((p: any) => ({ ...p, skill: p.overall, source: "Profissional" })),
         ...(aRes.data || []).map((p: any) => ({ ...p, source: "Base" })),
       ];
 
