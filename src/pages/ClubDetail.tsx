@@ -1009,7 +1009,12 @@ function SquadTable({
                     </TableCell>
                     <TableCell className="py-2 font-medium">
                       <div className="flex items-center gap-1.5">
-                        <span className="truncate max-w-[160px]">{p.name}</span>
+                        <button
+                          onClick={() => onOpenProfile?.(p.id)}
+                          className="truncate max-w-[160px] text-left hover:text-primary transition-colors"
+                        >
+                          {p.name}
+                        </button>
                         {p.a_venda && (
                           <span title="À venda">
                             <Tag className="h-3 w-3 text-primary/70 shrink-0" />
