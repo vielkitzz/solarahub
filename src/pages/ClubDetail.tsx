@@ -1029,12 +1029,17 @@ function SquadTable({
                       {p.age ?? "—"}
                     </TableCell>
                     <TableCell className="py-2">
-                      <StarRating value={stars} />
+                      <SkillDisplay value={p.habilidade} rate={club.rate} kind="skill" />
                     </TableCell>
                     <TableCell className="py-2">
                       {potDisplay ? (
                         <div className="flex items-center gap-1.5" title={potDisplay.tooltip}>
-                          <StarRating value={potDisplay.pmaxStars} />
+                          <SkillDisplay
+                            value={potDisplay.value}
+                            rate={club.rate}
+                            kind="potential"
+                            numericLabel={potDisplay.label}
+                          />
                         </div>
                       ) : (
                         <div
