@@ -34,10 +34,13 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  Heart,
 } from "lucide-react";
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
 import { getFlagUrl } from "@/lib/countries";
 import { StarRating } from "@/components/StarRating";
+import { PlayerProfileDialog } from "@/components/PlayerProfileDialog";
+import { useInterestList } from "@/hooks/useInterestList";
 import { toast } from "sonner";
 
 type TransferType = "compra" | "emprestimo" | "troca";
@@ -73,6 +76,10 @@ const Market = () => {
   const [cValor, setCValor] = useState("");
   const [cSalario, setCSalario] = useState("");
   const [cLuvas, setCLuvas] = useState("");
+
+  // perfil do jogador
+  const [profilePlayerId, setProfilePlayerId] = useState<string | null>(null);
+  const { items: interestItems, has: inInterest, toggle: toggleInterest } = useInterestList();
 
   useEffect(() => {
     document.title = "Mercado — Solara Hub";
@@ -369,6 +376,14 @@ const Market = () => {
                 <Send className="h-3.5 w-3.5 mr-1" /> Enviadas
               </TabsTrigger>
             )}
+            {user && (
+              <TabsTrigger value="interesses">
+                <Heart className="h-3.5 w-3.5 mr-1" /> Interesses
+                {interestItems.length > 0 && (
+                  <Badge className="ml-2 bg-primary text-primary-foreground">{interestItems.length}</Badge>
+                )}
+              </TabsTrigger>
+            )}
           </TabsList>
         </div>
 
@@ -399,7 +414,9 @@ const Market = () => {
                     </Badge>
                     <div className="flex-1 min-w-0 order-1 sm:order-none basis-full sm:basis-auto">
                       <div className="font-bold truncate flex items-center gap-2">
-                        {p.name}
+                        <button onClick={() => setProfilePlayerId(p.id)} className="hover:text-primary transition-colors text-left truncate">
+                          {p.name}
+                        </button>
                         {p.a_venda && (
                           <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0 shrink-0">
                             <Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA
@@ -502,7 +519,7 @@ const Market = () => {
                         </TableCell>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span>{p.name}</span>
+                            <button onClick={() => setProfilePlayerId(p.id)} className="hover:text-primary transition-colors">{p.name}</button>
                             {p.a_venda && (
                               <Badge className="bg-primary/20 text-primary border-primary/40 text-[10px] px-1.5 py-0">
                                 <Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA
@@ -893,6 +910,69 @@ const Market = () => {
             })}
           </TabsContent>
         )}
+
+        {/* INTERESSES */}
+        {user && (
+          <TabsContent value="interesses" className="space-y-2 mt-4">
+            <Card className="p-3 bg-gradient-card border-border/50 text-xs text-muted-foreground flex items-center gap-2">
+              <Heart className="h-4 w-4 text-primary" />
+              Sua lista pessoal de jogadores observados. Clique em qualquer um para abrir o perfil.
+            </Card>
+            {interestItems.length === 0 && (
+              <Card className="p-10 text-center text-muted-foreground bg-gradient-card border-border/50">
+                Sua lista está vazia. Clique no coração no perfil de um jogador para adicioná-lo.
+              </Card>
+            )}
+            {interestItems.map((entry) => {
+              const p = players.find((pl) => pl.id === entry.player_id);
+              if (!p) return null;
+              const c = p.club_id ? clubs[p.club_id] : null;
+              return (
+                <Card key={entry.id} className="p-3 bg-gradient-card border-border/50">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <Badge variant="outline" className="border-primary/40 text-primary">{p.position}</Badge>
+                    <button
+                      onClick={() => setProfilePlayerId(p.id)}
+                      className="font-bold hover:text-primary transition-colors text-left flex items-center gap-2"
+                    >
+                      {p.name}
+                      {p.nationality && <FlagImg nationality={p.nationality} />}
+                    </button>
+                    {p.a_venda && (
+                      <Badge className="bg-primary/20 text-primary border-primary/40 text-[10px]">
+                        <Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA
+                      </Badge>
+                    )}
+                    {c && (
+                      <Link to={`/clubes/${c.id}`} className="flex items-center gap-1.5 hover:text-primary text-xs">
+                        <div className="h-6 w-6">
+                          {c.crest_url && <img src={c.crest_url} className="w-full h-full object-contain" alt="" />}
+                        </div>
+                        <span className="hidden md:inline">{c.name}</span>
+                      </Link>
+                    )}
+                    <div className="ml-auto text-right">
+                      <div className="text-[10px] uppercase text-muted-foreground">Valor</div>
+                      <div className="font-display font-bold text-primary text-sm">
+                        {formatCurrency(Number(p.valor_base_calculado))}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      {hasClub && p.club_id && p.club_id !== activeClubId && (
+                        <Button size="sm" onClick={() => openProposal(p)} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+                          <ArrowRightLeft className="h-3.5 w-3.5" /> Negociar
+                        </Button>
+                      )}
+                      <Button size="sm" variant="outline" onClick={() => toggleInterest(p.id)}>
+                        <Heart className="h-3.5 w-3.5 fill-current text-primary" />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* PROPOSAL MODAL */}
@@ -1059,6 +1139,13 @@ const Market = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PlayerProfileDialog
+        playerId={profilePlayerId}
+        open={!!profilePlayerId}
+        onOpenChange={(v) => !v && setProfilePlayerId(null)}
+        onNegotiate={(p) => { setProfilePlayerId(null); openProposal(p); }}
+      />
     </div>
   );
 };

@@ -280,6 +280,33 @@ export type Database = {
         }
         Relationships: []
       }
+      interest_list: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          player_id: string
+          priority: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          player_id: string
+          priority?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          player_id?: string
+          priority?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       loans: {
         Row: {
           club_id: string
@@ -704,6 +731,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          preferences: Json
+          show_numeric_potential: boolean
+          show_numeric_skill: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          preferences?: Json
+          show_numeric_potential?: boolean
+          show_numeric_skill?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          preferences?: Json
+          show_numeric_potential?: boolean
+          show_numeric_skill?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

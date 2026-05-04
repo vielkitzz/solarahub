@@ -51,6 +51,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getFlagUrl } from "@/lib/countries";
+import { PlayerProfileDialog } from "@/components/PlayerProfileDialog";
+import { SkillDisplay } from "@/components/SkillDisplay";
 
 const ClubDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -64,6 +66,7 @@ const ClubDetail = () => {
   const [renewPlayer, setRenewPlayer] = useState<any>(null);
   const [shirtPlayer, setShirtPlayer] = useState<any>(null);
   const [multaPlayer, setMultaPlayer] = useState<any>(null);
+  const [profilePlayerId, setProfilePlayerId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [wikiData, setWikiData] = useState<WikiData>({});
   const [editingClub, setEditingClub] = useState<any>(null);
@@ -424,6 +427,7 @@ const ClubDetail = () => {
               setMultaPlayer={setMultaPlayer}
               myClub={myClub}
               scoutReports={scoutReports}
+              onOpenProfile={(id) => setProfilePlayerId(id)}
             />
           )}
         </TabsContent>
@@ -619,6 +623,11 @@ const ClubDetail = () => {
         isAdmin={isAdmin}
         onDone={load}
       />
+      <PlayerProfileDialog
+        playerId={profilePlayerId}
+        open={!!profilePlayerId}
+        onOpenChange={(v) => !v && setProfilePlayerId(null)}
+      />
     </div>
   );
 };
@@ -691,6 +700,7 @@ function SquadTable({
   setMultaPlayer,
   myClub,
   scoutReports,
+  onOpenProfile,
 }: {
   players: any[];
   club: any;
@@ -703,6 +713,7 @@ function SquadTable({
   setMultaPlayer: (p: any) => void;
   myClub: any | null;
   scoutReports: Record<string, ScoutReport>;
+  onOpenProfile?: (id: string) => void;
 }) {
   const isOwnClub = !!myClub && myClub.id === club.id;
   // ESTADOS
@@ -960,27 +971,18 @@ function SquadTable({
               filteredAndSorted.map((p: any) => {
                 const shirt = p.shirt_number ?? p.attributes?.shirtNumber;
                 const stars = calcStars(p.habilidade, club.rate);
-                // Potencial exibido: depende se é o próprio clube, se é admin, ou se há scout report
-                let potDisplay: { pmaxStars: number; label: string; tooltip: string } | null = null;
-                if (isAdmin) {
-                  if (p.potential_max) {
-                    potDisplay = {
-                      pmaxStars: calcStars(p.potential_max, club.rate),
-                      label: `${p.potential_min}-${p.potential_max}`,
-                      tooltip: "Visão de admin (real)",
-                    };
-                  }
-                } else if (isOwnClub && myClub) {
+                // Potencial exibido: APENAS o dono enxerga (estimativa via base). Outros precisam usar Olheiros.
+                let potDisplay: { value: number; label: string; tooltip: string } | null = null;
+                if (isOwnClub && myClub) {
                   const est = estimarPotencialOwn(p, myClub.id, myClub.nivel_base);
                   if (est) {
                     potDisplay = {
-                      pmaxStars: calcStars(est.pmax, club.rate),
+                      value: est.pmax,
                       label: `~${est.pmin}-${est.pmax}`,
                       tooltip: `Estimativa do seu olheiro (±${est.margem})`,
                     };
                   }
                 }
-                // adversários não veem potencial — devem usar a aba Olheiros
                 const expirando =
                   p.contrato_ate !== null && p.contrato_ate !== undefined && p.contrato_ate - temporadaAtual <= 1;
                 const ps = getPositionStyle(p.position);
@@ -1012,7 +1014,12 @@ function SquadTable({
                     </TableCell>
                     <TableCell className="py-2 font-medium">
                       <div className="flex items-center gap-1.5">
-                        <span className="truncate max-w-[160px]">{p.name}</span>
+                        <button
+                          onClick={() => onOpenProfile?.(p.id)}
+                          className="truncate max-w-[160px] text-left hover:text-primary transition-colors"
+                        >
+                          {p.name}
+                        </button>
                         {p.a_venda && (
                           <span title="À venda">
                             <Tag className="h-3 w-3 text-primary/70 shrink-0" />
@@ -1032,12 +1039,17 @@ function SquadTable({
                       {p.age ?? "—"}
                     </TableCell>
                     <TableCell className="py-2">
-                      <StarRating value={stars} />
+                      <SkillDisplay value={p.habilidade} rate={club.rate} kind="skill" />
                     </TableCell>
                     <TableCell className="py-2">
                       {potDisplay ? (
                         <div className="flex items-center gap-1.5" title={potDisplay.tooltip}>
-                          <StarRating value={potDisplay.pmaxStars} />
+                          <SkillDisplay
+                            value={potDisplay.value}
+                            rate={club.rate}
+                            kind="potential"
+                            numericLabel={potDisplay.label}
+                          />
                         </div>
                       ) : (
                         <div
