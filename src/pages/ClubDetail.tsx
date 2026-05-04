@@ -1053,6 +1053,7 @@ function SquadTable({
                         <div className="flex items-center gap-1.5" title={potDisplay.tooltip}>
                           <SkillDisplay
                             value={potDisplay.value}
+                            valueMin={potDisplay.min}
                             rate={club.rate}
                             kind="potential"
                             numericLabel={potDisplay.label}
