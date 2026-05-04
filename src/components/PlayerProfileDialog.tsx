@@ -13,7 +13,6 @@ import { getFlagUrl } from "@/lib/countries";
 import { Heart, ArrowRightLeft, FileSignature, Gavel, Shield, ExternalLink, Star, Loader2 } from "lucide-react";
 import { useInterestList } from "@/hooks/useInterestList";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
-import { estimarPotencialOwn } from "@/lib/scout";
 import { ContractRenewalDialog } from "@/components/ContractRenewalDialog";
 import { MultaRescisoriaDialog } from "@/components/MultaRescisoriaDialog";
 
@@ -21,251 +20,273 @@ interface Props {
   playerId: string | null;
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  /** Callback ao clicar em Negociar (recebe player). Se omitido, navega para /mercado. */
   onNegotiate?: (player: any) => void;
 }
 
 export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate }: Props) => {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const { has, toggle } = useInterestList();
-  const { prefs } = useUserPreferences();
-  const [player, setPlayer] = useState<any | null>(null);
-  const [club, setClub] = useState<any | null>(null);
-  const [myClub, setMyClub] = useState<any | null>(null);
-  const [scoutReport, setScoutReport] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
+  const [player, setPlayer] = useState<any>(null);
+  const [myClub, setMyClub] = useState<any>(null);
+  const [report, setReport] = useState<any>(null);
   const [renewOpen, setRenewOpen] = useState(false);
   const [multaOpen, setMultaOpen] = useState(false);
 
+  const { isInInterestList, toggleInterest } = useInterestList();
+
   useEffect(() => {
-    if (!open || !playerId) return;
-    let cancelled = false;
+    if (open && playerId) {
+      fetchData();
+    } else {
+      setPlayer(null);
+      setReport(null);
+    }
+  }, [open, playerId]);
+
+  const fetchData = async () => {
     setLoading(true);
-    (async () => {
-      const { data: p } = await supabase.from("players").select("*").eq("id", playerId).maybeSingle();
-      if (cancelled) return;
+    try {
+      // 1. Busca dados do jogador
+      const { data: p, error } = await supabase
+        .from("players")
+        .select(
+          `
+          *,
+          clubs (
+            id, name, crest_url, rate, owner_id
+          )
+        `,
+        )
+        .eq("id", playerId)
+        .single();
+
+      if (error) throw error;
       setPlayer(p);
-      if (p?.club_id) {
-        const { data: c } = await supabase.from("clubs").select("*").eq("id", p.club_id).maybeSingle();
-        if (!cancelled) setClub(c);
-      } else {
-        setClub(null);
-      }
+
+      // 2. Busca clube do usuário logado
       if (user) {
-        const { data: mine } = await supabase.from("clubs").select("*").eq("owner_id", user.id).maybeSingle();
-        if (!cancelled) setMyClub(mine);
-        if (mine && p) {
-          const { data: rep } = await supabase
+        const { data: c } = await supabase.from("clubs").select("*").eq("owner_id", user.id).maybeSingle();
+        setMyClub(c);
+
+        // 3. Busca relatório de olheiro se não for o dono
+        if (c && c.id !== p.club_id) {
+          const { data: r } = await supabase
             .from("scout_reports")
             .select("*")
-            .eq("scouter_club_id", mine.id)
-            .eq("target_player_id", p.id)
+            .eq("club_id", c.id)
+            .eq("target_player_id", playerId)
             .maybeSingle();
-          if (!cancelled) setScoutReport(rep);
+          setReport(r);
         }
       }
+    } catch (err) {
+      console.error("Erro ao carregar perfil:", err);
+    } finally {
       setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [open, playerId, user?.id]);
-
-  const isOwn = !!myClub && !!player && player.club_id === myClub.id;
-  const flagUrl = player?.nationality ? getFlagUrl(player.nationality) : null;
-
-  // Potencial: dono vê estimativa via base; admin vê real; outros só veem via scout report
-  const potencial = useMemo(() => {
-    if (!player) return null;
-    if (isOwn && myClub) {
-      const est = estimarPotencialOwn(player, myClub.id, myClub.nivel_base);
-      if (est)
-        return {
-          label: `${est.pmin}-${est.pmax}`,
-          tooltip: `Estimativa do seu olheiro (±${est.margem})`,
-          value: est.pmax,
-        };
-    }
-    if (isAdmin && player.potential_max) {
-      return {
-        label: `${player.potential_min}-${player.potential_max}`,
-        tooltip: "Visão de admin",
-        value: player.potential_max,
-      };
-    }
-    if (scoutReport) {
-      return {
-        label: `${scoutReport.potential_min_revelado}-${scoutReport.potential_max_revelado}`,
-        tooltip: `Relatório do olheiro (±${scoutReport.margem_aplicada})`,
-        value: scoutReport.potential_max_revelado,
-      };
-    }
-    return null;
-  }, [player, isOwn, isAdmin, scoutReport, myClub]);
-
-  const inInterest = playerId ? has(playerId) : false;
-
-  const handleNegotiate = () => {
-    if (onNegotiate && player) {
-      onNegotiate(player);
-    } else if (player) {
-      onOpenChange(false);
-      navigate(`/mercado?player=${player.id}`);
     }
   };
+
+  const isOwn = player?.club_id && myClub?.id === player.club_id;
+  const isAdmin = false; // Implementar lógica de admin se necessário
+
+  // Lógica de exibição do Potencial
+  const potDisplay = useMemo(() => {
+    if (!player) return null;
+
+    // Se for o dono, vê o real
+    if (isOwn) {
+      return {
+        value: player.potential,
+        min: player.potential,
+        label: String(player.potential),
+        tooltip: "Potencial real (visto apenas pelo dono)",
+      };
+    }
+
+    // Se tiver relatório de olheiro
+    if (report) {
+      return {
+        value: report.potential_max_revelado,
+        min: report.potential_min_revelado,
+        label: `${report.potential_min_revelado}-${report.potential_max_revelado}`,
+        tooltip: `Relatório de olheiro (margem ±${report.margem_aplicada})`,
+      };
+    }
+
+    // Caso contrário, oculto
+    return null;
+  }, [player, isOwn, report]);
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-xl">
-          {loading || !player ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <DialogContent className="max-w-2xl p-0 overflow-hidden bg-background border-border/50">
+          {loading ? (
+            <div className="h-64 flex items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
+          ) : !player ? (
+            <div className="p-8 text-center text-muted-foreground">Jogador não encontrado.</div>
           ) : (
             <>
-              <DialogHeader>
-                <div className="flex items-start gap-3">
-                  <Badge variant="outline" className="border-primary/40 text-primary text-sm font-bold">
-                    {player.position}
-                  </Badge>
-                  <div className="flex-1 min-w-0">
-                    <DialogTitle className="text-xl flex items-center gap-2 flex-wrap">
-                      <span className="truncate">{player.name}</span>
-                      {flagUrl && (
-                        <img
-                          src={flagUrl}
-                          alt={player.nationality}
-                          title={player.nationality}
-                          className="h-4 w-6 object-cover rounded-sm"
-                        />
-                      )}
-                      {player.shirt_number && (
-                        <span className="text-sm text-muted-foreground">#{player.shirt_number}</span>
-                      )}
-                    </DialogTitle>
-                    <DialogDescription className="text-xs">
-                      {player.age ? `${player.age} anos` : "Idade ?"}{" "}
-                      {player.nationality ? `· ${player.nationality}` : ""}
-                    </DialogDescription>
-                  </div>
+              {/* Header com Escudo e Nome */}
+              <div className="relative h-32 bg-gradient-to-br from-secondary to-background p-6 flex items-end gap-4">
+                <div className="h-20 w-20 bg-card rounded-xl border border-border/50 flex items-center justify-center p-2 shadow-xl">
+                  {player.clubs?.crest_url ? (
+                    <img
+                      src={player.clubs.crest_url}
+                      alt={player.clubs.name}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  ) : (
+                    <Shield className="h-10 w-10 text-muted-foreground/20" />
+                  )}
                 </div>
-              </DialogHeader>
-
-              {/* Clube */}
-              {club ? (
-                <Link
-                  to={`/clubes/${club.id}`}
-                  onClick={() => onOpenChange(false)}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-secondary/40 hover:bg-secondary/60 transition-colors group"
-                >
-                  <div className="h-10 w-10 flex items-center justify-center shrink-0">
-                    {club.crest_url ? (
-                      <img src={club.crest_url} alt={club.name} className="h-full w-full object-contain" />
-                    ) : (
-                      <Shield className="h-6 w-6 text-muted-foreground" />
-                    )}
+                <div className="mb-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <img
+                      src={getFlagUrl(player.nationality)}
+                      alt={player.nationality}
+                      className="h-3 w-4 object-cover rounded-sm"
+                    />
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
+                      {player.position} • {player.age} anos
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold truncate group-hover:text-primary">{club.name}</div>
-                    <div className="text-[10px] text-muted-foreground">
-                      Rate {Number(club.rate).toFixed(2)} · {club.city || ""}
-                    </div>
-                  </div>
-                  <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                </Link>
-              ) : (
-                <div className="text-xs text-muted-foreground p-3 bg-secondary/30 rounded-lg">Sem clube (livre).</div>
-              )}
-
-              {/* Atributos principais */}
-              <div className="grid grid-cols-2 gap-2">
-                <Card className="p-3 bg-gradient-card border-border/50">
-                  <div className="text-[10px] uppercase text-muted-foreground tracking-wider">Habilidade</div>
-                  <div className="mt-1">
-                    <SkillDisplay value={player.habilidade} rate={club?.rate} kind="skill" />
-                    {!prefs.show_numeric_skill && (
-                      <div className="text-[10px] text-muted-foreground mt-1">Real: {player.habilidade}</div>
-                    )}
-                  </div>
-                </Card>
-                <Card className="p-3 bg-gradient-card border-border/50">
-                  <div className="text-[10px] uppercase text-muted-foreground tracking-wider">Potencial</div>
-                  <div className="mt-1" title={potencial?.tooltip}>
-                    {potencial ? (
-                      <SkillDisplay
-                        value={potencial.value}
-                        rate={club?.rate}
-                        kind="potential"
-                        numericLabel={prefs.show_numeric_potential ? potencial.label : undefined}
-                      />
-                    ) : (
-                      <div className="flex items-center gap-1 text-muted-foreground/40">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} className="h-3 w-3" />
-                        ))}
-                        <span className="text-[10px] ml-2">Sem dados</span>
-                      </div>
-                    )}
-                    {potencial && <div className="text-[10px] text-muted-foreground mt-1">{potencial.label}</div>}
-                  </div>
-                </Card>
-                <Card className="p-3 bg-gradient-card border-border/50">
-                  <div className="text-[10px] uppercase text-muted-foreground tracking-wider">Valor de mercado</div>
-                  <div className="font-display font-bold text-primary">
-                    {formatCurrency(Number(player.market_value || 0))}
-                  </div>
-                  <div className="text-[10px] text-muted-foreground">
-                    Base: {formatCurrency(Number(player.valor_base_calculado || 0))}
-                  </div>
-                </Card>
-                <Card className="p-3 bg-gradient-card border-border/50">
-                  <div className="text-[10px] uppercase text-muted-foreground tracking-wider">Salário / Contrato</div>
-                  <div className="font-display font-bold">{formatCurrency(Number(player.salario_atual || 0))}/ano</div>
-                  <div className="text-[10px] text-muted-foreground">Até {player.contrato_ate ?? "—"}</div>
-                </Card>
+                  <DialogTitle className="text-2xl font-display font-bold leading-none">{player.name}</DialogTitle>
+                </div>
               </div>
 
-              <Separator />
+              <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Coluna Esquerda: Atributos principais */}
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                        Habilidade Atual
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <SkillDisplay value={player.habilidade} rate={player.clubs?.rate} kind="skill" />
+                      </div>
+                    </div>
 
-              {/* Ações */}
-              <div className="flex flex-wrap gap-2">
-                {user && (
-                  <Button
-                    variant={inInterest ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => playerId && toggle(playerId)}
-                    className={inInterest ? "bg-primary text-primary-foreground" : ""}
-                  >
-                    <Heart className={`h-3.5 w-3.5 ${inInterest ? "fill-current" : ""}`} />
-                    {inInterest ? "Na lista" : "Lista de interesses"}
-                  </Button>
-                )}
-                {!isOwn && myClub && player.club_id && (
-                  <Button
-                    size="sm"
-                    onClick={handleNegotiate}
-                    className="bg-gradient-gold text-primary-foreground hover:opacity-90"
-                  >
-                    <ArrowRightLeft className="h-3.5 w-3.5" /> Fazer proposta
-                  </Button>
-                )}
-                {isOwn && (
-                  <>
-                    <Button size="sm" variant="outline" onClick={() => setRenewOpen(true)}>
-                      <FileSignature className="h-3.5 w-3.5 text-primary" /> Renovar
+                    <div className="space-y-1">
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                        Potencial
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {potDisplay ? (
+                          <SkillDisplay
+                            value={potDisplay.value}
+                            valueMin={potDisplay.min}
+                            rate={player.clubs?.rate}
+                            kind="potential"
+                            numericLabel={potDisplay.label}
+                          />
+                        ) : (
+                          <div
+                            className="flex items-center gap-0.5 text-muted-foreground/20"
+                            title="Use a aba Olheiros para descobrir"
+                          >
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star key={i} style={{ width: 16, height: 16 }} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator className="opacity-50" />
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Clube</span>
+                      <Link
+                        to={`/clubes/${player.club_id}`}
+                        className="font-semibold hover:text-primary flex items-center gap-1"
+                      >
+                        {player.clubs?.name} <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Valor de Mercado</span>
+                      <span className="font-display font-bold text-primary">{formatCurrency(player.market_value)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Salário</span>
+                      <span className="font-medium">{formatCurrency(player.salary)}/mês</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Coluna Direita: Detalhes do Contrato */}
+                <div className="bg-secondary/20 rounded-xl p-4 border border-border/50 space-y-4">
+                  <h4 className="text-xs font-bold uppercase tracking-tighter text-muted-foreground flex items-center gap-2">
+                    <FileSignature className="h-3 w-3" /> Situação Contratual
+                  </h4>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Fim do Contrato</span>
+                      <span className={player.contract_end < 3 ? "text-destructive font-bold" : ""}>
+                        {player.contract_end} {player.contract_end === 1 ? "temporada" : "temporadas"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Multa Rescisória</span>
+                      <span className="font-bold text-amber-500">{formatCurrency(player.release_clause)}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    {player.transfer_listed ? (
+                      <Badge className="w-full justify-center bg-destructive/10 text-destructive border-destructive/20 py-1">
+                        Listado para Transferência
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="w-full justify-center opacity-50 py-1">
+                        Não está à venda
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer com Ações */}
+              <div className="p-4 bg-secondary/10 border-t border-border/50 flex flex-wrap gap-2 justify-between items-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={isInInterestList(player.id) ? "text-primary" : "text-muted-foreground"}
+                  onClick={() => toggleInterest(player.id)}
+                >
+                  <Heart className={`h-4 w-4 mr-2 ${isInInterestList(player.id) ? "fill-primary" : ""}`} />
+                  {isInInterestList(player.id) ? "Na lista" : "Interesse"}
+                </Button>
+
+                <div className="flex gap-2">
+                  {!isOwn && (
+                    <Button
+                      size="sm"
+                      className="bg-primary text-primary-foreground"
+                      onClick={() => (onNegotiate ? onNegotiate(player) : navigate("/mercado"))}
+                    >
+                      <ArrowRightLeft className="h-3.5 w-3.5 mr-2" /> Fazer proposta
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => setMultaOpen(true)}>
-                      <Gavel className="h-3.5 w-3.5 text-amber-400" /> Multa
-                    </Button>
-                  </>
-                )}
-                {isAdmin && !isOwn && (
-                  <Button size="sm" variant="outline" onClick={() => setMultaOpen(true)}>
-                    <Gavel className="h-3.5 w-3.5 text-amber-400" /> Multa (admin)
-                  </Button>
-                )}
+                  )}
+                  {isOwn && (
+                    <>
+                      <Button size="sm" variant="outline" onClick={() => setRenewOpen(true)}>
+                        <FileSignature className="h-3.5 w-3.5 mr-2 text-primary" /> Renovar
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setMultaOpen(true)}>
+                        <Gavel className="h-3.5 w-3.5 mr-2 text-amber-400" /> Multa
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
             </>
           )}
@@ -278,9 +299,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
             player={player}
             open={renewOpen}
             onOpenChange={setRenewOpen}
-            onRenewed={() => {
-              setRenewOpen(false);
-            }}
+            onRenewed={() => fetchData()}
           />
           <MultaRescisoriaDialog
             player={player}
@@ -288,7 +307,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
             onOpenChange={setMultaOpen}
             myClubId={myClub?.id || null}
             isAdmin={isAdmin}
-            onDone={() => setMultaOpen(false)}
+            onDone={() => fetchData()}
           />
         </>
       )}
