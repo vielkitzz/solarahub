@@ -623,6 +623,11 @@ const ClubDetail = () => {
         isAdmin={isAdmin}
         onDone={load}
       />
+      <PlayerProfileDialog
+        playerId={profilePlayerId}
+        open={!!profilePlayerId}
+        onOpenChange={(v) => !v && setProfilePlayerId(null)}
+      />
     </div>
   );
 };
