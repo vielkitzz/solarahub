@@ -966,27 +966,18 @@ function SquadTable({
               filteredAndSorted.map((p: any) => {
                 const shirt = p.shirt_number ?? p.attributes?.shirtNumber;
                 const stars = calcStars(p.habilidade, club.rate);
-                // Potencial exibido: depende se é o próprio clube, se é admin, ou se há scout report
-                let potDisplay: { pmaxStars: number; label: string; tooltip: string } | null = null;
-                if (isAdmin) {
-                  if (p.potential_max) {
-                    potDisplay = {
-                      pmaxStars: calcStars(p.potential_max, club.rate),
-                      label: `${p.potential_min}-${p.potential_max}`,
-                      tooltip: "Visão de admin (real)",
-                    };
-                  }
-                } else if (isOwnClub && myClub) {
+                // Potencial exibido: APENAS o dono enxerga (estimativa via base). Outros precisam usar Olheiros.
+                let potDisplay: { value: number; label: string; tooltip: string } | null = null;
+                if (isOwnClub && myClub) {
                   const est = estimarPotencialOwn(p, myClub.id, myClub.nivel_base);
                   if (est) {
                     potDisplay = {
-                      pmaxStars: calcStars(est.pmax, club.rate),
+                      value: est.pmax,
                       label: `~${est.pmin}-${est.pmax}`,
                       tooltip: `Estimativa do seu olheiro (±${est.margem})`,
                     };
                   }
                 }
-                // adversários não veem potencial — devem usar a aba Olheiros
                 const expirando =
                   p.contrato_ate !== null && p.contrato_ate !== undefined && p.contrato_ate - temporadaAtual <= 1;
                 const ps = getPositionStyle(p.position);
