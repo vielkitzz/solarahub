@@ -695,6 +695,7 @@ function SquadTable({
   setMultaPlayer,
   myClub,
   scoutReports,
+  onOpenProfile,
 }: {
   players: any[];
   club: any;
@@ -707,6 +708,7 @@ function SquadTable({
   setMultaPlayer: (p: any) => void;
   myClub: any | null;
   scoutReports: Record<string, ScoutReport>;
+  onOpenProfile?: (id: string) => void;
 }) {
   const isOwnClub = !!myClub && myClub.id === club.id;
   // ESTADOS
