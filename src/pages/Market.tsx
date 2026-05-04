@@ -34,10 +34,13 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  Heart,
 } from "lucide-react";
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
 import { getFlagUrl } from "@/lib/countries";
 import { StarRating } from "@/components/StarRating";
+import { PlayerProfileDialog } from "@/components/PlayerProfileDialog";
+import { useInterestList } from "@/hooks/useInterestList";
 import { toast } from "sonner";
 
 type TransferType = "compra" | "emprestimo" | "troca";
@@ -73,6 +76,10 @@ const Market = () => {
   const [cValor, setCValor] = useState("");
   const [cSalario, setCSalario] = useState("");
   const [cLuvas, setCLuvas] = useState("");
+
+  // perfil do jogador
+  const [profilePlayerId, setProfilePlayerId] = useState<string | null>(null);
+  const { items: interestItems, has: inInterest, toggle: toggleInterest } = useInterestList();
 
   useEffect(() => {
     document.title = "Mercado — Solara Hub";
