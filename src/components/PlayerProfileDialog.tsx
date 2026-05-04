@@ -82,7 +82,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
       const est = estimarPotencialOwn(player, myClub.id, myClub.nivel_base);
       if (est)
         return {
-          label: `~${est.pmin}-${est.pmax}`,
+          label: `${est.pmin}-${est.pmax}`,
           tooltip: `Estimativa do seu olheiro (±${est.margem})`,
           value: est.pmax,
         };
@@ -96,7 +96,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
     }
     if (scoutReport) {
       return {
-        label: `~${scoutReport.potential_min_revelado}-${scoutReport.potential_max_revelado}`,
+        label: `${scoutReport.potential_min_revelado}-${scoutReport.potential_max_revelado}`,
         tooltip: `Relatório do olheiro (±${scoutReport.margem_aplicada})`,
         value: scoutReport.potential_max_revelado,
       };
