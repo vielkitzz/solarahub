@@ -376,6 +376,14 @@ const Market = () => {
                 <Send className="h-3.5 w-3.5 mr-1" /> Enviadas
               </TabsTrigger>
             )}
+            {user && (
+              <TabsTrigger value="interesses">
+                <Heart className="h-3.5 w-3.5 mr-1" /> Interesses
+                {interestItems.length > 0 && (
+                  <Badge className="ml-2 bg-primary text-primary-foreground">{interestItems.length}</Badge>
+                )}
+              </TabsTrigger>
+            )}
           </TabsList>
         </div>
 
