@@ -414,7 +414,9 @@ const Market = () => {
                     </Badge>
                     <div className="flex-1 min-w-0 order-1 sm:order-none basis-full sm:basis-auto">
                       <div className="font-bold truncate flex items-center gap-2">
-                        {p.name}
+                        <button onClick={() => setProfilePlayerId(p.id)} className="hover:text-primary transition-colors text-left truncate">
+                          {p.name}
+                        </button>
                         {p.a_venda && (
                           <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0 shrink-0">
                             <Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA
