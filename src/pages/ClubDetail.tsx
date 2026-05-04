@@ -66,6 +66,7 @@ const ClubDetail = () => {
   const [renewPlayer, setRenewPlayer] = useState<any>(null);
   const [shirtPlayer, setShirtPlayer] = useState<any>(null);
   const [multaPlayer, setMultaPlayer] = useState<any>(null);
+  const [profilePlayerId, setProfilePlayerId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [wikiData, setWikiData] = useState<WikiData>({});
   const [editingClub, setEditingClub] = useState<any>(null);
@@ -426,6 +427,7 @@ const ClubDetail = () => {
               setMultaPlayer={setMultaPlayer}
               myClub={myClub}
               scoutReports={scoutReports}
+              onOpenProfile={(id) => setProfilePlayerId(id)}
             />
           )}
         </TabsContent>
