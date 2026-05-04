@@ -1137,6 +1137,13 @@ const Market = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PlayerProfileDialog
+        playerId={profilePlayerId}
+        open={!!profilePlayerId}
+        onOpenChange={(v) => !v && setProfilePlayerId(null)}
+        onNegotiate={(p) => { setProfilePlayerId(null); openProposal(p); }}
+      />
     </div>
   );
 };
