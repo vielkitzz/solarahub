@@ -18,81 +18,53 @@ const StarRatingRange = ({
 }) => {
   const starsMin = calcStars(min, rate);
   const starsMax = calcStars(max, rate);
+  const path = "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z";
 
   return (
     <div className="inline-flex items-center gap-0.5" aria-label={`Potencial de ${starsMin} a ${starsMax} estrelas`}>
       {Array.from({ length: 5 }).map((_, i) => {
         const v = i + 1;
+        const isHalfMin = v === Math.ceil(starsMin) && starsMin % 1 >= 0.5;
+        const isHalfMax = v === Math.ceil(starsMax) && starsMax % 1 >= 0.5 && !isHalfMin;
+        const isFullYellow = v <= Math.floor(starsMin);
+        const isFullWhite = !isFullYellow && !isHalfMin && !isHalfMax && v <= Math.floor(starsMax);
 
-        // Amarela cheia (dentro do mínimo)
-        if (v <= Math.floor(starsMin))
-          return <Star key={i} className="text-primary fill-primary" style={{ width: size, height: size }} />;
+        return (
+          <svg key={i} viewBox="0 0 24 24" style={{ width: size, height: size }} fill="none">
+            <defs>
+              <clipPath id={`left-${i}`}>
+                <rect x="0" y="0" width="12" height="24" />
+              </clipPath>
+              <clipPath id={`right-${i}`}>
+                <rect x="12" y="0" width="12" height="24" />
+              </clipPath>
+            </defs>
 
-        // Meia amarela (borda do mínimo)
-        if (v === Math.ceil(starsMin) && starsMin % 1 >= 0.5)
-          return (
-            <span key={i} className="relative inline-block" style={{ width: size, height: size }}>
-              {/* fundo: branca se dentro do máximo, apagada se fora */}
-              <Star
-                className={
-                  v <= Math.ceil(starsMax)
-                    ? "absolute inset-0 text-foreground/80 fill-foreground/80"
-                    : "absolute inset-0 text-primary/20"
-                }
-                style={{ width: size, height: size }}
-              />
-              {/* metade esquerda amarela */}
-              <svg
-                viewBox="0 0 24 24"
-                className="absolute inset-0 text-primary fill-primary"
-                style={{ width: size, height: size }}
-              >
-                <defs>
-                  <clipPath id={`hp-${i}`}>
-                    <rect x="0" y="0" width="12" height="24" />
-                  </clipPath>
-                </defs>
-                <path
-                  clipPath={`url(#hp-${i})`}
-                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                />
-              </svg>
-            </span>
-          );
+            {/* Fundo apagado sempre */}
+            <path d={path} fill="currentColor" className="text-primary/20" />
 
-        // Meia branca (borda do máximo)
-        if (v === Math.ceil(starsMax) && starsMax % 1 >= 0.5)
-          return (
-            <span key={i} className="relative inline-block" style={{ width: size, height: size }}>
-              {/* fundo apagado */}
-              <Star className="absolute inset-0 text-primary/20" style={{ width: size, height: size }} />
-              {/* metade esquerda branca */}
-              <svg
-                viewBox="0 0 24 24"
-                className="absolute inset-0 text-foreground/80 fill-foreground/80"
-                style={{ width: size, height: size }}
-              >
-                <defs>
-                  <clipPath id={`wp-${i}`}>
-                    <rect x="0" y="0" width="12" height="24" />
-                  </clipPath>
-                </defs>
-                <path
-                  clipPath={`url(#wp-${i})`}
-                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                />
-              </svg>
-            </span>
-          );
+            {/* Amarela cheia */}
+            {isFullYellow && <path d={path} fill="currentColor" className="text-primary" />}
 
-        // Branca cheia (entre mínimo e máximo)
-        if (v <= Math.floor(starsMax))
-          return (
-            <Star key={i} className="text-foreground/80 fill-foreground/80" style={{ width: size, height: size }} />
-          );
+            {/* Branca cheia */}
+            {isFullWhite && <path d={path} fill="currentColor" className="text-foreground/80" />}
 
-        // Apagada (fora do máximo)
-        return <Star key={i} className="text-primary/20" style={{ width: size, height: size }} />;
+            {/* Meia amarela (esquerda amarela, direita branca se dentro do max) */}
+            {isHalfMin && (
+              <>
+                <path d={path} clipPath={`url(#left-${i})`} fill="currentColor" className="text-primary" />
+                {v <= Math.ceil(starsMax) && (
+                  <path d={path} clipPath={`url(#right-${i})`} fill="currentColor" className="text-foreground/80" />
+                )}
+              </>
+            )}
+
+            {/* Meia branca (esquerda branca, direita apagada) */}
+            {isHalfMax && (
+              <path d={path} clipPath={`url(#left-${i})`} fill="currentColor" className="text-foreground/80" />
+            )}
+          </svg>
+        );
       })}
     </div>
   );
