@@ -26,6 +26,7 @@ import {
 import { POSITIONS, formatCurrency, calcStars } from "@/lib/format";
 import { COUNTRIES_DATA, getFlagUrl } from "@/lib/countries";
 import { StarRating } from "@/components/StarRating";
+import { SkillDisplay } from "@/components/SkillDisplay";
 import { generateRandomName } from "@/lib/scouting-names";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
@@ -941,7 +942,12 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
                             </div>
                             <div className="flex items-center gap-1">
                               <span className="text-muted-foreground">Pot.</span>
-                              <StarRating value={potStars} />
+                              <SkillDisplay
+                                value={p.potential}
+                                valueMin={p.potential_min}
+                                rate={p.rate}
+                                kind="potential"
+                              />
                             </div>
                           </div>
                         </div>
