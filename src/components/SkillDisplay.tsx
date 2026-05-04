@@ -35,7 +35,7 @@ const StarRatingRange = ({
             <span key={i} className="relative inline-block" style={{ width: size, height: size }}>
               {/* Fundo (direita) */}
               <Star
-                className={isWhiteBg ? "text-foreground/80 fill-foreground/80" : "text-primary/20"}
+                className={isWhiteBg ? "text-foreground fill-foreground" : "text-primary/20"}
                 style={{ width: size, height: size }}
               />
               {/* Frente (esquerda amarela) cortada ao meio com CSS */}
@@ -54,7 +54,7 @@ const StarRatingRange = ({
               <Star className="text-primary/20" style={{ width: size, height: size }} />
               {/* Frente (esquerda branca) cortada ao meio com CSS */}
               <div className="absolute inset-0" style={{ clipPath: "inset(0 50% 0 0)" }}>
-                <Star className="text-foreground/80 fill-foreground/80" style={{ width: size, height: size }} />
+                <Star className="text-foreground fill-foreground" style={{ width: size, height: size }} />
               </div>
             </span>
           );
@@ -62,9 +62,7 @@ const StarRatingRange = ({
 
         // 4. Branca cheia (entre mínimo e máximo)
         if (v <= Math.floor(starsMax))
-          return (
-            <Star key={i} className="text-foreground/80 fill-foreground/80" style={{ width: size, height: size }} />
-          );
+          return <Star key={i} className="text-foreground fill-foreground" style={{ width: size, height: size }} />;
 
         // 5. Apagada (fora do máximo)
         return <Star key={i} className="text-primary/20" style={{ width: size, height: size }} />;
