@@ -1,24 +1,41 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Telescope, Sparkles, Star, Shield } from "lucide-react";
+import { Search, Telescope, Star } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { SkillDisplay } from "@/components/SkillDisplay";
 import { POSITIONS } from "@/lib/format";
+import { getFlagUrl } from "@/lib/countries";
 import type { ScoutReport } from "@/lib/scout";
 import { toast } from "sonner";
 
 interface Props {
-  targetClub?: any; // Mantido para compatibilidade, mas o escopo agora é global
+  targetClub?: any;
   players?: any[];
   myClub: any | null;
   scoutReports: Record<string, ScoutReport>;
   onReportCreated: (report: ScoutReport, novoUsado: number) => void;
+}
+
+// ─── Componente para a Bandeira ─────────────────────────────────────────────
+function FlagImg({ nationality }: { nationality: string }) {
+  const url = getFlagUrl(nationality);
+  if (!url) return <span className="text-xs text-muted-foreground">—</span>;
+  return (
+    <img
+      src={url}
+      alt={nationality}
+      title={nationality}
+      className="h-6 w-8 object-cover rounded-sm"
+      style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.1)" }}
+    />
+  );
 }
 
 export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) => {
@@ -32,15 +49,16 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
   const [results, setResults] = useState<any[]>([]);
   const [scoutingId, setScoutingId] = useState<string | null>(null);
 
-  const [clubsMap, setClubsMap] = useState<Record<string, string>>({});
+  // Agora guardamos o objeto completo do clube para ter o escudo (crest_url)
+  const [clubsMap, setClubsMap] = useState<Record<string, { id: string; name: string; crest_url: string | null }>>({});
 
-  // Carrega os nomes de todos os clubes para exibir na tabela
   useEffect(() => {
     const fetchClubs = async () => {
-      const { data } = await supabase.from("clubs").select("id, name");
+      // Adicionamos o crest_url na busca
+      const { data } = await supabase.from("clubs").select("id, name, crest_url");
       if (data) {
-        const map: Record<string, string> = {};
-        data.forEach((c) => (map[c.id] = c.name));
+        const map: Record<string, any> = {};
+        data.forEach((c) => (map[c.id] = c));
         setClubsMap(map);
       }
     };
@@ -53,7 +71,7 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
     setResults([]);
 
     try {
-      // 1. Query para os jogadores profissionais (agora buscando 'habilidade')
+      // 1. Query para profissionais (usando 'habilidade')
       let pQuery = supabase.from("players").select("id, name, position, age, habilidade, nationality, club_id");
       if (searchTerm) pQuery = pQuery.ilike("name", `%${searchTerm}%`);
       if (positionFilter !== "todas") pQuery = pQuery.eq("position", positionFilter);
@@ -61,7 +79,7 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
       if (ageMax) pQuery = pQuery.lte("age", parseInt(ageMax) || 99);
       if (myClub) pQuery = pQuery.neq("club_id", myClub.id);
 
-      // 2. Query para os jogadores da base (aqui continua a ser 'skill')
+      // 2. Query para base (usando 'skill')
       let aQuery = supabase.from("academy_players").select("id, name, position, age, skill, nationality, club_id");
       if (searchTerm) aQuery = aQuery.ilike("name", `%${searchTerm}%`);
       if (positionFilter !== "todas") aQuery = aQuery.eq("position", positionFilter);
@@ -74,14 +92,11 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
       if (pRes.error) throw pRes.error;
       if (aRes.error) throw aRes.error;
 
-      // Junta os resultados identificando a origem de cada um
       const combined = [
-        // Mapeamos a coluna do profissional 'habilidade' para 'skill' para manter a tabela a funcionar
         ...(pRes.data || []).map((p: any) => ({ ...p, skill: p.habilidade, source: "Profissional" })),
         ...(aRes.data || []).map((p: any) => ({ ...p, source: "Base" })),
       ];
 
-      // Ordena por habilidade decrescente
       combined.sort((a, b) => b.skill - a.skill);
       setResults(combined);
     } catch (error: any) {
@@ -100,7 +115,6 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
     setScoutingId(playerId);
 
     try {
-      // Define qual a função do Supabase chamar dependendo de onde o jogador está
       const rpcName = player.source === "Base" ? "scout_academy_player" : "scout_player";
 
       const { data, error } = await supabase.rpc(rpcName as any, {
@@ -135,7 +149,7 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
   };
 
   const searchesUsed = myClub?.scout_searches_used ?? 0;
-  const limite = 10; // Caso queira tornar dinâmico depois, você altera aqui
+  const limite = 10;
   const restantes = Math.max(0, limite - searchesUsed);
 
   return (
@@ -156,7 +170,6 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
         </div>
       </div>
 
-      {/* PAINEL DE FILTROS */}
       <Card className="p-4 border-border/50 bg-gradient-card">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
           <div className="space-y-1 md:col-span-1">
@@ -225,51 +238,69 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
         </div>
       </Card>
 
-      {/* TABELA DE RESULTADOS */}
       {hasSearched && (
         <Card className="overflow-hidden border-border/50">
           <Table>
             <TableHeader className="bg-secondary/40">
               <TableRow>
                 <TableHead>Jogador</TableHead>
-                <TableHead className="text-center">Clube</TableHead>
-                <TableHead className="text-center w-16">Posição</TableHead>
+                <TableHead className="hidden sm:table-cell w-16">Nac.</TableHead>
+                <TableHead>Clube / Origem</TableHead>
+                <TableHead className="text-center w-16">Pos</TableHead>
                 <TableHead className="text-center w-16">Idade</TableHead>
-                <TableHead className="text-center w-32">Habilidade</TableHead>
-                <TableHead className="text-right w-44">Potencial</TableHead>
+                <TableHead className="text-center w-32">Hab.</TableHead>
+                <TableHead className="w-44">Potencial</TableHead>
+                <TableHead className="text-right w-24"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {results.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     Nenhum jogador encontrado com estes filtros.
                   </TableCell>
                 </TableRow>
               ) : (
                 results.map((p) => {
                   const rep = scoutReports[p.id];
+                  const club = clubsMap[p.club_id];
+
                   return (
                     <TableRow key={`${p.id}-${p.source}`} className="hover:bg-primary/5 transition-colors">
                       <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <span className="truncate max-w-[180px]">{p.name}</span>
-                        </div>
+                        <span className="truncate max-w-[180px] block">{p.name}</span>
                       </TableCell>
 
-                      <TableCell className="text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <span className="text-xs text-muted-foreground flex items-center gap-1 truncate max-w-[120px]">
-                            <Shield className="h-3 w-3" />
-                            {clubsMap[p.club_id] || "Sem Clube"}
-                          </span>
-                          <Badge
-                            variant={p.source === "Base" ? "outline" : "secondary"}
-                            className="text-[9px] h-4 leading-none py-0"
-                          >
-                            {p.source}
-                          </Badge>
-                        </div>
+                      <TableCell className="py-2 hidden sm:table-cell">
+                        <FlagImg nationality={p.nationality || ""} />
+                      </TableCell>
+
+                      <TableCell>
+                        {club ? (
+                          <div className="flex items-center gap-3">
+                            <Link
+                              to={`/clubes/${club.id}`}
+                              className="flex items-center gap-2 hover:text-primary transition-colors"
+                            >
+                              <div className="h-7 w-7 shrink-0 flex items-center justify-center">
+                                {club.crest_url ? (
+                                  <img src={club.crest_url} alt={club.name} className="w-full h-full object-contain" />
+                                ) : (
+                                  <div className="w-full h-full bg-secondary rounded-full" />
+                                )}
+                              </div>
+                              <span className="text-sm hidden md:inline">{club.name}</span>
+                            </Link>
+                            <Badge
+                              variant={p.source === "Base" ? "outline" : "secondary"}
+                              className="text-[9px] h-4 leading-none py-0"
+                            >
+                              {p.source}
+                            </Badge>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
                       </TableCell>
 
                       <TableCell className="text-center">
@@ -281,13 +312,12 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
                       <TableCell className="text-center text-xs tabular-nums">{p.age}a</TableCell>
 
                       <TableCell className="text-center">
-                        {/* Como não temos o rate da base de todos os clubes facilmente, passamos undefined para que exiba a força bruta */}
                         <SkillDisplay value={p.skill} rate={undefined} kind="skill" />
                       </TableCell>
 
-                      <TableCell className="text-right">
+                      <TableCell className="py-2">
                         {rep ? (
-                          <div className="flex justify-end" title={`Margem: ±${rep.margem_aplicada || "?"}`}>
+                          <div className="flex items-center gap-1.5" title={`Margem: ±${rep.margem_aplicada || "?"}`}>
                             <SkillDisplay
                               value={rep.potential_max_revelado}
                               valueMin={rep.potential_min_revelado}
@@ -297,23 +327,30 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
                             />
                           </div>
                         ) : (
-                          <div className="flex items-center justify-end gap-2">
-                            <div className="flex items-center gap-0.5 text-muted-foreground/40 hidden sm:flex">
-                              {Array.from({ length: 5 }).map((_, i) => (
-                                <Star key={i} style={{ width: 14, height: 14 }} />
-                              ))}
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={restantes <= 0 || scoutingId === p.id}
-                              onClick={() => pesquisarPotencial(p.id)}
-                              className="h-7 text-[10px] px-2 shrink-0"
-                            >
-                              <Telescope className="h-3 w-3 sm:mr-1" />
-                              <span className="hidden sm:inline">{scoutingId === p.id ? "..." : "Analisar"}</span>
-                            </Button>
+                          <div
+                            className="flex items-center gap-0.5 text-muted-foreground/30"
+                            title="Use a aba Olheiros para descobrir"
+                          >
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star key={i} style={{ width: 14, height: 14 }} />
+                            ))}
+                            <span className="text-[10px] ml-1.5"></span>
                           </div>
+                        )}
+                      </TableCell>
+
+                      <TableCell className="py-2 text-right">
+                        {!rep && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={restantes <= 0 || scoutingId === p.id}
+                            onClick={() => pesquisarPotencial(p.id)}
+                            className="h-7 text-[10px] px-2 shrink-0"
+                          >
+                            <Telescope className="h-3 w-3 sm:mr-1" />
+                            <span className="hidden sm:inline">{scoutingId === p.id ? "..." : "Analisar"}</span>
+                          </Button>
                         )}
                       </TableCell>
                     </TableRow>
