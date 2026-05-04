@@ -16,6 +16,7 @@ import MyClub from "./pages/MyClub";
 import Admin from "./pages/Admin";
 import Transferencias from "./pages/Transferencias";
 import Mapa from "./pages/Mapa";
+import Configuracoes from "./pages/Configuracoes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/meu-clube" element={<MyClub />} />
               <Route path="/transferencias" element={<Transferencias />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/configuracoes" element={<Configuracoes />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </AppLayout>

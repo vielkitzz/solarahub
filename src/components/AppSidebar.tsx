@@ -133,6 +133,14 @@ export function AppSidebar() {
                     </NavLink>
                   </SidebarMenuButton>
               </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/configuracoes")}>
+                    <NavLink to="/configuracoes">
+                      <Settings className="h-4 w-4" />
+                      {!collapsed && <span>Configurações</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 {isAdmin && (
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive("/admin")}>
