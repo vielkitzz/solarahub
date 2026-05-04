@@ -53,16 +53,15 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
     setResults([]);
 
     try {
-      // 1. Query para os jogadores profissionais
-      // ATENÇÃO: Troque 'overall' pelo nome correto da coluna de habilidade na sua tabela 'players'
-      let pQuery = supabase.from("players").select("id, name, position, age, overall, nationality, club_id");
+      // 1. Query para os jogadores profissionais (agora buscando 'habilidade')
+      let pQuery = supabase.from("players").select("id, name, position, age, habilidade, nationality, club_id");
       if (searchTerm) pQuery = pQuery.ilike("name", `%${searchTerm}%`);
       if (positionFilter !== "todas") pQuery = pQuery.eq("position", positionFilter);
       if (ageMin) pQuery = pQuery.gte("age", parseInt(ageMin) || 0);
       if (ageMax) pQuery = pQuery.lte("age", parseInt(ageMax) || 99);
       if (myClub) pQuery = pQuery.neq("club_id", myClub.id);
 
-      // 2. Query para os jogadores da base (aqui sabemos que a coluna se chama 'skill')
+      // 2. Query para os jogadores da base (aqui continua a ser 'skill')
       let aQuery = supabase.from("academy_players").select("id, name, position, age, skill, nationality, club_id");
       if (searchTerm) aQuery = aQuery.ilike("name", `%${searchTerm}%`);
       if (positionFilter !== "todas") aQuery = aQuery.eq("position", positionFilter);
@@ -77,8 +76,8 @@ export const ScoutsManager = ({ myClub, scoutReports, onReportCreated }: Props) 
 
       // Junta os resultados identificando a origem de cada um
       const combined = [
-        // Mapeamos a coluna do profissional (ex: p.overall) para 'skill' para que o componente SkillDisplay funcione
-        ...(pRes.data || []).map((p: any) => ({ ...p, skill: p.overall, source: "Profissional" })),
+        // Mapeamos a coluna do profissional 'habilidade' para 'skill' para manter a tabela a funcionar
+        ...(pRes.data || []).map((p: any) => ({ ...p, skill: p.habilidade, source: "Profissional" })),
         ...(aRes.data || []).map((p: any) => ({ ...p, source: "Base" })),
       ];
 
