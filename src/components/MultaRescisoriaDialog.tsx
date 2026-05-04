@@ -21,7 +21,9 @@ type Player = {
   id: string;
   name: string;
   club_id: string | null;
-  valor_base_calculado: number;
+  valor_base_calculado?: number | string | null;
+  market_value?: number | string | null;
+  salario_atual?: number | string | null;
 };
 
 export const MultaRescisoriaDialog = ({
@@ -46,15 +48,20 @@ export const MultaRescisoriaDialog = ({
   const [clubeCompId, setClubeCompId] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
-  const multa = player ? Number(player.valor_base_calculado || 0) * 5 : 0;
   const isOwner = !!myClubId && player?.club_id === myClubId;
+
+  // Valor base com fallback para market_value
+  const valorBase = player ? Number(player.valor_base_calculado || player.market_value || 0) : 0;
+
+  // Multa = 5× valor base (label corrigida para "5×")
+  const multa = valorBase * 5;
 
   useEffect(() => {
     if (!open || !player) return;
     setMode(isOwner && !isAdmin ? "liberar" : "comprar");
     setAnos(3);
-    setSalario(Math.max(50000, Math.round(Number(player.valor_base_calculado || 0) * 0.1)));
-    // Buscar clubes do usuário (para escolher quem compra)
+    setSalario(Math.max(50000, Math.round(valorBase * 0.1)));
+
     if (isAdmin) {
       supabase
         .from("clubs")
@@ -77,7 +84,9 @@ export const MultaRescisoriaDialog = ({
     if (!player) return;
     setLoading(true);
     if (mode === "liberar") {
-      const { error } = await supabase.rpc("liberar_jogador_pagando_multa", { _jogador_id: player.id });
+      const { error } = await supabase.rpc("liberar_jogador_pagando_multa", {
+        _jogador_id: player.id,
+      });
       setLoading(false);
       if (error) return toast.error(error.message);
       toast.success(`${player.name} liberado como agente livre. Multa paga: ${formatCurrency(multa)}`);
@@ -111,8 +120,9 @@ export const MultaRescisoriaDialog = ({
         </DialogHeader>
 
         <Card className="p-3 bg-secondary/30 border-border/50">
-          <div className="text-[10px] uppercase text-muted-foreground">Multa (10× valor base)</div>
+          <div className="text-[10px] uppercase text-muted-foreground">Multa (5× valor base)</div>
           <div className="font-display font-bold text-2xl text-primary">{formatCurrency(multa)}</div>
+          <div className="text-[10px] text-muted-foreground mt-1">Valor base: {formatCurrency(valorBase)}</div>
         </Card>
 
         {(isOwner || isAdmin) && (
@@ -151,7 +161,7 @@ export const MultaRescisoriaDialog = ({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>Salário/ano</Label>
+                <Label>Salário/mês</Label>
                 <NumberInput value={salario} onChange={setSalario} min={50000} max={50000000} />
               </div>
               <div className="space-y-2">
@@ -176,7 +186,8 @@ export const MultaRescisoriaDialog = ({
             Cancelar
           </Button>
           <Button onClick={submit} disabled={loading}>
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />} Pagar multa
+            {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Pagar multa
           </Button>
         </DialogFooter>
       </DialogContent>
