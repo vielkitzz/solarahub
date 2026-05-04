@@ -972,12 +972,13 @@ function SquadTable({
                 const shirt = p.shirt_number ?? p.attributes?.shirtNumber;
                 const stars = calcStars(p.habilidade, club.rate);
                 // Potencial exibido: APENAS o dono enxerga (estimativa via base). Outros precisam usar Olheiros.
-                let potDisplay: { value: number; label: string; tooltip: string } | null = null;
+                let potDisplay: { value: number; min: number; label: string; tooltip: string } | null = null;
                 if (isOwnClub && myClub) {
                   const est = estimarPotencialOwn(p, myClub.id, myClub.nivel_base);
                   if (est) {
                     potDisplay = {
                       value: est.pmax,
+                      min: est.pmin, // ← adicione esta linha
                       label: `${est.pmin}-${est.pmax}`,
                       tooltip: `Estimativa do seu olheiro (±${est.margem})`,
                     };
@@ -1039,7 +1040,13 @@ function SquadTable({
                       {p.age ?? "—"}
                     </TableCell>
                     <TableCell className="py-2">
-                      <SkillDisplay value={p.habilidade} rate={club.rate} kind="skill" />
+                      <SkillDisplay
+                        value={potDisplay.value} // pmax
+                        valueMin={potDisplay.min} // pmin ← novo
+                        rate={club.rate}
+                        kind="potential"
+                        numericLabel={potDisplay.label}
+                      />
                     </TableCell>
                     <TableCell className="py-2">
                       {potDisplay ? (
