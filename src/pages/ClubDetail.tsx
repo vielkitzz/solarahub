@@ -978,7 +978,7 @@ function SquadTable({
                   if (est) {
                     potDisplay = {
                       value: est.pmax,
-                      label: `~${est.pmin}-${est.pmax}`,
+                      label: `${est.pmin}-${est.pmax}`,
                       tooltip: `Estimativa do seu olheiro (±${est.margem})`,
                     };
                   }
