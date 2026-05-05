@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (jErr || !jogador) return json({ error: "Jogador não encontrado" }, 404);
 
-    const salarioMinimoEsperado = Number(jogador.valor_base_calculado || 0) * 0.10;
+    const salarioMinimoEsperado = Number(jogador.valor_base_calculado || 0) * 0.1;
     const idade = jogador.age ?? 25;
     const habilidade = jogador.habilidade ?? 70;
 
@@ -68,12 +68,12 @@ Regras de avaliação:
 Posição: ${jogador.position}
 Idade: ${idade}
 Habilidade: ${habilidade}
-Valor base anual: R$ ${Number(jogador.valor_base_calculado).toFixed(0)}
-Salário atual: R$ ${Number(jogador.salario_atual).toFixed(0)}
-Salário mínimo esperado (10%): R$ ${salarioMinimoEsperado.toFixed(0)}
+Valor base anual: € ${Number(jogador.valor_base_calculado).toFixed(0)}
+Salário atual: € ${Number(jogador.salario_atual).toFixed(0)}
+Salário mínimo esperado (10%): € ${salarioMinimoEsperado.toFixed(0)}
 
 Proposta do clube:
-- Salário anual: R$ ${salario_proposto}
+- Salário anual: € ${salario_proposto}
 - Duração: ${anos_proposto} ano(s)
 
 Decida.`;
@@ -120,7 +120,8 @@ Decida.`;
       }),
     });
 
-    if (aiResp.status === 429) return json({ error: "Limite de requisições atingido. Tente novamente em alguns instantes." }, 429);
+    if (aiResp.status === 429)
+      return json({ error: "Limite de requisições atingido. Tente novamente em alguns instantes." }, 429);
     if (aiResp.status === 402) return json({ error: "Créditos de IA esgotados. Adicione créditos no workspace." }, 402);
     if (!aiResp.ok) {
       const t = await aiResp.text();

@@ -95,32 +95,33 @@ export const EmpresasManager = () => {
   // Importar todas as marcas do brands.ts (KIT_SUPPLIERS + SPONSORS) para o banco
   const [importing, setImporting] = useState(false);
   const importBrands = async () => {
-    if (!confirm(`Importar ${KIT_SUPPLIERS.length + SPONSORS.length} marcas do catálogo brands.ts? Duplicatas (mesmo nome) serão ignoradas.`)) return;
+    if (
+      !confirm(
+        `Importar ${KIT_SUPPLIERS.length + SPONSORS.length} marcas do catálogo brands.ts? Duplicatas (mesmo nome) serão ignoradas.`,
+      )
+    )
+      return;
     setImporting(true);
     try {
       const existingNames = new Set(empresas.map((e) => e.nome.toLowerCase()));
 
-      const fromKit = KIT_SUPPLIERS
-        .filter((b) => !existingNames.has(b.name.toLowerCase()))
-        .map((b) => ({
-          nome: b.name,
-          categoria: "fornecedora" as const,
-          valor_anual_sugerido: Math.round(8_000_000 * (b.prestige ?? 1)),
-          logo_url: getBrandLogoUrl(b.domain),
-          exigencias: `Marca ${b.setor} (prestígio ${b.prestige ?? 1})`,
-          ativa: true,
-        }));
+      const fromKit = KIT_SUPPLIERS.filter((b) => !existingNames.has(b.name.toLowerCase())).map((b) => ({
+        nome: b.name,
+        categoria: "fornecedora" as const,
+        valor_anual_sugerido: Math.round(8_000_000 * (b.prestige ?? 1)),
+        logo_url: getBrandLogoUrl(b.domain),
+        exigencias: `Marca ${b.setor} (prestígio ${b.prestige ?? 1})`,
+        ativa: true,
+      }));
 
-      const fromSponsors = SPONSORS
-        .filter((b) => !existingNames.has(b.name.toLowerCase()))
-        .map((b) => ({
-          nome: b.name,
-          categoria: "master" as const,
-          valor_anual_sugerido: Math.round(5_000_000 * (b.prestige ?? 1)),
-          logo_url: getBrandLogoUrl(b.domain),
-          exigencias: `Marca ${b.setor} (prestígio ${b.prestige ?? 1})`,
-          ativa: true,
-        }));
+      const fromSponsors = SPONSORS.filter((b) => !existingNames.has(b.name.toLowerCase())).map((b) => ({
+        nome: b.name,
+        categoria: "master" as const,
+        valor_anual_sugerido: Math.round(5_000_000 * (b.prestige ?? 1)),
+        logo_url: getBrandLogoUrl(b.domain),
+        exigencias: `Marca ${b.setor} (prestígio ${b.prestige ?? 1})`,
+        ativa: true,
+      }));
 
       const rows = [...fromKit, ...fromSponsors];
       if (rows.length === 0) {
@@ -143,8 +144,14 @@ export const EmpresasManager = () => {
           <Building2 className="h-5 w-5 text-primary" /> Empresas patrocinadoras
         </h3>
         <div className="flex gap-2">
-          <Button onClick={importBrands} disabled={importing} variant="outline" className="border-primary/40 text-primary hover:bg-primary/10">
-            <Download className="h-4 w-4" /> {importing ? "Importando..." : `Importar catálogo (${KIT_SUPPLIERS.length + SPONSORS.length})`}
+          <Button
+            onClick={importBrands}
+            disabled={importing}
+            variant="outline"
+            className="border-primary/40 text-primary hover:bg-primary/10"
+          >
+            <Download className="h-4 w-4" />{" "}
+            {importing ? "Importando..." : `Importar catálogo (${KIT_SUPPLIERS.length + SPONSORS.length})`}
           </Button>
           <Button onClick={openNew} className="bg-gradient-gold text-primary-foreground">
             <Plus className="h-4 w-4" /> Nova empresa
@@ -230,7 +237,7 @@ export const EmpresasManager = () => {
               </Select>
             </div>
             <div>
-              <Label>Valor anual sugerido (R$)</Label>
+              <Label>Valor anual sugerido (€)</Label>
               <Input
                 type="number"
                 value={editing.valor_anual_sugerido}
@@ -256,10 +263,7 @@ export const EmpresasManager = () => {
               />
             </div>
             <div className="flex items-center gap-2">
-              <Switch
-                checked={!!editing.ativa}
-                onCheckedChange={(v) => setEditing({ ...editing, ativa: v })}
-              />
+              <Switch checked={!!editing.ativa} onCheckedChange={(v) => setEditing({ ...editing, ativa: v })} />
               <Label className="!m-0">Ativa</Label>
             </div>
           </div>

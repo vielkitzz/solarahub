@@ -4,21 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Trophy, Upload, FileJson, Plus, Trash2, Check, X, Save } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/format";
@@ -82,11 +69,7 @@ export const CampanhasManager = () => {
   };
 
   const loadPremios = async () => {
-    const { data } = await supabase
-      .from("premiacoes_torneio")
-      .select("*")
-      .order("torneio")
-      .order("fase");
+    const { data } = await supabase.from("premiacoes_torneio").select("*").order("torneio").order("fase");
     setPremios((data || []).map((p: any) => ({ ...p })));
   };
 
@@ -128,11 +111,13 @@ export const CampanhasManager = () => {
         return;
       }
 
-      const rows: ParsedRow[] = arr.map((r) => ({
-        clube_nome: String(r.clube ?? r.clube_nome ?? r.club ?? "").trim(),
-        fase: r.fase ?? r.phase ?? null,
-        posicao: r.posicao != null ? Number(r.posicao) : r.position != null ? Number(r.position) : null,
-      })).filter((r) => r.clube_nome);
+      const rows: ParsedRow[] = arr
+        .map((r) => ({
+          clube_nome: String(r.clube ?? r.clube_nome ?? r.club ?? "").trim(),
+          fase: r.fase ?? r.phase ?? null,
+          posicao: r.posicao != null ? Number(r.posicao) : r.position != null ? Number(r.position) : null,
+        }))
+        .filter((r) => r.clube_nome);
 
       // Auto-detecta temporada do JSON se vier
       if (json.temporada) setTemporada(Number(json.temporada));
@@ -180,7 +165,13 @@ export const CampanhasManager = () => {
   const addPremio = () => {
     setPremios((prev) => [
       ...prev,
-      { torneio: filtroTorneio !== "all" ? filtroTorneio : "superliga_solara", fase: "", valor: 0, _new: true, _dirty: true },
+      {
+        torneio: filtroTorneio !== "all" ? filtroTorneio : "superliga_solara",
+        fase: "",
+        valor: 0,
+        _new: true,
+        _dirty: true,
+      },
     ]);
   };
 
@@ -215,9 +206,7 @@ export const CampanhasManager = () => {
       valor: Number(rest.valor) || 0,
     }));
 
-    const { error } = await supabase
-      .from("premiacoes_torneio")
-      .upsert(payload, { onConflict: "torneio,fase" });
+    const { error } = await supabase.from("premiacoes_torneio").upsert(payload, { onConflict: "torneio,fase" });
 
     setSavingAll(false);
     if (error) return toast.error(error.message);
@@ -246,28 +235,24 @@ export const CampanhasManager = () => {
           <div>
             <Label>Torneio</Label>
             <Select value={torneio} onValueChange={(v) => setTorneio(v as TorneioSlug)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {TORNEIOS.map((t) => (
-                  <SelectItem key={t.slug} value={t.slug}>{t.label}</SelectItem>
+                  <SelectItem key={t.slug} value={t.slug}>
+                    {t.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div>
             <Label>Temporada</Label>
-            <Input
-              type="number"
-              value={temporada}
-              onChange={(e) => setTemporada(parseInt(e.target.value) || 0)}
-            />
+            <Input type="number" value={temporada} onChange={(e) => setTemporada(parseInt(e.target.value) || 0)} />
           </div>
           <div className="flex items-end">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => fileRef.current?.click()}
-            >
+            <Button variant="outline" className="w-full" onClick={() => fileRef.current?.click()}>
               <Upload className="h-4 w-4 mr-2" /> Selecionar arquivo
             </Button>
             <input
@@ -285,7 +270,10 @@ export const CampanhasManager = () => {
         </div>
 
         <div
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
           onDragLeave={() => setDragOver(false)}
           onDrop={onDrop}
           className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
@@ -295,7 +283,9 @@ export const CampanhasManager = () => {
           <FileJson className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
             {fileName ? (
-              <>Arquivo: <span className="text-foreground font-medium">{fileName}</span></>
+              <>
+                Arquivo: <span className="text-foreground font-medium">{fileName}</span>
+              </>
             ) : (
               <>Arraste o .json exportado pelo Tournament Manager 2 aqui</>
             )}
@@ -307,12 +297,16 @@ export const CampanhasManager = () => {
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="text-sm flex gap-3">
                 <span className="text-emerald-400">✓ {matchedCount} encontrados</span>
-                {unmatchedCount > 0 && (
-                  <span className="text-destructive">✗ {unmatchedCount} não encontrados</span>
-                )}
+                {unmatchedCount > 0 && <span className="text-destructive">✗ {unmatchedCount} não encontrados</span>}
               </div>
               <div className="flex gap-2">
-                <Button variant="ghost" onClick={() => { setPreview(null); setFileName(""); }}>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setPreview(null);
+                    setFileName("");
+                  }}
+                >
                   Cancelar
                 </Button>
                 <Button
@@ -371,22 +365,22 @@ export const CampanhasManager = () => {
           </div>
           <div className="flex gap-2 items-center">
             <Select value={filtroTorneio} onValueChange={setFiltroTorneio}>
-              <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-56">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os torneios</SelectItem>
                 {TORNEIOS.map((t) => (
-                  <SelectItem key={t.slug} value={t.slug}>{t.label}</SelectItem>
+                  <SelectItem key={t.slug} value={t.slug}>
+                    {t.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Button variant="outline" onClick={addPremio}>
               <Plus className="h-4 w-4 mr-2" /> Adicionar
             </Button>
-            <Button
-              onClick={saveAllPremios}
-              disabled={savingAll}
-              className="bg-gradient-gold text-primary-foreground"
-            >
+            <Button onClick={saveAllPremios} disabled={savingAll} className="bg-gradient-gold text-primary-foreground">
               <Save className="h-4 w-4 mr-2" />
               {savingAll ? "Salvando..." : "Salvar"}
             </Button>
@@ -399,7 +393,7 @@ export const CampanhasManager = () => {
               <TableRow>
                 <TableHead className="w-[260px]">Torneio</TableHead>
                 <TableHead>Fase / Posição</TableHead>
-                <TableHead>Valor (R$)</TableHead>
+                <TableHead>Valor (€)</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
@@ -416,14 +410,15 @@ export const CampanhasManager = () => {
                 return (
                   <TableRow key={p.id ?? `new-${idx}`}>
                     <TableCell>
-                      <Select
-                        value={p.torneio}
-                        onValueChange={(v) => updatePremio(idx, { torneio: v })}
-                      >
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                      <Select value={p.torneio} onValueChange={(v) => updatePremio(idx, { torneio: v })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           {TORNEIOS.map((t) => (
-                            <SelectItem key={t.slug} value={t.slug}>{t.label}</SelectItem>
+                            <SelectItem key={t.slug} value={t.slug}>
+                              {t.label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
