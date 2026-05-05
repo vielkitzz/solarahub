@@ -96,14 +96,11 @@ export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
     if (!confirm(`Confirmar investimento de ${formatCurrency(custoUpgrade)} nas obras do estádio?`)) return;
 
     setSaving(true);
-    const { error } = await supabase
-      .from("clubs")
-      .update({
-        budget: Number(club.budget) - custoUpgrade,
-        nivel_estadio: novoNivel,
-        stadium_capacity: capacidadeFinal,
-      })
-      .eq("id", club.id);
+    const { error } = await supabase.rpc("upgrade_estadio", {
+      _club_id: club.id,
+      _novo_nivel: novoNivel,
+      _nova_capacidade: capacidadeFinal,
+    });
 
     setSaving(false);
     if (error) return toast.error(error.message);
