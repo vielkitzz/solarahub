@@ -159,7 +159,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                     <img
                       src={getFlagUrl(player.nationality)}
                       alt={player.nationality}
-                      className="h-3 w-4 object-cover rounded-[1.5px]"
+                      className="h-3 w-4 object-cover rounded-[2px]"
                     />
                     <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
                       {player.position} • {player.age} anos
