@@ -849,6 +849,10 @@ export type Database = {
         }
         Returns: Json
       }
+      premiacao_clube_temporada: {
+        Args: { _club_id: string; _temp: number }
+        Returns: number
+      }
       premiacao_por_posicao: { Args: { _pos: number }; Returns: number }
       preview_season_turnover: {
         Args: never
