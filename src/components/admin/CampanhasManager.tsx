@@ -142,10 +142,14 @@ export const CampanhasManager = () => {
   const buildPreview = (rows: ParsedRow[]): PreviewRow[] =>
     rows.map((r) => {
       const found = clubByNorm.get(norm(r.clube_nome));
+      const premio = findPremio(premios, torneio, r.fase, r.posicao);
       return {
         ...r,
         match_id: found?.id ?? null,
         match_name: found?.name ?? null,
+        fase_efetiva: premio?.fase ?? r.fase ?? (r.posicao != null ? String(r.posicao) : null),
+        premio_valor: premio?.valor ?? null,
+        premio_label: premio?.fase ?? null,
       };
     });
 
