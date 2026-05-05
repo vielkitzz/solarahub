@@ -414,7 +414,10 @@ const Market = () => {
                     </Badge>
                     <div className="flex-1 min-w-0 order-1 sm:order-none basis-full sm:basis-auto">
                       <div className="font-bold truncate flex items-center gap-2">
-                        <button onClick={() => setProfilePlayerId(p.id)} className="hover:text-primary transition-colors text-left truncate">
+                        <button
+                          onClick={() => setProfilePlayerId(p.id)}
+                          className="hover:text-primary transition-colors text-left truncate"
+                        >
                           {p.name}
                         </button>
                         {p.a_venda && (
@@ -501,7 +504,6 @@ const Market = () => {
                     <TableHead>Jogador</TableHead>
                     <TableHead className="w-20 hidden sm:table-cell"></TableHead>
                     <TableHead>Clube</TableHead>
-                    <TableHead className="text-center w-16">Overall</TableHead>
                     <TableHead className="text-center w-16 hidden sm:table-cell">Idade</TableHead>
                     <TableHead className="text-right">Valor base</TableHead>
                     <TableHead className="w-24"></TableHead>
@@ -519,7 +521,12 @@ const Market = () => {
                         </TableCell>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <button onClick={() => setProfilePlayerId(p.id)} className="hover:text-primary transition-colors">{p.name}</button>
+                            <button
+                              onClick={() => setProfilePlayerId(p.id)}
+                              className="hover:text-primary transition-colors"
+                            >
+                              {p.name}
+                            </button>
                             {p.a_venda && (
                               <Badge className="bg-primary/20 text-primary border-primary/40 text-[10px] px-1.5 py-0">
                                 <Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA
@@ -547,9 +554,6 @@ const Market = () => {
                             <span className="text-xs text-muted-foreground">—</span>
                           )}
                         </TableCell>
-                        <TableCell className="text-center">
-                          <StarRating value={calcStars(p.habilidade, activeClub?.rate ?? 3.0)} />
-                        </TableCell>
                         <TableCell className="text-center hidden sm:table-cell text-sm">{p.age || "—"}</TableCell>
                         <TableCell className="text-right font-display font-bold text-primary">
                           {formatCurrency(Number(p.valor_base_calculado))}
@@ -568,7 +572,7 @@ const Market = () => {
                   })}
                   {filteredNegociar.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center text-muted-foreground py-10">
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
                         Nenhum jogador disponível.
                       </TableCell>
                     </TableRow>
@@ -930,7 +934,9 @@ const Market = () => {
               return (
                 <Card key={entry.id} className="p-3 bg-gradient-card border-border/50">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <Badge variant="outline" className="border-primary/40 text-primary">{p.position}</Badge>
+                    <Badge variant="outline" className="border-primary/40 text-primary">
+                      {p.position}
+                    </Badge>
                     <button
                       onClick={() => setProfilePlayerId(p.id)}
                       className="font-bold hover:text-primary transition-colors text-left flex items-center gap-2"
@@ -959,7 +965,11 @@ const Market = () => {
                     </div>
                     <div className="flex gap-2">
                       {hasClub && p.club_id && p.club_id !== activeClubId && (
-                        <Button size="sm" onClick={() => openProposal(p)} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+                        <Button
+                          size="sm"
+                          onClick={() => openProposal(p)}
+                          className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+                        >
                           <ArrowRightLeft className="h-3.5 w-3.5" /> Negociar
                         </Button>
                       )}
@@ -1144,7 +1154,10 @@ const Market = () => {
         playerId={profilePlayerId}
         open={!!profilePlayerId}
         onOpenChange={(v) => !v && setProfilePlayerId(null)}
-        onNegotiate={(p) => { setProfilePlayerId(null); openProposal(p); }}
+        onNegotiate={(p) => {
+          setProfilePlayerId(null);
+          openProposal(p);
+        }}
       />
     </div>
   );

@@ -17,7 +17,7 @@ interface Props {
 }
 
 const NIVEL_LABELS = ["—", "Modesto", "Regional", "Profissional", "Premium", "Elite"];
-const CUSTO_POR_LUGAR = 1000; // €/assento (sincronizado com settings.estadio_upgrade_custos.por_lugar)
+const CUSTO_POR_LUGAR = 1500; // Custo de €1.500 por novo assento
 const TABELA_CUSTOS_NIVEL: Record<number, number> = {
   2: 1000000, // 1 -> 2: €1M
   3: 10000000, // 2 -> 3: €10M
@@ -96,11 +96,14 @@ export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
     if (!confirm(`Confirmar investimento de ${formatCurrency(custoUpgrade)} nas obras do estádio?`)) return;
 
     setSaving(true);
-    const { error } = await supabase.rpc("upgrade_estadio", {
-      _club_id: club.id,
-      _novo_nivel: novoNivel,
-      _nova_capacidade: capacidadeFinal,
-    });
+    const { error } = await supabase
+      .from("clubs")
+      .update({
+        budget: Number(club.budget) - custoUpgrade,
+        nivel_estadio: novoNivel,
+        stadium_capacity: capacidadeFinal,
+      })
+      .eq("id", club.id);
 
     setSaving(false);
     if (error) return toast.error(error.message);

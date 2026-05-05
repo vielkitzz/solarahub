@@ -237,21 +237,10 @@ export const CampanhasManager = () => {
     <div className="space-y-8">
       {/* SEÇÃO 1 — Importar Resultados */}
       <Card className="p-5 bg-gradient-card border-border/50">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-4">
           <Trophy className="h-5 w-5 text-primary" />
-          <h3 className="font-display font-bold text-lg">1. Importar Resultados da Temporada</h3>
+          <h3 className="font-display font-bold text-lg">Importar Resultados</h3>
         </div>
-        <p className="text-xs text-muted-foreground mb-4">
-          Envie o JSON exportado pelo <strong>Tournament Manager 2</strong>. Cada linha precisa conter o nome do clube e
-          a fase atingida (ou posição). O sistema casa o nome do clube com o cadastro e, na virada de temporada,
-          calcula o prêmio multiplicando essa fase pelo valor configurado em <em>Configurar Prêmios</em> abaixo.
-        </p>
-        <pre className="text-[10px] bg-secondary/30 border border-border/40 rounded p-2 mb-4 overflow-x-auto text-muted-foreground">
-{`{ "temporada": 2026, "resultados": [
-  { "clube": "Solara FC", "fase": "Campeão" },
-  { "clube": "Vega United", "fase": "Final", "posicao": 2 }
-] }`}
-        </pre>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
           <div>
@@ -375,10 +364,10 @@ export const CampanhasManager = () => {
 
       {/* SEÇÃO 2 — Configurar Prêmios */}
       <Card className="p-5 bg-gradient-card border-border/50">
-        <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
           <div className="flex items-center gap-2">
             <Trophy className="h-5 w-5 text-primary" />
-            <h3 className="font-display font-bold text-lg">2. Configurar Prêmios por Fase</h3>
+            <h3 className="font-display font-bold text-lg">Configurar Prêmios</h3>
           </div>
           <div className="flex gap-2 items-center">
             <Select value={filtroTorneio} onValueChange={setFiltroTorneio}>
@@ -403,10 +392,6 @@ export const CampanhasManager = () => {
             </Button>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground mb-4">
-          O texto da <strong>Fase</strong> deve bater (ignorando maiúsculas/acentos) com o que vier no JSON. Ex.:
-          “Campeão”, “Final”, “Semifinal”, “Oitavas”, “Fase de Grupos”.
-        </p>
 
         <div className="border border-border/50 rounded-md overflow-auto scrollbar-thin">
           <Table>

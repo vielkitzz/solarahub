@@ -495,10 +495,7 @@ export type Database = {
           created_at: string
           fase: string
           id: string
-          posicao_max: number | null
-          posicao_min: number | null
           torneio: string
-          torneio_label: string | null
           updated_at: string
           valor: number
         }
@@ -506,10 +503,7 @@ export type Database = {
           created_at?: string
           fase: string
           id?: string
-          posicao_max?: number | null
-          posicao_min?: number | null
           torneio: string
-          torneio_label?: string | null
           updated_at?: string
           valor?: number
         }
@@ -517,10 +511,7 @@ export type Database = {
           created_at?: string
           fase?: string
           id?: string
-          posicao_max?: number | null
-          posicao_min?: number | null
           torneio?: string
-          torneio_label?: string | null
           updated_at?: string
           valor?: number
         }
@@ -848,10 +839,6 @@ export type Database = {
           _novo_salario: number
         }
         Returns: Json
-      }
-      premiacao_clube_temporada: {
-        Args: { _club_id: string; _temp: number }
-        Returns: number
       }
       premiacao_por_posicao: { Args: { _pos: number }; Returns: number }
       preview_season_turnover: {
