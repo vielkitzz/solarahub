@@ -4,9 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Save, Coins, Info } from "lucide-react";
+import { Save, Coins } from "lucide-react";
 import { toast } from "sonner";
-import { formatCurrency } from "@/lib/format";
 
 type Params = {
   receita_base: { estadual: number; nacional: number; continental: number; mundial: number };
@@ -31,21 +30,20 @@ const DEFAULT: Params = {
   manutencao_por_nivel_base: 300000,
   multiplicadores_evolucao: { "1": 0.8, "2": 0.95, "3": 1.1, "4": 1.2, "5": 1.3 },
   premiacao: {
-    "1": 8500000,
-    "2": 6000000,
-    "3": 4000000,
-    "4": 2000000,
-    "5_8": 1500000,
-    "9_12": 500000,
-    "13_16": 100000,
-    "17_20": 0,
+    "1": 20000000,
+    "2": 12000000,
+    "3": 8000000,
+    "4": 5000000,
+    "5_8": 3000000,
+    "9_12": 1500000,
+    "13_16": 750000,
+    "17_20": 300000,
   },
 };
 
 export const EconomyParams = () => {
   const [p, setP] = useState<Params>(DEFAULT);
   const [saving, setSaving] = useState(false);
-  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     supabase
@@ -54,18 +52,7 @@ export const EconomyParams = () => {
       .eq("key", "economia_params")
       .maybeSingle()
       .then(({ data }) => {
-        if (data?.value) {
-          // Merge profundo: garante que chaves novas do DEFAULT sejam preservadas
-          const remote = data.value as any;
-          setP({
-            ...DEFAULT,
-            ...remote,
-            receita_base: { ...DEFAULT.receita_base, ...remote.receita_base },
-            multiplicadores_evolucao: { ...DEFAULT.multiplicadores_evolucao, ...remote.multiplicadores_evolucao },
-            premiacao: { ...DEFAULT.premiacao, ...remote.premiacao },
-          });
-        }
-        setLoaded(true);
+        if (data?.value) setP({ ...DEFAULT, ...(data.value as any) });
       });
   }, []);
 
@@ -73,33 +60,31 @@ export const EconomyParams = () => {
     setSaving(true);
     const { error } = await supabase
       .from("settings")
-      .upsert({ key: "economia_params", value: p as any }, { onConflict: "key" });
+      .update({ value: p as any })
+      .eq("key", "economia_params");
     setSaving(false);
     if (error) return toast.error(error.message);
-    toast.success("Parâmetros econômicos atualizados! Serão aplicados na próxima virada.");
+    toast.success("Parâmetros econômicos atualizados!");
   };
 
   const num = (v: any) => (v === "" || v === null ? 0 : Number(v));
 
-  if (!loaded) return <div className="text-muted-foreground text-sm p-4">Carregando parâmetros...</div>;
-
   return (
-    <Card className="p-5 bg-gradient-card border-border/50 space-y-6">
+    <Card className="p-5 bg-gradient-card border-border/50 space-y-5">
       <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-display font-bold flex items-center gap-2">
-            <Coins className="h-5 w-5 text-primary" /> Parâmetros econômicos
-          </h3>
-          <p className="text-xs text-muted-foreground mt-0.5">Aplicados automaticamente na virada de temporada.</p>
-        </div>
+        <h3 className="font-display font-bold flex items-center gap-2">
+          <Coins className="h-5 w-5 text-primary" /> Parâmetros econômicos
+        </h3>
         <Button onClick={save} disabled={saving} className="bg-gradient-gold text-primary-foreground">
-          <Save className="h-4 w-4 mr-1" /> {saving ? "Salvando..." : "Salvar"}
+          <Save className="h-4 w-4" /> {saving ? "Salvando..." : "Salvar"}
         </Button>
       </div>
+      <p className="text-xs text-muted-foreground -mt-3">
+        Valores aplicados na próxima virada de temporada e na pré-visualização.
+      </p>
 
-      {/* Receita base */}
       <section className="space-y-2">
-        <h4 className="text-sm font-bold text-foreground">Receita de TV por reputação (€/ano)</h4>
+        <h4 className="text-sm font-bold text-foreground">Receita base por reputação (€/ano)</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {(["estadual", "nacional", "continental", "mundial"] as const).map((k) => (
             <div key={k}>
@@ -109,13 +94,11 @@ export const EconomyParams = () => {
                 value={p.receita_base[k]}
                 onChange={(e) => setP({ ...p, receita_base: { ...p.receita_base, [k]: num(e.target.value) } })}
               />
-              <p className="text-[10px] text-muted-foreground mt-0.5">{formatCurrency(p.receita_base[k])}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Bilheteria e manutenção */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <Label className="text-xs">Bilheteria base por nível de estádio (€)</Label>
@@ -124,7 +107,6 @@ export const EconomyParams = () => {
             value={p.bilheteria_por_nivel}
             onChange={(e) => setP({ ...p, bilheteria_por_nivel: num(e.target.value) })}
           />
-          <p className="text-[10px] text-muted-foreground mt-0.5">{formatCurrency(p.bilheteria_por_nivel)}</p>
         </div>
         <div>
           <Label className="text-xs">Custo de manutenção por nível de base (€)</Label>
@@ -133,11 +115,9 @@ export const EconomyParams = () => {
             value={p.manutencao_por_nivel_base}
             onChange={(e) => setP({ ...p, manutencao_por_nivel_base: num(e.target.value) })}
           />
-          <p className="text-[10px] text-muted-foreground mt-0.5">{formatCurrency(p.manutencao_por_nivel_base)}</p>
         </div>
       </section>
 
-      {/* Multiplicadores evolução */}
       <section className="space-y-2">
         <h4 className="text-sm font-bold text-foreground">Multiplicadores de evolução por nível de base</h4>
         <div className="grid grid-cols-5 gap-2">
@@ -157,28 +137,29 @@ export const EconomyParams = () => {
         </div>
       </section>
 
-      {/* Premiação por posição — agora conectada à função do banco */}
-      <section className="space-y-2">
-        <div className="flex items-center gap-2">
-          <h4 className="text-sm font-bold text-foreground">Premiação por posição final — Superliga (€)</h4>
-          <span
-            title="Estes valores alimentam diretamente a função premiacao_por_posicao() usada na virada de temporada."
-            className="text-muted-foreground cursor-help"
-          >
-            <Info className="h-3.5 w-3.5" />
+      <section className="space-y-2 opacity-60">
+        <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+          Premiação por posição final (€)
+          <span className="text-[10px] uppercase tracking-wider text-amber-500 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded">
+            Legado — não usado
           </span>
-        </div>
+        </h4>
+        <p className="text-[11px] text-muted-foreground -mt-1">
+          A premiação real agora vem da aba <span className="text-primary font-medium">Campanhas</span>: prêmio = soma
+          dos valores configurados em <em>Configurar Prêmios</em> casados com a fase/posição importada do Tournament
+          Manager. Estes valores ficam aqui apenas como histórico.
+        </p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {(
             [
-              ["1", "🥇 1º lugar"],
-              ["2", "🥈 2º lugar"],
-              ["3", "🥉 3º lugar"],
-              ["4", "4º lugar"],
-              ["5_8", "5º – 8º"],
-              ["9_12", "9º – 12º"],
-              ["13_16", "13º – 16º"],
-              ["17_20", "17º – 20º"],
+              ["1", "1º"],
+              ["2", "2º"],
+              ["3", "3º"],
+              ["4", "4º"],
+              ["5_8", "5º–8º"],
+              ["9_12", "9º–12º"],
+              ["13_16", "13º–16º"],
+              ["17_20", "17º–20º"],
             ] as const
           ).map(([k, label]) => (
             <div key={k}>
@@ -188,7 +169,6 @@ export const EconomyParams = () => {
                 value={(p.premiacao as any)[k]}
                 onChange={(e) => setP({ ...p, premiacao: { ...p.premiacao, [k]: num(e.target.value) } })}
               />
-              <p className="text-[10px] text-muted-foreground mt-0.5">{formatCurrency((p.premiacao as any)[k])}</p>
             </div>
           ))}
         </div>
