@@ -394,6 +394,7 @@ export const CampanhasManager = () => {
                     <TableHead>Fase</TableHead>
                     <TableHead className="text-center">Posição</TableHead>
                     <TableHead>Match</TableHead>
+                    <TableHead>Premiação</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -411,6 +412,20 @@ export const CampanhasManager = () => {
                           <span className="inline-flex items-center gap-1.5 text-destructive text-xs">
                             <X className="h-3.5 w-3.5" /> não encontrado
                           </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {row.premio_valor != null ? (
+                          <span className="inline-flex flex-col">
+                            <span className="text-emerald-400 font-medium">
+                              {formatCurrency(row.premio_valor)}
+                            </span>
+                            <span className="text-muted-foreground">
+                              fase: {row.premio_label}
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-amber-400">sem prêmio</span>
                         )}
                       </TableCell>
                     </TableRow>
