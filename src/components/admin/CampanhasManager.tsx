@@ -33,7 +33,44 @@ interface ParsedRow {
 interface PreviewRow extends ParsedRow {
   match_id: string | null;
   match_name: string | null;
+  fase_efetiva: string | null;
+  premio_valor: number | null;
+  premio_label: string | null;
 }
+
+// Resolve premiação para (torneio, fase, posicao) aceitando:
+//  - fase exata ("Campeão", "Final")
+//  - fase numérica ("1", "2") cruzando com posição
+//  - fase range ("2-4", "5_8", "9 a 12") cruzando com posição
+const parseFaseRange = (fase: string): [number, number] | null => {
+  const s = fase.trim().toLowerCase().replace(/\s+/g, "");
+  const m = s.match(/^(\d+)[-_a–](\d+)$/);
+  if (m) return [parseInt(m[1]), parseInt(m[2])];
+  const single = s.match(/^(\d+)$/);
+  if (single) return [parseInt(single[1]), parseInt(single[1])];
+  return null;
+};
+
+const findPremio = (
+  premios: PremioRow[],
+  torneio: string,
+  fase: string | null,
+  posicao: number | null,
+): PremioRow | null => {
+  const list = premios.filter((p) => p.torneio === torneio && p.fase);
+  if (fase) {
+    const exact = list.find((p) => norm(p.fase) === norm(fase));
+    if (exact) return exact;
+  }
+  if (posicao != null) {
+    // match por range numérico
+    for (const p of list) {
+      const r = parseFaseRange(p.fase);
+      if (r && posicao >= r[0] && posicao <= r[1]) return p;
+    }
+  }
+  return null;
+};
 
 interface PremioRow {
   id?: string;
@@ -88,10 +125,14 @@ export const CampanhasManager = () => {
   const buildPreview = (rows: ParsedRow[]): PreviewRow[] =>
     rows.map((r) => {
       const found = clubByNorm.get(norm(r.clube_nome));
+      const premio = findPremio(premios, torneio, r.fase, r.posicao);
       return {
         ...r,
         match_id: found?.id ?? null,
         match_name: found?.name ?? null,
+        fase_efetiva: premio?.fase ?? r.fase ?? (r.posicao != null ? String(r.posicao) : null),
+        premio_valor: premio?.valor ?? null,
+        premio_label: premio?.fase ?? null,
       };
     });
 
@@ -137,6 +178,23 @@ export const CampanhasManager = () => {
     if (f) parseFile(f);
   };
 
+  // Re-avalia premiação quando torneio ou tabela de prêmios muda
+  useEffect(() => {
+    if (!preview) return;
+    setPreview((prev) =>
+      prev!.map((p) => {
+        const premio = findPremio(premios, torneio, p.fase, p.posicao);
+        return {
+          ...p,
+          fase_efetiva: premio?.fase ?? p.fase ?? (p.posicao != null ? String(p.posicao) : null),
+          premio_valor: premio?.valor ?? null,
+          premio_label: premio?.fase ?? null,
+        };
+      }),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [torneio, premios]);
+
   const confirmImport = async () => {
     if (!preview || preview.length === 0) return;
     setImporting(true);
@@ -144,7 +202,9 @@ export const CampanhasManager = () => {
     const rows = preview.map((p) => ({
       temporada,
       torneio,
-      fase: p.fase,
+      // Persiste a fase efetiva (resolvida via posição quando o JSON não tem 'fase'),
+      // garantindo que pontos corridos casem com a tabela de prêmios.
+      fase: p.fase_efetiva,
       clube_nome: p.clube_nome,
       clube_id: p.match_id,
       posicao: p.posicao,
@@ -328,6 +388,7 @@ export const CampanhasManager = () => {
                     <TableHead>Fase</TableHead>
                     <TableHead className="text-center">Posição</TableHead>
                     <TableHead>Match</TableHead>
+                    <TableHead>Premiação</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -345,6 +406,20 @@ export const CampanhasManager = () => {
                           <span className="inline-flex items-center gap-1.5 text-destructive text-xs">
                             <X className="h-3.5 w-3.5" /> não encontrado
                           </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {row.premio_valor != null ? (
+                          <span className="inline-flex flex-col">
+                            <span className="text-emerald-400 font-medium">
+                              {formatCurrency(row.premio_valor)}
+                            </span>
+                            <span className="text-muted-foreground">
+                              fase: {row.premio_label}
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-amber-400">sem prêmio</span>
                         )}
                       </TableCell>
                     </TableRow>
