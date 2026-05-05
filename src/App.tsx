@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SeasonProvider } from "@/contexts/SeasonContext";
-import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
 import { AppLayout } from "@/components/AppLayout";
 import Home from "./pages/Home";
 import Ranking from "./pages/Ranking";
@@ -30,24 +29,22 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <SeasonProvider>
-            <UserPreferencesProvider>
-              <AppLayout>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/ranking" element={<Ranking />} />
-                  <Route path="/clubes" element={<ClubsList />} />
-                  <Route path="/clubes/:id" element={<ClubDetail />} />
-                  <Route path="/mapa" element={<Mapa />} />
-                  <Route path="/mercado" element={<Market />} />
-                  <Route path="/wiki" element={<WikiGlobal />} />
-                  <Route path="/meu-clube" element={<MyClub />} />
-                  <Route path="/transferencias" element={<Transferencias />} />
-                  <Route path="/admin" element={<Admin />} />
-                  <Route path="/configuracoes" element={<Configuracoes />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </AppLayout>
-            </UserPreferencesProvider>
+            <AppLayout>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/ranking" element={<Ranking />} />
+              <Route path="/clubes" element={<ClubsList />} />
+              <Route path="/clubes/:id" element={<ClubDetail />} />
+              <Route path="/mapa" element={<Mapa />} />
+              <Route path="/mercado" element={<Market />} />
+              <Route path="/wiki" element={<WikiGlobal />} />
+              <Route path="/meu-clube" element={<MyClub />} />
+              <Route path="/transferencias" element={<Transferencias />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/configuracoes" element={<Configuracoes />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            </AppLayout>
           </SeasonProvider>
         </AuthProvider>
       </BrowserRouter>

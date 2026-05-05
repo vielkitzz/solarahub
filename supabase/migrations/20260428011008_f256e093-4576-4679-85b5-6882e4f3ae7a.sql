@@ -111,7 +111,7 @@ BEGIN
      AND setor_lower NOT LIKE '%casa de apostas%'
      AND setor_lower NOT LIKE '%aposta%'
   THEN
-    RAISE EXCEPTION 'Clube com rate % e reputação % não pode contratar marcas de prestígio acima de 1.50 (exceto fornecedoras e casas de apostas).', c.rate, c.reputacao;
+    RAISE EXCEPTION 'Clube com rate % e reputação % não pode contratar marcas de prestígio acima de 1.00 (exceto fornecedoras e casas de apostas).', c.rate, c.reputacao;
   END IF;
 
   RETURN NEW;

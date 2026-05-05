@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Settings, Star, Hash } from "lucide-react";
-import { useUserPreferences } from "@/contexts/UserPreferencesContext";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -11,9 +11,7 @@ const Configuracoes = () => {
   const { user, signInWithDiscord } = useAuth();
   const { prefs, loading, update } = useUserPreferences();
 
-  useEffect(() => {
-    document.title = "Configurações — Solara Hub";
-  }, []);
+  useEffect(() => { document.title = "Configurações — Solara Hub"; }, []);
 
   if (!user) {
     return (
@@ -21,9 +19,7 @@ const Configuracoes = () => {
         <Card className="p-8 text-center bg-gradient-card border-border/50 space-y-3">
           <Settings className="h-10 w-10 text-muted-foreground mx-auto" />
           <p className="text-muted-foreground">Entre para acessar suas configurações.</p>
-          <button onClick={signInWithDiscord} className="text-primary underline text-sm">
-            Entrar com Discord
-          </button>
+          <button onClick={signInWithDiscord} className="text-primary underline text-sm">Entrar com Discord</button>
         </Card>
       </div>
     );
@@ -45,8 +41,8 @@ const Configuracoes = () => {
           <h2 className="font-display font-bold">Exibição de atributos</h2>
         </div>
         <p className="text-xs text-muted-foreground -mt-2">
-          Por padrão, qualidades e potenciais são mostrados como estrelas. Ative para ver os valores numéricos exatos
-          quando você for o dono do clube ou tiver olheiro.
+          Por padrão, qualidades e potenciais são mostrados como estrelas. Ative para ver os valores numéricos
+          exatos quando você for o dono do clube ou tiver olheiro.
         </p>
 
         {loading ? (
@@ -62,7 +58,10 @@ const Configuracoes = () => {
                   Mostra a habilidade real (45-99) em vez de estrelas no elenco do seu clube.
                 </p>
               </div>
-              <Switch checked={prefs.show_numeric_skill} onCheckedChange={(v) => update({ show_numeric_skill: v })} />
+              <Switch
+                checked={prefs.show_numeric_skill}
+                onCheckedChange={(v) => update({ show_numeric_skill: v })}
+              />
             </div>
 
             <div className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-secondary/20">

@@ -26,7 +26,6 @@ import {
 import { POSITIONS, formatCurrency, calcStars } from "@/lib/format";
 import { COUNTRIES_DATA, getFlagUrl } from "@/lib/countries";
 import { StarRating } from "@/components/StarRating";
-import { SkillDisplay } from "@/components/SkillDisplay";
 import { generateRandomName } from "@/lib/scouting-names";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
@@ -336,8 +335,13 @@ function AcademyTable({
             ) : (
               filteredAndSorted.map((p) => {
                 const finalizado = pronto(p);
+                const stars = calcStars(p.skill, club.rate);
                 const ps = getPositionStyle(p.position);
+
+                // Relatório do Olheiro
                 const rep = scoutReports[p.id];
+                const potStarsMin = rep ? calcStars(rep.potential_min_revelado, club.rate) : null;
+                const potStarsMax = rep ? calcStars(rep.potential_max_revelado, club.rate) : null;
 
                 return (
                   <TableRow
@@ -368,31 +372,24 @@ function AcademyTable({
                       {p.age ?? "—"}
                     </TableCell>
                     <TableCell className="py-2">
-                      {/* Trocado para SkillDisplay */}
-                      <SkillDisplay value={p.skill} rate={club.rate} kind="skill" />
+                      <StarRating value={stars} />
                     </TableCell>
 
                     <TableCell className="py-2">
                       {rep ? (
-                        <div
-                          className="flex items-center gap-1.5"
-                          title={`Margem de erro: ±${rep.margem_aplicada || "?"}`}
-                        >
-                          {/* Exatamente igual ao do ClubDetail.tsx usando SkillDisplay */}
-                          <SkillDisplay
-                            value={rep.potential_max_revelado}
-                            valueMin={rep.potential_min_revelado}
-                            rate={club.rate}
-                            kind="potential"
-                            numericLabel={`${rep.potential_min_revelado}-${rep.potential_max_revelado}`}
-                          />
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-muted-foreground w-7">min</span>
+                            <StarRating value={potStarsMin || 0} />
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-muted-foreground w-7">máx</span>
+                            <StarRating value={potStarsMax || 0} />
+                          </div>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <div
-                            className="flex items-center gap-0.5 text-muted-foreground/40"
-                            title="Use a aba Olheiros para descobrir"
-                          >
+                          <div className="flex items-center gap-0.5 text-muted-foreground/40">
                             {Array.from({ length: 5 }).map((_, i) => (
                               <Star key={i} style={{ width: 14, height: 14 }} />
                             ))}
@@ -653,6 +650,7 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
     onChange();
   };
 
+  // Função que usa o olheiro para revelar potencial do jogador da base
   const pesquisarJogadorBase = async (playerId: string) => {
     if (!club) return;
     setScoutingId(playerId);
@@ -682,7 +680,7 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
         toast.success(`Olheiro analisou o jogador (margem ±${res.margem}).`);
       }
 
-      onChange();
+      onChange(); // Atualiza contador do clube globalmente
     } catch (e: any) {
       toast.error(e.message || "Erro ao pesquisar jogador");
     } finally {
@@ -914,6 +912,8 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
               </div>
               <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
                 {scoutResults.map((p) => {
+                  const stars = calcStars(p.scout_skill, club.rate);
+                  const potStars = calcStars(p.scout_potential_max, club.rate);
                   return (
                     <Card key={p.scout_id} className="p-3 bg-card/40 border-border/50">
                       <div className="flex items-start gap-3">
@@ -934,21 +934,14 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
                               Pot. {p.scout_potential_min}–{p.scout_potential_max}
                             </Badge>
                           </div>
-
-                          {/* Substituído para SkillDisplay */}
                           <div className="flex justify-between items-center mt-2 text-[10px]">
                             <div className="flex items-center gap-1">
                               <span className="text-muted-foreground">Hab.</span>
-                              <SkillDisplay value={p.scout_skill} rate={club.rate} kind="skill" />
+                              <StarRating value={stars} />
                             </div>
                             <div className="flex items-center gap-1">
                               <span className="text-muted-foreground">Pot.</span>
-                              <SkillDisplay
-                                value={p.scout_potential_max}
-                                valueMin={p.scout_potential_min}
-                                rate={club.rate}
-                                kind="potential"
-                              />
+                              <StarRating value={potStars} />
                             </div>
                           </div>
                         </div>
