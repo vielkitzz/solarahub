@@ -104,8 +104,18 @@ export const EconomyParams = () => {
         </div>
       </section>
 
-      <section className="space-y-2">
-        <h4 className="text-sm font-bold text-foreground">Premiação por posição final (€)</h4>
+      <section className="space-y-2 opacity-60">
+        <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+          Premiação por posição final (€)
+          <span className="text-[10px] uppercase tracking-wider text-amber-500 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded">
+            Legado — não usado
+          </span>
+        </h4>
+        <p className="text-[11px] text-muted-foreground -mt-1">
+          A premiação real agora vem da aba <span className="text-primary font-medium">Campanhas</span>: prêmio = soma dos
+          valores configurados em <em>Configurar Prêmios</em> casados com a fase/posição importada do Tournament Manager.
+          Estes valores ficam aqui apenas como histórico.
+        </p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {([
             ["1", "1º"], ["2", "2º"], ["3", "3º"], ["4", "4º"],
