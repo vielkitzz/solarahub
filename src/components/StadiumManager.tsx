@@ -17,7 +17,7 @@ interface Props {
 }
 
 const NIVEL_LABELS = ["—", "Modesto", "Regional", "Profissional", "Premium", "Elite"];
-const CUSTO_POR_LUGAR = 1500; // Custo de €1.500 por novo assento
+const CUSTO_POR_LUGAR = 1000; // €/assento (sincronizado com settings.estadio_upgrade_custos.por_lugar)
 const TABELA_CUSTOS_NIVEL: Record<number, number> = {
   2: 1000000, // 1 -> 2: €1M
   3: 10000000, // 2 -> 3: €10M
