@@ -193,6 +193,23 @@ export const CampanhasManager = () => {
     if (f) parseFile(f);
   };
 
+  // Re-avalia premiação quando torneio ou tabela de prêmios muda
+  useEffect(() => {
+    if (!preview) return;
+    setPreview((prev) =>
+      prev!.map((p) => {
+        const premio = findPremio(premios, torneio, p.fase, p.posicao);
+        return {
+          ...p,
+          fase_efetiva: premio?.fase ?? p.fase ?? (p.posicao != null ? String(p.posicao) : null),
+          premio_valor: premio?.valor ?? null,
+          premio_label: premio?.fase ?? null,
+        };
+      }),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [torneio, premios]);
+
   const confirmImport = async () => {
     if (!preview || preview.length === 0) return;
     setImporting(true);
@@ -200,7 +217,9 @@ export const CampanhasManager = () => {
     const rows = preview.map((p) => ({
       temporada,
       torneio,
-      fase: p.fase,
+      // Persiste a fase efetiva (resolvida via posição quando o JSON não tem 'fase'),
+      // garantindo que pontos corridos casem com a tabela de prêmios.
+      fase: p.fase_efetiva,
       clube_nome: p.clube_nome,
       clube_id: p.match_id,
       posicao: p.posicao,
