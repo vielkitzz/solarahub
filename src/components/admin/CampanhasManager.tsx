@@ -375,10 +375,10 @@ export const CampanhasManager = () => {
 
       {/* SEÇÃO 2 — Configurar Prêmios */}
       <Card className="p-5 bg-gradient-card border-border/50">
-        <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
           <div className="flex items-center gap-2">
             <Trophy className="h-5 w-5 text-primary" />
-            <h3 className="font-display font-bold text-lg">Configurar Prêmios</h3>
+            <h3 className="font-display font-bold text-lg">2. Configurar Prêmios por Fase</h3>
           </div>
           <div className="flex gap-2 items-center">
             <Select value={filtroTorneio} onValueChange={setFiltroTorneio}>
