@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SeasonProvider } from "@/contexts/SeasonContext";
+import { UserPreferencesProvider } from "@/hooks/useUserPreferences";
 import { AppLayout } from "@/components/AppLayout";
 import Home from "./pages/Home";
 import Ranking from "./pages/Ranking";
@@ -29,6 +30,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <SeasonProvider>
+            <UserPreferencesProvider>
             <AppLayout>
             <Routes>
               <Route path="/" element={<Home />} />
@@ -45,6 +47,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
             </AppLayout>
+            </UserPreferencesProvider>
           </SeasonProvider>
         </AuthProvider>
       </BrowserRouter>
