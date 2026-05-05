@@ -46,7 +46,44 @@ interface ParsedRow {
 interface PreviewRow extends ParsedRow {
   match_id: string | null;
   match_name: string | null;
+  fase_efetiva: string | null;
+  premio_valor: number | null;
+  premio_label: string | null;
 }
+
+// Resolve premiação para (torneio, fase, posicao) aceitando:
+//  - fase exata ("Campeão", "Final")
+//  - fase numérica ("1", "2") cruzando com posição
+//  - fase range ("2-4", "5_8", "9 a 12") cruzando com posição
+const parseFaseRange = (fase: string): [number, number] | null => {
+  const s = fase.trim().toLowerCase().replace(/\s+/g, "");
+  const m = s.match(/^(\d+)[-_a–](\d+)$/);
+  if (m) return [parseInt(m[1]), parseInt(m[2])];
+  const single = s.match(/^(\d+)$/);
+  if (single) return [parseInt(single[1]), parseInt(single[1])];
+  return null;
+};
+
+const findPremio = (
+  premios: PremioRow[],
+  torneio: string,
+  fase: string | null,
+  posicao: number | null,
+): PremioRow | null => {
+  const list = premios.filter((p) => p.torneio === torneio && p.fase);
+  if (fase) {
+    const exact = list.find((p) => norm(p.fase) === norm(fase));
+    if (exact) return exact;
+  }
+  if (posicao != null) {
+    // match por range numérico
+    for (const p of list) {
+      const r = parseFaseRange(p.fase);
+      if (r && posicao >= r[0] && posicao <= r[1]) return p;
+    }
+  }
+  return null;
+};
 
 interface PremioRow {
   id?: string;
