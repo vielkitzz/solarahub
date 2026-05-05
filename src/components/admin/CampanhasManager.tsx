@@ -403,6 +403,10 @@ export const CampanhasManager = () => {
             </Button>
           </div>
         </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          O texto da <strong>Fase</strong> deve bater (ignorando maiúsculas/acentos) com o que vier no JSON. Ex.:
+          “Campeão”, “Final”, “Semifinal”, “Oitavas”, “Fase de Grupos”.
+        </p>
 
         <div className="border border-border/50 rounded-md overflow-auto scrollbar-thin">
           <Table>
