@@ -1,4 +1,4 @@
-import { getFlagUrl, getCountryByName } from "@/data/countries";
+import { getFlagUrl, getCountryByName } from "@/lib/countries";
 
 interface CountryFlagProps {
   country: string;
