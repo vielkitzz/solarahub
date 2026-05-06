@@ -378,7 +378,6 @@ function AcademyTable({
                           className="flex items-center gap-1.5"
                           title={`Margem de erro: ±${rep.margem_aplicada || "?"}`}
                         >
-                          {/* Exatamente igual ao do ClubDetail.tsx usando SkillDisplay */}
                           <SkillDisplay
                             value={rep.potential_max_revelado}
                             valueMin={rep.potential_min_revelado}
@@ -388,18 +387,8 @@ function AcademyTable({
                           />
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="flex items-center gap-0.5 text-muted-foreground/40"
-                            title="Use a aba Olheiros para descobrir"
-                          >
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <Star key={i} style={{ width: 14, height: 14 }} />
-                            ))}
-                            <span className="text-[10px] ml-1.5">desconhecido</span>
-                          </div>
-                          // REMOVER este bloco inteiro do AcademyTable
-                        </div>
+                        // Se o relatório não existe, você pode deixar vazio ou exibir um traço
+                        <span className="text-muted-foreground text-xs">—</span>
                       )}
                     </TableCell>
 
