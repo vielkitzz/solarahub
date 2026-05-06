@@ -790,6 +790,7 @@ function SquadTable({
   onOpenProfile?: (id: string) => void;
 }) {
   const isOwnClub = !!myClub && myClub.id === club.id;
+  const anyPotKnown = isOwnClub || players.some((p) => scoutReports[p.id]);
   // ESTADOS
   const [searchTerm, setSearchTerm] = useState("");
   const [positionFilter, setPositionFilter] = useState("todas");
