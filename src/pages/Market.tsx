@@ -689,7 +689,6 @@ const Market = () => {
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead>Jogador</TableHead>
-                  <TableHead className="w-12 hidden sm:table-cell"></TableHead>
                   <TableHead>De</TableHead>
                   <TableHead>Para</TableHead>
                   <TableHead className="text-center">Tipo</TableHead>
