@@ -215,7 +215,7 @@ const Market = () => {
 
   const fpError = target && tipo === "compra" ? fairPlayCheck(valorNum, Number(target.valor_base_calculado)) : null;
   const caixaError =
-    target && totalDevido > caixaComprador
+    target && tipo !== "emprestimo" && totalDevido > caixaComprador
       ? `Caixa insuficiente: necessário ${formatCurrency(totalDevido)}, disponível ${formatCurrency(caixaComprador)}`
       : null;
   const trocaError = tipo === "troca" && !jogadorTrocado ? "Selecione um jogador para oferecer na troca" : null;

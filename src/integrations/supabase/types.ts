@@ -88,6 +88,62 @@ export type Database = {
         }
         Relationships: []
       }
+      campanhas: {
+        Row: {
+          club_id: string
+          competicao: string
+          created_at: string | null
+          id: string
+          jogos_casa: number
+          jogos_fora: number
+          observacoes: string | null
+          posicao_final: number | null
+          premiacao_calculada: number | null
+          publico_medio: number | null
+          receita_bilheteria: number | null
+          temporada: number
+          updated_at: string | null
+        }
+        Insert: {
+          club_id: string
+          competicao: string
+          created_at?: string | null
+          id?: string
+          jogos_casa?: number
+          jogos_fora?: number
+          observacoes?: string | null
+          posicao_final?: number | null
+          premiacao_calculada?: number | null
+          publico_medio?: number | null
+          receita_bilheteria?: number | null
+          temporada: number
+          updated_at?: string | null
+        }
+        Update: {
+          club_id?: string
+          competicao?: string
+          created_at?: string | null
+          id?: string
+          jogos_casa?: number
+          jogos_fora?: number
+          observacoes?: string | null
+          posicao_final?: number | null
+          premiacao_calculada?: number | null
+          publico_medio?: number | null
+          receita_bilheteria?: number | null
+          temporada?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campanhas_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clubs: {
         Row: {
           academy_scouting_count: number
@@ -616,6 +672,39 @@ export type Database = {
         }
         Relationships: []
       }
+      tabela_premiacao: {
+        Row: {
+          competicao: string
+          created_at: string | null
+          id: string
+          posicao_max: number
+          posicao_min: number
+          temporada: number | null
+          updated_at: string | null
+          valor: number
+        }
+        Insert: {
+          competicao: string
+          created_at?: string | null
+          id?: string
+          posicao_max: number
+          posicao_min: number
+          temporada?: number | null
+          updated_at?: string | null
+          valor?: number
+        }
+        Update: {
+          competicao?: string
+          created_at?: string | null
+          id?: string
+          posicao_max?: number
+          posicao_min?: number
+          temporada?: number | null
+          updated_at?: string | null
+          valor?: number
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           categoria: string
@@ -850,7 +939,7 @@ export type Database = {
         Returns: Json
       }
       premiacao_clube_temporada: {
-        Args: { _club_id: string; _temp: number }
+        Args: { _club_id: string; _temporada: number }
         Returns: number
       }
       premiacao_por_posicao: { Args: { _pos: number }; Returns: number }

@@ -83,6 +83,7 @@ const ClubDetail = () => {
   };
 
   const [direitosTv, setDireitosTv] = useState<number>(0);
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
   const [imgSettings, setImgSettings] = useState<{ custo_pct: number; receita_pct: number }>({
     custo_pct: 0.03,
     receita_pct: 0.5,
@@ -146,6 +147,16 @@ const ClubDetail = () => {
     setEditingClub(c);
     setLoading(false);
     if (c) document.title = `${c.name} — Solara Hub`;
+
+    // Carrega últimas transações relevantes (transferências + upgrades)
+    const { data: tx } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("club_id", id)
+      .in("categoria", ["transferencia", "upgrade_estadio", "upgrade_academia"])
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setRecentTransactions(tx || []);
   };
 
   useEffect(() => {
@@ -399,11 +410,11 @@ const ClubDetail = () => {
         <div className="-mx-3 sm:-mx-4 md:mx-0 overflow-x-auto scrollbar-thin">
           <TabsList className="bg-secondary/50 mx-3 sm:mx-4 md:mx-0 w-max">
             <TabsTrigger value="elenco">Elenco</TabsTrigger>
-            <TabsTrigger value="evolucao">Evolução</TabsTrigger>
+            {canEdit && <TabsTrigger value="evolucao">Evolução</TabsTrigger>}
             <TabsTrigger value="financas">Finanças</TabsTrigger>
             <TabsTrigger value="estadio">Estádio</TabsTrigger>
             <TabsTrigger value="base">Base</TabsTrigger>
-            <TabsTrigger value="olheiros">Olheiros</TabsTrigger>
+            {canEdit && <TabsTrigger value="olheiros">Olheiros</TabsTrigger>}
             <TabsTrigger value="wiki">Wiki</TabsTrigger>
             {canEdit && <TabsTrigger value="config">Configurações</TabsTrigger>}
           </TabsList>
@@ -432,15 +443,17 @@ const ClubDetail = () => {
           )}
         </TabsContent>
 
-        <TabsContent value="olheiros" className="mt-4">
-          <ScoutsManager
-            targetClub={club}
-            players={players}
-            myClub={myClub}
-            scoutReports={scoutReports}
-            onReportCreated={handleScoutReportCreated}
-          />
-        </TabsContent>
+        {canEdit && (
+          <TabsContent value="olheiros" className="mt-4">
+            <ScoutsManager
+              targetClub={club}
+              players={players}
+              myClub={myClub}
+              scoutReports={scoutReports}
+              onReportCreated={handleScoutReportCreated}
+            />
+          </TabsContent>
+        )}
 
         <TabsContent value="financas" className="space-y-4 mt-4">
           {/* Cards-resumo */}
@@ -511,11 +524,72 @@ const ClubDetail = () => {
 
           {/* Empréstimos bancários */}
           <LoanManager club={club} canEdit={canEdit} onChange={load} />
+
+          {/* Transferências e investimentos em infraestrutura */}
+          <Card className="p-4 bg-gradient-card border-border/50">
+            <h4 className="font-display font-bold text-sm flex items-center gap-2 mb-3">
+              <ArrowUpDown className="h-4 w-4 text-primary" /> Transferências e investimentos
+            </h4>
+            {recentTransactions.length === 0 ? (
+              <div className="text-xs text-muted-foreground py-4 text-center">
+                Nenhuma transferência ou upgrade registrado.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-[10px]">Data</TableHead>
+                      <TableHead className="text-[10px]">Categoria</TableHead>
+                      <TableHead className="text-[10px]">Descrição</TableHead>
+                      <TableHead className="text-[10px] text-right">Valor</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {recentTransactions.map((t) => {
+                      const isIn = t.tipo === "entrada";
+                      const catLabel =
+                        t.categoria === "transferencia"
+                          ? "Transferência"
+                          : t.categoria === "upgrade_estadio"
+                            ? "Upgrade estádio"
+                            : t.categoria === "upgrade_academia"
+                              ? "Upgrade base"
+                              : t.categoria;
+                      return (
+                        <TableRow key={t.id} className="text-xs">
+                          <TableCell className="text-muted-foreground">
+                            {new Date(t.created_at).toLocaleDateString("pt-BR")}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-[10px]">
+                              {catLabel}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-[280px] truncate" title={t.descricao}>
+                            {t.descricao}
+                          </TableCell>
+                          <TableCell
+                            className={`text-right tabular-nums font-semibold ${isIn ? "text-success" : "text-destructive"}`}
+                          >
+                            {isIn ? "+" : "-"}
+                            {formatCurrency(Number(t.valor))}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </Card>
         </TabsContent>
 
-        <TabsContent value="evolucao" className="mt-4">
-          <EvolutionTable players={players} />
-        </TabsContent>
+        {canEdit && (
+          <TabsContent value="evolucao" className="mt-4">
+            <EvolutionTable players={players} />
+          </TabsContent>
+        )}
 
         <TabsContent value="estadio" className="mt-4">
           <StadiumManager club={club} canEdit={canEdit} onChange={load} />
@@ -716,6 +790,7 @@ function SquadTable({
   onOpenProfile?: (id: string) => void;
 }) {
   const isOwnClub = !!myClub && myClub.id === club.id;
+  const anyPotKnown = isOwnClub || players.some((p) => scoutReports[p.id]);
   // ESTADOS
   const [searchTerm, setSearchTerm] = useState("");
   const [positionFilter, setPositionFilter] = useState("todas");
@@ -917,11 +992,11 @@ function SquadTable({
               </TableHead>
 
               <TableHead
-                className="w-28 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
-                onClick={() => handleSort("potencial")}
+                className={`w-28 select-none transition-colors ${anyPotKnown ? "cursor-pointer hover:bg-secondary/40" : "cursor-default opacity-70"}`}
+                onClick={() => anyPotKnown && handleSort("potencial")}
               >
                 <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
-                  Potencial <SortIcon columnKey="potencial" />
+                  Potencial {anyPotKnown && <SortIcon columnKey="potencial" />}
                 </div>
               </TableHead>
 
