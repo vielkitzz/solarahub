@@ -83,7 +83,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
         .from("transferencias")
         .select("*")
         .eq("jogador_id", playerId)
-        .eq("status", "concluida") // FILTRO IMPORTANTE: Ajuste se o seu status for "aceita", "finalizada", etc.
+        .eq("status", "aceita") // Alterado para "aceita"
         .order("created_at", { ascending: false });
 
       if (transfersData && transfersData.length > 0) {
