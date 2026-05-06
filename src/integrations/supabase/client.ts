@@ -8,48 +8,36 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-/**
- * Storage adaptativo: tenta localStorage, cai para sessionStorage,
- * cai para memória (para iOS WebView / Safari privado / PWA).
- */
-const createAdaptiveStorage = () => {
-  // Testa se localStorage está realmente funcional
-  const testKey = "__supabase_storage_test__";
-  try {
-    localStorage.setItem(testKey, "1");
-    localStorage.removeItem(testKey);
-    return localStorage;
-  } catch {
-    // Safari privado, iOS WebView, ou storage bloqueado
-  }
-
-  try {
-    sessionStorage.setItem(testKey, "1");
-    sessionStorage.removeItem(testKey);
-    return sessionStorage;
-  } catch {
-    // Sem acesso a nenhum storage — usa memória
-  }
-
-  // Fallback in-memory (sessão dura enquanto a aba estiver aberta)
-  const memoryStore: Record<string, string> = {};
-  return {
-    getItem: (key: string) => memoryStore[key] ?? null,
-    setItem: (key: string, value: string) => {
-      memoryStore[key] = value;
-    },
-    removeItem: (key: string) => {
-      delete memoryStore[key];
-    },
-  };
-};
-
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    flowType: "pkce",
-    storage: createAdaptiveStorage(),
+    flowType: "implicit", // PKCE quebra em alguns Android Chrome por problemas no redirect de query params
+    storage: (() => {
+      const testKey = "__sb_test__";
+      try {
+        localStorage.setItem(testKey, "1");
+        localStorage.removeItem(testKey);
+        return localStorage;
+      } catch {
+        try {
+          sessionStorage.setItem(testKey, "1");
+          sessionStorage.removeItem(testKey);
+          return sessionStorage;
+        } catch {
+          const mem: Record<string, string> = {};
+          return {
+            getItem: (k: string) => mem[k] ?? null,
+            setItem: (k: string, v: string) => {
+              mem[k] = v;
+            },
+            removeItem: (k: string) => {
+              delete mem[k];
+            },
+          };
+        }
+      }
+    })(),
   },
 });
