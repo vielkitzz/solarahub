@@ -512,10 +512,16 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
 
     // Carregar relatórios de olheiro já feitos (opcional, dependendo do seu backend)
     try {
+      // DEPOIS — filtra apenas relatórios cujo target_player_id existe em academy_players
+      const { data: academyIds } = await supabase.from("academy_players").select("id").eq("club_id", club.id);
+
+      const ids = (academyIds || []).map((r) => r.id);
+
       const { data: reportsData } = await supabase
-        .from("scout_reports") // Substitua pelo nome correto da sua tabela de relatórios
+        .from("scout_reports")
         .select("*")
-        .eq("scouter_club_id", club.id);
+        .eq("scouter_club_id", club.id)
+        .in("target_player_id", ids.length > 0 ? ids : ["00000000-0000-0000-0000-000000000000"]);
 
       if (reportsData) {
         const reportsMap: Record<string, any> = {};
