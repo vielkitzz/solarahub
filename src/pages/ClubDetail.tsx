@@ -991,11 +991,11 @@ function SquadTable({
               </TableHead>
 
               <TableHead
-                className="w-28 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
-                onClick={() => handleSort("potencial")}
+                className={`w-28 select-none transition-colors ${anyPotKnown ? "cursor-pointer hover:bg-secondary/40" : "cursor-default opacity-70"}`}
+                onClick={() => anyPotKnown && handleSort("potencial")}
               >
                 <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
-                  Potencial <SortIcon columnKey="potencial" />
+                  Potencial {anyPotKnown && <SortIcon columnKey="potencial" />}
                 </div>
               </TableHead>
 
