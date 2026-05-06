@@ -524,6 +524,65 @@ const ClubDetail = () => {
 
           {/* Empréstimos bancários */}
           <LoanManager club={club} canEdit={canEdit} onChange={load} />
+
+          {/* Transferências e investimentos em infraestrutura */}
+          <Card className="p-4 bg-gradient-card border-border/50">
+            <h4 className="font-display font-bold text-sm flex items-center gap-2 mb-3">
+              <ArrowUpDown className="h-4 w-4 text-primary" /> Transferências e investimentos
+            </h4>
+            {recentTransactions.length === 0 ? (
+              <div className="text-xs text-muted-foreground py-4 text-center">
+                Nenhuma transferência ou upgrade registrado.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-[10px]">Data</TableHead>
+                      <TableHead className="text-[10px]">Categoria</TableHead>
+                      <TableHead className="text-[10px]">Descrição</TableHead>
+                      <TableHead className="text-[10px] text-right">Valor</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {recentTransactions.map((t) => {
+                      const isIn = t.tipo === "entrada";
+                      const catLabel =
+                        t.categoria === "transferencia"
+                          ? "Transferência"
+                          : t.categoria === "upgrade_estadio"
+                            ? "Upgrade estádio"
+                            : t.categoria === "upgrade_academia"
+                              ? "Upgrade base"
+                              : t.categoria;
+                      return (
+                        <TableRow key={t.id} className="text-xs">
+                          <TableCell className="text-muted-foreground">
+                            {new Date(t.created_at).toLocaleDateString("pt-BR")}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-[10px]">
+                              {catLabel}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-[280px] truncate" title={t.descricao}>
+                            {t.descricao}
+                          </TableCell>
+                          <TableCell
+                            className={`text-right tabular-nums font-semibold ${isIn ? "text-success" : "text-destructive"}`}
+                          >
+                            {isIn ? "+" : "-"}
+                            {formatCurrency(Number(t.valor))}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </Card>
         </TabsContent>
 
         {canEdit && (
