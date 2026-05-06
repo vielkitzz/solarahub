@@ -534,7 +534,7 @@ const Market = () => {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="hidden sm:table-cell py-2">
+                        <TableCell className="hidden sm:table-cell py-2 w-10">
                           {p.nationality && <FlagImg nationality={p.nationality} />}
                         </TableCell>
                         <TableCell>
