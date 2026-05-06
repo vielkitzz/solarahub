@@ -83,6 +83,7 @@ const ClubDetail = () => {
   };
 
   const [direitosTv, setDireitosTv] = useState<number>(0);
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
   const [imgSettings, setImgSettings] = useState<{ custo_pct: number; receita_pct: number }>({
     custo_pct: 0.03,
     receita_pct: 0.5,
