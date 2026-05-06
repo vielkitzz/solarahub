@@ -9,18 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { formatCurrency } from "@/lib/format";
 import { SkillDisplay } from "@/components/SkillDisplay";
 import { getFlagUrl } from "@/lib/countries";
-import {
-  Heart,
-  ArrowRightLeft,
-  FileSignature,
-  Gavel,
-  Shield,
-  ExternalLink,
-  Star,
-  Loader2,
-  History,
-  ArrowRight,
-} from "lucide-react";
+import { Heart, ArrowRightLeft, FileSignature, Gavel, Shield, ExternalLink, Star, Loader2 } from "lucide-react";
 import { useInterestList } from "@/hooks/useInterestList";
 import { ContractRenewalDialog } from "@/components/ContractRenewalDialog";
 import { MultaRescisoriaDialog } from "@/components/MultaRescisoriaDialog";
@@ -39,8 +28,6 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
   const [player, setPlayer] = useState<any>(null);
   const [myClub, setMyClub] = useState<any>(null);
   const [report, setReport] = useState<any>(null);
-  const [clubHistory, setClubHistory] = useState<any[]>([]);
-  const [allClubs, setAllClubs] = useState<Record<string, any>>({});
   const [renewOpen, setRenewOpen] = useState(false);
   const [multaOpen, setMultaOpen] = useState(false);
 
@@ -52,50 +39,31 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
     } else {
       setPlayer(null);
       setReport(null);
-      setClubHistory([]);
     }
   }, [open, playerId]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [{ data: p, error }, { data: cs }] = await Promise.all([
-        supabase
-          .from("players")
-          .select(
-            `
-          id, name, position, age, nationality,
-          habilidade, habilidade_anterior,
-          potential_min, potential_max,
-          market_value, salario_atual, valor_base_calculado,
-          contrato_ate, a_venda, club_id,
-          clubs (
-            id, name, crest_url, rate, owner_id
-          )
-        `,
-          )
-          .eq("id", playerId)
-          .single(),
-        supabase.from("clubs").select("id, name, crest_url"),
-      ]);
+      const { data: p, error } = await supabase
+        .from("players")
+        .select(
+          `
+        id, name, position, age, nationality,
+        habilidade, habilidade_anterior,
+        potential_min, potential_max,
+        market_value, salario_atual, valor_base_calculado,
+        contrato_ate, a_venda, club_id,
+        clubs (
+          id, name, crest_url, rate, owner_id
+        )
+      `,
+        )
+        .eq("id", playerId)
+        .single();
 
       if (error) throw error;
       setPlayer(p);
-
-      // Monta mapa de clubes
-      const map: Record<string, any> = {};
-      (cs || []).forEach((c) => (map[c.id] = c));
-      setAllClubs(map);
-
-      // Busca histórico de transferências aceitas do jogador
-      const { data: hist } = await supabase
-        .from("transferencias")
-        .select("id, clube_comprador_id, clube_vendedor_id, valor_ofertado, tipo, updated_at")
-        .eq("jogador_id", playerId)
-        .eq("status", "aceita")
-        .order("updated_at", { ascending: true });
-
-      setClubHistory(hist || []);
 
       if (user) {
         const { data: c } = await supabase.from("clubs").select("*").eq("owner_id", user.id).maybeSingle();
@@ -121,10 +89,12 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
   const isOwn = !!(player?.club_id && myClub?.id === player.club_id);
   const clubRate = player?.clubs?.rate ?? null;
 
+  // Potencial: dono vê real (min e max), outros só com relatório de olheiro
   const potDisplay = useMemo(() => {
     if (!player) return null;
 
     if (isOwn) {
+      // Dono vê o range real do jogador
       const min = player.potential_min;
       const max = player.potential_max;
       if (min == null || max == null) return null;
@@ -149,12 +119,15 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
     return null;
   }, [player, isOwn, report]);
 
+  // Contrato: contrato_ate é a temporada de término (número absoluto)
   const contratoLabel = useMemo(() => {
     if (player?.contrato_ate == null) return "—";
     return `até temp. ${player.contrato_ate}`;
   }, [player]);
 
-  const contratoUrgente = false;
+  // Contrato expirando: considera "curto" se faltar ≤ 2 temporadas
+  // Como não temos a temporada atual aqui, apenas exibimos o valor
+  const contratoUrgente = false; // ajuste se tiver acesso à temporada atual
 
   return (
     <>
@@ -270,6 +243,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                       <span className="text-muted-foreground">Fim do Contrato</span>
                       <span className={contratoUrgente ? "text-destructive font-bold" : ""}>{contratoLabel}</span>
                     </div>
+                    {/* Multa rescisória não existe na tabela players — omitida */}
                   </div>
 
                   <div className="pt-2">
@@ -284,88 +258,6 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                     )}
                   </div>
                 </div>
-              </div>
-
-              {/* Histórico de Clubes */}
-              <div className="px-6 pb-4">
-                <Separator className="opacity-50 mb-4" />
-                <h4 className="text-xs font-bold uppercase tracking-tighter text-muted-foreground flex items-center gap-2 mb-3">
-                  <History className="h-3 w-3" /> Histórico de Clubes
-                </h4>
-
-                {clubHistory.length === 0 ? (
-                  <p className="text-xs text-muted-foreground/60 italic">
-                    Nenhuma transferência registrada — jogador no clube de origem.
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {clubHistory.map((t, i) => {
-                      const from = allClubs[t.clube_vendedor_id];
-                      const to = allClubs[t.clube_comprador_id];
-                      const date = new Date(t.updated_at).toLocaleDateString("pt-BR", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                      });
-                      const isLast = i === clubHistory.length - 1;
-
-                      return (
-                        <div
-                          key={t.id}
-                          className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2 border ${
-                            isLast ? "bg-primary/5 border-primary/20" : "bg-secondary/20 border-border/30"
-                          }`}
-                        >
-                          {/* De */}
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            {from?.crest_url ? (
-                              <img src={from.crest_url} alt={from.name} className="h-5 w-5 object-contain shrink-0" />
-                            ) : (
-                              <Shield className="h-4 w-4 text-muted-foreground/40 shrink-0" />
-                            )}
-                            <span className="truncate text-muted-foreground max-w-[80px]">
-                              {from?.name ?? "Desconhecido"}
-                            </span>
-                          </div>
-
-                          <ArrowRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-
-                          {/* Para */}
-                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                            {to?.crest_url ? (
-                              <img src={to.crest_url} alt={to.name} className="h-5 w-5 object-contain shrink-0" />
-                            ) : (
-                              <Shield className="h-4 w-4 text-muted-foreground/40 shrink-0" />
-                            )}
-                            <span
-                              className={`truncate max-w-[80px] ${isLast ? "font-semibold text-foreground" : "text-muted-foreground"}`}
-                            >
-                              {to?.name ?? "Desconhecido"}
-                            </span>
-                          </div>
-
-                          {/* Tipo */}
-                          <Badge
-                            variant="outline"
-                            className="text-[9px] uppercase border-primary/30 text-primary shrink-0 px-1.5 py-0"
-                          >
-                            {t.tipo}
-                          </Badge>
-
-                          {/* Valor */}
-                          {Number(t.valor_ofertado) > 0 && (
-                            <span className="font-display font-bold text-primary shrink-0">
-                              {formatCurrency(Number(t.valor_ofertado))}
-                            </span>
-                          )}
-
-                          {/* Data */}
-                          <span className="text-muted-foreground/50 shrink-0 ml-auto">{date}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
 
               {/* Footer */}
@@ -417,24 +309,22 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
       </Dialog>
 
       {player && (
-        <ContractRenewalDialog
-          key={`renew-${player.id}`}
-          player={player}
-          open={renewOpen}
-          onOpenChange={setRenewOpen}
-          onRenewed={() => fetchData()}
-        />
-      )}
-      {player && (
-        <MultaRescisoriaDialog
-          key={`multa-${player.id}`}
-          player={player}
-          open={multaOpen}
-          onOpenChange={setMultaOpen}
-          myClubId={myClub?.id || null}
-          isAdmin={false}
-          onDone={() => fetchData()}
-        />
+        <>
+          <ContractRenewalDialog
+            player={player}
+            open={renewOpen}
+            onOpenChange={setRenewOpen}
+            onRenewed={() => fetchData()}
+          />
+          <MultaRescisoriaDialog
+            player={player}
+            open={multaOpen}
+            onOpenChange={setMultaOpen}
+            myClubId={myClub?.id || null}
+            isAdmin={false}
+            onDone={() => fetchData()}
+          />
+        </>
       )}
     </>
   );

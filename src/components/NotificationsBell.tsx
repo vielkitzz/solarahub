@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 type Notif = {
   id: string;
@@ -36,18 +37,12 @@ export const NotificationsBell = () => {
     load();
     const ch = supabase
       .channel("notif-" + user.id)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-        () => load(),
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, () => load())
       .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
+    return () => { supabase.removeChannel(ch); };
   }, [user?.id]);
 
-  const naoLidas = items.filter((n) => !n.lida).length;
+  const naoLidas = items.filter(n => !n.lida).length;
 
   const marcarTodas = async () => {
     if (!user) return;
@@ -60,7 +55,7 @@ export const NotificationsBell = () => {
     load();
   };
 
-  if (!user) return <div className="h-9 w-9" />;
+  if (!user) return null;
 
   return (
     <Popover>

@@ -42,11 +42,6 @@ import { StarRating } from "@/components/StarRating";
 import { PlayerProfileDialog } from "@/components/PlayerProfileDialog";
 import { useInterestList } from "@/hooks/useInterestList";
 import { toast } from "sonner";
-import { useSearchParams } from "react-router-dom";
-
-// dentro do componente Market:
-const [searchParams] = useSearchParams();
-const defaultTab = searchParams.get("tab") || "vitrine";
 
 type TransferType = "compra" | "emprestimo" | "troca";
 
@@ -351,7 +346,7 @@ const Market = () => {
         )}
       </header>
 
-      <Tabs defaultValue={defaultTab}>
+      <Tabs defaultValue="vitrine">
         <div className="-mx-3 sm:-mx-4 md:mx-0 overflow-x-auto scrollbar-thin">
           <TabsList className="bg-secondary/50 mx-3 sm:mx-4 md:mx-0 w-max">
             <TabsTrigger value="vitrine">

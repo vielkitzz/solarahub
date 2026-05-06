@@ -1,4 +1,3 @@
-// versão original simples — teste isso
 import { ReactNode } from "react";
 import { Inbox } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
