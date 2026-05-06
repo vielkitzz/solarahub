@@ -570,10 +570,20 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
     setScoutLoading(false);
     if (error) return toast.error(error.message);
 
-    const enriched = await Promise.all(
+  const enriched = await Promise.all(
       (data as ScoutResult[]).map(async (p) => {
-        const finalNationality =
-          p.scout_nationality || COUNTRIES_DATA[Math.floor(Math.random() * COUNTRIES_DATA.length)].name;
+        let finalNationality = p.scout_nationality;
+
+        // Se nenhuma nacionalidade específica foi exigida na busca
+        if (!finalNationality) {
+          // 85% de chance (0.0 a 0.84) de ser de Solara
+          if (Math.random() < 0.85) {
+            finalNationality = "Solara";
+          } else {
+            // 15% de chance de ser um estrangeiro aleatório
+            finalNationality = COUNTRIES_DATA[Math.floor(Math.random() * COUNTRIES_DATA.length)].name;
+          }
+        }
 
         return {
           ...p,
@@ -582,10 +592,6 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
         };
       }),
     );
-
-    setScoutResults(enriched);
-    onChange();
-  };
 
   const togglePick = (id: string) => {
     const next = new Set(picked);
