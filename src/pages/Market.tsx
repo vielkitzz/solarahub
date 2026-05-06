@@ -639,7 +639,12 @@ const Market = () => {
                     </Link>
                   )}
                   <ArrowRightLeft className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-sm font-bold">{player?.name || "—"}</span>
+                  <button
+                    onClick={() => player && setProfilePlayerId(player.id)}
+                    className="text-sm font-bold hover:text-primary transition-colors"
+                  >
+                    {player?.name || "—"}
+                  </button>
                   <span className="text-xs text-muted-foreground">de</span>
                   {vend && (
                     <Link to={`/clubes/${vend.id}`} className="flex items-center gap-1.5 hover:text-primary">
@@ -707,7 +712,14 @@ const Market = () => {
                   const tipoOp = (tx.metadata as any)?.tipo_op || "compra";
                   return (
                     <TableRow key={tx.id}>
-                      <TableCell className="font-medium">{player?.name || tx.descricao}</TableCell>
+                      <TableCell className="font-medium">
+                        <button
+                          onClick={() => player && setProfilePlayerId(player.id)}
+                          className="hover:text-primary transition-colors text-left"
+                        >
+                          {player?.name || tx.descricao}
+                        </button>
+                      </TableCell>
                       <TableCell>
                         {vendedorClub ? (
                           <Link
