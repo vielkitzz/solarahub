@@ -398,6 +398,7 @@ function AcademyTable({
                             ))}
                             <span className="text-[10px] ml-1.5">desconhecido</span>
                           </div>
+                          // REMOVER este bloco inteiro do AcademyTable
                           {canEdit && (
                             <Button
                               size="sm"
@@ -528,11 +529,11 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
 
       if (reportsData) {
         const reportsMap: Record<string, any> = {};
-        reportsData.forEach((r) => {
-          reportsMap[r.target_player_id] = {
-            potential_min_revelado: r.potential_min_revelado,
-            potential_max_revelado: r.potential_max_revelado,
-            margem_aplicada: r.margem_aplicada,
+        (playersData as AcademyPlayer[]).forEach((p) => {
+          reportsMap[p.id] = {
+            potential_min_revelado: p.potential_min,
+            potential_max_revelado: p.potential_max,
+            margem_aplicada: 0,
           };
         });
         setScoutReports(reportsMap);
