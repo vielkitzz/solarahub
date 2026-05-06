@@ -534,8 +534,8 @@ const Market = () => {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="hidden sm:table-cell py-3 w-10">
-                          {player?.nationality && <FlagImg nationality={player.nationality} />}
+                        <TableCell className="hidden sm:table-cell py-2 w-10">
+                          {p.nationality && <FlagImg nationality={p.nationality} />}
                         </TableCell>
                         <TableCell>
                           {club ? (
@@ -709,7 +709,7 @@ const Market = () => {
                     <TableRow key={tx.id}>
                       <TableCell className="font-medium">{player?.name || tx.descricao}</TableCell>
                       <TableCell className="hidden sm:table-cell py-3 w-10">
-                        {p.nationality && <FlagImg nationality={p.nationality} />}
+                        {player?.nationality && <FlagImg nationality={player.nationality} />}
                       </TableCell>
                       <TableCell>
                         {vendedorClub ? (
