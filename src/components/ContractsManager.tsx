@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Building2, Handshake, Plus, Trash2, AlertTriangle } from "lucide-react";
+import { Building2, Handshake, Plus, Trash2, Tv, Camera, AlertTriangle, Search } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 
 // IMPORTANDO O CATÁLOGO DO BRANDS.TS
@@ -136,7 +136,7 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
     return map;
   }, [contratos]);
 
-  // FÓRMULA DE CÁLCULO DE PATROCÍNIOS (SISTEMA NOVO)
+  // FÓRMULA DE CÁLCULO DE PATROCÍNIOS (LÓGICA NOVA DO MANUS)
   const empresasDaCategoria = (cat: PatrocinioCategoria): Empresa[] => {
     const isFornecedora = cat === "fornecedora";
     const baseBrands = isFornecedora ? KIT_SUPPLIERS : SPONSORS;
@@ -248,12 +248,9 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
       const multSetor = isFornecedora ? 1.5 : getMultiplicadorSetor(b.setor);
       const prestígio = getPrestígio(b.name, (b as any).prestige);
 
-      const entusiasmo =
-        b.setor === "Casa de Apostas"
-          ? prestígio // flat — sem curva de reputação
-          : Math.pow(multRep, prestígio);
+      const entusiasmo = b.setor === "Casa de Apostas" ? prestígio : Math.pow(multRep, prestígio);
 
-      // CÁLCULO FINAL
+      // CÁLCULO FINAL DA FÓRMULA MANUS
       const valorFinal = valorBaseRate * multSetor * multCamisa * entusiasmo * prestígio;
 
       return {
@@ -307,10 +304,10 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
     const anos = Math.max(1, Math.min(10, parseInt(duracao) || 3));
     const fim = temporadaAtual + anos;
 
-    // Valor anual efetivo com depreciação de 5% por ano adicional
+    // Valor anual efetivo com depreciação de 5% por ano adicional (Lógica Manus)
     const valorAnualEfetivo = Math.round(Number(empresa.valor_anual_sugerido) * Math.pow(0.95, anos - 1));
 
-    // 1. Garante que a marca existe na tabela empresas do banco
+    // 1. Garante que a marca existe na tabela empresas do banco (Lógica Manus)
     let dbEmpresaId = "";
     const { data: ext, error: extError } = await supabase
       .from("empresas")
@@ -357,13 +354,12 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
       inicio_temporada: temporadaAtual,
       fim_temporada: fim,
       anos_duracao: anos,
-      multa_rescisao: Math.round(valorAnualEfetivo * 0.7), // Multa de 70%
+      multa_rescisao: Math.round(valorAnualEfetivo * 0.7), // Multa de 70% (Lógica Manus)
       ativo: true,
     });
 
     setIsSubmitting(false);
     if (error) return toast.error(error.message);
-
     toast.success(`Contrato com ${empresa.nome} assinado!`);
     load();
     onChange?.();
@@ -371,11 +367,10 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
   };
 
   // LÓGICA DE RESCISÃO COM DÉBITO DO CAIXA (SISTEMA NOVO)
-  const handleRemoveContrato = async (contrato: Contrato) => {
-    const multa = Number(contrato.multa_rescisao || contrato.valor_anual * 0.7);
+  const handleRemoveContrato = async (id: string, multaMultaPrevista: number, nomeEmpresa: string) => {
     if (
       !confirm(
-        `Tem certeza que deseja rescindir este contrato com ${contrato.empresa?.nome}? Multa de ${formatCurrency(multa)} será debitada do caixa.`,
+        `Tem certeza que deseja rescindir este contrato com ${nomeEmpresa}? A multa de ${formatCurrency(multaMultaPrevista)} será debitada do caixa.`,
       )
     )
       return;
@@ -391,22 +386,19 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
       return;
     }
 
-    if (Number(club.budget) < multa) {
-      toast.error("Caixa insuficiente para pagar a multa");
+    if (Number(club.budget) < multaMultaPrevista) {
+      toast.error("Caixa insuficiente para pagar a multa rescisória");
       return;
     }
 
     const { error: e1 } = await supabase
       .from("clubs")
-      .update({ budget: Number(club.budget) - multa })
+      .update({ budget: Number(club.budget) - multaMultaPrevista })
       .eq("id", clubId);
 
-    if (e1) {
-      toast.error(e1.message);
-      return;
-    }
+    if (e1) return toast.error(e1.message);
 
-    const { error: e2 } = await supabase.from("contratos_clube").update({ ativo: false }).eq("id", contrato.id);
+    const { error: e2 } = await supabase.from("contratos_clube").update({ ativo: false }).eq("id", id);
     if (e2) return toast.error(e2.message);
 
     toast.success("Contrato rescindido.");
@@ -420,25 +412,6 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
 
   const totalFolhaSalarial = valorBaseFolha;
 
-  // LÓGICA DE DIREITOS DE TV & IMAGEM (SISTEMA NOVO)
-  const calcTVBase = (rep: string | null | undefined) => {
-    switch (rep?.toLowerCase()) {
-      case "estadual":
-        return 1500000;
-      case "nacional":
-        return 4000000;
-      case "continental":
-        return 8000000;
-      case "mundial":
-        return 12000000;
-      default:
-        return 0;
-    }
-  };
-  const tvBase = calcTVBase(reputacao);
-  const direitosImagemCusto = valorBaseFolha * 0.03;
-  const direitosImagemReceita = direitosImagemCusto * 0.5;
-
   return (
     <Card className="p-5 bg-gradient-card border-border/50 space-y-5">
       <div className="flex items-center justify-between">
@@ -447,24 +420,14 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
         </h3>
       </div>
 
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Card className="p-3 bg-secondary/30 border-border/30">
-          <div className="text-[10px] uppercase text-muted-foreground">Total Patrocínios</div>
+          <div className="text-[10px] uppercase text-muted-foreground">Total Patrocínios Anuais</div>
           <div className="font-display font-bold text-lg text-success">{formatCurrency(totalPatrocinios)}</div>
         </Card>
         <Card className="p-3 bg-secondary/30 border-border/30">
           <div className="text-[10px] uppercase text-muted-foreground">Folha Salarial Anual</div>
           <div className="font-display font-bold text-lg text-destructive">{formatCurrency(totalFolhaSalarial)}</div>
-        </Card>
-        <Card className="p-3 bg-secondary/30 border-border/30">
-          <div className="text-[10px] uppercase text-muted-foreground">Direitos de TV</div>
-          <div className="font-display font-bold text-lg text-success">{formatCurrency(tvBase)}</div>
-        </Card>
-        <Card className="p-3 bg-secondary/30 border-border/30">
-          <div className="text-[10px] uppercase text-muted-foreground">Direitos Imagem (Líquido)</div>
-          <div className="font-display font-bold text-lg text-destructive">
-            {formatCurrency(direitosImagemReceita - direitosImagemCusto)}
-          </div>
         </Card>
       </section>
 
@@ -486,8 +449,13 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
                 <Button
                   variant="destructive"
                   size="icon"
-                  onClick={() => handleRemoveContrato(contrato)}
-                  title={`Rescindir (multa ${formatCurrency(Number(contrato.multa_rescisao || contrato.valor_anual * 0.7))})`}
+                  onClick={() =>
+                    handleRemoveContrato(
+                      contrato.id,
+                      Number(contrato.multa_rescisao || contrato.valor_anual * 0.7),
+                      contrato.empresa?.nome || "Empresa Desconhecida",
+                    )
+                  }
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -500,7 +468,7 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
       {canEdit && (
         <section className="space-y-4">
           <h4 className="text-sm font-bold text-foreground">Patrocinadores Disponíveis</h4>
-          <div className="flex gap-2 items-center flex-wrap">
+          <div className="flex gap-2 items-center">
             <Input
               placeholder="Buscar patrocinador..."
               value={searchTerm}
@@ -572,7 +540,6 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
               const valorEfetivo = Math.round(
                 Number(empresaParaConfirmar.valor_anual_sugerido) * Math.pow(0.95, anosSelecionados - 1),
               );
-              const multaPrevista = Math.round(valorEfetivo * 0.7);
 
               return (
                 <div className="space-y-3">
@@ -589,21 +556,16 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
                         value={duracao}
                         onChange={(e) => setDuracao(e.target.value)}
                         min={1}
-                        max={10}
+                        max={5}
                       />
                     </div>
                     <div>
-                      <Label>Valor Anual Efetivo</Label>
+                      <Label>Valor Anual</Label>
                       <Input type="text" value={formatCurrency(valorEfetivo)} disabled />
                     </div>
                   </div>
-                  {anosSelecionados > 1 && (
-                    <p className="text-[11px] text-amber-500 font-medium">
-                      * O valor foi depreciado em 5% por ano de extensão contratual.
-                    </p>
-                  )}
                   <p className="text-xs text-muted-foreground">
-                    A multa rescisória (70%) será de {formatCurrency(multaPrevista)}.
+                    A multa rescisória (70%) será de {formatCurrency(Math.round(valorEfetivo * 0.7))}.
                   </p>
                 </div>
               );
