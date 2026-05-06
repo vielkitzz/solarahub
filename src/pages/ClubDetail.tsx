@@ -147,6 +147,16 @@ const ClubDetail = () => {
     setEditingClub(c);
     setLoading(false);
     if (c) document.title = `${c.name} — Solara Hub`;
+
+    // Carrega últimas transações relevantes (transferências + upgrades)
+    const { data: tx } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("club_id", id)
+      .in("categoria", ["transferencia", "upgrade_estadio", "upgrade_academia"])
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setRecentTransactions(tx || []);
   };
 
   useEffect(() => {
