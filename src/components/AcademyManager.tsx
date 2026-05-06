@@ -498,52 +498,44 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
   const peneirasRestantes = Math.max(0, 2 - peneirasUsadas);
   const pesquisasRestantes = Math.max(0, 10 - searchesUsed);
 
-  const load = async () => {
-    setLoading(true);
+const load = async () => {
+  setLoading(true);
 
-    // Carregar jogadores da base
-    const { data: playersData, error: playersError } = await supabase
-      .from("academy_players")
-      .select("*")
-      .eq("club_id", club.id)
-      .order("development_progress", { ascending: false });
+  const { data: playersData, error: playersError } = await supabase
+    .from("academy_players")
+    .select("*")
+    .eq("club_id", club.id)
+    .order("development_progress", { ascending: false });
 
-    if (playersError) toast.error(playersError.message);
-    setPlayers((playersData as AcademyPlayer[]) || []);
+  if (playersError) toast.error(playersError.message);
+  setPlayers((playersData as AcademyPlayer[]) || []);
 
-    // Carregar relatórios de olheiro já feitos (opcional, dependendo do seu backend)
+  // Se é o dono, mostra potencial real direto
+  // Se não é, busca apenas relatórios de olheiro já feitos
+  if (canEdit) {
+    const reportsMap: Record<string, any> = {};
+    (playersData as AcademyPlayer[] || []).forEach((p) => {
+      reportsMap[p.id] = {
+        potential_min_revelado: p.potential_min,
+        potential_max_revelado: p.potential_max,
+        margem_aplicada: 0,
+      };
+    });
+    setScoutReports(reportsMap);
+  } else {
     try {
-      const { data: academyIds } = await supabase.from("academy_players").select("id").eq("club_id", club.id);
+      const { data: academyIds } = await supabase
+        .from("academy_players")
+        .select("id")
+        .eq("club_id", club.id);
 
       const ids = (academyIds || []).map((r) => r.id);
-      console.log("IDs da base:", ids);
 
       const { data: reportsData } = await supabase
         .from("scout_reports")
         .select("*")
         .eq("scouter_club_id", club.id)
-        .in("target_player_id", ids.length > 0 ? ids : ["00000000-0000-0000-0000-000000000000"]);
-
-      console.log("Relatórios encontrados:", reportsData);
-      console.log("Scout reports map:", scoutReports);
-
-      if (reportsData) {
-        const reportsMap: Record<string, any> = {};
-        (playersData as AcademyPlayer[]).forEach((p) => {
-          reportsMap[p.id] = {
-            potential_min_revelado: p.potential_min,
-            potential_max_revelado: p.potential_max,
-            margem_aplicada: 0,
-          };
-        });
-        setScoutReports(reportsMap);
-      }
-    } catch (e) {
-      console.warn("Não foi possível carregar relatórios prévios (pode ignorar se não usar persistência).");
-    }
-
-    setLoading(false);
-  };
+        .in("target_player_id", ids.length > 0 ? ids : ["00000000-0000-0000-0000-000
 
   useEffect(() => {
     setSearchesUsed(club?.scout_searches_used ?? 0);
