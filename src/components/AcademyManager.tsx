@@ -498,44 +498,58 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
   const peneirasRestantes = Math.max(0, 2 - peneirasUsadas);
   const pesquisasRestantes = Math.max(0, 10 - searchesUsed);
 
-const load = async () => {
-  setLoading(true);
+  const load = async () => {
+    setLoading(true);
 
-  const { data: playersData, error: playersError } = await supabase
-    .from("academy_players")
-    .select("*")
-    .eq("club_id", club.id)
-    .order("development_progress", { ascending: false });
+    const { data: playersData, error: playersError } = await supabase
+      .from("academy_players")
+      .select("*")
+      .eq("club_id", club.id)
+      .order("development_progress", { ascending: false });
 
-  if (playersError) toast.error(playersError.message);
-  setPlayers((playersData as AcademyPlayer[]) || []);
+    if (playersError) toast.error(playersError.message);
+    setPlayers((playersData as AcademyPlayer[]) || []);
 
-  // Se é o dono, mostra potencial real direto
-  // Se não é, busca apenas relatórios de olheiro já feitos
-  if (canEdit) {
-    const reportsMap: Record<string, any> = {};
-    (playersData as AcademyPlayer[] || []).forEach((p) => {
-      reportsMap[p.id] = {
-        potential_min_revelado: p.potential_min,
-        potential_max_revelado: p.potential_max,
-        margem_aplicada: 0,
-      };
-    });
-    setScoutReports(reportsMap);
-  } else {
-    try {
-      const { data: academyIds } = await supabase
-        .from("academy_players")
-        .select("id")
-        .eq("club_id", club.id);
+    // Se é o dono, mostra potencial real direto
+    // Se não é, busca apenas relatórios de olheiro já feitos
+    if (canEdit) {
+      const reportsMap: Record<string, any> = {};
+      ((playersData as AcademyPlayer[]) || []).forEach((p) => {
+        reportsMap[p.id] = {
+          potential_min_revelado: p.potential_min,
+          potential_max_revelado: p.potential_max,
+          margem_aplicada: 0,
+        };
+      });
+      setScoutReports(reportsMap);
+    } else {
+      try {
+        const { data: academyIds } = await supabase.from("academy_players").select("id").eq("club_id", club.id);
 
-      const ids = (academyIds || []).map((r) => r.id);
+        const ids = (academyIds || []).map((r) => r.id);
 
-      const { data: reportsData } = await supabase
-        .from("scout_reports")
-        .select("*")
-        .eq("scouter_club_id", club.id)
-        .in("target_player_id", ids.length > 0 ? ids : ["00000000-0000-0000-0000-000000000000"]);
+        const { data: reportsData } = await supabase
+          .from("scout_reports")
+          .select("*")
+          .eq("scouter_club_id", club.id)
+          .in("target_player_id", ids.length > 0 ? ids : ["00000000-0000-0000-0000-000000000000"]);
+
+        const reportsMap: Record<string, any> = {};
+        (reportsData || []).forEach((r) => {
+          reportsMap[r.target_player_id] = {
+            potential_min_revelado: r.potential_min_revelado,
+            potential_max_revelado: r.potential_max_revelado,
+            margem_aplicada: r.margem_aplicada,
+          };
+        });
+        setScoutReports(reportsMap);
+      } catch (e) {
+        console.warn("Erro ao carregar relatórios de olheiro.");
+      }
+    }
+
+    setLoading(false);
+  };
 
   useEffect(() => {
     setSearchesUsed(club?.scout_searches_used ?? 0);
