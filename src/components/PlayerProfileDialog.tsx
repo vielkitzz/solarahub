@@ -78,15 +78,15 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
       if (error) throw error;
       setPlayer(p);
 
-      // 2. Busca o histórico usando a tabela de transferências
+      // 2. Busca o histórico de transferências concluídas
       const { data: transfersData } = await supabase
         .from("transferencias")
         .select("*")
         .eq("jogador_id", playerId)
-        .order("created_at", { ascending: false }); // Traz as mais recentes primeiro
+        .eq("status", "concluida") // FILTRO IMPORTANTE: Ajuste se o seu status for "aceita", "finalizada", etc.
+        .order("created_at", { ascending: false });
 
       if (transfersData && transfersData.length > 0) {
-        // Pega todos os IDs de clubes envolvidos para buscar os escudos/nomes
         const clubIds = new Set(
           transfersData.flatMap((t) => [t.clube_comprador_id, t.clube_vendedor_id].filter(Boolean)),
         );
@@ -96,7 +96,6 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
           .select("id, name, crest_url")
           .in("id", Array.from(clubIds));
 
-        // Cria um dicionário para facilitar a montagem da interface
         const clubsMap: Record<string, any> = {};
         if (clubsData) {
           clubsData.forEach((c) => {
@@ -104,7 +103,6 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
           });
         }
 
-        // Monta o array final com os dados de transferência + dados dos clubes
         const historyFormatted = transfersData.map((t) => ({
           ...t,
           comprador: t.clube_comprador_id ? clubsMap[t.clube_comprador_id] : null,
@@ -116,7 +114,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
         setHistory([]);
       }
 
-      // 3. Busca dados do usuário logado e relatórios de olheiro
+      // 3. Busca dados do usuário logado e relatórios
       if (user) {
         const { data: c } = await supabase.from("clubs").select("*").eq("owner_id", user.id).maybeSingle();
         setMyClub(c);
@@ -179,7 +177,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl p-0 overflow-hidden bg-background border-border/50 max-h-[90vh] flex flex-col">
+        <DialogContent className="max-w-3xl p-0 overflow-hidden bg-background border-border/50 max-h-[90vh] flex flex-col">
           {loading ? (
             <div className="h-64 flex items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -310,81 +308,64 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                   </div>
                 </div>
 
-                {/* Nova Seção: Histórico de Transferências */}
+                {/* Histórico de Transferências estilo Tabela */}
                 <div className="mt-8 space-y-4">
                   <h4 className="text-xs font-bold uppercase tracking-tighter text-muted-foreground flex items-center gap-2 pb-2 border-b border-border/50">
                     <History className="h-4 w-4" /> Histórico de Transferências
                   </h4>
 
                   {history.length > 0 ? (
-                    <div className="space-y-3">
-                      {history.map((item) => (
-                        <div
-                          key={item.id}
-                          className="flex flex-col gap-2 p-3 rounded-lg bg-secondary/10 border border-border/50 hover:bg-secondary/20 transition-colors"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                              {new Date(item.created_at).toLocaleDateString("pt-BR")}
-                            </span>
-                            <Badge variant="outline" className="text-[10px] py-0 capitalize">
-                              {item.status || "Desconhecido"}
-                            </Badge>
-                          </div>
-
-                          <div className="flex items-center gap-4">
-                            {/* Clube Vendedor */}
-                            <div className="flex items-center gap-2 flex-1">
-                              <div className="h-6 w-6 bg-card rounded flex items-center justify-center p-0.5 border border-border/50 shrink-0">
-                                {item.vendedor?.crest_url ? (
-                                  <img
-                                    src={item.vendedor.crest_url}
-                                    alt={item.vendedor.name}
-                                    className="max-h-full max-w-full"
-                                  />
+                    <div className="rounded-md border border-border/50 overflow-hidden bg-background">
+                      <table className="w-full text-sm text-left">
+                        <thead className="bg-secondary/30 text-[11px] uppercase tracking-wider text-muted-foreground">
+                          <tr>
+                            <th className="px-4 py-2.5 font-medium w-[100px]">Data</th>
+                            <th className="px-4 py-2.5 font-medium">Origem</th>
+                            <th className="px-4 py-2.5 font-medium">Destino</th>
+                            <th className="px-4 py-2.5 font-medium text-right">Quantia Paga</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/50">
+                          {history.map((item) => (
+                            <tr key={item.id} className="hover:bg-secondary/10 transition-colors">
+                              <td className="px-4 py-3 whitespace-nowrap text-xs text-muted-foreground">
+                                {new Date(item.created_at).toLocaleDateString("pt-BR")}
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  {item.vendedor?.crest_url ? (
+                                    <img src={item.vendedor.crest_url} alt="" className="w-5 h-5 object-contain" />
+                                  ) : (
+                                    <Shield className="w-5 h-5 text-muted-foreground/30" />
+                                  )}
+                                  <span className="font-medium text-sm">{item.vendedor?.name || "Sem Clube"}</span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  {item.comprador?.crest_url ? (
+                                    <img src={item.comprador.crest_url} alt="" className="w-5 h-5 object-contain" />
+                                  ) : (
+                                    <Shield className="w-5 h-5 text-muted-foreground/30" />
+                                  )}
+                                  <span className="font-medium text-sm">{item.comprador?.name || "Sem Clube"}</span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                {item.tipo === "emprestimo" ? (
+                                  <span className="text-xs text-muted-foreground bg-secondary/30 px-2 py-0.5 rounded">
+                                    Empréstimo
+                                  </span>
+                                ) : item.valor_ofertado && item.valor_ofertado > 0 ? (
+                                  <span className="font-mono text-xs">{formatCurrency(item.valor_ofertado)}</span>
                                 ) : (
-                                  <Shield className="h-3 w-3 text-muted-foreground/30" />
+                                  <span className="text-xs text-muted-foreground italic">Custo Zero</span>
                                 )}
-                              </div>
-                              <span
-                                className="text-sm truncate w-[100px]"
-                                title={item.vendedor?.name || "Clube Desconhecido"}
-                              >
-                                {item.vendedor?.name || "Desconhecido"}
-                              </span>
-                            </div>
-
-                            <ArrowRightLeft className="h-4 w-4 text-muted-foreground/50 shrink-0" />
-
-                            {/* Clube Comprador */}
-                            <div className="flex items-center justify-end gap-2 flex-1">
-                              <span
-                                className="text-sm text-right truncate w-[100px]"
-                                title={item.comprador?.name || "Clube Desconhecido"}
-                              >
-                                {item.comprador?.name || "Desconhecido"}
-                              </span>
-                              <div className="h-6 w-6 bg-card rounded flex items-center justify-center p-0.5 border border-border/50 shrink-0">
-                                {item.comprador?.crest_url ? (
-                                  <img
-                                    src={item.comprador.crest_url}
-                                    alt={item.comprador.name}
-                                    className="max-h-full max-w-full"
-                                  />
-                                ) : (
-                                  <Shield className="h-3 w-3 text-muted-foreground/30" />
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          {item.valor_ofertado != null && item.valor_ofertado > 0 && (
-                            <div className="mt-1 text-xs text-center text-muted-foreground/80 font-mono">
-                              Valor: {formatCurrency(item.valor_ofertado)}
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   ) : (
                     <div className="text-center py-6 border border-dashed border-border/50 rounded-lg bg-secondary/5">
