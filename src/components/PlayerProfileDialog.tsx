@@ -416,24 +416,20 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
         </DialogContent>
       </Dialog>
 
-      {player && (
-        <>
-          <ContractRenewalDialog
-            player={player}
-            open={renewOpen}
-            onOpenChange={setRenewOpen}
-            onRenewed={() => fetchData()}
-          />
-          <MultaRescisoriaDialog
-            player={player}
-            open={multaOpen}
-            onOpenChange={setMultaOpen}
-            myClubId={myClub?.id || null}
-            isAdmin={false}
-            onDone={() => fetchData()}
-          />
-        </>
-      )}
+      <ContractRenewalDialog
+        player={player}
+        open={renewOpen}
+        onOpenChange={setRenewOpen}
+        onRenewed={() => fetchData()}
+      />
+      <MultaRescisoriaDialog
+        player={player}
+        open={multaOpen}
+        onOpenChange={setMultaOpen}
+        myClubId={myClub?.id || null}
+        isAdmin={false}
+        onDone={() => fetchData()}
+      />
     </>
   );
 };
