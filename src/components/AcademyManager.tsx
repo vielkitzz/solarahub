@@ -535,7 +535,7 @@ const load = async () => {
         .from("scout_reports")
         .select("*")
         .eq("scouter_club_id", club.id)
-        .in("target_player_id", ids.length > 0 ? ids : ["00000000-0000-0000-0000-000
+        .in("target_player_id", ids.length > 0 ? ids : ["00000000-0000-0000-0000-000000000000"]);
 
   useEffect(() => {
     setSearchesUsed(club?.scout_searches_used ?? 0);
