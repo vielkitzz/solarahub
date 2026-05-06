@@ -6,7 +6,7 @@ import { AppSidebar } from "./AppSidebar";
 import { NotificationsBell } from "./NotificationsBell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -87,30 +87,28 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <header className="h-14 flex items-center gap-3 border-b border-border/50 bg-background/80 backdrop-blur-md px-4 sticky top-0 z-30">
             <SidebarTrigger />
             <div className="flex-1" />
-            <TooltipProvider delayDuration={150}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Caixa de entrada do mercado"
-                    onClick={goToInbox}
-                    className="relative"
-                  >
-                    <Inbox className="h-5 w-5" />
-                    {inboxCount > 0 && (
-                      <Badge className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] leading-none flex items-center justify-center bg-primary text-primary-foreground rounded-full pointer-events-none">
-                        {inboxCount > 99 ? "99+" : inboxCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Caixa de entrada do mercado
-                  {inboxCount > 0 && ` · ${inboxCount} pendente${inboxCount > 1 ? "s" : ""}`}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Caixa de entrada do mercado"
+                  onClick={goToInbox}
+                  className="relative"
+                >
+                  <Inbox className="h-5 w-5" />
+                  {inboxCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] leading-none flex items-center justify-center bg-primary text-primary-foreground rounded-full pointer-events-none">
+                      {inboxCount > 99 ? "99+" : inboxCount}
+                    </Badge>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Caixa de entrada do mercado
+                {inboxCount > 0 && ` · ${inboxCount} pendente${inboxCount > 1 ? "s" : ""}`}
+              </TooltipContent>
+            </Tooltip>
             <NotificationsBell />
           </header>
           <main className="flex-1 p-3 sm:p-4 md:p-8 animate-fade-in min-w-0">{children}</main>
