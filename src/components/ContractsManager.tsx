@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Building2, Handshake, Plus, Trash2, Tv, Camera, AlertTriangle, Search } from "lucide-react";
+import { Building2, Handshake, Plus, Trash2, AlertTriangle } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 
 // IMPORTANDO O CATÁLOGO DO BRANDS.TS
@@ -136,31 +136,30 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
     return map;
   }, [contratos]);
 
-  // FÓRMULA DE CÁLCULO DE PATROCÍNIOS
+  // FÓRMULA DE CÁLCULO DE PATROCÍNIOS (SISTEMA NOVO)
   const empresasDaCategoria = (cat: PatrocinioCategoria): Empresa[] => {
     const isFornecedora = cat === "fornecedora";
     const baseBrands = isFornecedora ? KIT_SUPPLIERS : SPONSORS;
 
     // 1. VALOR BASE PELO RATE DO CLUBE (0.01 – 8.00)
     const clubRate = rate || 1.0;
-    // Ajuste: Curva mais suave para o valor base
-    const valorBaseRate = Math.pow(clubRate, 1.5) * 200000 + 1000000; // Ex: Rate 8 -> ~5.5M, Rate 2 -> ~1.5M
+    const valorBaseRate = Math.pow(clubRate, 2) * 250000 + 500000;
 
     // 2. MULTIPLICADOR DE REPUTAÇÃO DO CLUBE
     const getMultRep = (rep: string | null | undefined) => {
       switch (rep?.toLowerCase()) {
         case "local":
-          return 0.6;
+          return 0.5;
         case "estadual":
-          return 0.9;
-        case "nacional":
-          return 1.1;
-        case "continental":
-          return 1.3;
-        case "mundial":
-          return 1.5;
-        default:
           return 0.8;
+        case "nacional":
+          return 1.0;
+        case "continental":
+          return 1.35;
+        case "mundial":
+          return 1.75;
+        default:
+          return 0.7;
       }
     };
     const multRep = getMultRep(reputacao);
@@ -169,34 +168,33 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
     const getMultiplicadorSetor = (setor?: string) => {
       switch (setor) {
         case "Casa de Apostas":
-          return 2.0; // Reduzido de 2.5
+          return 2.5;
         case "Banco":
         case "Finanças":
-          return 1.8; // Reduzido de 2.0
+          return 2.0;
         case "Tecnologia":
         case "Multinacional":
-          return 1.6; // Reduzido de 1.8
+          return 1.8;
         case "Companhias Aéreas":
-          return 1.4; // Reduzido de 1.6
+          return 1.6;
         case "Automóveis":
-          return 1.3; // Reduzido de 1.5
+          return 1.5;
         case "Telecomunicações":
-          return 1.3; // Reduzido de 1.5
+          return 1.5;
         case "Energia":
-          return 1.2; // Reduzido de 1.4
+          return 1.4;
         case "Serviços":
         case "Seguros":
-          return 1.1; // Reduzido de 1.2
+          return 1.2;
         case "Alimentação":
         case "Varejista":
           return 1.0;
         default:
-          return 1.0; // Reduzido de 1.1
+          return 1.1;
       }
     };
 
     // 4. PRESTÍGIO INDIVIDUAL DA MARCA (0.6 – 2.0)
-    // Usa o campo `prestige` do brands.ts se definido; caso contrário, hash do nome como fallback
     const getPrestígio = (nome: string, prestige?: number) => {
       if (prestige !== undefined) return Math.min(2.0, Math.max(0.6, prestige));
       let h = 0;
@@ -239,28 +237,23 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
 
     // 6. MULTIPLICADOR DE POSIÇÃO NA CAMISA
     let multCamisa = 1;
-    if (cat === "master")
-      multCamisa = 3.0; // Reduzido de 5.0
-    else if (cat === "secundario_central" || cat === "costas_superior")
-      multCamisa = 2.0; // Reduzido de 2.5
-    else if (cat === "omoplata" || cat === "manga")
-      multCamisa = 1.5; // Reduzido de 1.8
-    else if (cat === "lateral" || cat === "barra_frontal" || cat === "barra_traseira") multCamisa = 1.1; // Reduzido de 1.2
+    if (cat === "master") multCamisa = 5.0;
+    else if (cat === "secundario_central" || cat === "costas_superior") multCamisa = 2.5;
+    else if (cat === "omoplata" || cat === "manga") multCamisa = 1.8;
+    else if (cat === "lateral" || cat === "barra_frontal" || cat === "barra_traseira") multCamisa = 1.2;
 
-    // Rate exigido (meio ponto abaixo do atual)
     const rateExigido = Math.max(0.1, clubRate - 0.5).toFixed(2);
 
     return baseBrands.map((b) => {
       const multSetor = isFornecedora ? 1.5 : getMultiplicadorSetor(b.setor);
       const prestígio = getPrestígio(b.name, (b as any).prestige);
 
-      // Casas de apostas não se importam com reputação — patrocinam qualquer clube igualmente.
-      // Para as demais, marcas maiores ficam mais seletivas: a curva exponencial (multRep^prestige)
-      // faz a Nike triplicar para clubes mundiais e cair para estaduais, enquanto a Walon mal varia.
-      // Ajuste: Substituir o multiplicador exponencial por um linear mais suave
-      const entusiasmo = b.setor === "Casa de Apostas" ? prestígio : multRep + (prestígio - 1.0); // Linearizado
+      const entusiasmo =
+        b.setor === "Casa de Apostas"
+          ? prestígio // flat — sem curva de reputação
+          : Math.pow(multRep, prestígio);
 
-      // CÁLCULO FINAL: rate × setor × posição × entusiasmo (já inclui reputação e prestígio)
+      // CÁLCULO FINAL
       const valorFinal = valorBaseRate * multSetor * multCamisa * entusiasmo * prestígio;
 
       return {
@@ -270,7 +263,7 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
         categoria: cat,
         valor_anual_sugerido: Math.round(valorFinal),
         exigencias: isFornecedora ? null : getDescricaoSetor(b.setor, rateExigido),
-        setor: b.setor,
+        setor: b.setor || null,
         ativa: true,
       };
     });
@@ -306,34 +299,116 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
     return filtered;
   }, [contratosPorCategoria, empresasDaCategoria, searchTerm, searchCategoria, sortOrder]);
 
+  // LÓGICA DE ASSINATURA (SISTEMA NOVO)
   const handleAddContrato = async (empresa: Empresa) => {
     if (!clubId) return toast.error("ID do clube não encontrado.");
     setIsSubmitting(true);
 
+    const anos = Math.max(1, Math.min(10, parseInt(duracao) || 3));
+    const fim = temporadaAtual + anos;
+
+    // Valor anual efetivo com depreciação de 5% por ano adicional
+    const valorAnualEfetivo = Math.round(Number(empresa.valor_anual_sugerido) * Math.pow(0.95, anos - 1));
+
+    // 1. Garante que a marca existe na tabela empresas do banco
+    let dbEmpresaId = "";
+    const { data: ext, error: extError } = await supabase
+      .from("empresas")
+      .select("id")
+      .eq("nome", empresa.nome)
+      .maybeSingle();
+
+    if (extError) {
+      toast.error("Erro ao verificar empresa: " + extError.message);
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (ext) {
+      dbEmpresaId = ext.id;
+    } else {
+      const { data: newEmp, error: errEmp } = await supabase
+        .from("empresas")
+        .insert({
+          nome: empresa.nome,
+          logo_url: empresa.logo_url,
+          ativa: true,
+          categoria: empresa.categoria,
+          valor_anual_sugerido: empresa.valor_anual_sugerido,
+          exigencias: empresa.exigencias,
+        })
+        .select("id")
+        .single();
+
+      if (errEmp) {
+        toast.error("Erro ao registar empresa no banco: " + errEmp.message);
+        setIsSubmitting(false);
+        return;
+      }
+      dbEmpresaId = newEmp.id;
+    }
+
+    // 2. Insere o contrato vinculado
     const { error } = await supabase.from("contratos_clube").insert({
       club_id: clubId,
-      empresa_id: empresa.id,
+      empresa_id: dbEmpresaId,
       categoria: empresa.categoria,
-      valor_anual: empresa.valor_anual_sugerido,
+      valor_anual: valorAnualEfetivo || 0,
       inicio_temporada: temporadaAtual,
-      fim_temporada: temporadaAtual + Number(duracao) - 1,
-      anos_duracao: Number(duracao),
-      multa_rescisao: empresa.valor_anual_sugerido * 2, // Multa de 2x o valor anual
+      fim_temporada: fim,
+      anos_duracao: anos,
+      multa_rescisao: Math.round(valorAnualEfetivo * 0.7), // Multa de 70%
       ativo: true,
     });
 
     setIsSubmitting(false);
     if (error) return toast.error(error.message);
+
     toast.success(`Contrato com ${empresa.nome} assinado!`);
     load();
     onChange?.();
     setEmpresaParaConfirmar(null);
   };
 
-  const handleRemoveContrato = async (id: string) => {
-    if (!confirm("Tem certeza que deseja rescindir este contrato?")) return;
-    const { error } = await supabase.from("contratos_clube").update({ ativo: false }).eq("id", id);
-    if (error) return toast.error(error.message);
+  // LÓGICA DE RESCISÃO COM DÉBITO DO CAIXA (SISTEMA NOVO)
+  const handleRemoveContrato = async (contrato: Contrato) => {
+    const multa = Number(contrato.multa_rescisao || contrato.valor_anual * 0.7);
+    if (
+      !confirm(
+        `Tem certeza que deseja rescindir este contrato com ${contrato.empresa?.nome}? Multa de ${formatCurrency(multa)} será debitada do caixa.`,
+      )
+    )
+      return;
+
+    const { data: club, error: clubError } = await supabase
+      .from("clubs")
+      .select("budget")
+      .eq("id", clubId)
+      .maybeSingle();
+
+    if (clubError || !club) {
+      toast.error("Clube não encontrado");
+      return;
+    }
+
+    if (Number(club.budget) < multa) {
+      toast.error("Caixa insuficiente para pagar a multa");
+      return;
+    }
+
+    const { error: e1 } = await supabase
+      .from("clubs")
+      .update({ budget: Number(club.budget) - multa })
+      .eq("id", clubId);
+
+    if (e1) {
+      toast.error(e1.message);
+      return;
+    }
+
+    const { error: e2 } = await supabase.from("contratos_clube").update({ ativo: false }).eq("id", contrato.id);
+    if (e2) return toast.error(e2.message);
+
     toast.success("Contrato rescindido.");
     load();
     onChange?.();
@@ -345,6 +420,25 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
 
   const totalFolhaSalarial = valorBaseFolha;
 
+  // LÓGICA DE DIREITOS DE TV & IMAGEM (SISTEMA NOVO)
+  const calcTVBase = (rep: string | null | undefined) => {
+    switch (rep?.toLowerCase()) {
+      case "estadual":
+        return 1500000;
+      case "nacional":
+        return 4000000;
+      case "continental":
+        return 8000000;
+      case "mundial":
+        return 12000000;
+      default:
+        return 0;
+    }
+  };
+  const tvBase = calcTVBase(reputacao);
+  const direitosImagemCusto = valorBaseFolha * 0.03;
+  const direitosImagemReceita = direitosImagemCusto * 0.5;
+
   return (
     <Card className="p-5 bg-gradient-card border-border/50 space-y-5">
       <div className="flex items-center justify-between">
@@ -353,14 +447,24 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
         </h3>
       </div>
 
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         <Card className="p-3 bg-secondary/30 border-border/30">
-          <div className="text-[10px] uppercase text-muted-foreground">Total Patrocínios Anuais</div>
+          <div className="text-[10px] uppercase text-muted-foreground">Total Patrocínios</div>
           <div className="font-display font-bold text-lg text-success">{formatCurrency(totalPatrocinios)}</div>
         </Card>
         <Card className="p-3 bg-secondary/30 border-border/30">
           <div className="text-[10px] uppercase text-muted-foreground">Folha Salarial Anual</div>
           <div className="font-display font-bold text-lg text-destructive">{formatCurrency(totalFolhaSalarial)}</div>
+        </Card>
+        <Card className="p-3 bg-secondary/30 border-border/30">
+          <div className="text-[10px] uppercase text-muted-foreground">Direitos de TV</div>
+          <div className="font-display font-bold text-lg text-success">{formatCurrency(tvBase)}</div>
+        </Card>
+        <Card className="p-3 bg-secondary/30 border-border/30">
+          <div className="text-[10px] uppercase text-muted-foreground">Direitos Imagem (Líquido)</div>
+          <div className="font-display font-bold text-lg text-destructive">
+            {formatCurrency(direitosImagemReceita - direitosImagemCusto)}
+          </div>
         </Card>
       </section>
 
@@ -379,7 +483,12 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
                 <p className="text-xs text-success font-medium">{formatCurrency(contrato.valor_anual)} / ano</p>
               </div>
               {canEdit && (
-                <Button variant="destructive" size="icon" onClick={() => handleRemoveContrato(contrato.id)}>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  onClick={() => handleRemoveContrato(contrato)}
+                  title={`Rescindir (multa ${formatCurrency(Number(contrato.multa_rescisao || contrato.valor_anual * 0.7))})`}
+                >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               )}
@@ -391,7 +500,7 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
       {canEdit && (
         <section className="space-y-4">
           <h4 className="text-sm font-bold text-foreground">Patrocinadores Disponíveis</h4>
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center flex-wrap">
             <Input
               placeholder="Buscar patrocinador..."
               value={searchTerm}
@@ -457,30 +566,48 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
           <DialogHeader>
             <DialogTitle>Assinar contrato com {empresaParaConfirmar?.nome}?</DialogTitle>
           </DialogHeader>
-          {empresaParaConfirmar && (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Você está prestes a assinar um contrato de patrocínio de{" "}
-                <span className="font-bold text-primary">
-                  {formatCurrency(empresaParaConfirmar.valor_anual_sugerido)}
-                </span>{" "}
-                por ano com a <span className="font-bold text-primary">{empresaParaConfirmar.nome}</span>.
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Duração (anos)</Label>
-                  <Input type="number" value={duracao} onChange={(e) => setDuracao(e.target.value)} min={1} max={5} />
+          {empresaParaConfirmar &&
+            (() => {
+              const anosSelecionados = Math.max(1, Math.min(10, parseInt(duracao) || 3));
+              const valorEfetivo = Math.round(
+                Number(empresaParaConfirmar.valor_anual_sugerido) * Math.pow(0.95, anosSelecionados - 1),
+              );
+              const multaPrevista = Math.round(valorEfetivo * 0.7);
+
+              return (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Você está prestes a assinar um contrato de patrocínio de{" "}
+                    <span className="font-bold text-primary">{formatCurrency(valorEfetivo)}</span> por ano com a{" "}
+                    <span className="font-bold text-primary">{empresaParaConfirmar.nome}</span>.
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Duração (anos)</Label>
+                      <Input
+                        type="number"
+                        value={duracao}
+                        onChange={(e) => setDuracao(e.target.value)}
+                        min={1}
+                        max={10}
+                      />
+                    </div>
+                    <div>
+                      <Label>Valor Anual Efetivo</Label>
+                      <Input type="text" value={formatCurrency(valorEfetivo)} disabled />
+                    </div>
+                  </div>
+                  {anosSelecionados > 1 && (
+                    <p className="text-[11px] text-amber-500 font-medium">
+                      * O valor foi depreciado em 5% por ano de extensão contratual.
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    A multa rescisória (70%) será de {formatCurrency(multaPrevista)}.
+                  </p>
                 </div>
-                <div>
-                  <Label>Valor Anual</Label>
-                  <Input type="text" value={formatCurrency(empresaParaConfirmar.valor_anual_sugerido)} disabled />
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                A multa rescisória será de {formatCurrency(empresaParaConfirmar.valor_anual_sugerido * 2)}.
-              </p>
-            </div>
-          )}
+              );
+            })()}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEmpresaParaConfirmar(null)}>
               Cancelar
