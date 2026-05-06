@@ -708,7 +708,7 @@ const Market = () => {
                   return (
                     <TableRow key={tx.id}>
                       <TableCell className="font-medium">{player?.name || tx.descricao}</TableCell>
-                      <TableCell className="hidden sm:table-cell py-3 w-10">
+                      <TableCell className="hidden sm:table-cell py-4 w-10">
                         {player?.nationality && <FlagImg nationality={player.nationality} />}
                       </TableCell>
                       <TableCell>
