@@ -570,7 +570,7 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
     setScoutLoading(false);
     if (error) return toast.error(error.message);
 
-  const enriched = await Promise.all(
+    const enriched = await Promise.all(
       (data as ScoutResult[]).map(async (p) => {
         let finalNationality = p.scout_nationality;
 
@@ -592,6 +592,10 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
         };
       }),
     );
+
+    setScoutResults(enriched);
+    onChange();
+  };
 
   const togglePick = (id: string) => {
     const next = new Set(picked);
