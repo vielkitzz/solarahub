@@ -5,581 +5,972 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  GraduationCap,
+  Search,
+  ArrowUp,
+  X,
+  AlertTriangle,
+  Sparkles,
+  Star,
+  ArrowUpCircle,
+  ArrowUpDown,
+  ChevronUp,
+  ChevronDown,
+  Telescope,
+} from "lucide-react";
+import { POSITIONS, formatCurrency, calcStars } from "@/lib/format";
+import { COUNTRIES_DATA, getFlagUrl } from "@/lib/countries";
+import { StarRating } from "@/components/StarRating";
+import { SkillDisplay } from "@/components/SkillDisplay";
+import { generateRandomName } from "@/lib/scouting-names";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Building2, Handshake, Plus, Trash2, Tv, Camera, AlertTriangle, Search } from "lucide-react";
-import { formatCurrency } from "@/lib/format";
-
-// IMPORTANDO O CATÁLOGO DO BRANDS.TS
-import { KIT_SUPPLIERS, SPONSORS, getBrandLogoUrl } from "@/lib/brands";
-
-export type PatrocinioCategoria =
-  | "fornecedora"
-  | "master"
-  | "secundario_central"
-  | "omoplata"
-  | "barra_frontal"
-  | "barra_traseira"
-  | "costas_superior"
-  | "manga"
-  | "lateral";
-
-export const PATROCINIO_CATEGORIAS: Array<{
-  value: PatrocinioCategoria;
-  label: string;
-  max: number;
-  semExigencia?: boolean;
-}> = [
-  { value: "fornecedora", label: "Fornecedora", max: 1, semExigencia: true },
-  { value: "master", label: "Máster", max: 1 },
-  { value: "secundario_central", label: "Secundário central", max: 1 },
-  { value: "omoplata", label: "Omoplata", max: 2 },
-  { value: "barra_frontal", label: "Barra frontal", max: 2 },
-  { value: "barra_traseira", label: "Barra traseira", max: 2 },
-  { value: "costas_superior", label: "Costas superior", max: 1 },
-  { value: "manga", label: "Manga", max: 2 },
-  { value: "lateral", label: "Lateral", max: 1 },
-];
-
-interface Contrato {
-  id: string;
-  club_id: string;
-  empresa_id: string | null;
-  categoria: string;
-  valor_anual: number;
-  inicio_temporada: number | null;
-  fim_temporada: number | null;
-  anos_duracao: number;
-  multa_rescisao: number;
-  ativo: boolean;
-  empresa?: { id: string; nome: string; logo_url: string | null; exigencias: string | null };
-}
-
-// Interface adaptada para uso interno dinâmico
-interface Empresa {
-  id: string;
-  nome: string;
-  logo_url: string | null;
-  categoria: PatrocinioCategoria;
-  valor_anual_sugerido: number;
-  exigencias: string | null;
-  setor: string | null;
-  ativa: boolean;
-}
+import type { ScoutReport } from "@/lib/scout"; // Certifique-se de que essa exportação exista
 
 interface Props {
-  clubId: string;
+  club: any;
   canEdit: boolean;
-  reputacao?: string | null;
-  valorBaseFolha?: number;
-  rate?: number;
-  onChange?: () => void;
+  onChange: () => void;
 }
 
-export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 0, rate, onChange }: Props) {
-  const [contratos, setContratos] = useState<Contrato[]>([]);
-  const [temporadaAtual, setTemporadaAtual] = useState<number>(2020);
-  const [loading, setLoading] = useState(true);
-  const [searchCategoria, setSearchCategoria] = useState<PatrocinioCategoria | null>(null);
-  const [duracao, setDuracao] = useState("3");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [empresaParaConfirmar, setEmpresaParaConfirmar] = useState<Empresa | null>(null);
+interface AcademyPlayer {
+  id: string;
+  club_id: string;
+  name: string;
+  position: string;
+  age: number;
+  nationality: string | null;
+  skill: number;
+  potential_min: number;
+  potential_max: number;
+  development_progress: number;
+  seasons_in_academy: number;
+  free_agent: boolean;
+  created_at: string;
+}
 
-  const [logoApiKey, setLogoApiKey] = useState("");
-  const [searchTerm, setSearchTerm] = useState(""); // Estado do buscador
-  const [sortOrder, setSortOrder] = useState<"valor" | "az">("valor");
+interface ScoutResult {
+  scout_id: string;
+  scout_name: string;
+  scout_position: string;
+  scout_age: number;
+  scout_nationality: string | null;
+  scout_skill: number;
+  scout_potential_min: number;
+  scout_potential_max: number;
+}
+
+const NIVEL_LABELS = ["—", "Modesto", "Regional", "Profissional", "Premium", "Elite"];
+
+// Custos de upgrade da base
+const BASE_UPGRADE_CUSTOS: Record<string, number> = {
+  "1_2": 800_000,
+  "2_3": 4_000_000,
+  "3_4": 18_000_000,
+  "4_5": 35_000_000,
+};
+
+// ─── Estilos da Tabela ────────────────────────────────────────────────────────
+const POSITION_COLORS: Record<string, { color: string; bg: string }> = {
+  GOL: { color: "text-yellow-300", bg: "bg-yellow-400/20 border-yellow-400/50" },
+  ZAG: { color: "text-blue-300", bg: "bg-blue-500/20 border-blue-400/50" },
+  LD: { color: "text-sky-300", bg: "bg-sky-500/20 border-sky-400/50" },
+  LE: { color: "text-sky-300", bg: "bg-sky-500/20 border-sky-400/50" },
+  VOL: { color: "text-teal-300", bg: "bg-teal-500/20 border-teal-400/50" },
+  MC: { color: "text-emerald-300", bg: "bg-emerald-500/20 border-emerald-400/50" },
+  MEI: { color: "text-lime-300", bg: "bg-lime-500/20 border-lime-400/50" },
+  PD: { color: "text-orange-300", bg: "bg-orange-500/20 border-orange-400/50" },
+  PE: { color: "text-orange-300", bg: "bg-orange-500/20 border-orange-400/50" },
+  SA: { color: "text-red-300", bg: "bg-red-500/20 border-red-400/50" },
+  ATA: { color: "text-rose-300", bg: "bg-rose-500/20 border-rose-400/50" },
+};
+
+function getPositionStyle(position: string) {
+  return (
+    POSITION_COLORS[(position || "").toUpperCase()] ?? {
+      color: "text-muted-foreground",
+      bg: "bg-secondary/30 border-border/30",
+    }
+  );
+}
+
+function FlagImg({ nationality }: { nationality: string }) {
+  const url = getFlagUrl(nationality);
+  if (!url) return <span className="text-xs text-muted-foreground">—</span>;
+  return (
+    <img
+      src={url}
+      alt={nationality}
+      title={nationality}
+      className="h-6 w-8 object-cover rounded-sm"
+      style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.1)" }}
+    />
+  );
+}
+
+// ─── Componente da Tabela da Base ─────────────────────────────────────────────
+function AcademyTable({
+  players,
+  club,
+  canEdit,
+  promover,
+  dispensar,
+  pronto,
+  scoutReports,
+  pesquisar,
+  scoutingId,
+  searchesRestantes,
+}: {
+  players: AcademyPlayer[];
+  club: any;
+  canEdit: boolean;
+  promover: (p: AcademyPlayer) => void;
+  dispensar: (p: AcademyPlayer) => void;
+  pronto: (p: AcademyPlayer) => boolean;
+  scoutReports: Record<string, any>;
+  pesquisar: (playerId: string) => void;
+  scoutingId: string | null;
+  searchesRestantes: number;
+}) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [positionFilter, setPositionFilter] = useState("todas");
+  const [statusFilter, setStatusFilter] = useState("todos");
+
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>({
+    key: "desenvolvimento",
+    direction: "desc",
+  });
+
+  const handleSort = (key: string) => {
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+    if (sortConfig?.key !== columnKey) return <ArrowUpDown className="h-3 w-3 opacity-20 shrink-0" />;
+    return sortConfig.direction === "asc" ? (
+      <ChevronUp className="h-3 w-3 shrink-0" />
+    ) : (
+      <ChevronDown className="h-3 w-3 shrink-0" />
+    );
+  };
+
+  const filteredAndSorted = useMemo(() => {
+    return players
+      .filter((p) => {
+        if (searchTerm && !p.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+        if (positionFilter !== "todas" && p.position !== positionFilter) return false;
+        if (statusFilter === "pronto" && !pronto(p)) return false;
+        if (statusFilter === "desenvolvimento" && pronto(p)) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        if (!sortConfig) return 0;
+        const { key, direction } = sortConfig;
+        const modifier = direction === "asc" ? 1 : -1;
+
+        switch (key) {
+          case "posicao":
+            const ai = POSITIONS.indexOf(a.position);
+            const bi = POSITIONS.indexOf(b.position);
+            const av = ai === -1 ? 999 : ai;
+            const bv = bi === -1 ? 999 : bi;
+            if (av !== bv) return (av - bv) * modifier;
+            return (Number(b.development_progress || 0) - Number(a.development_progress || 0)) * modifier;
+          case "nome":
+            return a.name.localeCompare(b.name) * modifier;
+          case "nacionalidade":
+            return (a.nationality || "").localeCompare(b.nationality || "") * modifier;
+          case "idade":
+            return (Number(a.age || 0) - Number(b.age || 0)) * modifier;
+          case "qualidade":
+            return (Number(a.skill || 0) - Number(b.skill || 0)) * modifier;
+          case "potencial":
+            const repA = scoutReports[a.id];
+            const repB = scoutReports[b.id];
+            const valA = repA ? repA.potential_max_revelado : 0;
+            const valB = repB ? repB.potential_max_revelado : 0;
+            return (valA - valB) * modifier;
+          case "desenvolvimento":
+            return (Number(a.development_progress || 0) - Number(b.development_progress || 0)) * modifier;
+          default:
+            return 0;
+        }
+      });
+  }, [players, searchTerm, positionFilter, statusFilter, sortConfig, scoutReports]);
+
+  return (
+    <div className="space-y-0 rounded-lg overflow-hidden border border-border/50 bg-gradient-card mt-4">
+      <div className="flex items-center gap-4 px-4 py-2.5 bg-secondary/40 border-b border-border/50 text-xs text-muted-foreground flex-wrap">
+        <span className="font-semibold text-foreground">{filteredAndSorted.length} jogadores na base</span>
+        <div className="ml-auto flex items-center gap-3 flex-wrap">
+          <span className="flex items-center gap-1.5 bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
+            <Telescope className="h-3.5 w-3.5" />
+            <span className="font-bold">{searchesRestantes}</span> pesquisas de olheiro restantes
+          </span>
+        </div>
+      </div>
+
+      <div className="p-3 bg-secondary/10 border-b border-border/50 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar pelo nome..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 h-9 text-xs bg-background/50"
+          />
+        </div>
+
+        <Select value={positionFilter} onValueChange={setPositionFilter}>
+          <SelectTrigger className="h-9 text-xs bg-background/50">
+            <SelectValue placeholder="Todas as posições" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todas">Todas as posições</SelectItem>
+            {POSITIONS.map((pos) => (
+              <SelectItem key={pos} value={pos}>
+                {pos}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-9 text-xs bg-background/50">
+            <SelectValue placeholder="Qualquer status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Qualquer status</SelectItem>
+            <SelectItem value="pronto">Prontos para promover</SelectItem>
+            <SelectItem value="desenvolvimento">Em desenvolvimento</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-border/50 bg-secondary/20">
+              <TableHead
+                className="w-16 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                onClick={() => handleSort("posicao")}
+              >
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                  Posição <SortIcon columnKey="posicao" />
+                </div>
+              </TableHead>
+
+              <TableHead
+                className="cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                onClick={() => handleSort("nome")}
+              >
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                  Nome <SortIcon columnKey="nome" />
+                </div>
+              </TableHead>
+
+              <TableHead
+                className="w-20 hidden sm:table-cell cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                onClick={() => handleSort("nacionalidade")}
+              >
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                  Nacionalidade <SortIcon columnKey="nacionalidade" />
+                </div>
+              </TableHead>
+
+              <TableHead
+                className="w-16 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                onClick={() => handleSort("idade")}
+              >
+                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                  Idade <SortIcon columnKey="idade" />
+                </div>
+              </TableHead>
+
+              <TableHead
+                className="w-28 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                onClick={() => handleSort("qualidade")}
+              >
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                  Qualidade <SortIcon columnKey="qualidade" />
+                </div>
+              </TableHead>
+
+              <TableHead
+                className="w-44 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                onClick={() => handleSort("potencial")}
+              >
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                  Potencial <SortIcon columnKey="potencial" />
+                </div>
+              </TableHead>
+
+              <TableHead
+                className="w-32 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                onClick={() => handleSort("desenvolvimento")}
+              >
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                  Desenvolvimento <SortIcon columnKey="desenvolvimento" />
+                </div>
+              </TableHead>
+
+              {canEdit && <TableHead className="w-24 text-right" />}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredAndSorted.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={canEdit ? 8 : 7} className="text-center py-8 text-muted-foreground">
+                  Nenhum jogador encontrado.
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredAndSorted.map((p) => {
+                const finalizado = pronto(p);
+                const ps = getPositionStyle(p.position);
+                const rep = scoutReports[p.id];
+
+                return (
+                  <TableRow
+                    key={p.id}
+                    className={`border-border/30 hover:bg-primary/5 transition-colors text-sm ${finalizado ? "bg-primary/5" : ""}`}
+                  >
+                    <TableCell className="py-2">
+                      <span
+                        className={`inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded border ${ps.bg} ${ps.color}`}
+                      >
+                        {p.position || "—"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-2 font-medium">
+                      <div className="flex items-center gap-1.5">
+                        <span className="truncate max-w-[160px]">{p.name}</span>
+                        {finalizado && (
+                          <span title="Pronto para promover">
+                            <Sparkles className="h-3 w-3 text-primary shrink-0" />
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-2 hidden sm:table-cell">
+                      <FlagImg nationality={p.nationality || ""} />
+                    </TableCell>
+                    <TableCell className="py-2 text-center text-xs text-muted-foreground tabular-nums">
+                      {p.age ?? "—"}
+                    </TableCell>
+                    <TableCell className="py-2">
+                      {/* Trocado para SkillDisplay */}
+                      <SkillDisplay value={p.skill} rate={club.rate} kind="skill" />
+                    </TableCell>
+
+                    <TableCell className="py-2">
+                      {rep ? (
+                        <div
+                          className="flex items-center gap-1.5"
+                          title={`Margem de erro: ±${rep.margem_aplicada || "?"}`}
+                        >
+                          <SkillDisplay
+                            value={rep.potential_max_revelado}
+                            valueMin={rep.potential_min_revelado}
+                            rate={club.rate}
+                            kind="potential"
+                            numericLabel={`${rep.potential_min_revelado}-${rep.potential_max_revelado}`}
+                          />
+                        </div>
+                      ) : (
+                        // Se o relatório não existe, você pode deixar vazio ou exibir um traço
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </TableCell>
+
+                    <TableCell className="py-2">
+                      <div className="flex flex-col gap-1 w-24">
+                        <div className="flex justify-between text-[10px] text-muted-foreground">
+                          <span>{Math.round(p.development_progress)}%</span>
+                        </div>
+                        <Progress value={p.development_progress} className="h-1.5" />
+                      </div>
+                    </TableCell>
+                    {canEdit && (
+                      <TableCell className="py-2 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          {finalizado ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Promover"
+                              onClick={() => promover(p)}
+                              className="h-7 w-7 text-primary hover:text-primary/80"
+                            >
+                              <ArrowUp className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Promover já (Aplica penalidade)"
+                              onClick={() => promover(p)}
+                              className="h-7 w-7 text-amber-400 hover:text-amber-500"
+                            >
+                              <AlertTriangle className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Dispensar"
+                            onClick={() => dispensar(p)}
+                            className="h-7 w-7 text-destructive hover:text-destructive/80"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+// ─── Gerenciador Principal ────────────────────────────────────────────────────
+export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
+  const [players, setPlayers] = useState<AcademyPlayer[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Scout e Peneira
+  const [scoutOpen, setScoutOpen] = useState(false);
+  const [scoutPositions, setScoutPositions] = useState<string[]>([]);
+  const [scoutAgeMin, setScoutAgeMin] = useState(14);
+  const [scoutAgeMax, setScoutAgeMax] = useState(23);
+  const [scoutNat, setScoutNat] = useState<string>("__any__");
+  const [scoutLoading, setScoutLoading] = useState(false);
+  const [scoutResults, setScoutResults] = useState<ScoutResult[] | null>(null);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [savingScout, setSavingScout] = useState(false);
+
+  // Olheiro
+  const [scoutReports, setScoutReports] = useState<Record<string, any>>({});
+  const [scoutingId, setScoutingId] = useState<string | null>(null);
+  const [searchesUsed, setSearchesUsed] = useState<number>(club?.scout_searches_used ?? 0);
+
+  const [upgradingBase, setUpgradingBase] = useState(false);
+
+  const peneirasUsadas = club.academy_scouting_count ?? 0;
+  const peneirasRestantes = Math.max(0, 2 - peneirasUsadas);
+  const pesquisasRestantes = Math.max(0, 10 - searchesUsed);
 
   const load = async () => {
     setLoading(true);
-    // Busca contratos ativos e configurações (temporada e chave da API)
-    const [{ data: c, error: contratosError }, { data: settings, error: settingsError }] = await Promise.all([
-      supabase
-        .from("contratos_clube")
-        .select("*, empresa:empresas(id, nome, logo_url, exigencias)")
-        .eq("club_id", clubId)
-        .eq("ativo", true)
-        .order("created_at", { ascending: false }),
-      supabase.from("settings").select("key, value").in("key", ["temporada_atual", "logo_dev_key"]),
-    ]);
 
-    if (contratosError) {
-      console.error("Erro ao carregar contratos:", contratosError);
+    const { data: playersData, error: playersError } = await supabase
+      .from("academy_players")
+      .select("*")
+      .eq("club_id", club.id)
+      .order("development_progress", { ascending: false });
+
+    if (playersError) toast.error(playersError.message);
+    setPlayers((playersData as AcademyPlayer[]) || []);
+
+    // Se é o dono, mostra potencial real direto
+    // Se não é, busca apenas relatórios de olheiro já feitos
+    if (canEdit) {
+      const reportsMap: Record<string, any> = {};
+      ((playersData as AcademyPlayer[]) || []).forEach((p) => {
+        reportsMap[p.id] = {
+          potential_min_revelado: p.potential_min,
+          potential_max_revelado: p.potential_max,
+          margem_aplicada: 0,
+        };
+      });
+      setScoutReports(reportsMap);
     } else {
-      setContratos((c as any) || []);
-    }
+      try {
+        const { data: academyIds } = await supabase.from("academy_players").select("id").eq("club_id", club.id);
 
-    settings?.forEach((s) => {
-      if (s.key === "temporada_atual") {
-        const val = s.value as any;
-        if (val?.ano) setTemporadaAtual(Number(val.ano));
+        const ids = (academyIds || []).map((r) => r.id);
+
+        const { data: reportsData } = await supabase
+          .from("scout_reports")
+          .select("*")
+          .eq("scouter_club_id", club.id)
+          .in("target_player_id", ids.length > 0 ? ids : ["00000000-0000-0000-0000-000000000000"]);
+
+        const reportsMap: Record<string, any> = {};
+        (reportsData || []).forEach((r) => {
+          reportsMap[r.target_player_id] = {
+            potential_min_revelado: r.potential_min_revelado,
+            potential_max_revelado: r.potential_max_revelado,
+            margem_aplicada: r.margem_aplicada,
+          };
+        });
+        setScoutReports(reportsMap);
+      } catch (e) {
+        console.warn("Erro ao carregar relatórios de olheiro.");
       }
-      if (s.key === "logo_dev_key") {
-        const val = s.value as any;
-        setLogoApiKey(typeof val === "string" ? val : val?.token || val?.key || "");
-      }
-    });
+    }
 
     setLoading(false);
   };
 
   useEffect(() => {
+    setSearchesUsed(club?.scout_searches_used ?? 0);
+  }, [club?.id, club?.scout_searches_used]);
+
+  useEffect(() => {
     load();
-  }, [clubId]);
+  }, [club.id]);
 
-  const contratosPorCategoria = useMemo(() => {
-    const map: Record<string, Contrato[]> = {};
-    contratos.forEach((c) => {
-      if (!map[c.categoria]) map[c.categoria] = [];
-      map[c.categoria].push(c);
+  const proximoNivel = (club.nivel_base || 1) < 5 ? (club.nivel_base || 1) + 1 : null;
+  const custoUpgrade = proximoNivel ? BASE_UPGRADE_CUSTOS[`${club.nivel_base}_${proximoNivel}`] || 0 : 0;
+
+  const upgradeBase = async () => {
+    if (!proximoNivel) return;
+    if (Number(club.budget) < custoUpgrade) {
+      return toast.error(`Caixa insuficiente. Necessário ${formatCurrency(custoUpgrade)}`);
+    }
+    if (!confirm(`Subir a base para nível ${proximoNivel} por ${formatCurrency(custoUpgrade)}?`)) return;
+    setUpgradingBase(true);
+    const { error } = await supabase.rpc("upgrade_academia" as any, {
+      _club_id: club.id,
+      _novo_nivel: proximoNivel,
     });
-    return map;
-  }, [contratos]);
-
-  // FÓRMULA DE CÁLCULO DE PATROCÍNIOS (LÓGICA NOVA DO MANUS)
-  const empresasDaCategoria = (cat: PatrocinioCategoria): Empresa[] => {
-    const isFornecedora = cat === "fornecedora";
-    const baseBrands = isFornecedora ? KIT_SUPPLIERS : SPONSORS;
-
-    // 1. VALOR BASE PELO RATE DO CLUBE (0.01 – 8.00)
-    const clubRate = rate || 1.0;
-    const valorBaseRate = Math.pow(clubRate, 2) * 250000 + 500000;
-
-    // 2. MULTIPLICADOR DE REPUTAÇÃO DO CLUBE
-    const getMultRep = (rep: string | null | undefined) => {
-      switch (rep?.toLowerCase()) {
-        case "local":
-          return 0.5;
-        case "estadual":
-          return 0.8;
-        case "nacional":
-          return 1.0;
-        case "continental":
-          return 1.35;
-        case "mundial":
-          return 1.75;
-        default:
-          return 0.7;
-      }
-    };
-    const multRep = getMultRep(reputacao);
-
-    // 3. MULTIPLICADOR DE SETOR DA EMPRESA
-    const getMultiplicadorSetor = (setor?: string) => {
-      switch (setor) {
-        case "Casa de Apostas":
-          return 2.5;
-        case "Banco":
-        case "Finanças":
-          return 2.0;
-        case "Tecnologia":
-        case "Multinacional":
-          return 1.8;
-        case "Companhias Aéreas":
-          return 1.6;
-        case "Automóveis":
-          return 1.5;
-        case "Telecomunicações":
-          return 1.5;
-        case "Energia":
-          return 1.4;
-        case "Serviços":
-        case "Seguros":
-          return 1.2;
-        case "Alimentação":
-        case "Varejista":
-          return 1.0;
-        default:
-          return 1.1;
-      }
-    };
-
-    // 4. PRESTÍGIO INDIVIDUAL DA MARCA (0.6 – 2.0)
-    const getPrestígio = (nome: string, prestige?: number) => {
-      if (prestige !== undefined) return Math.min(2.0, Math.max(0.6, prestige));
-      let h = 0;
-      for (const c of nome) h = (h * 31 + c.charCodeAt(0)) % 10000;
-      return 0.6 + (h / 10000) * 1.4;
-    };
-
-    // 5. DESCRIÇÃO CONTEXTUALIZADA POR SETOR
-    const getDescricaoSetor = (setor?: string, rateExigido?: string) => {
-      const rateText = `Rate mínimo exigido: ${rateExigido}`;
-      switch (setor) {
-        case "Casa de Apostas":
-          return `Patrocinador de alto investimento no futebol. Busca visibilidade máxima e associação com clubes competitivos. ${rateText}.`;
-        case "Banco":
-        case "Finanças":
-          return `Instituição financeira que valoriza imagem de solidez e prestígio. Prefere clubes com boa reputação e estabilidade. ${rateText}.`;
-        case "Tecnologia":
-        case "Multinacional":
-          return `Empresa global focada em inovação e alcance de audiência jovem. Exige clubes com presença expressiva no mercado. ${rateText}.`;
-        case "Automóveis":
-          return `Montadora ou revendedora que usa o futebol para projetar sofisticação e performance da marca. ${rateText}.`;
-        case "Energia":
-          return `Empresa do setor energético que aposta no esporte como vetor de reconhecimento de marca em larga escala. ${rateText}.`;
-        case "Serviços":
-          return `Empresa de serviços que busca fidelização de clientes por meio da associação com o futebol. ${rateText}.`;
-        case "Seguros":
-          return `Seguradora que utiliza o patrocínio esportivo para transmitir confiança e proteção ao consumidor. ${rateText}.`;
-        case "Alimentação":
-          return `Marca do setor alimentício com foco em popularidade e alcance do público geral. ${rateText}.`;
-        case "Varejista":
-          return `Rede varejista que aposta no futebol para reforçar presença regional e nacional. ${rateText}.`;
-        case "Companhias Aéreas":
-          return `Companhia aérea que usa o patrocínio para destacar mobilidade, prestígio e cobertura internacional. ${rateText}.`;
-        case "Telecomunicações":
-          return `Operadora ou empresa de telecom que alia tecnologia e esporte para ampliar reconhecimento de marca. ${rateText}.`;
-        default:
-          return `Empresa interessada em visibilidade esportiva e expansão de mercado. ${rateText}.`;
-      }
-    };
-
-    // 6. MULTIPLICADOR DE POSIÇÃO NA CAMISA
-    let multCamisa = 1;
-    if (cat === "master") multCamisa = 5.0;
-    else if (cat === "secundario_central" || cat === "costas_superior") multCamisa = 2.5;
-    else if (cat === "omoplata" || cat === "manga") multCamisa = 1.8;
-    else if (cat === "lateral" || cat === "barra_frontal" || cat === "barra_traseira") multCamisa = 1.2;
-
-    const rateExigido = Math.max(0.1, clubRate - 0.5).toFixed(2);
-
-    return baseBrands.map((b) => {
-      const multSetor = isFornecedora ? 1.5 : getMultiplicadorSetor(b.setor);
-      const prestígio = getPrestígio(b.name, (b as any).prestige);
-
-      const entusiasmo = b.setor === "Casa de Apostas" ? prestígio : Math.pow(multRep, prestígio);
-
-      // CÁLCULO FINAL DA FÓRMULA MANUS
-      const valorFinal = valorBaseRate * multSetor * multCamisa * entusiasmo * prestígio;
-
-      return {
-        id: b.name,
-        nome: b.name,
-        logo_url: getBrandLogoUrl(b.domain, logoApiKey),
-        categoria: cat,
-        valor_anual_sugerido: Math.round(valorFinal),
-        exigencias: isFornecedora ? null : getDescricaoSetor(b.setor, rateExigido),
-        setor: b.setor || null,
-        ativa: true,
-      };
-    });
-  };
-
-  const empresasDisponiveis = useMemo(() => {
-    let filtered = PATROCINIO_CATEGORIAS.flatMap((cat) => {
-      const contratosAtivos = contratosPorCategoria[cat.value] || [];
-      if (contratosAtivos.length >= cat.max) return [];
-      return empresasDaCategoria(cat.value).map((emp) => ({ ...emp, categoria: cat.value }));
-    });
-
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (emp) =>
-          emp.nome.toLowerCase().includes(term) ||
-          emp.setor?.toLowerCase().includes(term) ||
-          emp.exigencias?.toLowerCase().includes(term),
-      );
-    }
-
-    if (searchCategoria) {
-      filtered = filtered.filter((emp) => emp.categoria === searchCategoria);
-    }
-
-    if (sortOrder === "valor") {
-      filtered.sort((a, b) => b.valor_anual_sugerido - a.valor_anual_sugerido);
-    } else {
-      filtered.sort((a, b) => a.nome.localeCompare(b.nome));
-    }
-
-    return filtered;
-  }, [contratosPorCategoria, empresasDaCategoria, searchTerm, searchCategoria, sortOrder]);
-
-  // LÓGICA DE ASSINATURA (SISTEMA NOVO)
-  const handleAddContrato = async (empresa: Empresa) => {
-    if (!clubId) return toast.error("ID do clube não encontrado.");
-    setIsSubmitting(true);
-
-    const anos = Math.max(1, Math.min(10, parseInt(duracao) || 3));
-    const fim = temporadaAtual + anos;
-
-    // Valor anual efetivo com depreciação de 5% por ano adicional (Lógica Manus)
-    const valorAnualEfetivo = Math.round(Number(empresa.valor_anual_sugerido) * Math.pow(0.95, anos - 1));
-
-    // 1. Garante que a marca existe na tabela empresas do banco (Lógica Manus)
-    let dbEmpresaId = "";
-    const { data: ext, error: extError } = await supabase
-      .from("empresas")
-      .select("id")
-      .eq("nome", empresa.nome)
-      .maybeSingle();
-
-    if (extError) {
-      toast.error("Erro ao verificar empresa: " + extError.message);
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (ext) {
-      dbEmpresaId = ext.id;
-    } else {
-      const { data: newEmp, error: errEmp } = await supabase
-        .from("empresas")
-        .insert({
-          nome: empresa.nome,
-          logo_url: empresa.logo_url,
-          ativa: true,
-          categoria: empresa.categoria,
-          valor_anual_sugerido: empresa.valor_anual_sugerido,
-          exigencias: empresa.exigencias,
-        })
-        .select("id")
-        .single();
-
-      if (errEmp) {
-        toast.error("Erro ao registar empresa no banco: " + errEmp.message);
-        setIsSubmitting(false);
-        return;
-      }
-      dbEmpresaId = newEmp.id;
-    }
-
-    // 2. Insere o contrato vinculado
-    const { error } = await supabase.from("contratos_clube").insert({
-      club_id: clubId,
-      empresa_id: dbEmpresaId,
-      categoria: empresa.categoria,
-      valor_anual: valorAnualEfetivo || 0,
-      inicio_temporada: temporadaAtual,
-      fim_temporada: fim,
-      anos_duracao: anos,
-      multa_rescisao: Math.round(valorAnualEfetivo * 0.7), // Multa de 70% (Lógica Manus)
-      ativo: true,
-    });
-
-    setIsSubmitting(false);
+    setUpgradingBase(false);
     if (error) return toast.error(error.message);
-    toast.success(`Contrato com ${empresa.nome} assinado!`);
-    load();
-    onChange?.();
-    setEmpresaParaConfirmar(null);
+    toast.success(`Base evoluiu para nível ${proximoNivel}!`);
+    onChange();
   };
 
-  // LÓGICA DE RESCISÃO COM DÉBITO DO CAIXA (SISTEMA NOVO)
-  const handleRemoveContrato = async (id: string, multaMultaPrevista: number, nomeEmpresa: string) => {
-    if (
-      !confirm(
-        `Tem certeza que deseja rescindir este contrato com ${nomeEmpresa}? A multa de ${formatCurrency(multaMultaPrevista)} será debitada do caixa.`,
-      )
-    )
-      return;
+  const realizarPeneira = async () => {
+    if (peneirasRestantes <= 0) return toast.error("Limite de peneiras desta temporada atingido");
+    setScoutLoading(true);
+    setScoutResults(null);
+    setPicked(new Set());
+    const { data, error } = await supabase.rpc("realizar_peneira_v2" as any, {
+      _club_id: club.id,
+      _positions: scoutPositions.length > 0 ? scoutPositions : null,
+      _age_min: scoutAgeMin,
+      _age_max: scoutAgeMax,
+      _nationality: scoutNat === "__any__" ? null : scoutNat,
+    });
+    setScoutLoading(false);
+    if (error) return toast.error(error.message);
 
-    const { data: club, error: clubError } = await supabase
-      .from("clubs")
-      .select("budget")
-      .eq("id", clubId)
-      .maybeSingle();
+    const enriched = await Promise.all(
+      (data as ScoutResult[]).map(async (p) => {
+        const finalNationality =
+          p.scout_nationality || COUNTRIES_DATA[Math.floor(Math.random() * COUNTRIES_DATA.length)].name;
 
-    if (clubError || !club) {
-      toast.error("Clube não encontrado");
-      return;
-    }
+        return {
+          ...p,
+          scout_nationality: finalNationality,
+          scout_name: await generateRandomName(finalNationality),
+        };
+      }),
+    );
 
-    if (Number(club.budget) < multaMultaPrevista) {
-      toast.error("Caixa insuficiente para pagar a multa rescisória");
-      return;
-    }
-
-    const { error: e1 } = await supabase
-      .from("clubs")
-      .update({ budget: Number(club.budget) - multaMultaPrevista })
-      .eq("id", clubId);
-
-    if (e1) return toast.error(e1.message);
-
-    const { error: e2 } = await supabase.from("contratos_clube").update({ ativo: false }).eq("id", id);
-    if (e2) return toast.error(e2.message);
-
-    toast.success("Contrato rescindido.");
-    load();
-    onChange?.();
+    setScoutResults(enriched);
+    onChange();
   };
 
-  const totalPatrocinios = useMemo(() => {
-    return contratos.reduce((sum, c) => sum + c.valor_anual, 0);
-  }, [contratos]);
+  const togglePick = (id: string) => {
+    const next = new Set(picked);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setPicked(next);
+  };
 
-  const totalFolhaSalarial = valorBaseFolha;
+  const confirmarPicks = async () => {
+    if (!scoutResults) return;
+    const escolhidos = scoutResults.filter((p) => picked.has(p.scout_id));
+    if (escolhidos.length === 0) {
+      setScoutOpen(false);
+      setScoutResults(null);
+      return;
+    }
+    setSavingScout(true);
+    const rows = escolhidos.map((p) => ({
+      club_id: club.id,
+      name: p.scout_name,
+      position: p.scout_position,
+      age: p.scout_age,
+      nationality: p.scout_nationality,
+      skill: p.scout_skill,
+      potential_min: p.scout_potential_min,
+      potential_max: p.scout_potential_max,
+    }));
+    const { error } = await supabase.from("academy_players").insert(rows);
+    setSavingScout(false);
+    if (error) return toast.error(error.message);
+    toast.success(`${escolhidos.length} jogador(es) adicionado(s) à base!`);
+    setScoutOpen(false);
+    setScoutResults(null);
+    setPicked(new Set());
+    load();
+  };
+
+  const dispensar = async (p: AcademyPlayer) => {
+    if (!confirm(`Dispensar ${p.name}? Esta ação é permanente.`)) return;
+    const { error } = await supabase.from("academy_players").delete().eq("id", p.id);
+    if (error) return toast.error(error.message);
+    toast.success("Jogador dispensado");
+    load();
+  };
+
+  const promover = async (p: AcademyPlayer) => {
+    const aviso =
+      p.development_progress < 100
+        ? `Promover ${p.name} antes do desenvolvimento completo (${Math.round(p.development_progress)}%)?\n\nEle subirá com habilidade atual e terá uma penalidade no potencial proporcional ao quanto faltou.`
+        : `Promover ${p.name} ao elenco principal?`;
+    if (!confirm(aviso)) return;
+    const { error } = await supabase.rpc("promover_academia" as any, {
+      _academy_player_id: p.id,
+    });
+    if (error) return toast.error(error.message);
+    toast.success(`${p.name} foi promovido ao elenco principal!`);
+    load();
+    onChange();
+  };
+
+  const pesquisarJogadorBase = async (playerId: string) => {
+    if (!club) return;
+    setScoutingId(playerId);
+    try {
+      const { data, error } = await supabase.rpc("scout_academy_player" as any, {
+        _scouter_club_id: club.id,
+        _target_player_id: playerId,
+      });
+      if (error) throw error;
+
+      const res: any = data;
+
+      setScoutReports((prev) => ({
+        ...prev,
+        [playerId]: {
+          potential_min_revelado: res.potential_min,
+          potential_max_revelado: res.potential_max,
+          margem_aplicada: res.margem,
+        },
+      }));
+
+      setSearchesUsed(res.searches_used);
+
+      if (res.ja_existia) {
+        toast.info("Relatório já existia — não consumiu pesquisa.");
+      } else {
+        toast.success(`Olheiro analisou o jogador (margem ±${res.margem}).`);
+      }
+
+      onChange();
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao pesquisar jogador");
+    } finally {
+      setScoutingId(null);
+    }
+  };
+
+  const pronto = (p: AcademyPlayer) => p.development_progress >= 100;
 
   return (
-    <Card className="p-5 bg-gradient-card border-border/50 space-y-5">
-      <div className="flex items-center justify-between">
-        <h3 className="font-display font-bold flex items-center gap-2">
-          <Handshake className="h-5 w-5 text-primary" /> Gerenciar Contratos
-        </h3>
-      </div>
-
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Card className="p-3 bg-secondary/30 border-border/30">
-          <div className="text-[10px] uppercase text-muted-foreground">Total Patrocínios Anuais</div>
-          <div className="font-display font-bold text-lg text-success">{formatCurrency(totalPatrocinios)}</div>
-        </Card>
-        <Card className="p-3 bg-secondary/30 border-border/30">
-          <div className="text-[10px] uppercase text-muted-foreground">Folha Salarial Anual</div>
-          <div className="font-display font-bold text-lg text-destructive">{formatCurrency(totalFolhaSalarial)}</div>
-        </Card>
-      </section>
-
-      <section className="space-y-4">
-        <h4 className="text-sm font-bold text-foreground">Contratos Ativos</h4>
-        {contratos.length === 0 && <p className="text-muted-foreground text-sm">Nenhum contrato ativo no momento.</p>}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {contratos.map((contrato) => (
-            <Card key={contrato.id} className="p-3 flex items-center gap-3 bg-card/50 border-border/50">
-              {contrato.empresa?.logo_url && (
-                <img src={contrato.empresa.logo_url} alt={contrato.empresa.nome} className="h-10 w-10 object-contain" />
-              )}
-              <div className="flex-1">
-                <p className="font-semibold text-sm">{contrato.empresa?.nome || "Empresa Desconhecida"}</p>
-                <p className="text-xs text-muted-foreground capitalize">{contrato.categoria.replace(/_/g, " ")}</p>
-                <p className="text-xs text-success font-medium">{formatCurrency(contrato.valor_anual)} / ano</p>
+    <div className="space-y-4">
+      {/* Visão geral da base */}
+      <Card className="p-5 bg-gradient-card border-border/50">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <GraduationCap className="h-5 w-5 text-primary" />
+            <div>
+              <div className="font-display font-bold text-lg">Categoria de Base</div>
+              <div className="text-xs text-muted-foreground">
+                {NIVEL_LABELS[club.nivel_base] || "—"} · {players.length} jogador(es) na academia
               </div>
-              {canEdit && (
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={() =>
-                    handleRemoveContrato(
-                      contrato.id,
-                      Number(contrato.multa_rescisao || contrato.valor_anual * 0.7),
-                      contrato.empresa?.nome || "Empresa Desconhecida",
-                    )
-                  }
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {canEdit && (
-        <section className="space-y-4">
-          <h4 className="text-sm font-bold text-foreground">Patrocinadores Disponíveis</h4>
-          <div className="flex gap-2 items-center">
-            <Input
-              placeholder="Buscar patrocinador..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-            <Select
-              value={searchCategoria || "all"}
-              onValueChange={(v) => setSearchCategoria(v === "all" ? null : (v as PatrocinioCategoria))}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filtrar por categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as Categorias</SelectItem>
-                {PATROCINIO_CATEGORIAS.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as "valor" | "az")}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Ordenar por" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="valor">Valor</SelectItem>
-                <SelectItem value="az">A-Z</SelectItem>
-              </SelectContent>
-            </Select>
+            </div>
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {empresasDisponiveis.map((empresa) => (
-              <Card key={empresa.id} className="p-3 flex items-center gap-3 bg-card/50 border-border/50">
-                {empresa.logo_url && (
-                  <img src={empresa.logo_url} alt={empresa.nome} className="h-10 w-10 object-contain" />
-                )}
-                <div className="flex-1">
-                  <p className="font-semibold text-sm">{empresa.nome}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{empresa.categoria.replace(/_/g, " ")}</p>
-                  <p className="text-xs text-success font-medium">
-                    {formatCurrency(empresa.valor_anual_sugerido)} / ano
-                  </p>
-                  {empresa.exigencias && (
-                    <p className="text-[10px] text-amber-500 mt-1 flex items-center gap-1">
-                      <AlertTriangle className="h-3 w-3" /> {empresa.exigencias}
-                    </p>
-                  )}
-                </div>
-                <Button onClick={() => setEmpresaParaConfirmar(empresa)} disabled={isSubmitting}>
-                  <Plus className="h-4 w-4" /> Assinar
-                </Button>
-              </Card>
+          <div className="flex items-center gap-1">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Star
+                key={i}
+                className={`h-5 w-5 ${i < (club.nivel_base || 0) ? "text-primary fill-primary" : "text-primary/25"}`}
+              />
             ))}
           </div>
-        </section>
+        </div>
+
+        {canEdit && proximoNivel && (
+          <div className="flex items-center justify-between gap-3 bg-background/40 rounded p-3 mt-4">
+            <div>
+              <div className="text-[10px] uppercase text-muted-foreground tracking-wider">
+                Próximo nível ({NIVEL_LABELS[proximoNivel]})
+              </div>
+              <div className="font-display font-bold gold-text text-lg">{formatCurrency(custoUpgrade)}</div>
+              <div className="text-[10px] text-muted-foreground">
+                Aumenta a chance de encontrar talentos raros nas peneiras
+              </div>
+            </div>
+            <Button
+              size="sm"
+              onClick={upgradeBase}
+              disabled={upgradingBase || Number(club.budget) < custoUpgrade}
+              className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+            >
+              <ArrowUpCircle className="h-4 w-4" />
+              Evoluir base
+            </Button>
+          </div>
+        )}
+      </Card>
+
+      {/* Peneira */}
+      <Card className="p-5 bg-gradient-card border-border/50">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <Search className="h-5 w-5 text-primary" />
+            <div>
+              <div className="font-display font-bold">Peneira</div>
+              <div className="text-xs text-muted-foreground">
+                {peneirasRestantes} de 2 peneiras restantes nesta temporada
+              </div>
+            </div>
+          </div>
+          {canEdit && (
+            <Button
+              onClick={() => {
+                setScoutOpen(true);
+                setScoutResults(null);
+                setPicked(new Set());
+              }}
+              disabled={peneirasRestantes <= 0}
+              className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+            >
+              <Search className="h-4 w-4" />
+              Realizar peneira
+            </Button>
+          )}
+        </div>
+      </Card>
+
+      {/* Lista da academia em formato de tabela */}
+      {loading ? (
+        <Card className="p-6 bg-gradient-card border-border/50 text-muted-foreground text-sm">Carregando...</Card>
+      ) : players.length === 0 ? (
+        <Card className="p-8 bg-gradient-card border-border/50 text-center text-sm text-muted-foreground mt-4">
+          Nenhum jogador na base. Realize uma peneira para começar.
+        </Card>
+      ) : (
+        <AcademyTable
+          players={players}
+          club={club}
+          canEdit={canEdit}
+          promover={promover}
+          dispensar={dispensar}
+          pronto={pronto}
+          scoutReports={scoutReports}
+          pesquisar={pesquisarJogadorBase}
+          scoutingId={scoutingId}
+          searchesRestantes={pesquisasRestantes}
+        />
       )}
 
-      <Dialog open={!!empresaParaConfirmar} onOpenChange={() => setEmpresaParaConfirmar(null)}>
-        <DialogContent>
+      {/* Dialog peneira */}
+      <Dialog
+        open={scoutOpen}
+        onOpenChange={(o) => {
+          if (!o) {
+            setScoutOpen(false);
+            setScoutResults(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Assinar contrato com {empresaParaConfirmar?.nome}?</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Search className="h-5 w-5 text-primary" /> Nova peneira
+            </DialogTitle>
           </DialogHeader>
-          {empresaParaConfirmar &&
-            (() => {
-              const anosSelecionados = Math.max(1, Math.min(10, parseInt(duracao) || 3));
-              const valorEfetivo = Math.round(
-                Number(empresaParaConfirmar.valor_anual_sugerido) * Math.pow(0.95, anosSelecionados - 1),
-              );
 
-              return (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    Você está prestes a assinar um contrato de patrocínio de{" "}
-                    <span className="font-bold text-primary">{formatCurrency(valorEfetivo)}</span> por ano com a{" "}
-                    <span className="font-bold text-primary">{empresaParaConfirmar.nome}</span>.
-                  </p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>Duração (anos)</Label>
-                      <Input
-                        type="number"
-                        value={duracao}
-                        onChange={(e) => setDuracao(e.target.value)}
-                        min={1}
-                        max={5}
-                      />
-                    </div>
-                    <div>
-                      <Label>Valor Anual</Label>
-                      <Input type="text" value={formatCurrency(valorEfetivo)} disabled />
-                    </div>
+          {!scoutResults ? (
+            <>
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Posições (opcional — múltipla seleção)</Label>
+                  <div className="flex flex-wrap gap-1.5 p-2 rounded-md border border-border/50 bg-secondary/20">
+                    {POSITIONS.map((p) => {
+                      const active = scoutPositions.includes(p);
+                      return (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() =>
+                            setScoutPositions((prev) => (active ? prev.filter((x) => x !== p) : [...prev, p]))
+                          }
+                          className={`px-2.5 py-1 rounded text-xs font-bold transition-colors ${
+                            active
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-background/40 text-muted-foreground hover:text-foreground border border-border/40"
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      );
+                    })}
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    A multa rescisória (70%) será de {formatCurrency(Math.round(valorEfetivo * 0.7))}.
-                  </p>
+                  <div className="text-[10px] text-muted-foreground">
+                    {scoutPositions.length === 0
+                      ? "Nenhuma escolhida → posições aleatórias"
+                      : `${scoutPositions.length} posição(ões) selecionada(s)`}
+                  </div>
                 </div>
-              );
-            })()}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEmpresaParaConfirmar(null)}>
-              Cancelar
-            </Button>
-            <Button onClick={() => handleAddContrato(empresaParaConfirmar!)} disabled={isSubmitting}>
-              {isSubmitting ? "Assinando..." : "Confirmar"}
-            </Button>
-          </DialogFooter>
+
+                <div className="grid sm:grid-cols-3 gap-3">
+                  <div className="space-y-1 sm:col-span-1">
+                    <Label className="text-xs">Nacionalidade</Label>
+                    <Select value={scoutNat} onValueChange={setScoutNat}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Qualquer" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-72">
+                        <SelectItem value="__any__">Qualquer</SelectItem>
+                        {COUNTRIES_DATA.map((c) => (
+                          <SelectItem key={c.code} value={c.name}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Idade mín. (14–23)</Label>
+                    <Input
+                      type="number"
+                      min={14}
+                      max={23}
+                      value={scoutAgeMin}
+                      onChange={(e) => {
+                        const v = Number(e.target.value);
+                        if (Number.isNaN(v)) return;
+                        setScoutAgeMin(Math.max(14, Math.min(23, v)));
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Idade máx. (14–23)</Label>
+                    <Input
+                      type="number"
+                      min={14}
+                      max={23}
+                      value={scoutAgeMax}
+                      onChange={(e) => {
+                        const v = Number(e.target.value);
+                        if (Number.isNaN(v)) return;
+                        setScoutAgeMax(Math.max(14, Math.min(23, v)));
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-xs text-muted-foreground bg-secondary/30 rounded p-3 mt-2">
+                A peneira gera entre 3 e 8 jogadores. A chance de talentos raros depende do nível da sua base (
+                {club.nivel_base}). Esta operação consome 1 das 2 peneiras desta temporada.
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setScoutOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={realizarPeneira}
+                  disabled={scoutLoading || peneirasRestantes <= 0}
+                  className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+                >
+                  {scoutLoading ? "Buscando..." : "Iniciar peneira"}
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <div className="text-xs text-muted-foreground mb-2">
+                {scoutResults.length} jogador(es) encontrado(s). Marque os que deseja levar para a base.
+              </div>
+              <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
+                {scoutResults.map((p) => {
+                  return (
+                    <Card key={p.scout_id} className="p-3 bg-card/40 border-border/50">
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          checked={picked.has(p.scout_id)}
+                          onCheckedChange={() => togglePick(p.scout_id)}
+                          className="mt-1"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <div>
+                              <div className="font-bold">{p.scout_name}</div>
+                              <div className="text-[10px] text-muted-foreground">
+                                {p.scout_position} · {p.scout_age} anos · {p.scout_nationality || "—"}
+                              </div>
+                            </div>
+                            <Badge variant="outline" className="text-[10px]">
+                              Pot. {p.scout_potential_min}–{p.scout_potential_max}
+                            </Badge>
+                          </div>
+
+                          {/* Substituído para SkillDisplay */}
+                          <div className="flex justify-between items-center mt-2 text-[10px]">
+                            <div className="flex items-center gap-1">
+                              <span className="text-muted-foreground">Hab.</span>
+                              <SkillDisplay value={p.scout_skill} rate={club.rate} kind="skill" />
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="text-muted-foreground">Pot.</span>
+                              <SkillDisplay
+                                value={p.scout_potential_max}
+                                valueMin={p.scout_potential_min}
+                                rate={club.rate}
+                                kind="potential"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+              <DialogFooter className="flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setScoutOpen(false);
+                    setScoutResults(null);
+                  }}
+                >
+                  Descartar todos
+                </Button>
+                <Button
+                  onClick={confirmarPicks}
+                  disabled={savingScout}
+                  className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+                >
+                  {savingScout ? "Salvando..." : `Adicionar ${picked.size} à base`}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
-    </Card>
+    </div>
   );
-}
+};
