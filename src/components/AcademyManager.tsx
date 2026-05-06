@@ -399,19 +399,6 @@ function AcademyTable({
                             <span className="text-[10px] ml-1.5">desconhecido</span>
                           </div>
                           // REMOVER este bloco inteiro do AcademyTable
-                          {canEdit && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={searchesRestantes <= 0 || scoutingId === p.id}
-                              onClick={() => pesquisar(p.id)}
-                              className="h-6 text-[10px] px-2"
-                              title="Usar Olheiro para descobrir o potencial"
-                            >
-                              <Telescope className="h-3 w-3 mr-1" />
-                              {scoutingId === p.id ? "..." : "Analisar"}
-                            </Button>
-                          )}
                         </div>
                       )}
                     </TableCell>
