@@ -142,23 +142,24 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
 
     // 1. VALOR BASE PELO RATE DO CLUBE (0.01 – 8.00)
     const clubRate = rate || 1.0;
-    const valorBaseRate = Math.pow(clubRate, 2) * 250000 + 500000;
+    // Ajuste: Curva mais suave para o valor base
+    const valorBaseRate = Math.pow(clubRate, 1.5) * 200000 + 1000000; // Ex: Rate 8 -> ~5.5M, Rate 2 -> ~1.5M
 
     // 2. MULTIPLICADOR DE REPUTAÇÃO DO CLUBE
     const getMultRep = (rep: string | null | undefined) => {
       switch (rep?.toLowerCase()) {
         case "local":
-          return 0.5;
+          return 0.6;
         case "estadual":
-          return 0.8;
+          return 0.9;
         case "nacional":
-          return 1.0;
+          return 1.1;
         case "continental":
-          return 1.35;
+          return 1.3;
         case "mundial":
-          return 1.75;
+          return 1.5;
         default:
-          return 0.7;
+          return 0.8;
       }
     };
     const multRep = getMultRep(reputacao);
@@ -167,29 +168,29 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
     const getMultiplicadorSetor = (setor?: string) => {
       switch (setor) {
         case "Casa de Apostas":
-          return 2.5;
+          return 2.0; // Reduzido de 2.5
         case "Banco":
         case "Finanças":
-          return 2.0;
+          return 1.8; // Reduzido de 2.0
         case "Tecnologia":
         case "Multinacional":
-          return 1.8;
+          return 1.6; // Reduzido de 1.8
         case "Companhias Aéreas":
-          return 1.6;
+          return 1.4; // Reduzido de 1.6
         case "Automóveis":
-          return 1.5;
+          return 1.3; // Reduzido de 1.5
         case "Telecomunicações":
-          return 1.5;
+          return 1.3; // Reduzido de 1.5
         case "Energia":
-          return 1.4;
+          return 1.2; // Reduzido de 1.4
         case "Serviços":
         case "Seguros":
-          return 1.2;
+          return 1.1; // Reduzido de 1.2
         case "Alimentação":
         case "Varejista":
           return 1.0;
         default:
-          return 1.1;
+          return 1.0; // Reduzido de 1.1
       }
     };
 
@@ -237,10 +238,13 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
 
     // 6. MULTIPLICADOR DE POSIÇÃO NA CAMISA
     let multCamisa = 1;
-    if (cat === "master") multCamisa = 5.0;
-    else if (cat === "secundario_central" || cat === "costas_superior") multCamisa = 2.5;
-    else if (cat === "omoplata" || cat === "manga") multCamisa = 1.8;
-    else if (cat === "lateral" || cat === "barra_frontal" || cat === "barra_traseira") multCamisa = 1.2;
+    if (cat === "master")
+      multCamisa = 3.0; // Reduzido de 5.0
+    else if (cat === "secundario_central" || cat === "costas_superior")
+      multCamisa = 2.0; // Reduzido de 2.5
+    else if (cat === "omoplata" || cat === "manga")
+      multCamisa = 1.5; // Reduzido de 1.8
+    else if (cat === "lateral" || cat === "barra_frontal" || cat === "barra_traseira") multCamisa = 1.1; // Reduzido de 1.2
 
     // Rate exigido (meio ponto abaixo do atual)
     const rateExigido = Math.max(0.1, clubRate - 0.5).toFixed(2);
@@ -252,10 +256,8 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
       // Casas de apostas não se importam com reputação — patrocinam qualquer clube igualmente.
       // Para as demais, marcas maiores ficam mais seletivas: a curva exponencial (multRep^prestige)
       // faz a Nike triplicar para clubes mundiais e cair para estaduais, enquanto a Walon mal varia.
-      const entusiasmo =
-        b.setor === "Casa de Apostas"
-          ? prestígio // flat — sem curva de reputação
-          : Math.pow(multRep, prestígio); // multRep absorve o papel de multRep separado
+      // Ajuste: Substituir o multiplicador exponencial por um linear mais suave
+      const entusiasmo = b.setor === "Casa de Apostas" ? prestígio : multRep + (prestígio - 1.0); // Linearizado
 
       // CÁLCULO FINAL: rate × setor × posição × entusiasmo (já inclui reputação e prestígio)
       const valorFinal = valorBaseRate * multSetor * multCamisa * entusiasmo * prestígio;
@@ -267,561 +269,227 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
         categoria: cat,
         valor_anual_sugerido: Math.round(valorFinal),
         exigencias: isFornecedora ? null : getDescricaoSetor(b.setor, rateExigido),
-        setor: b.setor || null,
+        setor: b.setor,
         ativa: true,
       };
     });
   };
 
-  const totalPatrocinios = contratos.reduce((s, c) => s + Number(c.valor_anual || 0), 0);
+  const empresasDisponiveis = useMemo(() => {
+    let filtered = PATROCINIO_CATEGORIAS.flatMap((cat) => {
+      const contratosAtivos = contratosPorCategoria[cat.value] || [];
+      if (contratosAtivos.length >= cat.max) return [];
+      return empresasDaCategoria(cat.value).map((emp) => ({ ...emp, categoria: cat.value }));
+    });
 
-  const calcTVBase = (rep: string | null | undefined) => {
-    switch (rep?.toLowerCase()) {
-      case "estadual":
-        return 2500000;
-      case "nacional":
-        return 5000000;
-      case "continental":
-        return 10000000;
-      case "mundial":
-        return 15000000;
-      default:
-        return 0;
-    }
-  };
-  const tvBase = calcTVBase(reputacao);
-
-  const direitosImagemCusto = valorBaseFolha * 0.03;
-  const direitosImagemReceita = direitosImagemCusto * 0.5;
-
-  const firmar = async (empresa: Empresa) => {
-    if (!searchCategoria) {
-      toast.error("Categoria não selecionada");
-      return;
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (emp) =>
+          emp.nome.toLowerCase().includes(term) ||
+          emp.setor?.toLowerCase().includes(term) ||
+          emp.exigencias?.toLowerCase().includes(term),
+      );
     }
 
-    setIsSubmitting(true);
-    const anos = Math.max(1, Math.min(10, parseInt(duracao) || 3));
-    const fim = temporadaAtual + anos;
-    // Valor anual efetivo com depreciação de 5% por ano adicional
-    const valorAnualEfetivo = Math.round(Number(empresa.valor_anual_sugerido) * Math.pow(0.95, anos - 1));
-
-    // 1. Garante que a marca existe na tabela empresas do banco
-    let dbEmpresaId = "";
-    const { data: ext, error: extError } = await supabase
-      .from("empresas")
-      .select("id")
-      .eq("nome", empresa.nome)
-      .maybeSingle();
-
-    if (extError) {
-      toast.error("Erro ao verificar empresa: " + extError.message);
-      setIsSubmitting(false);
-      return;
+    if (searchCategoria) {
+      filtered = filtered.filter((emp) => emp.categoria === searchCategoria);
     }
 
-    if (ext) {
-      dbEmpresaId = ext.id;
+    if (sortOrder === "valor") {
+      filtered.sort((a, b) => b.valor_anual_sugerido - a.valor_anual_sugerido);
     } else {
-      // Cria a empresa no banco passando todos os campos obrigatórios
-      const { data: newEmp, error: errEmp } = await supabase
-        .from("empresas")
-        .insert({
-          nome: empresa.nome,
-          logo_url: empresa.logo_url,
-          ativa: true,
-          categoria: empresa.categoria,
-          valor_anual_sugerido: empresa.valor_anual_sugerido,
-          exigencias: empresa.exigencias,
-        })
-        .select("id")
-        .single();
-
-      if (errEmp) {
-        toast.error("Erro ao registar empresa no banco: " + errEmp.message);
-        setIsSubmitting(false);
-        return;
-      }
-      dbEmpresaId = newEmp.id;
+      filtered.sort((a, b) => a.nome.localeCompare(b.nome));
     }
 
-    // 2. Insere o contrato vinculado
+    return filtered;
+  }, [contratosPorCategoria, empresasDaCategoria, searchTerm, searchCategoria, sortOrder]);
+
+  const handleAddContrato = async (empresa: Empresa) => {
+    if (!clubId) return toast.error("ID do clube não encontrado.");
+    setIsSubmitting(true);
+
     const { error } = await supabase.from("contratos_clube").insert({
       club_id: clubId,
-      empresa_id: dbEmpresaId,
-      categoria: searchCategoria,
-      valor_anual: valorAnualEfetivo || 0,
+      empresa_id: empresa.id,
+      categoria: empresa.categoria,
+      valor_anual: empresa.valor_anual_sugerido,
       inicio_temporada: temporadaAtual,
-      fim_temporada: fim,
-      anos_duracao: anos,
+      fim_temporada: temporadaAtual + Number(duracao) - 1,
+      anos_duracao: Number(duracao),
+      multa_rescisao: empresa.valor_anual_sugerido * 2, // Multa de 2x o valor anual
       ativo: true,
     });
 
     setIsSubmitting(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-
-    toast.success(`Contrato firmado com ${empresa.nome}!`);
+    if (error) return toast.error(error.message);
+    toast.success(`Contrato com ${empresa.nome} assinado!`);
+    load();
+    onChange?.();
     setEmpresaParaConfirmar(null);
-    setSearchCategoria(null);
-    setSearchTerm("");
-    setDuracao("3");
-    await load();
+  };
+
+  const handleRemoveContrato = async (id: string) => {
+    if (!confirm("Tem certeza que deseja rescindir este contrato?")) return;
+    const { error } = await supabase.from("contratos_clube").update({ ativo: false }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Contrato rescindido.");
+    load();
     onChange?.();
   };
 
-  const rescindir = async (c: Contrato) => {
-    // Calcula quantos anos faltam para o fim do contrato
-    const anosRestantes = (c.fim_temporada || temporadaAtual) - temporadaAtual;
+  const totalPatrocinios = useMemo(() => {
+    return contratos.reduce((sum, c) => sum + c.valor_anual, 0);
+  }, [contratos]);
 
-    // Lógica da multa proporcional
-    let multa = 0;
-    if (anosRestantes <= 0) {
-      // Se já está no último ano/meses, cobra apenas uma multa residual (30% do ano)
-      multa = Number(c.valor_anual) * 0.3;
-    } else {
-      // Se faltam anos, calcula 70% de todo o valor restante que o clube receberia
-      const valorTotalRestante = Number(c.valor_anual) * anosRestantes;
-      multa = valorTotalRestante * 0.7;
-    }
-
-    const textoTempo = anosRestantes <= 0 ? "menos de 1 ano" : `${anosRestantes} ano(s)`;
-
-    if (
-      !confirm(
-        `Rescindir contrato com ${c.empresa?.nome}? Resta(m) ${textoTempo}. Multa de ${formatCurrency(multa)} será debitada do caixa.`,
-      )
-    )
-      return;
-
-    const { data: club, error: clubError } = await supabase
-      .from("clubs")
-      .select("budget")
-      .eq("id", clubId)
-      .maybeSingle();
-
-    if (clubError || !club) {
-      toast.error("Clube não encontrado");
-      return;
-    }
-
-    if (Number(club.budget) < multa) {
-      toast.error("Caixa insuficiente para pagar a multa");
-      return;
-    }
-
-    const { error: e1 } = await supabase
-      .from("clubs")
-      .update({ budget: Number(club.budget) - multa })
-      .eq("id", clubId);
-
-    if (e1) {
-      toast.error(e1.message);
-      return;
-    }
-
-    const { error: e2 } = await supabase.from("contratos_clube").update({ ativo: false }).eq("id", c.id);
-
-    if (e2) {
-      toast.error(e2.message);
-      return;
-    }
-
-    toast.success("Contrato rescindido");
-    await load();
-    onChange?.();
-  };
-
-  if (loading) {
-    return <Card className="p-6 bg-gradient-card border-border/50 text-muted-foreground">A carregar contratos...</Card>;
-  }
+  const totalFolhaSalarial = valorBaseFolha;
 
   return (
-    <div className="space-y-6">
-      {/* SEÇÃO 1: PATROCÍNIOS */}
-      <Card className="p-5 bg-gradient-card border-border/50 space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="font-display font-bold flex items-center gap-2">
-            <Handshake className="h-4 w-4 text-primary" /> Patrocínios
-          </h3>
-          <Badge variant="outline" className="border-primary/40 text-primary">
-            Total: {formatCurrency(totalPatrocinios)} / ano
-          </Badge>
-        </div>
+    <Card className="p-5 bg-gradient-card border-border/50 space-y-5">
+      <div className="flex items-center justify-between">
+        <h3 className="font-display font-bold flex items-center gap-2">
+          <Handshake className="h-5 w-5 text-primary" /> Gerenciar Contratos
+        </h3>
+      </div>
 
-        <div className="grid gap-3 md:grid-cols-2">
-          {PATROCINIO_CATEGORIAS.map((cat) => {
-            const ativos = contratosPorCategoria[cat.value] || [];
-            const cheio = ativos.length >= cat.max;
-            return (
-              <div key={cat.value} className="rounded-lg border border-border/50 bg-card/40 p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-display font-bold">{cat.label}</div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {ativos.length} / {cat.max} {cat.semExigencia && "· sem exigências"}
-                    </div>
-                  </div>
-                  {canEdit && !cheio && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-primary/40 text-primary h-7"
-                      onClick={() => setSearchCategoria(cat.value)}
-                    >
-                      <Plus className="h-3 w-3" /> Buscar
-                    </Button>
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <Card className="p-3 bg-secondary/30 border-border/30">
+          <div className="text-[10px] uppercase text-muted-foreground">Total Patrocínios Anuais</div>
+          <div className="font-display font-bold text-lg text-success">{formatCurrency(totalPatrocinios)}</div>
+        </Card>
+        <Card className="p-3 bg-secondary/30 border-border/30">
+          <div className="text-[10px] uppercase text-muted-foreground">Folha Salarial Anual</div>
+          <div className="font-display font-bold text-lg text-destructive">{formatCurrency(totalFolhaSalarial)}</div>
+        </Card>
+      </section>
+
+      <section className="space-y-4">
+        <h4 className="text-sm font-bold text-foreground">Contratos Ativos</h4>
+        {contratos.length === 0 && <p className="text-muted-foreground text-sm">Nenhum contrato ativo no momento.</p>}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          {contratos.map((contrato) => (
+            <Card key={contrato.id} className="p-3 flex items-center gap-3 bg-card/50 border-border/50">
+              {contrato.empresa?.logo_url && (
+                <img src={contrato.empresa.logo_url} alt={contrato.empresa.nome} className="h-10 w-10 object-contain" />
+              )}
+              <div className="flex-1">
+                <p className="font-semibold text-sm">{contrato.empresa?.nome || "Empresa Desconhecida"}</p>
+                <p className="text-xs text-muted-foreground capitalize">{contrato.categoria.replace(/_/g, " ")}</p>
+                <p className="text-xs text-success font-medium">{formatCurrency(contrato.valor_anual)} / ano</p>
+              </div>
+              {canEdit && (
+                <Button variant="destructive" size="icon" onClick={() => handleRemoveContrato(contrato.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {canEdit && (
+        <section className="space-y-4">
+          <h4 className="text-sm font-bold text-foreground">Patrocinadores Disponíveis</h4>
+          <div className="flex gap-2 items-center">
+            <Input
+              placeholder="Buscar patrocinador..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+            <Select
+              value={searchCategoria || "all"}
+              onValueChange={(v) => setSearchCategoria(v === "all" ? null : (v as PatrocinioCategoria))}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filtrar por categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as Categorias</SelectItem>
+                {PATROCINIO_CATEGORIAS.map((cat) => (
+                  <SelectItem key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as "valor" | "az")}>
+              <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="Ordenar por" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="valor">Valor</SelectItem>
+                <SelectItem value="az">A-Z</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {empresasDisponiveis.map((empresa) => (
+              <Card key={empresa.id} className="p-3 flex items-center gap-3 bg-card/50 border-border/50">
+                {empresa.logo_url && (
+                  <img src={empresa.logo_url} alt={empresa.nome} className="h-10 w-10 object-contain" />
+                )}
+                <div className="flex-1">
+                  <p className="font-semibold text-sm">{empresa.nome}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{empresa.categoria.replace(/_/g, " ")}</p>
+                  <p className="text-xs text-success font-medium">
+                    {formatCurrency(empresa.valor_anual_sugerido)} / ano
+                  </p>
+                  {empresa.exigencias && (
+                    <p className="text-[10px] text-amber-500 mt-1 flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" /> {empresa.exigencias}
+                    </p>
                   )}
                 </div>
-                {ativos.length === 0 ? (
-                  <div className="text-xs text-muted-foreground italic">Nenhum contrato ativo</div>
-                ) : (
-                  <div className="space-y-1.5">
-                    {ativos.map((c) => (
-                      <div key={c.id} className="flex items-center gap-2 bg-background/40 rounded p-2">
-                        <div className="h-7 w-7 rounded overflow-hidden shrink-0">
-                          {c.empresa?.logo_url ? (
-                            <img
-                              src={c.empresa.logo_url}
-                              alt={c.empresa.nome}
-                              className="h-full w-full object-contain p-0.5"
-                            />
-                          ) : (
-                            <Building2 className="h-3 w-3 text-muted-foreground" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs font-bold truncate">{c.empresa?.nome || "—"}</div>
-                          <div className="text-[10px] text-muted-foreground">
-                            {formatCurrency(Number(c.valor_anual))}/ano · até {c.fim_temporada || "—"}
-                          </div>
-                        </div>
-                        {canEdit && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 text-destructive"
-                            onClick={() => rescindir(c)}
-                            title={`Rescindir (multa ${formatCurrency(
-                              (c.fim_temporada || temporadaAtual) - temporadaAtual <= 0
-                                ? Number(c.valor_anual) * 0.3
-                                : Number(c.valor_anual) * ((c.fim_temporada || temporadaAtual) - temporadaAtual) * 0.7,
-                            )})`}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </Card>
-
-      {/* SEÇÃO 2: DIREITOS DE TRANSMISSÃO */}
-      <Card className="p-5 bg-gradient-card border-border/50">
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <h3 className="font-display font-bold flex items-center gap-2">
-            <Tv className="h-4 w-4 text-primary" /> Direitos de transmissão
-          </h3>
-          <Badge variant="outline" className="border-success/40 text-success capitalize">
-            {reputacao || "—"}
-          </Badge>
-        </div>
-        <div className="text-sm text-muted-foreground mb-2">Valor anual fixo baseado na reputação da sua equipa.</div>
-        <div className="text-2xl font-display font-bold gold-text">
-          {formatCurrency(tvBase)} <span className="text-sm font-normal text-muted-foreground">/ ano</span>
-        </div>
-      </Card>
-
-      {/* SEÇÃO 3: DIREITOS DE IMAGEM */}
-      <Card className="p-5 bg-gradient-card border-border/50">
-        <h3 className="font-display font-bold flex items-center gap-2 mb-3">
-          <Camera className="h-4 w-4 text-primary" /> Direitos de imagem
-        </h3>
-        <div className="grid sm:grid-cols-2 gap-3 text-sm">
-          <div className="bg-background/30 rounded p-3">
-            <div className="text-[10px] uppercase text-muted-foreground tracking-wider">Custo</div>
-            <div className="font-display font-bold text-destructive">{formatCurrency(direitosImagemCusto)}</div>
-            <div className="text-[10px] text-muted-foreground">3% do Valor base do elenco</div>
-          </div>
-          <div className="bg-background/30 rounded p-3">
-            <div className="text-[10px] uppercase text-muted-foreground tracking-wider">Receita</div>
-            <div className="font-display font-bold text-success">{formatCurrency(direitosImagemReceita)}</div>
-            <div className="text-[10px] text-muted-foreground">50% sobre os custos de imagem</div>
-          </div>
-        </div>
-      </Card>
-
-      {/* DIALOG: GALERIA DE EMPRESAS */}
-      <Dialog
-        open={!!searchCategoria}
-        onOpenChange={(o) => {
-          if (!o) {
-            setSearchCategoria(null);
-            setSearchTerm("");
-            setSortOrder("valor");
-          }
-        }}
-      >
-        <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
-          <DialogHeader className="shrink-0">
-            <DialogTitle>
-              Buscar contrato — {PATROCINIO_CATEGORIAS.find((c) => c.value === searchCategoria)?.label}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-3 pb-2 shrink-0">
-            {/* Buscador + Ordenação */}
-            <div className="flex gap-2 items-end">
-              <div className="flex-1">
-                <Label className="text-xs mb-1 block">Pesquisar marca</Label>
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Digite o nome da empresa..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 bg-secondary/20"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-1 shrink-0">
-                <Button
-                  size="sm"
-                  variant={sortOrder === "valor" ? "default" : "outline"}
-                  className="h-9 text-xs"
-                  onClick={() => setSortOrder("valor")}
-                >
-                  Maior valor
+                <Button onClick={() => setEmpresaParaConfirmar(empresa)} disabled={isSubmitting}>
+                  <Plus className="h-4 w-4" /> Assinar
                 </Button>
-                <Button
-                  size="sm"
-                  variant={sortOrder === "az" ? "default" : "outline"}
-                  className="h-9 text-xs"
-                  onClick={() => setSortOrder("az")}
-                >
-                  A → Z
-                </Button>
-              </div>
-            </div>
+              </Card>
+            ))}
           </div>
+        </section>
+      )}
 
-          {/* Container com scroll para os cards */}
-          <div className="flex-1 overflow-y-auto pr-2 space-y-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {searchCategoria &&
-                empresasDaCategoria(searchCategoria)
-                  .filter((e) => e.nome.toLowerCase().includes(searchTerm.toLowerCase()))
-                  .sort((a, b) =>
-                    sortOrder === "az" ? a.nome.localeCompare(b.nome) : b.valor_anual_sugerido - a.valor_anual_sugerido,
-                  )
-                  .map((e) => {
-                    const semExig = PATROCINIO_CATEGORIAS.find((c) => c.value === searchCategoria)?.semExigencia;
-                    return (
-                      <Card key={e.id} className="p-3 bg-card/40 border-border/50 flex flex-col gap-2">
-                        <div className="flex gap-2 items-start">
-                          <div className="h-12 w-12 rounded overflow-hidden shrink-0 mt-0.5">
-                            {e.logo_url ? (
-                              <img src={e.logo_url} alt={e.nome} className="h-full w-full object-contain p-0" />
-                            ) : (
-                              <Building2 className="h-5 w-5 text-muted-foreground" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-1">
-                              <div className="font-bold truncate">{e.nome}</div>
-                              {e.setor && (
-                                <Badge
-                                  variant="outline"
-                                  className="text-[10px] shrink-0 border-primary/30 text-primary/80 leading-tight"
-                                >
-                                  {e.setor}
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="text-xs text-success font-display">
-                              {formatCurrency(Number(e.valor_anual_sugerido))}/ano
-                            </div>
-                          </div>
-                        </div>
-                        {!semExig && e.exigencias && (
-                          <div className="text-[11px] text-muted-foreground bg-background/40 rounded p-2 mt-1">
-                            {e.exigencias}
-                          </div>
-                        )}
-                        <Button
-                          size="sm"
-                          className="bg-gradient-gold text-primary-foreground hover:opacity-90 mt-auto"
-                          onClick={() => {
-                            setEmpresaParaConfirmar(e);
-                            setDuracao("3");
-                          }}
-                          disabled={isSubmitting}
-                        >
-                          Negociar
-                        </Button>
-                      </Card>
-                    );
-                  })}
-            </div>
-          </div>
-
-          <DialogFooter className="shrink-0 pt-4">
-            <Button variant="outline" onClick={() => setSearchCategoria(null)}>
-              Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* DIALOG: CONFIRMAÇÃO DE CONTRATO */}
-      <Dialog
-        open={!!empresaParaConfirmar}
-        onOpenChange={(o) => {
-          if (!o) {
-            setEmpresaParaConfirmar(null);
-            setDuracao("3");
-          }
-        }}
-      >
-        <DialogContent className="max-w-md">
+      <Dialog open={!!empresaParaConfirmar} onOpenChange={() => setEmpresaParaConfirmar(null)}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Handshake className="h-5 w-5 text-primary" /> Confirmar contrato
-            </DialogTitle>
+            <DialogTitle>Assinar contrato com {empresaParaConfirmar?.nome}?</DialogTitle>
           </DialogHeader>
-
-          {empresaParaConfirmar &&
-            (() => {
-              const anos = Math.max(1, Math.min(10, parseInt(duracao) || 3));
-              const fimContrato = temporadaAtual + anos;
-              const valorBase = Number(empresaParaConfirmar.valor_anual_sugerido);
-              // Depreciação: cada ano adicional reduz 5% do valor anual
-              // Ano 1 = 100%, Ano 2 = 95%, Ano 3 = 90%, etc.
-              const valorAnualEfetivo = Math.round(valorBase * Math.pow(0.95, anos - 1));
-              const multa = Math.round(valorAnualEfetivo * 0.7);
-              // Total = soma da série geométrica: valorBase * (1 + 0.95 + 0.95² + ...)
-              const totalContrato = Math.round(
-                Array.from({ length: anos }, (_, i) => valorBase * Math.pow(0.95, i)).reduce((a, b) => a + b, 0),
-              );
-              const desconto = anos > 1 ? Math.round((1 - Math.pow(0.95, anos - 1)) * 100) : 0;
-              return (
-                <div className="space-y-4">
-                  {/* Cabeçalho da empresa */}
-                  <div className="flex items-center gap-3 bg-background/40 rounded-lg p-3">
-                    <div className="h-14 w-14 rounded overflow-hidden shrink-0">
-                      {empresaParaConfirmar.logo_url ? (
-                        <img
-                          src={empresaParaConfirmar.logo_url}
-                          alt={empresaParaConfirmar.nome}
-                          className="h-full w-full object-contain p-1"
-                        />
-                      ) : (
-                        <Building2 className="h-6 w-6 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-bold text-base truncate">{empresaParaConfirmar.nome}</div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <div className="text-xs text-success font-display font-bold">
-                          {formatCurrency(valorBase)} / ano (base)
-                        </div>
-                        {empresaParaConfirmar.setor && (
-                          <Badge variant="outline" className="text-[10px] border-primary/30 text-primary/80">
-                            {empresaParaConfirmar.setor}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Duração do contrato */}
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Duração do contrato (anos)</Label>
-                    <div className="flex items-center gap-3">
-                      <Input
-                        type="number"
-                        min={1}
-                        max={10}
-                        value={duracao}
-                        onChange={(e) => setDuracao(e.target.value)}
-                        className="w-24"
-                      />
-                      <span className="text-xs text-muted-foreground">
-                        temporada {temporadaAtual} → {fimContrato}
-                      </span>
-                    </div>
-                    {anos > 1 && (
-                      <div className="text-[11px] text-amber-500/90 flex items-center gap-1">
-                        <AlertTriangle className="h-3 w-3 shrink-0" />
-                        Cada ano adicional reduz o valor anual em 5% — no último ano pagarão{" "}
-                        <strong>{formatCurrency(valorAnualEfetivo)}/ano</strong> ({desconto}% abaixo do valor base).
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Resumo financeiro */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-background/40 rounded p-2.5">
-                      <div className="text-[10px] uppercase text-muted-foreground tracking-wider">Valor no 1º ano</div>
-                      <div className="font-display font-bold text-success text-sm">{formatCurrency(valorBase)}</div>
-                      <div className="text-[10px] text-muted-foreground">sem depreciação</div>
-                    </div>
-                    <div className="bg-background/40 rounded p-2.5">
-                      <div className="text-[10px] uppercase text-muted-foreground tracking-wider">
-                        Total do contrato
-                      </div>
-                      <div className="font-display font-bold text-success text-sm">{formatCurrency(totalContrato)}</div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {anos} ano{anos > 1 ? "s" : ""}
-                      </div>
-                    </div>
-                    <div className="bg-background/40 rounded p-2.5">
-                      <div className="text-[10px] uppercase text-muted-foreground tracking-wider">Multa rescisória</div>
-                      <div className="font-display font-bold text-destructive text-sm">{formatCurrency(multa)}</div>
-                      <div className="text-[10px] text-muted-foreground">70% do ano atual</div>
-                    </div>
-                  </div>
-
-                  {/* Aviso de irreversibilidade */}
-                  <div className="flex items-start gap-2 bg-destructive/10 border border-destructive/30 rounded-lg p-3">
-                    <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                    <div className="text-xs text-destructive/90 leading-relaxed">
-                      <strong className="block text-destructive">Atenção — esta ação é irreversível!</strong>
-                      Ao confirmar, o contrato será firmado imediatamente. A rescisão antecipada implicará uma multa de{" "}
-                      <strong>{formatCurrency(multa)}</strong> debitada do seu caixa. Não será possível voltar atrás.
-                    </div>
-                  </div>
+          {empresaParaConfirmar && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Você está prestes a assinar um contrato de patrocínio de{" "}
+                <span className="font-bold text-primary">
+                  {formatCurrency(empresaParaConfirmar.valor_anual_sugerido)}
+                </span>{" "}
+                por ano com a <span className="font-bold text-primary">{empresaParaConfirmar.nome}</span>.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Duração (anos)</Label>
+                  <Input type="number" value={duracao} onChange={(e) => setDuracao(e.target.value)} min={1} max={5} />
                 </div>
-              );
-            })()}
-
-          <DialogFooter className="pt-2 gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setEmpresaParaConfirmar(null);
-                setDuracao("3");
-              }}
-            >
+                <div>
+                  <Label>Valor Anual</Label>
+                  <Input type="text" value={formatCurrency(empresaParaConfirmar.valor_anual_sugerido)} disabled />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                A multa rescisória será de {formatCurrency(empresaParaConfirmar.valor_anual_sugerido * 2)}.
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEmpresaParaConfirmar(null)}>
               Cancelar
             </Button>
-            <Button
-              className="bg-gradient-gold text-primary-foreground hover:opacity-90"
-              onClick={() => empresaParaConfirmar && firmar(empresaParaConfirmar)}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "A processar..." : "Confirmar contrato"}
+            <Button onClick={() => handleAddContrato(empresaParaConfirmar!)} disabled={isSubmitting}>
+              {isSubmitting ? "Assinando..." : "Confirmar"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </Card>
   );
 }
