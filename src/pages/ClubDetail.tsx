@@ -515,9 +515,11 @@ const ClubDetail = () => {
           <LoanManager club={club} canEdit={canEdit} onChange={load} />
         </TabsContent>
 
-        <TabsContent value="evolucao" className="mt-4">
-          <EvolutionTable players={players} />
-        </TabsContent>
+        {canEdit && (
+          <TabsContent value="evolucao" className="mt-4">
+            <EvolutionTable players={players} />
+          </TabsContent>
+        )}
 
         <TabsContent value="estadio" className="mt-4">
           <StadiumManager club={club} canEdit={canEdit} onChange={load} />
