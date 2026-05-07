@@ -246,9 +246,9 @@ const Market = () => {
 
   // contraproposta modal
   const [counterTarget, setCounterTarget] = useState<any>(null);
-  const [cValor, setCValor] = useState("");
-  const [cSalario, setCSalario] = useState("");
-  const [cLuvas, setCLuvas] = useState("");
+  const [cValor, setCValor] = useState<string>("");
+  const [cSalario, setCSalario] = useState<string>("");
+  const [cLuvas, setCLuvas] = useState<string>("");
 
   // perfil do jogador
   const [profilePlayerId, setProfilePlayerId] = useState<string | null>(null);
