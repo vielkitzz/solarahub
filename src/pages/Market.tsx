@@ -287,22 +287,27 @@ const Market = () => {
   };
 
   const inbox = useMemo(() => {
-    // Propostas pendentes que VOCÊ precisa responder:
-    // - normais (sem proposta_pai_id) onde você é vendedor
-    // - contrapropostas (com proposta_pai_id) onde você é comprador
+    // Propostas que VOCÊ precisa responder ou confirmar:
     return proposals.filter((p) => {
-      if (p.status !== "pendente" && p.status !== "contraproposta") return false;
+      if (!["pendente", "aguardando_confirmacao"].includes(p.status)) return false;
       const isCounter = !!p.proposta_pai_id;
-      if (isCounter) return p.clube_comprador_id === activeClubId && p.status === "pendente";
-      return p.clube_vendedor_id === activeClubId && p.status === "pendente";
+      if (p.status === "aguardando_confirmacao") {
+        // só o comprador pode confirmar/cancelar
+        return p.clube_comprador_id === activeClubId;
+      }
+      if (isCounter) {
+        // contraproposta: responde quem NÃO criou (qualquer um dos dois lados)
+        if (p.created_by && p.created_by === userIdLocal) return false;
+        return p.clube_vendedor_id === activeClubId || p.clube_comprador_id === activeClubId;
+      }
+      return p.clube_vendedor_id === activeClubId;
     });
   }, [proposals, activeClubId]);
 
   const sent = useMemo(() => {
-    // Propostas que VOCÊ enviou (qualquer status)
     return proposals.filter((p) => {
       const isCounter = !!p.proposta_pai_id;
-      if (isCounter) return p.clube_vendedor_id === activeClubId; // contraproposta enviada pelo vendedor
+      if (isCounter) return p.clube_vendedor_id === activeClubId;
       return p.clube_comprador_id === activeClubId;
     });
   }, [proposals, activeClubId]);
