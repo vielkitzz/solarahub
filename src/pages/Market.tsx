@@ -326,6 +326,7 @@ const Market = () => {
       });
   }, [players, activeClubId, q, pos, onlyForSale]);
 
+  const [onlyForSale, setOnlyForSale] = useState<boolean>(false);
   const myPlayers = useMemo(() => players.filter((p) => p.club_id === activeClubId), [players, activeClubId]);
 
   const resetProposalFields = () => {
