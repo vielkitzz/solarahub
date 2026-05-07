@@ -1616,8 +1616,6 @@ const Market = () => {
                     </div>
                   </Card>
                 )}
-                  </Card>
-                )}
               </div>
               <DialogFooter className="flex gap-2">
                 <Button variant="outline" onClick={() => setForeignResponse(null)}>
