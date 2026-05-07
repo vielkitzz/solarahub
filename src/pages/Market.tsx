@@ -218,7 +218,11 @@ const Market = () => {
     if (caixaError) return toast.error(caixaError);
     if (trocaError) return toast.error(trocaError);
     if (!salario || parseFloat(salario) < 0) return toast.error("Salário inválido");
-    setSubmitting(true);
+
+    // Jogadores estrangeiros/passes livres sem clube não podem ser negociados via tabela transferencias
+    if (target._isForeign || target._isFreeAgent) {
+      return toast.error("Jogadores estrangeiros são contratados diretamente — use o fluxo de contratação direta.");
+    }
     const payload: any = {
       jogador_id: target.id,
       clube_comprador_id: activeClubId,
