@@ -30,6 +30,8 @@ const empty: Row = {
   age: 25,
   nationality: "",
   overall: 75,
+  potential_min: 75, // Adicionado
+  potential_max: 85, // Adicionado
   market_value: 0,
   salary_demand: 0,
   club_origin: "",
@@ -85,6 +87,9 @@ export const ForeignPlayersManager = () => {
           age: r.age != null ? Number(r.age) : null,
           nationality: r.nationality || null,
           overall: Number(r.overall || 70),
+          // Novos campos mapeados aqui:
+          potential_min: Number(r.potential_min || r.overall || 70),
+          potential_max: Number(r.potential_max || r.overall || 80),
           market_value: Number(r.market_value || 0),
           salary_demand: Number(r.salary_demand || 0),
           club_origin: r.club_origin || null,
@@ -187,44 +192,80 @@ export const ForeignPlayersManager = () => {
               </div>
               <div>
                 <Label>Posição</Label>
-                <Input value={editing.position} onChange={(e) => setEditing({ ...editing, position: e.target.value.toUpperCase() })} />
+                <Input
+                  value={editing.position}
+                  onChange={(e) => setEditing({ ...editing, position: e.target.value.toUpperCase() })}
+                />
               </div>
               <div>
                 <Label>Overall</Label>
-                <Input type="number" value={editing.overall} onChange={(e) => setEditing({ ...editing, overall: Number(e.target.value) })} />
+                <Input
+                  type="number"
+                  value={editing.overall}
+                  onChange={(e) => setEditing({ ...editing, overall: Number(e.target.value) })}
+                />
               </div>
               <div>
                 <Label>Idade</Label>
-                <Input type="number" value={editing.age ?? ""} onChange={(e) => setEditing({ ...editing, age: e.target.value ? Number(e.target.value) : null })} />
+                <Input
+                  type="number"
+                  value={editing.age ?? ""}
+                  onChange={(e) => setEditing({ ...editing, age: e.target.value ? Number(e.target.value) : null })}
+                />
               </div>
               <div>
                 <Label>Nacionalidade</Label>
-                <Input value={editing.nationality ?? ""} onChange={(e) => setEditing({ ...editing, nationality: e.target.value })} />
+                <Input
+                  value={editing.nationality ?? ""}
+                  onChange={(e) => setEditing({ ...editing, nationality: e.target.value })}
+                />
               </div>
               <div>
                 <Label>Clube origem</Label>
-                <Input value={editing.club_origin ?? ""} onChange={(e) => setEditing({ ...editing, club_origin: e.target.value })} />
+                <Input
+                  value={editing.club_origin ?? ""}
+                  onChange={(e) => setEditing({ ...editing, club_origin: e.target.value })}
+                />
               </div>
               <div>
                 <Label>Liga origem</Label>
-                <Input value={editing.league_origin ?? ""} onChange={(e) => setEditing({ ...editing, league_origin: e.target.value })} />
+                <Input
+                  value={editing.league_origin ?? ""}
+                  onChange={(e) => setEditing({ ...editing, league_origin: e.target.value })}
+                />
               </div>
               <div>
                 <Label>Valor de mercado</Label>
-                <Input type="number" value={editing.market_value} onChange={(e) => setEditing({ ...editing, market_value: Number(e.target.value) })} />
+                <Input
+                  type="number"
+                  value={editing.market_value}
+                  onChange={(e) => setEditing({ ...editing, market_value: Number(e.target.value) })}
+                />
               </div>
               <div>
                 <Label>Salário pedido</Label>
-                <Input type="number" value={editing.salary_demand} onChange={(e) => setEditing({ ...editing, salary_demand: Number(e.target.value) })} />
+                <Input
+                  type="number"
+                  value={editing.salary_demand}
+                  onChange={(e) => setEditing({ ...editing, salary_demand: Number(e.target.value) })}
+                />
               </div>
               <div>
                 <Label>Temporada</Label>
-                <Input type="number" value={editing.temporada ?? ""} onChange={(e) => setEditing({ ...editing, temporada: e.target.value ? Number(e.target.value) : null })} />
+                <Input
+                  type="number"
+                  value={editing.temporada ?? ""}
+                  onChange={(e) =>
+                    setEditing({ ...editing, temporada: e.target.value ? Number(e.target.value) : null })
+                  }
+                />
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setEditing(null)}>Cancelar</Button>
+            <Button variant="ghost" onClick={() => setEditing(null)}>
+              Cancelar
+            </Button>
             <Button onClick={save}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
@@ -263,7 +304,9 @@ export const ForeignPlayersManager = () => {
             </Table>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setImportPreview(null)}>Cancelar</Button>
+            <Button variant="ghost" onClick={() => setImportPreview(null)}>
+              Cancelar
+            </Button>
             <Button onClick={confirmImport} disabled={importing}>
               <Upload className="h-4 w-4 mr-2" />
               Confirmar importação
