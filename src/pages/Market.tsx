@@ -885,6 +885,16 @@ const Market = () => {
                   const compradorClub = clubs[tx.related_club_id];
                   const vendedorClub = clubs[tx.club_id];
                   const tipoOp = (tx.metadata as any)?.tipo_op || "compra";
+                  const isEstrangeiro = tipoOp === "estrangeiro";
+                  const isLivre = tipoOp === "livre";
+
+                  // Para estrangeiros e livres, "De" não é um clube real
+                  const vendedorDisplay = isEstrangeiro
+                    ? { name: "Mercado Estrangeiro", crest_url: null, id: null }
+                    : isLivre
+                      ? { name: "Passes Livres", crest_url: null, id: null }
+                      : vendedorClub;
+
                   return (
                     <TableRow key={tx.id}>
                       <TableCell className="font-medium">
@@ -896,18 +906,26 @@ const Market = () => {
                         </button>
                       </TableCell>
                       <TableCell>
-                        {vendedorClub ? (
-                          <Link
-                            to={`/clubes/${vendedorClub.id}`}
-                            className="flex items-center gap-2 hover:text-primary"
-                          >
-                            <div className="h-6 w-6 shrink-0">
-                              {vendedorClub.crest_url && (
-                                <img src={vendedorClub.crest_url} className="w-full h-full object-contain" alt="" />
-                              )}
-                            </div>
-                            <span className="text-sm hidden md:inline">{vendedorClub.name}</span>
-                          </Link>
+                        {vendedorDisplay ? (
+                          vendedorDisplay.id ? (
+                            <Link
+                              to={`/clubes/${vendedorDisplay.id}`}
+                              className="flex items-center gap-2 hover:text-primary"
+                            >
+                              <div className="h-6 w-6 shrink-0">
+                                {vendedorDisplay.crest_url && (
+                                  <img
+                                    src={vendedorDisplay.crest_url}
+                                    className="w-full h-full object-contain"
+                                    alt=""
+                                  />
+                                )}
+                              </div>
+                              <span className="text-sm hidden md:inline">{vendedorDisplay.name}</span>
+                            </Link>
+                          ) : (
+                            <span className="text-sm text-muted-foreground italic">{vendedorDisplay.name}</span>
+                          )
                         ) : (
                           "—"
                         )}
