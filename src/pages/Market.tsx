@@ -1793,10 +1793,11 @@ const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen, onNegotiate }: Fr
     (async () => {
       const [{ data: fa }, { data: pls }] = await Promise.all([
         supabase.from("free_agents").select("*"),
-        (supabase.from("players") as any)
+        supabase
+          .from("players")
           .select("id,name,position,age,nationality,habilidade,salario_atual,valor_base_calculado")
           .is("club_id", null)
-          .is("external_club_id", null),
+          .filter("external_club_id", "is", null),
       ]);
       const merged = [
         ...(fa || []).map((r: any) => ({ ...r, _src: "free_agents" })),
