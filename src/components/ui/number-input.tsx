@@ -3,8 +3,10 @@ import { Input } from "@/components/ui/input";
 import { formatThousands, parseFormatted } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-export interface NumberInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "min" | "max" | "type"> {
+export interface NumberInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "value" | "onChange" | "min" | "max" | "type"
+> {
   value: number | string | null | undefined;
   onChange: (value: number) => void;
   min?: number;
@@ -15,7 +17,10 @@ export interface NumberInputProps
 }
 
 const _NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
-  ({ value, onChange, min, max, allowNegative, unbounded = false, thousands = true, onBlur, className, ...rest }, ref) => {
+  (
+    { value, onChange, min, max, allowNegative, unbounded = false, thousands = true, onBlur, className, ...rest },
+    ref,
+  ) => {
     const negOk = allowNegative ?? (min !== undefined && min < 0);
     const display = React.useMemo(() => {
       if (value === null || value === undefined || value === "") return "";
@@ -37,7 +42,7 @@ const _NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
         if (max !== undefined && Number.isFinite(n) && n > max) return;
         if (min !== undefined && Number.isFinite(n) && n < min && v !== "-" && v !== "") return;
       }
-      const formatted = v === "" || v === "-" ? v : (thousands ? formatThousands(n) : String(n));
+      const formatted = v === "" || v === "-" ? v : thousands ? formatThousands(n) : String(n);
       setRaw(formatted);
       onChange(n);
     };
@@ -47,7 +52,7 @@ const _NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
         if (min !== undefined && n < min) n = min;
         if (max !== undefined && n > max) n = max;
       }
-      const formatted = raw === "" ? "" : (thousands ? formatThousands(n) : String(n));
+      const formatted = raw === "" ? "" : thousands ? formatThousands(n) : String(n);
       setRaw(formatted);
       onChange(n);
       onBlur?.(e);
@@ -67,8 +72,6 @@ const _NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
   },
 );
 
-_NumberInput.displayName = "NumberInput";
-
-export const NumberInput = _NumberInput as React.ForwardRefExoticComponent
+export const NumberInput = _NumberInput as React.ForwardRefExoticComponent<
   NumberInputProps & React.RefAttributes<HTMLInputElement>
 >;
