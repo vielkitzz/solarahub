@@ -823,7 +823,9 @@ const Market = () => {
               const player = playerById(t.jogador_id);
               const oferecido = t.jogador_trocado_id ? playerById(t.jogador_trocado_id) : null;
               const isCounter = !!t.proposta_pai_id;
-              const fromClub = isCounter ? clubs[t.clube_vendedor_id] : clubs[t.clube_comprador_id];
+              const fromClub = isCounter
+                ? (t.clube_vendedor_id === activeClubId ? clubs[t.clube_comprador_id] : clubs[t.clube_vendedor_id])
+                : clubs[t.clube_comprador_id];
               const base = Number(player?.valor_base_calculado || 0);
               return (
                 <Card key={t.id} className="p-4 bg-gradient-card border-border/50">
