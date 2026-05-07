@@ -394,7 +394,7 @@ const Market = () => {
               <UserMinus className="h-3.5 w-3.5 mr-1" /> Passes Livres
             </TabsTrigger>
             <TabsTrigger value="temporada">
-              <History className="h-3.5 w-3.5 mr-1" /> Transferências da Temporada
+              <History className="h-3.5 w-3.5 mr-1" /> Transferências
             </TabsTrigger>
             {hasClub && (
               <TabsTrigger value="inbox">
