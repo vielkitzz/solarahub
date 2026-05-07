@@ -657,6 +657,9 @@ const Market = () => {
     });
   }, [proposals, activeClubId, user]);
 
+  // ✅ DEPOIS DE LER TODOS OS HOOKS, AÍ SIM VOCÊ PODE ABORTAR A RENDERIZAÇÃO
+  if (loading) return null;
+
   const playerById = (id: string) => players.find((p) => p.id === id);
   const tipoLabel = (t: TransferType) => (t === "compra" ? "Compra" : t === "emprestimo" ? "Empréstimo" : "Troca");
 
