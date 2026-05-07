@@ -334,6 +334,24 @@ const Admin = () => {
             <Trophy className="h-4 w-4" /> Campanhas
           </TabsTrigger>
           <TabsTrigger
+            value="foreign"
+            className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
+          >
+            <Globe2 className="h-4 w-4" /> Estrangeiros
+          </TabsTrigger>
+          <TabsTrigger
+            value="freeagents"
+            className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
+          >
+            <UserMinus className="h-4 w-4" /> Passes Livres
+          </TabsTrigger>
+          <TabsTrigger
+            value="externalclubs"
+            className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
+          >
+            <Building2 className="h-4 w-4" /> Clubes Externos
+          </TabsTrigger>
+          <TabsTrigger
             value="config"
             className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
           >
