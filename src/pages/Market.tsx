@@ -209,12 +209,13 @@ const Market = () => {
   const [rumores, setRumores] = useState<any[]>([]);
   const [temporadaAtual, setTemporadaAtual] = useState<number>(new Date().getFullYear());
 
-  // filtros (agora com o onlyForSale no lugar certo e único)
+  // filtros
   const [pos, setPos] = useState<string>("all");
   const [temp, setTemp] = useState<string>("all");
   const [q, setQ] = useState<string>("");
+  const [onlyForSale, setOnlyForSale] = useState<boolean>(false);
 
-  // proposta modal (aqui estavam os perdidos target e tipo!)
+  // proposta modal
   const [target, setTarget] = useState<any>(null);
   const [tipo, setTipo] = useState<TransferType>("compra");
   const [valor, setValor] = useState<string>("");
@@ -280,15 +281,15 @@ const Market = () => {
 
   const loadSeasonAndRumors = async () => {
     const { data: cfg } = await supabase.from("settings").select("value").eq("key", "temporada_atual").maybeSingle();
-    const temp = Number((cfg?.value as any)?.ano) || new Date().getFullYear();
-    setTemporadaAtual(temp);
+    const tempValue = Number((cfg?.value as any)?.ano) || new Date().getFullYear();
+    setTemporadaAtual(tempValue);
 
     const { data: tx } = await supabase
       .from("transactions")
       .select("*")
       .eq("categoria", "transferencia")
       .eq("tipo", "entrada")
-      .eq("temporada", temp)
+      .eq("temporada", tempValue)
       .order("created_at", { ascending: false })
       .limit(200);
     setSeasonTransfers(tx || []);
@@ -307,9 +308,11 @@ const Market = () => {
     loadAll();
     loadSeasonAndRumors();
   }, []);
+
   useEffect(() => {
     loadMine();
   }, [user]);
+
   useEffect(() => {
     loadProposals();
   }, [activeClubId]);
@@ -326,7 +329,6 @@ const Market = () => {
       });
   }, [players, activeClubId, q, pos, onlyForSale]);
 
-  const [onlyForSale, setOnlyForSale] = useState<boolean>(false);
   const myPlayers = useMemo(() => players.filter((p) => p.club_id === activeClubId), [players, activeClubId]);
 
   const resetProposalFields = () => {
@@ -343,7 +345,6 @@ const Market = () => {
     const enriched = { ...player, valor_base_calculado: base };
     setTarget(enriched);
 
-    // Passes livres: forçar tipo compra
     if (player._isFreeAgent) {
       setTipo("compra");
     } else {
@@ -439,7 +440,6 @@ const Market = () => {
     }
 
     if (isDirect) {
-      // Passes livres: contratação direta, apenas salário + anos contrato
       const { error } = await supabase.rpc("contratar_jogador_direto" as any, {
         _clube_id: activeClubId,
         _jogador_id: target.id,
@@ -647,7 +647,7 @@ const Market = () => {
     });
   }, [proposals, activeClubId, user]);
 
-  const inboxCount = inbox.length; // Movido para cá!
+  const inboxCount = inbox.length;
 
   const sent = useMemo(() => {
     return proposals.filter((p) => {
