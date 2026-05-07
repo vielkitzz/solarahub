@@ -1634,7 +1634,7 @@ const Market = () => {
                       onClick={acceptForeignCounter}
                       className="bg-gradient-gold text-primary-foreground hover:opacity-90"
                     >
-                      <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Aceitar contraproposta
+                      <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Aceitar
                     </Button>
                   </>
                 )}
