@@ -3,8 +3,10 @@ import { Input } from "@/components/ui/input";
 import { formatThousands, parseFormatted } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-export interface NumberInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "min" | "max" | "type"> {
+export interface NumberInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "value" | "onChange" | "min" | "max" | "type"
+> {
   value: number | string | null | undefined;
   onChange: (value: number) => void;
   min?: number;
@@ -24,7 +26,10 @@ export interface NumberInputProps
  * - Bloqueio de digitação fora dos limites quando `unbounded=false`
  */
 export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
-  ({ value, onChange, min, max, allowNegative, unbounded = false, thousands = true, onBlur, className, ...rest }, ref) => {
+  (
+    { value, onChange, min, max, allowNegative, unbounded = false, thousands = true, onBlur, className, ...rest },
+    ref,
+  ) => {
     const negOk = allowNegative ?? (min !== undefined && min < 0);
 
     const display = React.useMemo(() => {
@@ -60,7 +65,7 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
         }
       }
       // Reformata enquanto digita
-      const formatted = v === "" || v === "-" ? v : (thousands ? formatThousands(n) : String(n));
+      const formatted = v === "" || v === "-" ? v : thousands ? formatThousands(n) : String(n);
       setRaw(formatted);
       onChange(n);
     };
@@ -71,7 +76,7 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
         if (min !== undefined && n < min) n = min;
         if (max !== undefined && n > max) n = max;
       }
-      const formatted = raw === "" ? "" : (thousands ? formatThousands(n) : String(n));
+      const formatted = raw === "" ? "" : thousands ? formatThousands(n) : String(n);
       setRaw(formatted);
       onChange(n);
       onBlur?.(e);
@@ -92,3 +97,4 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
   },
 );
 NumberInput.displayName = "NumberInput";
+export type { NumberInputProps };
