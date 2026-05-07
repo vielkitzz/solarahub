@@ -60,7 +60,6 @@ type ForeignResponse = {
 function evaluateForeignProposal(
   player: { market_value: number; salary_demand: number; overall: number; name: string; club_origin?: string },
   proposta: { tipo: TransferType; valor: number; salario: number; luvas: number },
-  jogadorTrocado?: { valor_base_calculado: number; name: string } | null,
 ): ForeignResponse {
   const valorJusto = Number(player.market_value) || 0;
   const salarioJusto = Number(player.salary_demand) || 0;
@@ -99,52 +98,12 @@ function evaluateForeignProposal(
     };
   }
 
-  // ── TROCA: avalia valor do jogador + dinheiro ──
+  // ── TROCA: não faz sentido para mercado estrangeiro (sem elenco real) ──
   if (proposta.tipo === "troca") {
-    if (!jogadorTrocado) {
-      return {
-        status: "recusada",
-        mensagem: `${clube} espera que você ofereça um jogador na troca por ${jogadorNome}.`,
-        valor_sugerido: Math.round(valorJusto * 0.9),
-        salario_sugerido: salarioJusto,
-        luvas_sugeridas: 0,
-      };
-    }
-
-    const valorTrocado = Number(jogadorTrocado.valor_base_calculado) || 0;
-    const totalOferecido = valorTrocado + proposta.valor;
-    const ratio = valorJusto > 0 ? totalOferecido / valorJusto : 0;
-
-    // Variação aleatória sutil
-    const adjustedRatio = ratio * (0.95 + Math.random() * 0.1);
-
-    if (adjustedRatio >= 0.9) {
-      const msgDinheiro = proposta.valor > 0 ? ` + ${formatCurrency(proposta.valor)}` : "";
-      return {
-        status: "aceita",
-        mensagem: `${clube} aceitou a troca! ${jogadorTrocado.name}${msgDinheiro} por ${jogadorNome}. Negócio fechado.`,
-        valor_sugerido: proposta.valor,
-        salario_sugerido: proposta.salario,
-        luvas_sugeridas: 0,
-      };
-    }
-
-    if (adjustedRatio >= 0.55) {
-      const deficit = Math.round(valorJusto - totalOferecido);
-      const deficitStr = deficit > 0 ? ` Falta ${formatCurrency(deficit)}.` : "";
-      return {
-        status: "contraproposta",
-        mensagem: `${clube} considera ${jogadorTrocado.name} interessante, mas avalia que o pacote está abaixo do valor de ${jogadorNome} (${formatCurrency(valorJusto)}).${deficitStr} Considere incluir mais dinheiro ou oferecer um jogador de maior valor.`,
-        valor_sugerido: Math.round(deficit * 1.1),
-        salario_sugerido: proposta.salario,
-        luvas_sugeridas: 0,
-      };
-    }
-
     return {
       status: "recusada",
-      mensagem: `${clube} recusou a troca. ${jogadorTrocado.name} (${formatCurrency(valorTrocado)}) não tem valor suficiente para ${jogadorNome} (${formatCurrency(valorJusto)}). Ofereça um jogador melhor ou inclua dinheiro.`,
-      valor_sugerido: Math.round(valorJusto - valorTrocado),
+      mensagem: `${clube} não aceita trocas por jogadores do seu elenco para ${jogadorNome}. Negocie apenas por valor financeiro ou empréstimo.`,
+      valor_sugerido: Math.round(valorJusto * 0.9),
       salario_sugerido: salarioJusto,
       luvas_sugeridas: 0,
     };
@@ -155,15 +114,19 @@ function evaluateForeignProposal(
   const salRatio = salarioJusto > 0 ? proposta.salario / salarioJusto : 0;
   const luvasBonus = valorJusto > 0 ? proposta.luvas / valorJusto : 0;
 
+  // Score: 60% valor + 30% salário + 10% luvas
   let score = valorRatio * 0.6 + Math.min(salRatio, 1.2) * 0.3 + Math.min(luvasBonus, 0.3) * 0.1;
 
+  // Jogadores melhores = mais difíceis de negociar
   if (player.overall >= 88) score *= 0.82;
   else if (player.overall >= 84) score *= 0.88;
   else if (player.overall >= 80) score *= 0.93;
   else if (player.overall <= 65) score *= 1.05;
 
+  // Variação aleatória sutil (±5%) pra não ser 100% determinístico
   score *= 0.95 + Math.random() * 0.1;
 
+  // ── ACEITA ──
   if (score >= 0.92) {
     const msgs = [
       `${clube} aceitou a proposta por ${jogadorNome}. O valor de ${formatCurrency(proposta.valor)} foi considerado justo.`,
@@ -179,7 +142,9 @@ function evaluateForeignProposal(
     };
   }
 
+  // ── CONTRAPROPOSTA ──
   if (score >= 0.55) {
+    // Quanto menor o score, mais afasta do justo
     const gap = 1 - score;
     const multiplicador = 1 + gap * 0.6 + Math.random() * 0.15;
     const valorSugerido = Math.round(valorJusto * multiplicador);
@@ -194,12 +159,13 @@ function evaluateForeignProposal(
     return {
       status: "contraproposta",
       mensagem: msgs[Math.floor(Math.random() * msgs.length)],
-      valor_sugerido: Math.min(valorSugerido, Math.round(valorJusto * 1.5)),
+      valor_sugerido: Math.min(valorSugerido, Math.round(valorJusto * 1.5)), // teto em 150%
       salario_sugerido: salarioSugerido,
       luvas_sugeridas: luvasSugeridas,
     };
   }
 
+  // ── RECUSADA ──
   const msgs = [
     `${clube} recusou a proposta. ${formatCurrency(proposta.valor)} por ${jogadorNome} está muito abaixo do valor de mercado (${formatCurrency(valorJusto)}).`,
     `Proposta recusada. ${clube} não considera ${formatCurrency(proposta.valor)} uma oferta séria por ${jogadorNome}.`,
@@ -246,8 +212,9 @@ const Market = () => {
 
   // contraproposta modal
   const [counterTarget, setCounterTarget] = useState<any>(null);
-  const [cSalario, setCSalario] = useState<string>("");
-  const [cLuvas, setCLuvas] = useState<string>("");
+  const [cValor, setCValor] = useState("");
+  const [cSalario, setCSalario] = useState("");
+  const [cLuvas, setCLuvas] = useState("");
 
   // perfil do jogador
   const [profilePlayerId, setProfilePlayerId] = useState<string | null>(null);
@@ -400,9 +367,6 @@ const Market = () => {
       // Simula "tempo de resposta" do clube estrangeiro (1-2s)
       await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000));
 
-      // Busca dados do jogador trocado (se for troca)
-      const trocado = tipo === "troca" && jogadorTrocado ? players.find((p) => p.id === jogadorTrocado) : null;
-
       const response = evaluateForeignProposal(
         {
           market_value: Number(target.market_value) || Number(target.valor_base_calculado) || 0,
@@ -412,7 +376,6 @@ const Market = () => {
           club_origin: (target as any).club_origin,
         },
         { tipo, valor: valorNum, salario: parseFloat(salario) || 0, luvas: luvasNum },
-        trocado ? { valor_base_calculado: Number(trocado.valor_base_calculado), name: trocado.name } : null,
       );
 
       // Anexa dados do jogador para poder reabrir dialog se necessário
@@ -425,13 +388,6 @@ const Market = () => {
       (response as any)._playerClubOrigin = (target as any).club_origin;
       (response as any)._playerSalaryDemand = Number((target as any).salary_demand) || 0;
       (response as any)._playerOverall = Number((target as any).overall) || 70;
-
-      // Anexa dados do jogador trocado (se houver) para processar a troca depois
-      if (trocado) {
-        (response as any)._trocadoId = trocado.id;
-        (response as any)._trocadoName = trocado.name;
-        (response as any)._trocadoValor = Number(trocado.valor_base_calculado);
-      }
 
       setForeignLoading(false);
       setForeignResponse(response);
@@ -517,13 +473,11 @@ const Market = () => {
 
   const openCounter = (proposal: any) => {
     setCounterTarget(proposal);
-    const v1: string = String(Math.round(Number(proposal.valor_ofertado || 0)));
-    const v2: string = String(Math.round(Number(proposal.salario_ofertado || 0)));
-    const v3: string = String(Math.round(Number(proposal.luvas || 0)));
-    setCValor(v1);
-    setCSalario(v2);
-    setCLuvas(v3);
+    setCValor(String(Math.round(Number(proposal.valor_ofertado || 0))));
+    setCSalario(String(Math.round(Number(proposal.salario_ofertado || 0))));
+    setCLuvas(String(Math.round(Number(proposal.luvas || 0))));
   };
+
   const sendCounter = async () => {
     if (!counterTarget) return;
     const { error } = await supabase.rpc("criar_contraproposta", {
@@ -565,42 +519,6 @@ const Market = () => {
   const playerById = (id: string) => players.find((p) => p.id === id);
   const tipoLabel = (t: TransferType) => (t === "compra" ? "Compra" : t === "emprestimo" ? "Empréstimo" : "Troca");
 
-  // Busca ou cria clube estrangeiro e move jogador trocado pra lá
-  const movePlayerToForeignClub = async (playerId: string, clubOrigin: string) => {
-    if (!clubOrigin) return;
-
-    // Busca clube estrangeiro pelo nome
-    const { data: existingClub } = await supabase
-      .from("external_clubs")
-      .select("id")
-      .eq("name", clubOrigin)
-      .maybeSingle();
-
-    let externalClubId = existingClub?.id;
-
-    // Se não existe, cria um
-    if (!externalClubId) {
-      const { data: newClub } = await supabase
-        .from("external_clubs")
-        .insert({ name: clubOrigin, active: true } as any)
-        .select("id")
-        .single();
-      externalClubId = newClub?.id;
-    }
-
-    if (!externalClubId) return;
-
-    // Move o jogador: remove do elenco, vincula ao clube estrangeiro
-    await supabase
-      .from("players")
-      .update({
-        club_id: null,
-        external_club_id: externalClubId,
-        a_venda: false,
-      })
-      .eq("id", playerId);
-  };
-
   // Aceitar contraproposta da IA estrangeira
   const acceptForeignCounter = async () => {
     if (!foreignResponse || !activeClubId || !user) return;
@@ -616,17 +534,8 @@ const Market = () => {
       _user_id: user.id,
     });
 
-    if (error) {
-      setForeignLoading(false);
-      return toast.error(error.message);
-    }
-
-    // Se foi troca, move o jogador trocado pro clube estrangeiro
-    if ((foreignResponse as any)._trocadoId) {
-      await movePlayerToForeignClub((foreignResponse as any)._trocadoId, (foreignResponse as any)._playerClubOrigin);
-    }
-
     setForeignLoading(false);
+    if (error) return toast.error(error.message);
     toast.success("Contratação realizada!");
     setForeignResponse(null);
     await Promise.all([loadAll(), loadProposals(), loadSeasonAndRumors()]);
@@ -1445,15 +1354,15 @@ const Market = () => {
           <div className="space-y-3">
             <div>
               <Label>Valor da transferência (€)</Label>
-              <NumberInput value={cValor} onChange={(v: number) => setCValor(String(v))} min={0} />
+              <NumberInput value={cValor} onChange={(v) => setCValor(String(v))} min={0} />
             </div>
             <div>
               <Label>Salário (€/ano)</Label>
-              <NumberInput value={cSalario} onChange={(v: number) => setCSalario(String(v))} min={0} />
+              <NumberInput value={cSalario} onChange={(v) => setCSalario(String(v))} min={0} />
             </div>
             <div>
               <Label>Luvas (€)</Label>
-              <NumberInput value={cLuvas} onChange={(v: number) => setCLuvas(String(v))} min={0} />
+              <NumberInput value={cLuvas} onChange={(v) => setCLuvas(String(v))} min={0} />
             </div>
           </div>
           <DialogFooter>
@@ -1797,8 +1706,7 @@ const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen, onNegotiate }: Fr
         supabase
           .from("players")
           .select("id,name,position,age,nationality,habilidade,salario_atual,valor_base_calculado")
-          .is("club_id", null)
-          .filter("external_club_id", "is", null),
+          .is("club_id", null),
       ]);
       const merged = [
         ...(fa || []).map((r: any) => ({ ...r, _src: "free_agents" })),
