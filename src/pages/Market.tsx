@@ -435,6 +435,7 @@ const Market = () => {
       setForeignLoading(false);
       setForeignResponse(response);
       setTarget(null);
+      setCounterTarget(null);
       setSubmitting(false);
       return;
     }
