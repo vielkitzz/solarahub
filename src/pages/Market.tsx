@@ -657,9 +657,10 @@ const Market = () => {
     });
   }, [proposals, activeClubId, user]);
 
-  // ✅ DEPOIS DE LER TODOS OS HOOKS, AÍ SIM VOCÊ PODE ABORTAR A RENDERIZAÇÃO
+  // ✅ 2. DEPOIS: FAÇA O EARLY RETURN (Agora é seguro!)
   if (loading) return null;
 
+  // ✅ 3. VARIÁVEIS COMUNS E O RETURN DO JSX
   const playerById = (id: string) => players.find((p) => p.id === id);
   const tipoLabel = (t: TransferType) => (t === "compra" ? "Compra" : t === "emprestimo" ? "Empréstimo" : "Troca");
 
