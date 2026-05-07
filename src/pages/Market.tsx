@@ -999,8 +999,13 @@ const Market = () => {
             })}
           </TabsContent>
         )}
+        <TabsContent value="estrangeiro" className="mt-4">
+          <ForeignMarketTab />
+        </TabsContent>
+        <TabsContent value="livres" className="mt-4">
+          <FreeAgentsTab />
+        </TabsContent>
       </Tabs>
-
       {/* PROPOSAL MODAL */}
       <Dialog open={!!target} onOpenChange={(o) => !o && setTarget(null)}>
         <DialogContent className="max-w-lg">
