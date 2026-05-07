@@ -255,13 +255,35 @@ const Market = () => {
     if (accept) {
       const { error } = await supabase.rpc("accept_transfer", { _transfer_id: id });
       if (error) return toast.error(error.message);
-      toast.success("Transferência concluída!");
+      toast.success("Proposta aceita — aguardando confirmação do comprador");
     } else {
       const { error } = await supabase.from("transferencias").update({ status: "recusada" }).eq("id", id);
       if (error) return toast.error(error.message);
       toast.success("Proposta recusada");
     }
     await Promise.all([loadAll(), loadProposals(), loadSeasonAndRumors()]);
+  };
+
+  const confirmar = async (id: string) => {
+    const { error } = await supabase.rpc("confirmar_contratacao" as any, { _transfer_id: id });
+    if (error) return toast.error(error.message);
+    toast.success("Contratação confirmada!");
+    await Promise.all([loadAll(), loadProposals(), loadSeasonAndRumors()]);
+  };
+
+  const cancelarConf = async (id: string) => {
+    const { error } = await supabase.rpc("cancelar_contratacao" as any, { _transfer_id: id });
+    if (error) return toast.error(error.message);
+    toast.success("Contratação cancelada");
+    await Promise.all([loadAll(), loadProposals(), loadSeasonAndRumors()]);
+  };
+
+  const removerProposta = async (id: string) => {
+    if (!confirm("Remover esta proposta?")) return;
+    const { error } = await supabase.rpc("remover_proposta" as any, { _transfer_id: id });
+    if (error) return toast.error(error.message);
+    toast.success("Proposta removida");
+    await Promise.all([loadProposals(), loadSeasonAndRumors()]);
   };
 
   const openCounter = (proposal: any) => {
