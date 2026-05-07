@@ -329,10 +329,10 @@ const Market = () => {
   const sent = useMemo(() => {
     return proposals.filter((p) => {
       const isCounter = !!p.proposta_pai_id;
-      if (isCounter) return p.clube_vendedor_id === activeClubId;
+      if (isCounter) return user && p.created_by === user.id;
       return p.clube_comprador_id === activeClubId;
     });
-  }, [proposals, activeClubId]);
+  }, [proposals, activeClubId, user]);
 
   const playerById = (id: string) => players.find((p) => p.id === id);
   const tipoLabel = (t: TransferType) => (t === "compra" ? "Compra" : t === "emprestimo" ? "Empréstimo" : "Troca");
