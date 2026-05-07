@@ -1526,8 +1526,8 @@ const Market = () => {
       </Dialog>
 
       {/* ─── MODAL: CONTRAPROPOSTA ────────────────────────────────────── */}
-      <Dialog open={!!counterTarget} onOpenChange={(o) => !o && setCounterTarget(null)}>
-        <DialogContent className="max-w-md">
+      <Dialog open={!!foreignResponse} onOpenChange={(o) => !o && setForeignResponse(null)}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-primary" /> Enviar contraproposta
@@ -1561,7 +1561,7 @@ const Market = () => {
 
       {/* ─── MODAL: RESPOSTA IA ESTRANGEIRA ──────────────────────────── */}
       <Dialog open={!!foreignResponse} onOpenChange={(o) => !o && setForeignResponse(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           {foreignLoading ? (
             <div className="py-10 flex flex-col items-center gap-3">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
