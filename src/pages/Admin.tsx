@@ -36,6 +36,10 @@ import { BulkBudgetAdjuster } from "@/components/admin/BulkBudgetAdjuster";
 import { PlayerBulkActions } from "@/components/admin/PlayerBulkActions";
 import { CampanhasManager } from "@/components/admin/CampanhasManager";
 import { SquadGenerator } from "@/components/admin/SquadGenerator";
+import { ForeignPlayersManager } from "@/components/admin/ForeignPlayersManager";
+import { FreeAgentsManager } from "@/components/admin/FreeAgentsManager";
+import { ExternalClubsManager } from "@/components/admin/ExternalClubsManager";
+import { Globe2, UserMinus, Building2 } from "lucide-react";
 import { parseSquadJson, ImportedPlayer } from "@/lib/squad-import";
 import { useSeason } from "@/contexts/SeasonContext";
 
@@ -328,6 +332,24 @@ const Admin = () => {
             className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
           >
             <Trophy className="h-4 w-4" /> Campanhas
+          </TabsTrigger>
+          <TabsTrigger
+            value="foreign"
+            className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
+          >
+            <Globe2 className="h-4 w-4" /> Estrangeiros
+          </TabsTrigger>
+          <TabsTrigger
+            value="freeagents"
+            className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
+          >
+            <UserMinus className="h-4 w-4" /> Passes Livres
+          </TabsTrigger>
+          <TabsTrigger
+            value="externalclubs"
+            className="gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-4"
+          >
+            <Building2 className="h-4 w-4" /> Clubes Externos
           </TabsTrigger>
           <TabsTrigger
             value="config"
@@ -699,6 +721,18 @@ const Admin = () => {
         {/* CONFIGURAÇÕES GLOBAIS */}
         <TabsContent value="campanhas" className="mt-6">
           <CampanhasManager />
+        </TabsContent>
+
+        <TabsContent value="foreign" className="mt-6">
+          <ForeignPlayersManager />
+        </TabsContent>
+
+        <TabsContent value="freeagents" className="mt-6">
+          <FreeAgentsManager />
+        </TabsContent>
+
+        <TabsContent value="externalclubs" className="mt-6">
+          <ExternalClubsManager />
         </TabsContent>
 
         <TabsContent value="config" className="mt-6">
