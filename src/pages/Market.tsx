@@ -297,7 +297,7 @@ const Market = () => {
       }
       if (isCounter) {
         // contraproposta: responde quem NÃO criou (qualquer um dos dois lados)
-        if (p.created_by && p.created_by === userIdLocal) return false;
+        if (p.created_by && user && p.created_by === user.id) return false;
         return p.clube_vendedor_id === activeClubId || p.clube_comprador_id === activeClubId;
       }
       return p.clube_vendedor_id === activeClubId;
