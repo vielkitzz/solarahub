@@ -156,17 +156,6 @@ const Market = () => {
     loadProposals();
   }, [activeClubId]);
 
-  const filteredVitrine = useMemo(() => {
-    return players
-      .filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))
-      .filter((p) => pos === "all" || p.position === pos)
-      .filter((p) => !onlyForSale || p.a_venda)
-      .sort((a, b) => {
-        if (a.a_venda !== b.a_venda) return a.a_venda ? -1 : 1;
-        return Number(b.market_value || 0) - Number(a.market_value || 0);
-      });
-  }, [players, q, pos, onlyForSale]);
-
   const filteredNegociar = useMemo(() => {
     return players
       .filter((p) => p.club_id && p.club_id !== activeClubId)
@@ -330,7 +319,6 @@ const Market = () => {
 
   if (loading) return null;
 
-  const forSaleCount = players.filter((p) => p.a_venda).length;
   const inboxCount = inbox.length;
   const hasClub = myClubs.length > 0;
 
@@ -341,13 +329,7 @@ const Market = () => {
           <Users className="h-7 w-7 sm:h-8 sm:w-8 text-primary shrink-0" />
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Mercado da Bola</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              Vitrine, rumores e negociações.{" "}
-              <Badge variant="outline" className="border-primary/40 text-primary ml-1 text-[10px]">
-                <Tag className="h-2.5 w-2.5 mr-1" />
-                {forSaleCount} à venda
-              </Badge>
-            </p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Negociações, rumores e movimentações.</p>
           </div>
         </div>
         {hasClub && myClubs.length > 1 && (
@@ -366,12 +348,9 @@ const Market = () => {
         )}
       </header>
 
-      <Tabs defaultValue="vitrine">
+      <Tabs defaultValue={hasClub ? "negociar" : "rumores"}>
         <div className="-mx-3 sm:-mx-4 md:mx-0 overflow-x-auto scrollbar-thin">
           <TabsList className="bg-secondary/50 mx-3 sm:mx-4 md:mx-0 w-max">
-            <TabsTrigger value="vitrine">
-              <Tag className="h-3.5 w-3.5 mr-1" /> Vitrine
-            </TabsTrigger>
             {hasClub && (
               <TabsTrigger value="negociar">
                 <ArrowRightLeft className="h-3.5 w-3.5 mr-1" /> Negociar
@@ -412,120 +391,6 @@ const Market = () => {
             )}
           </TabsList>
         </div>
-
-        {/* ─── VITRINE ─────────────────────────────────────────────────────── */}
-        <TabsContent value="vitrine" className="mt-4 space-y-3">
-          <Filters
-            q={q}
-            setQ={setQ}
-            pos={pos}
-            setPos={setPos}
-            onlyForSale={onlyForSale}
-            setOnlyForSale={setOnlyForSale}
-          />
-          <Card className="bg-gradient-card border-border/50 overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-16">Posição</TableHead>
-                  <TableHead>Jogador</TableHead>
-                  <TableHead className="w-20 hidden sm:table-cell"></TableHead>
-                  <TableHead>Clube</TableHead>
-                  <TableHead className="text-center w-16 hidden sm:table-cell">Idade</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
-                  {hasClub && <TableHead className="w-24"></TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredVitrine.map((p) => {
-                  const club = p.club_id ? clubs[p.club_id] : null;
-                  return (
-                    <TableRow key={p.id} className={p.a_venda ? "bg-primary/5" : ""}>
-                      <TableCell>
-                        <Badge variant="outline" className="border-primary/40 text-primary">
-                          {p.position}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <button
-                            onClick={() => setProfilePlayerId(p.id)}
-                            className="hover:text-primary transition-colors text-left"
-                          >
-                            {p.name}
-                          </button>
-                          {p.a_venda && (
-                            <Badge className="bg-primary/20 text-primary border-primary/40 text-[10px] px-1.5 py-0">
-                              <Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell py-2 w-10">
-                        {p.nationality && <FlagImg nationality={p.nationality} />}
-                      </TableCell>
-                      <TableCell>
-                        {club ? (
-                          <Link
-                            to={`/clubes/${club.id}`}
-                            className="flex items-center gap-2 hover:text-primary transition-colors"
-                          >
-                            <div className="h-7 w-7 shrink-0 flex items-center justify-center">
-                              {club.crest_url && (
-                                <img src={club.crest_url} alt={club.name} className="w-full h-full object-contain" />
-                              )}
-                            </div>
-                            <span className="text-sm hidden md:inline">{club.name}</span>
-                          </Link>
-                        ) : (
-                          <Badge variant="secondary" className="text-xs">
-                            Sem clube
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center hidden sm:table-cell text-sm">{p.age || "—"}</TableCell>
-                      <TableCell className="text-right font-display font-bold text-primary">
-                        {formatCurrency(Number(p.market_value))}
-                      </TableCell>
-                      {hasClub && (
-                        <TableCell>
-                          {p.a_venda && p.club_id !== activeClubId ? (
-                            <Button
-                              size="sm"
-                              onClick={() => openProposal(p)}
-                              className="bg-gradient-gold text-primary-foreground hover:opacity-90"
-                            >
-                              Negociar
-                            </Button>
-                          ) : (
-                            <span />
-                          )}
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  );
-                })}
-                {filteredVitrine.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={hasClub ? 7 : 6} className="text-center text-muted-foreground py-10">
-                      Nenhum jogador encontrado.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </Card>
-          {!user && (
-            <Card className="p-6 text-center bg-gradient-card border-primary/30">
-              <p className="text-sm text-muted-foreground mb-3">
-                Quer enviar propostas? Entre com Discord para acessar negociações.
-              </p>
-              <Button onClick={signInWithDiscord} className="bg-[#5865F2] hover:bg-[#4752c4] text-white">
-                <LogIn className="h-4 w-4" /> Entrar com Discord
-              </Button>
-            </Card>
-          )}
-        </TabsContent>
 
         {/* ─── NEGOCIAR ────────────────────────────────────────────────────── */}
         {hasClub && (
@@ -726,7 +591,12 @@ const Market = () => {
 
         {/* ─── PASSES LIVRES ───────────────────────────────────────────────── */}
         <TabsContent value="livres" className="mt-4">
-          <FreeAgentsTab activeClubId={activeClubId} hasClub={hasClub} onProfileOpen={setProfilePlayerId} />
+          <FreeAgentsTab
+            activeClubId={activeClubId}
+            hasClub={hasClub}
+            onProfileOpen={setProfilePlayerId}
+            onNegotiate={openProposal}
+          />
         </TabsContent>
 
         {/* ─── TRANSFERÊNCIAS DA TEMPORADA ─────────────────────────────────── */}
@@ -1337,6 +1207,19 @@ const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: ForeignMarketT
       (!q || r.name.toLowerCase().includes(q.toLowerCase())),
   );
 
+  // Build a synthetic player object compatible with openProposal
+  const buildForeignPlayer = (r: any) => ({
+    id: r.id,
+    name: r.name,
+    position: r.position,
+    age: r.age,
+    nationality: r.nationality,
+    valor_base_calculado: r.market_value,
+    market_value: r.market_value,
+    club_id: r.club_id ?? null,
+    a_venda: true,
+  });
+
   return (
     <div className="space-y-3">
       <div className="flex flex-col sm:flex-row gap-3">
@@ -1384,6 +1267,7 @@ const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: ForeignMarketT
               <TableHead className="text-center w-16 hidden sm:table-cell">Idade</TableHead>
               <TableHead className="text-right">Valor</TableHead>
               <TableHead className="text-right">Salário</TableHead>
+              {hasClub && <TableHead className="w-24"></TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -1407,11 +1291,22 @@ const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: ForeignMarketT
                   {formatCurrency(r.market_value)}
                 </TableCell>
                 <TableCell className="text-right text-sm">{formatCurrency(r.salary_demand)}</TableCell>
+                {hasClub && (
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      onClick={() => onNegotiate(buildForeignPlayer(r))}
+                      className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+                    >
+                      Negociar
+                    </Button>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
+                <TableCell colSpan={hasClub ? 8 : 7} className="text-center text-muted-foreground py-10">
                   Nenhum jogador encontrado.
                 </TableCell>
               </TableRow>
@@ -1429,9 +1324,10 @@ interface FreeAgentsTabProps {
   activeClubId: string;
   hasClub: boolean;
   onProfileOpen: (id: string) => void;
+  onNegotiate: (player: any) => void;
 }
 
-const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen }: FreeAgentsTabProps) => {
+const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen, onNegotiate }: FreeAgentsTabProps) => {
   const [rows, setRows] = useState<any[]>([]);
   const [pos, setPos] = useState("all");
   const [q, setQ] = useState("");
@@ -1442,7 +1338,7 @@ const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen }: FreeAgentsTabPr
         supabase.from("free_agents").select("*"),
         supabase
           .from("players")
-          .select("id,name,position,age,nationality,habilidade,salario_atual")
+          .select("id,name,position,age,nationality,habilidade,salario_atual,valor_base_calculado")
           .is("club_id", null),
       ]);
       const merged = [
@@ -1456,6 +1352,7 @@ const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen }: FreeAgentsTabPr
           nationality: p.nationality,
           overall: p.habilidade,
           salary_demand: p.salario_atual,
+          valor_base_calculado: p.valor_base_calculado,
           last_club: null,
           _src: "players",
         })),
@@ -1469,6 +1366,19 @@ const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen }: FreeAgentsTabPr
     .filter((r) => pos === "all" || r.position === pos)
     .filter((r) => !q || r.name.toLowerCase().includes(q.toLowerCase()))
     .sort((a, b) => Number(b.overall || 0) - Number(a.overall || 0));
+
+  // Build a synthetic player object compatible with openProposal
+  const buildFreeAgentPlayer = (r: any) => ({
+    id: r._src === "players" ? r._realId : r.id,
+    name: r.name,
+    position: r.position,
+    age: r.age,
+    nationality: r.nationality,
+    valor_base_calculado: r.valor_base_calculado ?? r.salary_demand ?? 0,
+    market_value: r.valor_base_calculado ?? r.salary_demand ?? 0,
+    club_id: null,
+    a_venda: true,
+  });
 
   return (
     <div className="space-y-3">
@@ -1502,6 +1412,7 @@ const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen }: FreeAgentsTabPr
               <TableHead>Último clube</TableHead>
               <TableHead className="text-right">OVR</TableHead>
               <TableHead className="text-right">Salário pedido</TableHead>
+              {hasClub && <TableHead className="w-24"></TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -1533,11 +1444,22 @@ const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen }: FreeAgentsTabPr
                 <TableCell className="text-right font-display font-bold text-primary">
                   {formatCurrency(r.salary_demand || 0)}
                 </TableCell>
+                {hasClub && (
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      onClick={() => onNegotiate(buildFreeAgentPlayer(r))}
+                      className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+                    >
+                      Negociar
+                    </Button>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
+                <TableCell colSpan={hasClub ? 8 : 7} className="text-center text-muted-foreground py-10">
                   Nenhum jogador encontrado.
                 </TableCell>
               </TableRow>
