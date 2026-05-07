@@ -302,7 +302,7 @@ const Market = () => {
       }
       return p.clube_vendedor_id === activeClubId;
     });
-  }, [proposals, activeClubId]);
+  }, [proposals, activeClubId, user]);
 
   const sent = useMemo(() => {
     return proposals.filter((p) => {
@@ -310,7 +310,7 @@ const Market = () => {
       if (isCounter) return p.clube_vendedor_id === activeClubId;
       return p.clube_comprador_id === activeClubId;
     });
-  }, [proposals, activeClubId, user]);
+  }, [proposals, activeClubId]);
 
   const playerById = (id: string) => players.find((p) => p.id === id);
   const tipoLabel = (t: TransferType) => (t === "compra" ? "Compra" : t === "emprestimo" ? "Empréstimo" : "Troca");
