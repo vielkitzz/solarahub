@@ -255,13 +255,35 @@ const Market = () => {
     if (accept) {
       const { error } = await supabase.rpc("accept_transfer", { _transfer_id: id });
       if (error) return toast.error(error.message);
-      toast.success("Transferência concluída!");
+      toast.success("Proposta aceita — aguardando confirmação do comprador");
     } else {
       const { error } = await supabase.from("transferencias").update({ status: "recusada" }).eq("id", id);
       if (error) return toast.error(error.message);
       toast.success("Proposta recusada");
     }
     await Promise.all([loadAll(), loadProposals(), loadSeasonAndRumors()]);
+  };
+
+  const confirmar = async (id: string) => {
+    const { error } = await supabase.rpc("confirmar_contratacao" as any, { _transfer_id: id });
+    if (error) return toast.error(error.message);
+    toast.success("Contratação confirmada!");
+    await Promise.all([loadAll(), loadProposals(), loadSeasonAndRumors()]);
+  };
+
+  const cancelarConf = async (id: string) => {
+    const { error } = await supabase.rpc("cancelar_contratacao" as any, { _transfer_id: id });
+    if (error) return toast.error(error.message);
+    toast.success("Contratação cancelada");
+    await Promise.all([loadAll(), loadProposals(), loadSeasonAndRumors()]);
+  };
+
+  const removerProposta = async (id: string) => {
+    if (!confirm("Remover esta proposta?")) return;
+    const { error } = await supabase.rpc("remover_proposta" as any, { _transfer_id: id });
+    if (error) return toast.error(error.message);
+    toast.success("Proposta removida");
+    await Promise.all([loadProposals(), loadSeasonAndRumors()]);
   };
 
   const openCounter = (proposal: any) => {
@@ -287,25 +309,30 @@ const Market = () => {
   };
 
   const inbox = useMemo(() => {
-    // Propostas pendentes que VOCÊ precisa responder:
-    // - normais (sem proposta_pai_id) onde você é vendedor
-    // - contrapropostas (com proposta_pai_id) onde você é comprador
+    // Propostas que VOCÊ precisa responder ou confirmar:
     return proposals.filter((p) => {
-      if (p.status !== "pendente" && p.status !== "contraproposta") return false;
+      if (!["pendente", "aguardando_confirmacao"].includes(p.status)) return false;
       const isCounter = !!p.proposta_pai_id;
-      if (isCounter) return p.clube_comprador_id === activeClubId && p.status === "pendente";
-      return p.clube_vendedor_id === activeClubId && p.status === "pendente";
+      if (p.status === "aguardando_confirmacao") {
+        // só o comprador pode confirmar/cancelar
+        return p.clube_comprador_id === activeClubId;
+      }
+      if (isCounter) {
+        // contraproposta: responde quem NÃO criou (qualquer um dos dois lados)
+        if (p.created_by && user && p.created_by === user.id) return false;
+        return p.clube_vendedor_id === activeClubId || p.clube_comprador_id === activeClubId;
+      }
+      return p.clube_vendedor_id === activeClubId;
     });
-  }, [proposals, activeClubId]);
+  }, [proposals, activeClubId, user]);
 
   const sent = useMemo(() => {
-    // Propostas que VOCÊ enviou (qualquer status)
     return proposals.filter((p) => {
       const isCounter = !!p.proposta_pai_id;
-      if (isCounter) return p.clube_vendedor_id === activeClubId; // contraproposta enviada pelo vendedor
+      if (isCounter) return user && p.created_by === user.id;
       return p.clube_comprador_id === activeClubId;
     });
-  }, [proposals, activeClubId]);
+  }, [proposals, activeClubId, user]);
 
   const playerById = (id: string) => players.find((p) => p.id === id);
   const tipoLabel = (t: TransferType) => (t === "compra" ? "Compra" : t === "emprestimo" ? "Empréstimo" : "Troca");
@@ -796,7 +823,9 @@ const Market = () => {
               const player = playerById(t.jogador_id);
               const oferecido = t.jogador_trocado_id ? playerById(t.jogador_trocado_id) : null;
               const isCounter = !!t.proposta_pai_id;
-              const fromClub = isCounter ? clubs[t.clube_vendedor_id] : clubs[t.clube_comprador_id];
+              const fromClub = isCounter
+                ? (t.clube_vendedor_id === activeClubId ? clubs[t.clube_comprador_id] : clubs[t.clube_vendedor_id])
+                : clubs[t.clube_comprador_id];
               const base = Number(player?.valor_base_calculado || 0);
               return (
                 <Card key={t.id} className="p-4 bg-gradient-card border-border/50">
@@ -847,27 +876,42 @@ const Market = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => respond(t.id, false)}>
-                          Recusar
-                        </Button>
-                        {!isCounter && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openCounter(t)}
-                            className="border-primary/40 text-primary hover:bg-primary/10"
-                          >
-                            <MessageSquare className="h-3.5 w-3.5" /> Contra-propor
-                          </Button>
+                      <div className="flex gap-2 flex-wrap">
+                        {t.status === "aguardando_confirmacao" ? (
+                          <>
+                            <Button size="sm" variant="outline" onClick={() => cancelarConf(t.id)}>
+                              Cancelar
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => confirmar(t.id)}
+                              className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+                            >
+                              Confirmar contratação
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button size="sm" variant="outline" onClick={() => respond(t.id, false)}>
+                              Recusar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openCounter(t)}
+                              className="border-primary/40 text-primary hover:bg-primary/10"
+                            >
+                              <MessageSquare className="h-3.5 w-3.5" /> Contra-propor
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => respond(t.id, true)}
+                              className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+                            >
+                              Aceitar
+                            </Button>
+                          </>
                         )}
-                        <Button
-                          size="sm"
-                          onClick={() => respond(t.id, true)}
-                          className="bg-gradient-gold text-primary-foreground hover:opacity-90"
-                        >
-                          Aceitar
-                        </Button>
                       </div>
                     </div>
                   </div>
@@ -918,12 +962,17 @@ const Market = () => {
                     </div>
                     <Badge
                       variant={
-                        t.status === "aceita" ? "default" : t.status === "recusada" ? "destructive" : "secondary"
+                        t.status === "aceita" ? "default" : t.status === "recusada" || t.status === "cancelada" ? "destructive" : "secondary"
                       }
                       className={t.status === "aceita" ? "bg-primary text-primary-foreground" : ""}
                     >
                       {t.status}
                     </Badge>
+                    {t.status === "pendente" && (
+                      <Button size="sm" variant="ghost" onClick={() => removerProposta(t.id)}>
+                        Remover
+                      </Button>
+                    )}
                   </div>
                 </Card>
               );

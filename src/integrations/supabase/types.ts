@@ -1077,6 +1077,15 @@ export type Database = {
         Args: { _club_ids: string[]; _delta: number }
         Returns: number
       }
+      avisar_aposentadorias_proximas: { Args: never; Returns: undefined }
+      cancelar_contratacao: {
+        Args: { _transfer_id: string }
+        Returns: undefined
+      }
+      confirmar_contratacao: {
+        Args: { _transfer_id: string }
+        Returns: undefined
+      }
       criar_contraproposta: {
         Args: {
           _luvas: number
@@ -1196,6 +1205,7 @@ export type Database = {
           scout_skill: number
         }[]
       }
+      remover_proposta: { Args: { _transfer_id: string }; Returns: undefined }
       renovar_contrato_jogador: {
         Args: {
           _jogador_id: string
@@ -1264,7 +1274,13 @@ export type Database = {
         | "contraproposta"
         | "expirada"
       external_region: "europeu" | "brasileiro" | "arabe"
-      transfer_status: "pendente" | "aceita" | "recusada" | "contraproposta"
+      transfer_status:
+        | "pendente"
+        | "aceita"
+        | "recusada"
+        | "contraproposta"
+        | "cancelada"
+        | "aguardando_confirmacao"
       transfer_type: "compra" | "emprestimo" | "troca"
     }
     CompositeTypes: {
@@ -1420,7 +1436,14 @@ export const Constants = {
         "expirada",
       ],
       external_region: ["europeu", "brasileiro", "arabe"],
-      transfer_status: ["pendente", "aceita", "recusada", "contraproposta"],
+      transfer_status: [
+        "pendente",
+        "aceita",
+        "recusada",
+        "contraproposta",
+        "cancelada",
+        "aguardando_confirmacao",
+      ],
       transfer_type: ["compra", "emprestimo", "troca"],
     },
   },
