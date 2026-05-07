@@ -27,7 +27,6 @@ import {
   Inbox,
   Send,
   AlertTriangle,
-  LogIn,
   MessageSquare,
   History,
   Radio,
@@ -60,16 +59,15 @@ type ForeignResponse = {
 function evaluateForeignProposal(
   player: { market_value: number; salary_demand: number; overall: number; name: string; club_origin?: string },
   proposta: { tipo: TransferType; valor: number; salario: number; luvas: number },
+  jogadorTrocado?: { valor_base_calculado: number; name: string } | null,
 ): ForeignResponse {
   const valorJusto = Number(player.market_value) || 0;
   const salarioJusto = Number(player.salary_demand) || 0;
   const clube = player.club_origin || "O clube";
   const jogadorNome = player.name;
 
-  // ── EMPRÉSTIMO: foco principal é salário ──
   if (proposta.tipo === "emprestimo") {
     const salRatio = salarioJusto > 0 ? proposta.salario / salarioJusto : 1;
-
     if (salRatio >= 0.85) {
       return {
         status: "aceita",
@@ -91,47 +89,73 @@ function evaluateForeignProposal(
     }
     return {
       status: "recusada",
-      mensagem: `${clube} recusou o empréstimo. O salário oferecido (${formatCurrency(proposta.salario)}/ano) está muito abaixo da demanda de ${jogadorNome} (${formatCurrency(salarioJusto)}/ano). Negociação encerrada por agora.`,
+      mensagem: `${clube} recusou o empréstimo. O salário oferecido (${formatCurrency(proposta.salario)}/ano) está muito abaixo da demanda de ${jogadorNome} (${formatCurrency(salarioJusto)}/ano).`,
       valor_sugerido: 0,
       salario_sugerido: salarioJusto,
       luvas_sugeridas: 0,
     };
   }
 
-  // ── TROCA: não faz sentido para mercado estrangeiro (sem elenco real) ──
   if (proposta.tipo === "troca") {
+    if (!jogadorTrocado) {
+      return {
+        status: "recusada",
+        mensagem: `${clube} espera que você ofereça um jogador na troca por ${jogadorNome}.`,
+        valor_sugerido: Math.round(valorJusto * 0.9),
+        salario_sugerido: salarioJusto,
+        luvas_sugeridas: 0,
+      };
+    }
+    const valorTrocado = Number(jogadorTrocado.valor_base_calculado) || 0;
+    const totalOferecido = valorTrocado + proposta.valor;
+    const ratio = valorJusto > 0 ? totalOferecido / valorJusto : 0;
+    const adjustedRatio = ratio * (0.95 + Math.random() * 0.1);
+    if (adjustedRatio >= 0.9) {
+      const msgDinheiro = proposta.valor > 0 ? ` + ${formatCurrency(proposta.valor)}` : "";
+      return {
+        status: "aceita",
+        mensagem: `${clube} aceitou a troca! ${jogadorTrocado.name}${msgDinheiro} por ${jogadorNome}. Negócio fechado.`,
+        valor_sugerido: proposta.valor,
+        salario_sugerido: proposta.salario,
+        luvas_sugeridas: 0,
+      };
+    }
+    if (adjustedRatio >= 0.55) {
+      const deficit = Math.round(valorJusto - totalOferecido);
+      const deficitStr = deficit > 0 ? ` Falta ${formatCurrency(deficit)}.` : "";
+      return {
+        status: "contraproposta",
+        mensagem: `${clube} considera ${jogadorTrocado.name} interessante, mas avalia que o pacote está abaixo do valor de ${jogadorNome} (${formatCurrency(valorJusto)}).${deficitStr}`,
+        valor_sugerido: Math.round(deficit * 1.1),
+        salario_sugerido: proposta.salario,
+        luvas_sugeridas: 0,
+      };
+    }
     return {
       status: "recusada",
-      mensagem: `${clube} não aceita trocas por jogadores do seu elenco para ${jogadorNome}. Negocie apenas por valor financeiro ou empréstimo.`,
-      valor_sugerido: Math.round(valorJusto * 0.9),
+      mensagem: `${clube} recusou a troca. ${jogadorTrocado.name} (${formatCurrency(valorTrocado)}) não tem valor suficiente para ${jogadorNome} (${formatCurrency(valorJusto)}).`,
+      valor_sugerido: Math.round(valorJusto - valorTrocado),
       salario_sugerido: salarioJusto,
       luvas_sugeridas: 0,
     };
   }
 
-  // ── COMPRA: avaliação composta ──
+  // COMPRA
   const valorRatio = valorJusto > 0 ? proposta.valor / valorJusto : 0;
   const salRatio = salarioJusto > 0 ? proposta.salario / salarioJusto : 0;
   const luvasBonus = valorJusto > 0 ? proposta.luvas / valorJusto : 0;
-
-  // Score: 60% valor + 30% salário + 10% luvas
   let score = valorRatio * 0.6 + Math.min(salRatio, 1.2) * 0.3 + Math.min(luvasBonus, 0.3) * 0.1;
-
-  // Jogadores melhores = mais difíceis de negociar
   if (player.overall >= 88) score *= 0.82;
   else if (player.overall >= 84) score *= 0.88;
   else if (player.overall >= 80) score *= 0.93;
   else if (player.overall <= 65) score *= 1.05;
-
-  // Variação aleatória sutil (±5%) pra não ser 100% determinístico
   score *= 0.95 + Math.random() * 0.1;
 
-  // ── ACEITA ──
   if (score >= 0.92) {
     const msgs = [
       `${clube} aceitou a proposta por ${jogadorNome}. O valor de ${formatCurrency(proposta.valor)} foi considerado justo.`,
       `Acordo fechado! ${clube} libera ${jogadorNome} por ${formatCurrency(proposta.valor)}.`,
-      `${clube} confirmou a venda de ${jogadorNome} por ${formatCurrency(proposta.valor)}. Negociação concluída.`,
+      `${clube} confirmou a venda de ${jogadorNome} por ${formatCurrency(proposta.valor)}.`,
     ];
     return {
       status: "aceita",
@@ -141,31 +165,25 @@ function evaluateForeignProposal(
       luvas_sugeridas: proposta.luvas,
     };
   }
-
-  // ── CONTRAPROPOSTA ──
   if (score >= 0.55) {
-    // Quanto menor o score, mais afasta do justo
     const gap = 1 - score;
     const multiplicador = 1 + gap * 0.6 + Math.random() * 0.15;
     const valorSugerido = Math.round(valorJusto * multiplicador);
     const salarioSugerido = Math.round(Math.max(proposta.salario, salarioJusto * 0.85));
     const luvasSugeridas = proposta.luvas > 0 ? Math.round(proposta.luvas * 1.1) : Math.round(valorJusto * 0.05);
-
     const msgs = [
       `${clube} avalia que a proposta por ${jogadorNome} está abaixo do esperado. O valor justo estaria na casa de ${formatCurrency(valorSugerido)}.`,
-      `${clube} contrapropõe: ${formatCurrency(valorSugerido)} por ${jogadorNome}. O valor ofertado (${formatCurrency(proposta.valor)}) não reflete o potencial do jogador.`,
+      `${clube} contrapropõe: ${formatCurrency(valorSugerido)} por ${jogadorNome}.`,
       `Interesse existe, mas ${clube} pede um ajuste. Para ${jogadorNome}, o mínimo seria ${formatCurrency(valorSugerido)}.`,
     ];
     return {
       status: "contraproposta",
       mensagem: msgs[Math.floor(Math.random() * msgs.length)],
-      valor_sugerido: Math.min(valorSugerido, Math.round(valorJusto * 1.5)), // teto em 150%
+      valor_sugerido: Math.min(valorSugerido, Math.round(valorJusto * 1.5)),
       salario_sugerido: salarioSugerido,
       luvas_sugeridas: luvasSugeridas,
     };
   }
-
-  // ── RECUSADA ──
   const msgs = [
     `${clube} recusou a proposta. ${formatCurrency(proposta.valor)} por ${jogadorNome} está muito abaixo do valor de mercado (${formatCurrency(valorJusto)}).`,
     `Proposta recusada. ${clube} não considera ${formatCurrency(proposta.valor)} uma oferta séria por ${jogadorNome}.`,
@@ -203,6 +221,9 @@ const Market = () => {
   const [salario, setSalario] = useState("");
   const [luvas, setLuvas] = useState("");
   const [duracao, setDuracao] = useState("1");
+  const [anosContrato, setAnosContrato] = useState("1");
+  const [opcaoCompra, setOpcaoCompra] = useState("0");
+  const [percentualRevenda, setPercentualRevenda] = useState("0");
   const [jogadorTrocado, setJogadorTrocado] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -212,9 +233,9 @@ const Market = () => {
 
   // contraproposta modal
   const [counterTarget, setCounterTarget] = useState<any>(null);
-  const [cValor, setCValor] = useState("");
-  const [cSalario, setCSalario] = useState("");
-  const [cLuvas, setCLuvas] = useState("");
+  const [cValor, setCValor] = useState<string>("");
+  const [cSalario, setCSalario] = useState<string>("");
+  const [cLuvas, setCLuvas] = useState<string>("");
 
   // perfil do jogador
   const [profilePlayerId, setProfilePlayerId] = useState<string | null>(null);
@@ -307,16 +328,29 @@ const Market = () => {
 
   const myPlayers = useMemo(() => players.filter((p) => p.club_id === activeClubId), [players, activeClubId]);
 
+  const resetProposalFields = () => {
+    setAnosContrato("1");
+    setOpcaoCompra("0");
+    setPercentualRevenda("0");
+    setJogadorTrocado("");
+    setDuracao("1");
+    setLuvas("0");
+  };
+
   const openProposal = async (player: any) => {
-    // Jogadores externos (mercado estrangeiro / passes livres sem DB id real)
-    // podem não ter valor_base_calculado — usamos market_value como fallback.
     const base = Number(player.valor_base_calculado) || Number(player.market_value) || 0;
     const enriched = { ...player, valor_base_calculado: base };
     setTarget(enriched);
-    setTipo("compra");
+
+    // Passes livres: forçar tipo compra
+    if (player._isFreeAgent) {
+      setTipo("compra");
+    } else {
+      setTipo("compra");
+    }
+
     setValor(String(Math.round(base)));
     let sugerido = Math.round(base * 0.1);
-    // Só consulta a RPC se for um jogador real na tabela players
     if (base > 0 && !player._isForeign && !player._isFreeAgent) {
       try {
         const { data } = await supabase.rpc("sugerir_salario_jogador", { _jogador_id: player.id });
@@ -324,9 +358,7 @@ const Market = () => {
       } catch {}
     }
     setSalario(String(Math.max(50000, sugerido)));
-    setLuvas("0");
-    setDuracao("1");
-    setJogadorTrocado("");
+    resetProposalFields();
   };
 
   const fairPlayCheck = (v: number, base: number) => {
@@ -349,24 +381,26 @@ const Market = () => {
       : null;
   const trocaError = tipo === "troca" && !jogadorTrocado ? "Selecione um jogador para oferecer na troca" : null;
 
+  const isFreeAgentTarget = target?._isFreeAgent === true;
+  const isForeignTarget = target?._isForeign === true;
+
   const submit = async () => {
     if (!target || !activeClubId || !user) return;
     if (fpError) return toast.error(fpError);
     if (caixaError) return toast.error(caixaError);
     if (trocaError) return toast.error(trocaError);
     if (!salario || parseFloat(salario) < 0) return toast.error("Salário inválido");
+    const anos = parseInt(anosContrato) || 1;
+    if (anos < 1 || anos > 5) return toast.error("Anos de contrato deve ser entre 1 e 5");
     setSubmitting(true);
 
     const isForeign = !!target._isForeign;
     const isDirect = isForeign || target._isFreeAgent || !target.club_id;
 
     if (isForeign) {
-      // ── MERCADO ESTRANGEIRO: IA avalia antes de contratar ──
       setForeignLoading(true);
-
-      // Simula "tempo de resposta" do clube estrangeiro (1-2s)
       await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000));
-
+      const trocado = tipo === "troca" && jogadorTrocado ? players.find((p) => p.id === jogadorTrocado) : null;
       const response = evaluateForeignProposal(
         {
           market_value: Number(target.market_value) || Number(target.valor_base_calculado) || 0,
@@ -376,9 +410,9 @@ const Market = () => {
           club_origin: (target as any).club_origin,
         },
         { tipo, valor: valorNum, salario: parseFloat(salario) || 0, luvas: luvasNum },
+        trocado ? { valor_base_calculado: Number(trocado.valor_base_calculado), name: trocado.name } : null,
       );
 
-      // Anexa dados do jogador para poder reabrir dialog se necessário
       (response as any)._playerId = target.id;
       (response as any)._playerName = target.name;
       (response as any)._playerPosition = target.position;
@@ -388,15 +422,23 @@ const Market = () => {
       (response as any)._playerClubOrigin = (target as any).club_origin;
       (response as any)._playerSalaryDemand = Number((target as any).salary_demand) || 0;
       (response as any)._playerOverall = Number((target as any).overall) || 70;
+      (response as any)._anosContrato = anos;
+
+      if (trocado) {
+        (response as any)._trocadoId = trocado.id;
+        (response as any)._trocadoName = trocado.name;
+        (response as any)._trocadoValor = Number(trocado.valor_base_calculado);
+      }
 
       setForeignLoading(false);
       setForeignResponse(response);
       setTarget(null);
+      setSubmitting(false);
       return;
     }
 
     if (isDirect) {
-      // ── PASSES LIVRES: contratação direta (sem negociação) ──
+      // Passes livres: contratação direta, apenas salário + anos contrato
       const { error } = await supabase.rpc("contratar_jogador_direto" as any, {
         _clube_id: activeClubId,
         _jogador_id: target.id,
@@ -405,6 +447,8 @@ const Market = () => {
         _valor: valorNum,
         _tipo: "livre",
         _user_id: user.id,
+        _anos_contrato: anos,
+        _percentual_revenda: 0,
       });
       setSubmitting(false);
       if (error) return toast.error(error.message);
@@ -422,10 +466,20 @@ const Market = () => {
       salario_ofertado: parseFloat(salario),
       luvas: tipo === "compra" ? luvasNum : 0,
       tipo,
+      anos_contrato: anos,
       created_by: user.id,
     };
+
     if (tipo === "troca") payload.jogador_trocado_id = jogadorTrocado;
-    if (tipo === "emprestimo") payload.duracao_emprestimo = parseInt(duracao) || 1;
+    if (tipo === "emprestimo") {
+      payload.duracao_emprestimo = parseInt(duracao) || 1;
+      const opcaoCompraNum = parseFloat(opcaoCompra) || 0;
+      if (opcaoCompraNum > 0) payload.opcao_compra = opcaoCompraNum;
+    }
+    if (tipo === "compra") {
+      const pctRevenda = parseFloat(percentualRevenda) || 0;
+      if (pctRevenda > 0) payload.percentual_revenda = pctRevenda;
+    }
 
     const { error } = await supabase.from("transferencias").insert(payload);
     setSubmitting(false);
@@ -493,37 +547,33 @@ const Market = () => {
     loadSeasonAndRumors();
   };
 
-  const inbox = useMemo(() => {
-    return proposals.filter((p) => {
-      if (!["pendente", "aguardando_confirmacao"].includes(p.status)) return false;
-      const isCounter = !!p.proposta_pai_id;
-      if (p.status === "aguardando_confirmacao") {
-        return p.clube_comprador_id === activeClubId;
-      }
-      if (isCounter) {
-        if (p.created_by && user && p.created_by === user.id) return false;
-        return p.clube_vendedor_id === activeClubId || p.clube_comprador_id === activeClubId;
-      }
-      return p.clube_vendedor_id === activeClubId;
-    });
-  }, [proposals, activeClubId, user]);
+  const movePlayerToForeignClub = async (playerId: string, clubOrigin: string) => {
+    if (!clubOrigin) return;
+    const { data: existingClub } = await supabase
+      .from("external_clubs")
+      .select("id")
+      .eq("name", clubOrigin)
+      .maybeSingle();
+    let externalClubId = existingClub?.id;
+    if (!externalClubId) {
+      const { data: newClub } = await supabase
+        .from("external_clubs")
+        .insert({ name: clubOrigin, active: true } as any)
+        .select("id")
+        .single();
+      externalClubId = newClub?.id;
+    }
+    if (!externalClubId) return;
+    await supabase
+      .from("players")
+      .update({ club_id: null, external_club_id: externalClubId, a_venda: false })
+      .eq("id", playerId);
+  };
 
-  const sent = useMemo(() => {
-    return proposals.filter((p) => {
-      const isCounter = !!p.proposta_pai_id;
-      if (isCounter) return user && p.created_by === user.id;
-      return p.clube_comprador_id === activeClubId;
-    });
-  }, [proposals, activeClubId, user]);
-
-  const playerById = (id: string) => players.find((p) => p.id === id);
-  const tipoLabel = (t: TransferType) => (t === "compra" ? "Compra" : t === "emprestimo" ? "Empréstimo" : "Troca");
-
-  // Aceitar contraproposta da IA estrangeira
   const acceptForeignCounter = async () => {
     if (!foreignResponse || !activeClubId || !user) return;
     setForeignLoading(true);
-
+    const anos = (foreignResponse as any)._anosContrato || 1;
     const { error } = await supabase.rpc("contratar_jogador_direto" as any, {
       _clube_id: activeClubId,
       _jogador_id: (foreignResponse as any)._playerId,
@@ -532,16 +582,22 @@ const Market = () => {
       _valor: foreignResponse.valor_sugerido,
       _tipo: "estrangeiro",
       _user_id: user.id,
+      _anos_contrato: anos,
+      _percentual_revenda: 0,
     });
-
+    if (error) {
+      setForeignLoading(false);
+      return toast.error(error.message);
+    }
+    if ((foreignResponse as any)._trocadoId) {
+      await movePlayerToForeignClub((foreignResponse as any)._trocadoId, (foreignResponse as any)._playerClubOrigin);
+    }
     setForeignLoading(false);
-    if (error) return toast.error(error.message);
     toast.success("Contratação realizada!");
     setForeignResponse(null);
     await Promise.all([loadAll(), loadProposals(), loadSeasonAndRumors()]);
   };
 
-  // Tentar novamente com novos valores (abre o dialog de proposta de novo)
   const retryForeignNegotiation = () => {
     if (!foreignResponse) return;
     const enriched = {
@@ -566,7 +622,9 @@ const Market = () => {
       setValor(String(foreignResponse.valor_sugerido));
       setSalario(String(foreignResponse.salario_sugerido));
       setLuvas(String(foreignResponse.luvas_sugeridas));
-      setDuracao("1");
+      setAnosContrato("1");
+      setOpcaoCompra("0");
+      setPercentualRevenda("0");
       setJogadorTrocado("");
     }
   };
@@ -575,6 +633,30 @@ const Market = () => {
 
   const inboxCount = inbox.length;
   const hasClub = myClubs.length > 0;
+
+  const inbox = useMemo(() => {
+    return proposals.filter((p) => {
+      if (!["pendente", "aguardando_confirmacao"].includes(p.status)) return false;
+      const isCounter = !!p.proposta_pai_id;
+      if (p.status === "aguardando_confirmacao") return p.clube_comprador_id === activeClubId;
+      if (isCounter) {
+        if (p.created_by && user && p.created_by === user.id) return false;
+        return p.clube_vendedor_id === activeClubId || p.clube_comprador_id === activeClubId;
+      }
+      return p.clube_vendedor_id === activeClubId;
+    });
+  }, [proposals, activeClubId, user]);
+
+  const sent = useMemo(() => {
+    return proposals.filter((p) => {
+      const isCounter = !!p.proposta_pai_id;
+      if (isCounter) return user && p.created_by === user.id;
+      return p.clube_comprador_id === activeClubId;
+    });
+  }, [proposals, activeClubId, user]);
+
+  const playerById = (id: string) => players.find((p) => p.id === id);
+  const tipoLabel = (t: TransferType) => (t === "compra" ? "Compra" : t === "emprestimo" ? "Empréstimo" : "Troca");
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -646,7 +728,7 @@ const Market = () => {
           </TabsList>
         </div>
 
-        {/* ─── NEGOCIAR ────────────────────────────────────────────────────── */}
+        {/* ─── NEGOCIAR ─────────────────────────────────────────────────── */}
         {hasClub && (
           <TabsContent value="negociar" className="space-y-3 mt-4">
             <Filters
@@ -744,7 +826,7 @@ const Market = () => {
           </TabsContent>
         )}
 
-        {/* ─── RUMORES ─────────────────────────────────────────────────────── */}
+        {/* ─── RUMORES ──────────────────────────────────────────────────── */}
         <TabsContent value="rumores" className="space-y-2 mt-4">
           <Card className="p-3 bg-gradient-card border-border/50 text-xs text-muted-foreground flex items-center gap-2">
             <Radio className="h-4 w-4 text-primary" />
@@ -838,12 +920,12 @@ const Market = () => {
           })}
         </TabsContent>
 
-        {/* ─── MERCADO ESTRANGEIRO ─────────────────────────────────────────── */}
+        {/* ─── MERCADO ESTRANGEIRO ──────────────────────────────────────── */}
         <TabsContent value="estrangeiro" className="mt-4">
           <ForeignMarketTab activeClubId={activeClubId} hasClub={hasClub} onNegotiate={openProposal} />
         </TabsContent>
 
-        {/* ─── PASSES LIVRES ───────────────────────────────────────────────── */}
+        {/* ─── PASSES LIVRES ────────────────────────────────────────────── */}
         <TabsContent value="livres" className="mt-4">
           <FreeAgentsTab
             activeClubId={activeClubId}
@@ -853,7 +935,7 @@ const Market = () => {
           />
         </TabsContent>
 
-        {/* ─── TRANSFERÊNCIAS DA TEMPORADA ─────────────────────────────────── */}
+        {/* ─── TRANSFERÊNCIAS DA TEMPORADA ─────────────────────────────── */}
         <TabsContent value="temporada" className="space-y-3 mt-4">
           <Card className="p-3 bg-gradient-card border-border/50 text-xs text-muted-foreground flex items-center gap-2">
             <History className="h-4 w-4 text-primary" />
@@ -887,14 +969,11 @@ const Market = () => {
                   const tipoOp = (tx.metadata as any)?.tipo_op || "compra";
                   const isEstrangeiro = tipoOp === "estrangeiro";
                   const isLivre = tipoOp === "livre";
-
-                  // Para estrangeiros e livres, "De" não é um clube real
                   const vendedorDisplay = isEstrangeiro
                     ? { name: "Mercado Estrangeiro", crest_url: null, id: null }
                     : isLivre
                       ? { name: "Passes Livres", crest_url: null, id: null }
                       : vendedorClub;
-
                   return (
                     <TableRow key={tx.id}>
                       <TableCell className="font-medium">
@@ -970,7 +1049,7 @@ const Market = () => {
           </Card>
         </TabsContent>
 
-        {/* ─── INBOX ───────────────────────────────────────────────────────── */}
+        {/* ─── INBOX ────────────────────────────────────────────────────── */}
         {hasClub && (
           <TabsContent value="inbox" className="space-y-2 mt-4">
             {inbox.length === 0 && (
@@ -994,8 +1073,7 @@ const Market = () => {
                     <div className="flex items-center gap-2 flex-wrap">
                       {isCounter && (
                         <Badge className="bg-primary/30 text-primary border-primary/50 text-[10px]">
-                          <MessageSquare className="h-2.5 w-2.5 mr-1" />
-                          CONTRAPROPOSTA
+                          <MessageSquare className="h-2.5 w-2.5 mr-1" /> CONTRAPROPOSTA
                         </Badge>
                       )}
                       <Badge variant="outline" className="border-primary/40 text-primary uppercase text-[10px]">
@@ -1009,7 +1087,11 @@ const Market = () => {
                         <div className="text-xs text-muted-foreground">
                           {isCounter ? "Contraproposta de" : "Oferta de"} <strong>{fromClub?.name || "?"}</strong> ·
                           base {formatCurrency(base)}
+                          {t.anos_contrato > 1 && <> · {t.anos_contrato} anos</>}
                           {t.tipo === "emprestimo" && t.duracao_emprestimo && <> · {t.duracao_emprestimo} temp.</>}
+                          {t.tipo === "emprestimo" && t.opcao_compra > 0 && (
+                            <> · opção de compra {formatCurrency(Number(t.opcao_compra))}</>
+                          )}
                           {t.tipo === "troca" && oferecido && (
                             <>
                               {" "}
@@ -1017,6 +1099,12 @@ const Market = () => {
                             </>
                           )}
                           {Number(t.luvas) > 0 && <> · luvas {formatCurrency(Number(t.luvas))}</>}
+                          {t.tipo === "compra" && t.percentual_revenda > 0 && (
+                            <>
+                              {" "}
+                              · <span className="text-amber-400">{t.percentual_revenda}% revenda</span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1082,7 +1170,7 @@ const Market = () => {
           </TabsContent>
         )}
 
-        {/* ─── SENT ────────────────────────────────────────────────────────── */}
+        {/* ─── SENT ─────────────────────────────────────────────────────── */}
         {hasClub && (
           <TabsContent value="sent" className="space-y-2 mt-4">
             {sent.length === 0 && (
@@ -1099,8 +1187,7 @@ const Market = () => {
                   <div className="flex items-center gap-3 flex-wrap">
                     {isCounter && (
                       <Badge className="bg-primary/30 text-primary border-primary/50 text-[10px]">
-                        <MessageSquare className="h-2.5 w-2.5 mr-1" />
-                        CONTRAPROPOSTA
+                        <MessageSquare className="h-2.5 w-2.5 mr-1" /> CONTRAPROPOSTA
                       </Badge>
                     )}
                     <Badge variant="outline" className="border-primary/40 text-primary uppercase text-[10px]">
@@ -1113,6 +1200,7 @@ const Market = () => {
                       <div className="font-bold truncate">{player?.name || "Jogador"}</div>
                       <div className="text-xs text-muted-foreground truncate">
                         Para <strong>{otherClub?.name || "?"}</strong>
+                        {t.anos_contrato > 1 && <> · {t.anos_contrato} anos</>}
                       </div>
                     </div>
                     <div className="text-right">
@@ -1145,12 +1233,12 @@ const Market = () => {
           </TabsContent>
         )}
 
-        {/* ─── INTERESSES ──────────────────────────────────────────────────── */}
+        {/* ─── INTERESSES ───────────────────────────────────────────────── */}
         {user && (
           <TabsContent value="interesses" className="space-y-2 mt-4">
             <Card className="p-3 bg-gradient-card border-border/50 text-xs text-muted-foreground flex items-center gap-2">
               <Heart className="h-4 w-4 text-primary" />
-              Sua lista pessoal de jogadores observados. Clique em qualquer um para abrir o perfil.
+              Sua lista pessoal de jogadores observados.
             </Card>
             {interestItems.length === 0 && (
               <Card className="p-10 text-center text-muted-foreground bg-gradient-card border-border/50">
@@ -1215,7 +1303,7 @@ const Market = () => {
         )}
       </Tabs>
 
-      {/* ─── MODAL: PROPOSTA ─────────────────────────────────────────────── */}
+      {/* ─── MODAL: PROPOSTA ──────────────────────────────────────────── */}
       <Dialog open={!!target} onOpenChange={(o) => !o && setTarget(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -1224,106 +1312,199 @@ const Market = () => {
               {target && (
                 <>
                   Por <strong>{target.name}</strong> · valor base {formatCurrency(Number(target.valor_base_calculado))}
+                  {isFreeAgentTarget && (
+                    <span className="ml-2 text-amber-400 text-xs font-medium">· Passe livre — apenas salário</span>
+                  )}
                 </>
               )}
             </DialogDescription>
           </DialogHeader>
+
           {target && (
-            <Tabs value={tipo} onValueChange={(v) => setTipo(v as TransferType)}>
-              <TabsList className="grid grid-cols-3 w-full">
-                <TabsTrigger value="compra">Compra</TabsTrigger>
-                <TabsTrigger value="emprestimo">Empréstimo</TabsTrigger>
-                <TabsTrigger value="troca">Troca</TabsTrigger>
-              </TabsList>
-              <TabsContent value="compra" className="space-y-3 mt-3">
-                <div>
-                  <Label>Valor da transferência (€)</Label>
-                  <NumberInput value={valor} onChange={(v) => setValor(String(v))} />
-                  <div className="text-[11px] text-muted-foreground mt-1">
-                    Faixa Fair Play: {formatCurrency(Number(target.valor_base_calculado) * 0.5)} –{" "}
-                    {formatCurrency(Number(target.valor_base_calculado) * 3.0)}
+            <>
+              {/* Passes livres: sem abas, apenas formulário de salário + contrato */}
+              {isFreeAgentTarget ? (
+                <div className="space-y-3 mt-2">
+                  <div>
+                    <Label>Salário oferecido (€/ano)</Label>
+                    <NumberInput value={salario} onChange={(v) => setSalario(String(v))} min={0} />
+                    <div className="text-[11px] text-muted-foreground mt-1">
+                      Não há valor de transferência para passes livres.
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Anos de contrato</Label>
+                    <NumberInput
+                      value={anosContrato}
+                      onChange={(v) => setAnosContrato(String(v))}
+                      min={1}
+                      max={5}
+                      thousands={false}
+                    />
                   </div>
                 </div>
-                <div>
-                  <Label>Salário ofertado (€/ano)</Label>
-                  <NumberInput value={salario} onChange={(v) => setSalario(String(v))} min={0} />
-                  <div className="text-[11px] text-muted-foreground mt-1">
-                    Sugerido: {formatCurrency(Math.round(Number(target.valor_base_calculado || 0) * 0.1))}/ano (10% do
-                    valor base)
-                  </div>
-                </div>
-                <div>
-                  <Label>Luvas (€)</Label>
-                  <NumberInput
-                    value={luvas}
-                    onChange={(v) => setLuvas(String(v))}
-                    min={0}
-                    max={Math.max(0, caixaComprador)}
-                  />
-                  <div className="text-[11px] text-muted-foreground mt-1">
-                    Total à vista: <strong>{formatCurrency(totalDevido)}</strong> · Caixa:{" "}
-                    {formatCurrency(caixaComprador)}
-                  </div>
-                </div>
-              </TabsContent>
-              <TabsContent value="emprestimo" className="space-y-3 mt-3">
-                <div>
-                  <Label>Duração (temporadas)</Label>
-                  <NumberInput
-                    value={duracao}
-                    onChange={(v) => setDuracao(String(v))}
-                    min={1}
-                    max={3}
-                    thousands={false}
-                  />
-                </div>
-                <div>
-                  <Label>Salário pago pelo empréstimo (€/ano)</Label>
-                  <NumberInput value={salario} onChange={(v) => setSalario(String(v))} min={0} />
-                </div>
-              </TabsContent>
-              <TabsContent value="troca" className="space-y-3 mt-3">
-                <div>
-                  <Label>Jogador que você oferece</Label>
-                  <Select value={jogadorTrocado} onValueChange={setJogadorTrocado}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione do seu elenco..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {myPlayers.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.position} · {p.name} ({formatCurrency(Number(p.valor_base_calculado))})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Diferença em dinheiro (€) — opcional</Label>
-                  <NumberInput value={valor} onChange={(v) => setValor(String(v))} min={0} />
-                </div>
-                <div>
-                  <Label>Salário ofertado ao jogador-alvo (€/ano)</Label>
-                  <NumberInput value={salario} onChange={(v) => setSalario(String(v))} min={0} />
-                </div>
-              </TabsContent>
-              {fpError && (
-                <div className="flex items-start gap-2 p-3 mt-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
-                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" /> {fpError}
-                </div>
+              ) : (
+                /* Mercado interno + estrangeiro: abas normais */
+                <Tabs value={tipo} onValueChange={(v) => setTipo(v as TransferType)}>
+                  {/* Mercado estrangeiro: sem troca (não faz sentido IA + troca via tab interno) */}
+                  <TabsList
+                    className="grid w-full"
+                    style={{ gridTemplateColumns: isForeignTarget ? "1fr 1fr" : "1fr 1fr 1fr" }}
+                  >
+                    <TabsTrigger value="compra">Compra</TabsTrigger>
+                    <TabsTrigger value="emprestimo">Empréstimo</TabsTrigger>
+                    {!isForeignTarget && <TabsTrigger value="troca">Troca</TabsTrigger>}
+                  </TabsList>
+
+                  {/* ── COMPRA ── */}
+                  <TabsContent value="compra" className="space-y-3 mt-3">
+                    <div>
+                      <Label>Valor da transferência (€)</Label>
+                      <NumberInput value={valor} onChange={(v) => setValor(String(v))} />
+                      <div className="text-[11px] text-muted-foreground mt-1">
+                        Faixa Fair Play: {formatCurrency(Number(target.valor_base_calculado) * 0.5)} –{" "}
+                        {formatCurrency(Number(target.valor_base_calculado) * 3.0)}
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Salário ofertado (€/ano)</Label>
+                      <NumberInput value={salario} onChange={(v) => setSalario(String(v))} min={0} />
+                    </div>
+                    <div>
+                      <Label>Luvas (€)</Label>
+                      <NumberInput
+                        value={luvas}
+                        onChange={(v) => setLuvas(String(v))}
+                        min={0}
+                        max={Math.max(0, caixaComprador)}
+                      />
+                      <div className="text-[11px] text-muted-foreground mt-1">
+                        Total à vista: <strong>{formatCurrency(totalDevido)}</strong> · Caixa:{" "}
+                        {formatCurrency(caixaComprador)}
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Anos de contrato</Label>
+                      <NumberInput
+                        value={anosContrato}
+                        onChange={(v) => setAnosContrato(String(v))}
+                        min={1}
+                        max={5}
+                        thousands={false}
+                      />
+                    </div>
+                    {/* Cláusula de revenda: apenas em compra de mercado interno */}
+                    {!isForeignTarget && (
+                      <div>
+                        <Label>Cláusula de revenda (%) — opcional</Label>
+                        <NumberInput
+                          value={percentualRevenda}
+                          onChange={(v) => setPercentualRevenda(String(v))}
+                          min={0}
+                          max={50}
+                          thousands={false}
+                        />
+                        <div className="text-[11px] text-muted-foreground mt-1">
+                          Percentual que o seu clube recebe em uma futura revenda deste jogador.
+                        </div>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  {/* ── EMPRÉSTIMO ── */}
+                  <TabsContent value="emprestimo" className="space-y-3 mt-3">
+                    <div>
+                      <Label>Duração (temporadas)</Label>
+                      <NumberInput
+                        value={duracao}
+                        onChange={(v) => setDuracao(String(v))}
+                        min={1}
+                        max={3}
+                        thousands={false}
+                      />
+                    </div>
+                    <div>
+                      <Label>Salário pago pelo empréstimo (€/ano)</Label>
+                      <NumberInput value={salario} onChange={(v) => setSalario(String(v))} min={0} />
+                    </div>
+                    <div>
+                      <Label>Anos de contrato</Label>
+                      <NumberInput
+                        value={anosContrato}
+                        onChange={(v) => setAnosContrato(String(v))}
+                        min={1}
+                        max={5}
+                        thousands={false}
+                      />
+                    </div>
+                    <div>
+                      <Label>Opção de compra (€) — opcional</Label>
+                      <NumberInput value={opcaoCompra} onChange={(v) => setOpcaoCompra(String(v))} min={0} />
+                      <div className="text-[11px] text-muted-foreground mt-1">
+                        Valor fixado para compra definitiva ao final do empréstimo.
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* ── TROCA ── (só mercado interno) */}
+                  {!isForeignTarget && (
+                    <TabsContent value="troca" className="space-y-3 mt-3">
+                      <div>
+                        <Label>Jogador que você oferece</Label>
+                        <Select value={jogadorTrocado} onValueChange={setJogadorTrocado}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione do seu elenco..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {myPlayers.map((p) => (
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.position} · {p.name} ({formatCurrency(Number(p.valor_base_calculado))})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Diferença em dinheiro (€) — opcional</Label>
+                        <NumberInput value={valor} onChange={(v) => setValor(String(v))} min={0} />
+                      </div>
+                      <div>
+                        <Label>Salário ofertado ao jogador-alvo (€/ano)</Label>
+                        <NumberInput value={salario} onChange={(v) => setSalario(String(v))} min={0} />
+                      </div>
+                      <div>
+                        <Label>Anos de contrato</Label>
+                        <NumberInput
+                          value={anosContrato}
+                          onChange={(v) => setAnosContrato(String(v))}
+                          min={1}
+                          max={5}
+                          thousands={false}
+                        />
+                      </div>
+                    </TabsContent>
+                  )}
+
+                  {fpError && (
+                    <div className="flex items-start gap-2 p-3 mt-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
+                      <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" /> {fpError}
+                    </div>
+                  )}
+                  {caixaError && !fpError && (
+                    <div className="flex items-start gap-2 p-3 mt-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
+                      <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" /> {caixaError}
+                    </div>
+                  )}
+                  {trocaError && (
+                    <div className="flex items-start gap-2 p-3 mt-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
+                      <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" /> {trocaError}
+                    </div>
+                  )}
+                </Tabs>
               )}
-              {caixaError && !fpError && (
-                <div className="flex items-start gap-2 p-3 mt-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
-                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" /> {caixaError}
-                </div>
-              )}
-              {trocaError && (
-                <div className="flex items-start gap-2 p-3 mt-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
-                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" /> {trocaError}
-                </div>
-              )}
-            </Tabs>
+            </>
           )}
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setTarget(null)}>
               Cancelar
@@ -1339,30 +1520,27 @@ const Market = () => {
         </DialogContent>
       </Dialog>
 
-      {/* ─── MODAL: CONTRAPROPOSTA ───────────────────────────────────────── */}
+      {/* ─── MODAL: CONTRAPROPOSTA ────────────────────────────────────── */}
       <Dialog open={!!counterTarget} onOpenChange={(o) => !o && setCounterTarget(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-primary" /> Enviar contraproposta
             </DialogTitle>
-            <DialogDescription>
-              Edite os valores e devolva. A proposta original será encerrada e a nova vai pra caixa de entrada do
-              comprador.
-            </DialogDescription>
+            <DialogDescription>Edite os valores e devolva. A proposta original será encerrada.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div>
               <Label>Valor da transferência (€)</Label>
-              <NumberInput value={cValor} onChange={(v) => setCValor(String(v))} min={0} />
+              <NumberInput value={cValor} onChange={(v: number) => setCValor(String(v))} min={0} />
             </div>
             <div>
               <Label>Salário (€/ano)</Label>
-              <NumberInput value={cSalario} onChange={(v) => setCSalario(String(v))} min={0} />
+              <NumberInput value={cSalario} onChange={(v: number) => setCSalario(String(v))} min={0} />
             </div>
             <div>
               <Label>Luvas (€)</Label>
-              <NumberInput value={cLuvas} onChange={(v) => setCLuvas(String(v))} min={0} />
+              <NumberInput value={cLuvas} onChange={(v: number) => setCLuvas(String(v))} min={0} />
             </div>
           </div>
           <DialogFooter>
@@ -1376,7 +1554,7 @@ const Market = () => {
         </DialogContent>
       </Dialog>
 
-      {/* ─── MODAL: RESPOSTA IA ESTRANGEIRA ─────────────────────────────── */}
+      {/* ─── MODAL: RESPOSTA IA ESTRANGEIRA ──────────────────────────── */}
       <Dialog open={!!foreignResponse} onOpenChange={(o) => !o && setForeignResponse(null)}>
         <DialogContent className="max-w-md">
           {foreignLoading ? (
@@ -1400,10 +1578,8 @@ const Market = () => {
                       : "Contraproposta"}
                 </DialogTitle>
               </DialogHeader>
-
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground leading-relaxed">{foreignResponse?.mensagem}</p>
-
                 {foreignResponse?.status === "contraproposta" && (
                   <Card className="p-3 bg-amber-500/10 border-amber-500/30 space-y-2">
                     <div className="text-xs font-semibold text-amber-400 uppercase">Valores sugeridos</div>
@@ -1430,7 +1606,6 @@ const Market = () => {
                   </Card>
                 )}
               </div>
-
               <DialogFooter className="flex gap-2">
                 <Button variant="outline" onClick={() => setForeignResponse(null)}>
                   Fechar
@@ -1529,7 +1704,7 @@ const Filters = ({ q, setQ, pos, setPos, onlyForSale, setOnlyForSale }: FiltersP
         onClick={() => setOnlyForSale((v) => !v)}
         className={onlyForSale ? "bg-gradient-gold text-primary-foreground shrink-0" : "shrink-0"}
       >
-        <Tag className="h-4 w-4" />{" "}
+        <Tag className="h-4 w-4" />
         <span className="hidden sm:inline">{onlyForSale ? "Mostrando à venda" : "Só à venda"}</span>
       </Button>
     </div>
@@ -1543,7 +1718,6 @@ interface ForeignMarketTabProps {
   hasClub: boolean;
   onNegotiate: (player: any) => void;
 }
-
 const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: ForeignMarketTabProps) => {
   const [rows, setRows] = useState<any[]>([]);
   const [pos, setPos] = useState("all");
@@ -1570,7 +1744,6 @@ const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: ForeignMarketT
       (!q || r.name.toLowerCase().includes(q.toLowerCase())),
   );
 
-  // Build a synthetic player object compatible with openProposal
   const buildForeignPlayer = (r: any) => ({
     id: r.id,
     name: r.name,
@@ -1693,7 +1866,6 @@ interface FreeAgentsTabProps {
   onProfileOpen: (id: string) => void;
   onNegotiate: (player: any) => void;
 }
-
 const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen, onNegotiate }: FreeAgentsTabProps) => {
   const [rows, setRows] = useState<any[]>([]);
   const [pos, setPos] = useState("all");
@@ -1706,7 +1878,8 @@ const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen, onNegotiate }: Fr
         supabase
           .from("players")
           .select("id,name,position,age,nationality,habilidade,salario_atual,valor_base_calculado")
-          .is("club_id", null),
+          .is("club_id", null)
+          .filter("external_club_id", "is", null),
       ]);
       const merged = [
         ...(fa || []).map((r: any) => ({ ...r, _src: "free_agents" })),
@@ -1734,7 +1907,6 @@ const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen, onNegotiate }: Fr
     .filter((r) => !q || r.name.toLowerCase().includes(q.toLowerCase()))
     .sort((a, b) => Number(b.overall || 0) - Number(a.overall || 0));
 
-  // Build a synthetic player object compatible with openProposal
   const buildFreeAgentPlayer = (r: any) => ({
     id: r._src === "players" ? r._realId : r.id,
     name: r.name,
@@ -1819,7 +1991,7 @@ const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen, onNegotiate }: Fr
                       onClick={() => onNegotiate(buildFreeAgentPlayer(r))}
                       className="bg-gradient-gold text-primary-foreground hover:opacity-90"
                     >
-                      Negociar
+                      Contratar
                     </Button>
                   </TableCell>
                 )}
