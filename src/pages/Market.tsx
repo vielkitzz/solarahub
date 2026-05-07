@@ -171,14 +171,21 @@ const Market = () => {
   const myPlayers = useMemo(() => players.filter((p) => p.club_id === activeClubId), [players, activeClubId]);
 
   const openProposal = async (player: any) => {
-    setTarget(player);
+    // Jogadores externos (mercado estrangeiro / passes livres sem DB id real)
+    // podem não ter valor_base_calculado — usamos market_value como fallback.
+    const base = Number(player.valor_base_calculado) || Number(player.market_value) || 0;
+    const enriched = { ...player, valor_base_calculado: base };
+    setTarget(enriched);
     setTipo("compra");
-    setValor(String(Math.round(Number(player.valor_base_calculado))));
-    let sugerido = Math.round(Number(player.valor_base_calculado || 0) * 0.1);
-    try {
-      const { data } = await supabase.rpc("sugerir_salario_jogador", { _jogador_id: player.id });
-      if (data) sugerido = Math.round(Number(data));
-    } catch {}
+    setValor(String(Math.round(base)));
+    let sugerido = Math.round(base * 0.1);
+    // Só consulta a RPC se for um jogador real na tabela players
+    if (base > 0 && !player._isForeign && !player._isFreeAgent) {
+      try {
+        const { data } = await supabase.rpc("sugerir_salario_jogador", { _jogador_id: player.id });
+        if (data) sugerido = Math.round(Number(data));
+      } catch {}
+    }
     setSalario(String(Math.max(50000, sugerido)));
     setLuvas("0");
     setDuracao("1");
@@ -1214,10 +1221,11 @@ const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: ForeignMarketT
     position: r.position,
     age: r.age,
     nationality: r.nationality,
-    valor_base_calculado: r.market_value,
-    market_value: r.market_value,
+    valor_base_calculado: Number(r.market_value) || 0,
+    market_value: Number(r.market_value) || 0,
     club_id: r.club_id ?? null,
     a_venda: true,
+    _isForeign: true,
   });
 
   return (
@@ -1374,10 +1382,11 @@ const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen, onNegotiate }: Fr
     position: r.position,
     age: r.age,
     nationality: r.nationality,
-    valor_base_calculado: r.valor_base_calculado ?? r.salary_demand ?? 0,
-    market_value: r.valor_base_calculado ?? r.salary_demand ?? 0,
+    valor_base_calculado: Number(r.valor_base_calculado) || Number(r.salary_demand) || 0,
+    market_value: Number(r.valor_base_calculado) || Number(r.salary_demand) || 0,
     club_id: null,
     a_venda: true,
+    _isFreeAgent: r._src !== "players",
   });
 
   return (
