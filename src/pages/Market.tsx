@@ -1797,7 +1797,7 @@ const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen, onNegotiate }: Fr
           .from("players")
           .select("id,name,position,age,nationality,habilidade,salario_atual,valor_base_calculado")
           .is("club_id", null)
-          .is("external_club_id" as any, null),
+          .filter("external_club_id", "is", null),
       ]);
       const merged = [
         ...(fa || []).map((r: any) => ({ ...r, _src: "free_agents" })),
