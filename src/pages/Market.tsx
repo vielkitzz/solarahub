@@ -569,7 +569,7 @@ const Market = () => {
     // @ts-ignore - Bypass de tipagem rígida gerada pelo Supabase
     await supabase
       .from("players")
-      .update({ club_id: null, external_club_id: externalClubId, a_venda: false })
+      .update({ club_id: null, external_club_id: externalClubId, a_venda: false } as any) // <--- as any AQUI
       .eq("id", playerId);
   };
 
