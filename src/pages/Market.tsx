@@ -47,6 +47,139 @@ import { toast } from "sonner";
 
 type TransferType = "compra" | "emprestimo" | "troca";
 
+// ─── IA DE NEGOCIAÇÃO ESTRANGEIRA ────────────────────────────────────────────
+
+type ForeignResponse = {
+  status: "aceita" | "recusada" | "contraproposta";
+  mensagem: string;
+  valor_sugerido: number;
+  salario_sugerido: number;
+  luvas_sugeridas: number;
+};
+
+function evaluateForeignProposal(
+  player: { market_value: number; salary_demand: number; overall: number; name: string; club_origin?: string },
+  proposta: { tipo: TransferType; valor: number; salario: number; luvas: number },
+): ForeignResponse {
+  const valorJusto = Number(player.market_value) || 0;
+  const salarioJusto = Number(player.salary_demand) || 0;
+  const clube = player.club_origin || "O clube";
+  const jogadorNome = player.name;
+
+  // ── EMPRÉSTIMO: foco principal é salário ──
+  if (proposta.tipo === "emprestimo") {
+    const salRatio = salarioJusto > 0 ? proposta.salario / salarioJusto : 1;
+
+    if (salRatio >= 0.85) {
+      return {
+        status: "aceita",
+        mensagem: `${clube} aceitou o empréstimo de ${jogadorNome}. O salário oferecido é satisfatório e o jogador seguirá emprestado.`,
+        valor_sugerido: 0,
+        salario_sugerido: proposta.salario,
+        luvas_sugeridas: 0,
+      };
+    }
+    if (salRatio >= 0.5) {
+      const sugSal = Math.round(salarioJusto * (0.8 + Math.random() * 0.15));
+      return {
+        status: "contraproposta",
+        mensagem: `${clube} está aberto ao empréstimo, mas considera o salário de ${formatCurrency(proposta.salario)} abaixo do adequado para ${jogadorNome}. Pedimos um ajuste.`,
+        valor_sugerido: 0,
+        salario_sugerido: sugSal,
+        luvas_sugeridas: 0,
+      };
+    }
+    return {
+      status: "recusada",
+      mensagem: `${clube} recusou o empréstimo. O salário oferecido (${formatCurrency(proposta.salario)}/ano) está muito abaixo da demanda de ${jogadorNome} (${formatCurrency(salarioJusto)}/ano). Negociação encerrada por agora.`,
+      valor_sugerido: 0,
+      salario_sugerido: salarioJusto,
+      luvas_sugeridas: 0,
+    };
+  }
+
+  // ── TROCA: não faz sentido para mercado estrangeiro (sem elenco real) ──
+  if (proposta.tipo === "troca") {
+    return {
+      status: "recusada",
+      mensagem: `${clube} não aceita trocas por jogadores do seu elenco para ${jogadorNome}. Negocie apenas por valor financeiro ou empréstimo.`,
+      valor_sugerido: Math.round(valorJusto * 0.9),
+      salario_sugerido: salarioJusto,
+      luvas_sugeridas: 0,
+    };
+  }
+
+  // ── COMPRA: avaliação composta ──
+  const valorRatio = valorJusto > 0 ? proposta.valor / valorJusto : 0;
+  const salRatio = salarioJusto > 0 ? proposta.salario / salarioJusto : 0;
+  const luvasBonus = valorJusto > 0 ? proposta.luvas / valorJusto : 0;
+
+  // Score: 60% valor + 30% salário + 10% luvas
+  let score = valorRatio * 0.6 + Math.min(salRatio, 1.2) * 0.3 + Math.min(luvasBonus, 0.3) * 0.1;
+
+  // Jogadores melhores = mais difíceis de negociar
+  if (player.overall >= 88) score *= 0.82;
+  else if (player.overall >= 84) score *= 0.88;
+  else if (player.overall >= 80) score *= 0.93;
+  else if (player.overall <= 65) score *= 1.05;
+
+  // Variação aleatória sutil (±5%) pra não ser 100% determinístico
+  score *= 0.95 + Math.random() * 0.1;
+
+  // ── ACEITA ──
+  if (score >= 0.92) {
+    const msgs = [
+      `${clube} aceitou a proposta por ${jogadorNome}. O valor de ${formatCurrency(proposta.valor)} foi considerado justo.`,
+      `Acordo fechado! ${clube} libera ${jogadorNome} por ${formatCurrency(proposta.valor)}.`,
+      `${clube} confirmou a venda de ${jogadorNome} por ${formatCurrency(proposta.valor)}. Negociação concluída.`,
+    ];
+    return {
+      status: "aceita",
+      mensagem: msgs[Math.floor(Math.random() * msgs.length)],
+      valor_sugerido: proposta.valor,
+      salario_sugerido: proposta.salario,
+      luvas_sugeridas: proposta.luvas,
+    };
+  }
+
+  // ── CONTRAPROPOSTA ──
+  if (score >= 0.55) {
+    // Quanto menor o score, mais afasta do justo
+    const gap = 1 - score;
+    const multiplicador = 1 + gap * 0.6 + Math.random() * 0.15;
+    const valorSugerido = Math.round(valorJusto * multiplicador);
+    const salarioSugerido = Math.round(Math.max(proposta.salario, salarioJusto * 0.85));
+    const luvasSugeridas = proposta.luvas > 0 ? Math.round(proposta.luvas * 1.1) : Math.round(valorJusto * 0.05);
+
+    const msgs = [
+      `${clube} avalia que a proposta por ${jogadorNome} está abaixo do esperado. O valor justo estaria na casa de ${formatCurrency(valorSugerido)}.`,
+      `${clube} contrapropõe: ${formatCurrency(valorSugerido)} por ${jogadorNome}. O valor ofertado (${formatCurrency(proposta.valor)}) não reflete o potencial do jogador.`,
+      `Interesse existe, mas ${clube} pede um ajuste. Para ${jogadorNome}, o mínimo seria ${formatCurrency(valorSugerido)}.`,
+    ];
+    return {
+      status: "contraproposta",
+      mensagem: msgs[Math.floor(Math.random() * msgs.length)],
+      valor_sugerido: Math.min(valorSugerido, Math.round(valorJusto * 1.5)), // teto em 150%
+      salario_sugerido: salarioSugerido,
+      luvas_sugeridas: luvasSugeridas,
+    };
+  }
+
+  // ── RECUSADA ──
+  const msgs = [
+    `${clube} recusou a proposta. ${formatCurrency(proposta.valor)} por ${jogadorNome} está muito abaixo do valor de mercado (${formatCurrency(valorJusto)}).`,
+    `Proposta recusada. ${clube} não considera ${formatCurrency(proposta.valor)} uma oferta séria por ${jogadorNome}.`,
+    `${clube} rejeitou a oferta. ${jogadorNome} é peça importante e o valor proposto não atende às expectativas.`,
+  ];
+  return {
+    status: "recusada",
+    mensagem: msgs[Math.floor(Math.random() * msgs.length)],
+    valor_sugerido: Math.round(valorJusto * 0.9),
+    salario_sugerido: salarioJusto,
+    luvas_sugeridas: 0,
+  };
+}
+
 const Market = () => {
   const { user, loading, signInWithDiscord } = useAuth();
   const [players, setPlayers] = useState<any[]>([]);
@@ -72,6 +205,10 @@ const Market = () => {
   const [duracao, setDuracao] = useState("1");
   const [jogadorTrocado, setJogadorTrocado] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
+
+  // resposta da IA estrangeira
+  const [foreignResponse, setForeignResponse] = useState<ForeignResponse | null>(null);
+  const [foreignLoading, setForeignLoading] = useState(false);
 
   // contraproposta modal
   const [counterTarget, setCounterTarget] = useState<any>(null);
@@ -220,16 +357,53 @@ const Market = () => {
     if (!salario || parseFloat(salario) < 0) return toast.error("Salário inválido");
     setSubmitting(true);
 
-    const isDirect = target._isForeign || target._isFreeAgent || !target.club_id;
+    const isForeign = !!target._isForeign;
+    const isDirect = isForeign || target._isFreeAgent || !target.club_id;
+
+    if (isForeign) {
+      // ── MERCADO ESTRANGEIRO: IA avalia antes de contratar ──
+      setForeignLoading(true);
+
+      // Simula "tempo de resposta" do clube estrangeiro (1-2s)
+      await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000));
+
+      const response = evaluateForeignProposal(
+        {
+          market_value: Number(target.market_value) || Number(target.valor_base_calculado) || 0,
+          salary_demand: Number((target as any).salary_demand) || 0,
+          overall: Number((target as any).overall) || 70,
+          name: target.name,
+          club_origin: (target as any).club_origin,
+        },
+        { tipo, valor: valorNum, salario: parseFloat(salario) || 0, luvas: luvasNum },
+      );
+
+      // Anexa dados do jogador para poder reabrir dialog se necessário
+      (response as any)._playerId = target.id;
+      (response as any)._playerName = target.name;
+      (response as any)._playerPosition = target.position;
+      (response as any)._playerAge = target.age;
+      (response as any)._playerNationality = target.nationality;
+      (response as any)._playerMarketValue = Number(target.market_value) || Number(target.valor_base_calculado) || 0;
+      (response as any)._playerClubOrigin = (target as any).club_origin;
+      (response as any)._playerSalaryDemand = Number((target as any).salary_demand) || 0;
+      (response as any)._playerOverall = Number((target as any).overall) || 70;
+
+      setForeignLoading(false);
+      setForeignResponse(response);
+      setTarget(null);
+      return;
+    }
 
     if (isDirect) {
+      // ── PASSES LIVRES: contratação direta (sem negociação) ──
       const { error } = await supabase.rpc("contratar_jogador_direto" as any, {
         _clube_id: activeClubId,
         _jogador_id: target.id,
         _salario: parseFloat(salario),
         _luvas: luvasNum,
         _valor: valorNum,
-        _tipo: target._isForeign ? "estrangeiro" : "livre",
+        _tipo: "livre",
         _user_id: user.id,
       });
       setSubmitting(false);
@@ -344,6 +518,58 @@ const Market = () => {
 
   const playerById = (id: string) => players.find((p) => p.id === id);
   const tipoLabel = (t: TransferType) => (t === "compra" ? "Compra" : t === "emprestimo" ? "Empréstimo" : "Troca");
+
+  // Aceitar contraproposta da IA estrangeira
+  const acceptForeignCounter = async () => {
+    if (!foreignResponse || !activeClubId || !user) return;
+    setForeignLoading(true);
+
+    const { error } = await supabase.rpc("contratar_jogador_direto" as any, {
+      _clube_id: activeClubId,
+      _jogador_id: (foreignResponse as any)._playerId,
+      _salario: foreignResponse.salario_sugerido,
+      _luvas: foreignResponse.luvas_sugeridas,
+      _valor: foreignResponse.valor_sugerido,
+      _tipo: "estrangeiro",
+      _user_id: user.id,
+    });
+
+    setForeignLoading(false);
+    if (error) return toast.error(error.message);
+    toast.success("Contratação realizada!");
+    setForeignResponse(null);
+    await Promise.all([loadAll(), loadProposals(), loadSeasonAndRumors()]);
+  };
+
+  // Tentar novamente com novos valores (abre o dialog de proposta de novo)
+  const retryForeignNegotiation = () => {
+    if (!foreignResponse) return;
+    const enriched = {
+      id: (foreignResponse as any)._playerId,
+      name: (foreignResponse as any)._playerName,
+      position: (foreignResponse as any)._playerPosition,
+      age: (foreignResponse as any)._playerAge,
+      nationality: (foreignResponse as any)._playerNationality,
+      valor_base_calculado: (foreignResponse as any)._playerMarketValue,
+      market_value: (foreignResponse as any)._playerMarketValue,
+      club_id: null,
+      a_venda: true,
+      _isForeign: true,
+      club_origin: (foreignResponse as any)._playerClubOrigin,
+      salary_demand: (foreignResponse as any)._playerSalaryDemand,
+      overall: (foreignResponse as any)._playerOverall,
+    };
+    setForeignResponse(null);
+    if (foreignResponse.status === "contraproposta") {
+      setTarget(enriched);
+      setTipo("compra");
+      setValor(String(foreignResponse.valor_sugerido));
+      setSalario(String(foreignResponse.salario_sugerido));
+      setLuvas(String(foreignResponse.luvas_sugeridas));
+      setDuracao("1");
+      setJogadorTrocado("");
+    }
+  };
 
   if (loading) return null;
 
@@ -1132,6 +1358,97 @@ const Market = () => {
         </DialogContent>
       </Dialog>
 
+      {/* ─── MODAL: RESPOSTA IA ESTRANGEIRA ─────────────────────────────── */}
+      <Dialog open={!!foreignResponse} onOpenChange={(o) => !o && setForeignResponse(null)}>
+        <DialogContent className="max-w-md">
+          {foreignLoading ? (
+            <div className="py-10 flex flex-col items-center gap-3">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <p className="text-sm text-muted-foreground">
+                {(foreignResponse as any)?._playerClubOrigin || "O clube"} está analisando a proposta...
+              </p>
+            </div>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  {foreignResponse?.status === "aceita" && <CheckCircle2 className="h-5 w-5 text-emerald-500" />}
+                  {foreignResponse?.status === "recusada" && <XCircle className="h-5 w-5 text-destructive" />}
+                  {foreignResponse?.status === "contraproposta" && <MessageSquare className="h-5 w-5 text-amber-500" />}
+                  {foreignResponse?.status === "aceita"
+                    ? "Proposta Aceita!"
+                    : foreignResponse?.status === "recusada"
+                      ? "Proposta Recusada"
+                      : "Contraproposta"}
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground leading-relaxed">{foreignResponse?.mensagem}</p>
+
+                {foreignResponse?.status === "contraproposta" && (
+                  <Card className="p-3 bg-amber-500/10 border-amber-500/30 space-y-2">
+                    <div className="text-xs font-semibold text-amber-400 uppercase">Valores sugeridos</div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Valor:</span>
+                      <span className="font-display font-bold text-primary">
+                        {formatCurrency(foreignResponse.valor_sugerido)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Salário:</span>
+                      <span className="font-display font-bold">
+                        {formatCurrency(foreignResponse.salario_sugerido)}/ano
+                      </span>
+                    </div>
+                    {foreignResponse.luvas_sugeridas > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Luvas:</span>
+                        <span className="font-display font-bold">
+                          {formatCurrency(foreignResponse.luvas_sugeridas)}
+                        </span>
+                      </div>
+                    )}
+                  </Card>
+                )}
+              </div>
+
+              <DialogFooter className="flex gap-2">
+                <Button variant="outline" onClick={() => setForeignResponse(null)}>
+                  Fechar
+                </Button>
+                {foreignResponse?.status === "contraproposta" && (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={retryForeignNegotiation}
+                      className="border-primary/40 text-primary hover:bg-primary/10"
+                    >
+                      <ArrowRightLeft className="h-3.5 w-3.5 mr-1" /> Nova proposta
+                    </Button>
+                    <Button
+                      onClick={acceptForeignCounter}
+                      className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Aceitar contraproposta
+                    </Button>
+                  </>
+                )}
+                {foreignResponse?.status === "recusada" && (
+                  <Button
+                    variant="outline"
+                    onClick={retryForeignNegotiation}
+                    className="border-primary/40 text-primary hover:bg-primary/10"
+                  >
+                    <ArrowRightLeft className="h-3.5 w-3.5 mr-1" /> Tentar novamente
+                  </Button>
+                )}
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <PlayerProfileDialog
         playerId={profilePlayerId}
         open={!!profilePlayerId}
@@ -1244,7 +1561,10 @@ const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: ForeignMarketT
     nationality: r.nationality,
     valor_base_calculado: Number(r.market_value) || 0,
     market_value: Number(r.market_value) || 0,
-    club_id: r.club_id ?? null,
+    salary_demand: Number(r.salary_demand) || 0,
+    overall: Number(r.overall) || 70,
+    club_id: null,
+    club_origin: r.club_origin,
     a_venda: true,
     _isForeign: true,
   });
