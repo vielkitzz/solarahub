@@ -480,11 +480,17 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
     const { data: playersData, error: playersError } = await supabase
       .from("academy_players")
       .select("*")
-      .eq("club_id", club.id)
-      .order("development_progress", { ascending: false });
+      .eq("club_id", club.id);
 
     if (playersError) toast.error(playersError.message);
-    setPlayers((playersData as AcademyPlayer[]) || []);
+    const POS_ORDER: Record<string, number> = { GOL: 1, ZAG: 2, LAT: 3, VOL: 4, MEI: 5, ATA: 6 };
+    const sorted = ((playersData as AcademyPlayer[]) || []).slice().sort((a, b) => {
+      const oa = POS_ORDER[a.position] ?? 99;
+      const ob = POS_ORDER[b.position] ?? 99;
+      if (oa !== ob) return oa - ob;
+      return (b.development_progress || 0) - (a.development_progress || 0);
+    });
+    setPlayers(sorted);
 
     // Se é o dono, mostra potencial real direto
     // Se não é, busca apenas relatórios de olheiro já feitos
