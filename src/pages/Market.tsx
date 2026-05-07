@@ -42,6 +42,7 @@ import { getFlagUrl } from "@/lib/countries";
 import { StarRating } from "@/components/StarRating";
 import { PlayerProfileDialog } from "@/components/PlayerProfileDialog";
 import { useInterestList } from "@/hooks/useInterestList";
+import { ExternalProposalsInbox } from "@/components/ExternalProposalsInbox";
 import { toast } from "sonner";
 
 type TransferType = "compra" | "emprestimo" | "troca";
@@ -231,6 +232,7 @@ const Market = () => {
   // resposta da IA estrangeira
   const [foreignResponse, setForeignResponse] = useState<ForeignResponse | null>(null);
   const [foreignLoading, setForeignLoading] = useState<boolean>(false);
+  const [externalInboxCount, setExternalInboxCount] = useState<number>(0);
 
   // contraproposta modal
   const [counterTarget, setCounterTarget] = useState<any>(null);
@@ -279,6 +281,25 @@ const Market = () => {
     setProposals(data || []);
   };
 
+  const loadExternalCount = async () => {
+    if (!activeClubId) {
+      setExternalInboxCount(0);
+      return;
+    }
+    const { data: pls } = await supabase.from("players").select("id").eq("club_id", activeClubId);
+    const ids = (pls || []).map((p: any) => p.id);
+    if (ids.length === 0) {
+      setExternalInboxCount(0);
+      return;
+    }
+    const { count } = await supabase
+      .from("external_proposals")
+      .select("id", { count: "exact", head: true })
+      .in("player_id", ids)
+      .eq("status", "pendente");
+    setExternalInboxCount(count || 0);
+  };
+
   const loadSeasonAndRumors = async () => {
     const { data: cfg } = await supabase.from("settings").select("value").eq("key", "temporada_atual").maybeSingle();
     const tempValue = Number((cfg?.value as any)?.ano) || new Date().getFullYear();
@@ -315,6 +336,7 @@ const Market = () => {
 
   useEffect(() => {
     loadProposals();
+    loadExternalCount();
   }, [activeClubId]);
 
   const filteredNegociar = useMemo(() => {
@@ -650,7 +672,7 @@ const Market = () => {
     });
   }, [proposals, activeClubId, user]);
 
-  const inboxCount = inbox.length;
+  const inboxCount = inbox.length + externalInboxCount;
 
   const sent = useMemo(() => {
     return proposals.filter((p) => {
@@ -1060,11 +1082,31 @@ const Market = () => {
         {/* ─── INBOX ────────────────────────────────────────────────────── */}
         {hasClub && (
           <TabsContent value="inbox" className="space-y-2 mt-4">
-            {inbox.length === 0 && (
+            {/* Propostas de clubes estrangeiros */}
+            {activeClubId && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground px-1">
+                  <Globe2 className="h-3.5 w-3.5 text-primary" />
+                  <span className="font-semibold uppercase tracking-wide">Propostas de clubes estrangeiros</span>
+                </div>
+                <ExternalProposalsInbox clubId={activeClubId} />
+              </div>
+            )}
+
+            {/* Propostas internas entre clubes */}
+            {inbox.length > 0 && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground px-1 mt-4">
+                <ArrowRightLeft className="h-3.5 w-3.5 text-primary" />
+                <span className="font-semibold uppercase tracking-wide">Propostas entre clubes</span>
+              </div>
+            )}
+
+            {inbox.length === 0 && externalInboxCount === 0 && (
               <Card className="p-10 text-center text-muted-foreground bg-gradient-card border-border/50">
                 Nenhuma proposta para responder.
               </Card>
             )}
+
             {inbox.map((t) => {
               const player = playerById(t.jogador_id);
               const oferecido = t.jogador_trocado_id ? playerById(t.jogador_trocado_id) : null;
