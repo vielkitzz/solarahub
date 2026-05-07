@@ -213,17 +213,16 @@ const Market = () => {
   const [pos, setPos] = useState<string>("all");
   const [temp, setTemp] = useState<string>("all");
   const [q, setQ] = useState<string>("");
+  const [onlyForSale, setOnlyForSale] = useState<boolean>(false);
 
   // proposta modal
-  const [target, setTarget] = useState<any>(null);
-  const [tipo, setTipo] = useState<TransferType>("compra");
-  const [valor, setValor] = useState("");
-  const [salario, setSalario] = useState("");
-  const [luvas, setLuvas] = useState("");
-  const [duracao, setDuracao] = useState("1");
-  const [anosContrato, setAnosContrato] = useState("1");
-  const [opcaoCompra, setOpcaoCompra] = useState("0");
-  const [percentualRevenda, setPercentualRevenda] = useState("0");
+  const [valor, setValor] = useState<string>("");
+  const [salario, setSalario] = useState<string>("");
+  const [luvas, setLuvas] = useState<string>("");
+  const [duracao, setDuracao] = useState<string>("1");
+  const [anosContrato, setAnosContrato] = useState<string>("1");
+  const [opcaoCompra, setOpcaoCompra] = useState<string>("0");
+  const [percentualRevenda, setPercentualRevenda] = useState<string>("0");
   const [jogadorTrocado, setJogadorTrocado] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
 
