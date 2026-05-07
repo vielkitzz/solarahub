@@ -598,6 +598,7 @@ const Market = () => {
     setForeignLoading(false);
     toast.success("Contratação realizada!");
     setForeignResponse(null);
+    setCounterTarget(null);
     await Promise.all([loadAll(), loadProposals(), loadSeasonAndRumors()]);
   };
 
@@ -619,6 +620,7 @@ const Market = () => {
       overall: (foreignResponse as any)._playerOverall,
     };
     setForeignResponse(null);
+    setCounterTarget(null);
     if (foreignResponse.status === "contraproposta") {
       setTarget(enriched);
       setTipo("compra");
@@ -1586,28 +1588,34 @@ const Market = () => {
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground leading-relaxed">{foreignResponse?.mensagem}</p>
                 {foreignResponse?.status === "contraproposta" && (
-                  <Card className="p-3 bg-amber-500/10 border-amber-500/30 space-y-2">
-                    <div className="text-xs font-semibold text-amber-400 uppercase">Valores sugeridos</div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Valor:</span>
-                      <span className="font-display font-bold text-primary">
-                        {formatCurrency(foreignResponse.valor_sugerido)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Salário:</span>
-                      <span className="font-display font-bold">
-                        {formatCurrency(foreignResponse.salario_sugerido)}/ano
-                      </span>
-                    </div>
-                    {foreignResponse.luvas_sugeridas > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Luvas:</span>
-                        <span className="font-display font-bold">
-                          {formatCurrency(foreignResponse.luvas_sugeridas)}
-                        </span>
+                  <Card className="p-3 bg-amber-500/10 border-amber-500/30">
+                    <div className="text-xs font-semibold text-amber-400 uppercase mb-2">Valores sugeridos</div>
+                    <div className="grid grid-cols-3 gap-2 text-center min-w-0">
+                      <div className="min-w-0">
+                        <div className="text-[10px] text-muted-foreground">Valor</div>
+                        <div className="font-display font-bold text-primary text-xs truncate">
+                          {formatCurrency(foreignResponse.valor_sugerido)}
+                        </div>
                       </div>
-                    )}
+                      <div className="min-w-0">
+                        <div className="text-[10px] text-muted-foreground">Salário</div>
+                        <div className="font-display font-bold text-xs truncate">
+                          {formatCurrency(foreignResponse.salario_sugerido)}/ano
+                        </div>
+                      </div>
+                      {foreignResponse.luvas_sugeridas > 0 ? (
+                        <div className="min-w-0">
+                          <div className="text-[10px] text-muted-foreground">Luvas</div>
+                          <div className="font-display font-bold text-xs truncate">
+                            {formatCurrency(foreignResponse.luvas_sugeridas)}
+                          </div>
+                        </div>
+                      ) : (
+                        <div />
+                      )}
+                    </div>
+                  </Card>
+                )}
                   </Card>
                 )}
               </div>
