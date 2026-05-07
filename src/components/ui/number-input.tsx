@@ -14,9 +14,7 @@ export interface NumberInputProps
   thousands?: boolean;
 }
 
-export const NumberInput: React.ForwardRefExoticComponent
-  NumberInputProps & React.RefAttributes<HTMLInputElement>
-> = React.forwardRef<HTMLInputElement, NumberInputProps>(
+const _NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
   ({ value, onChange, min, max, allowNegative, unbounded = false, thousands = true, onBlur, className, ...rest }, ref) => {
     const negOk = allowNegative ?? (min !== undefined && min < 0);
     const display = React.useMemo(() => {
@@ -69,4 +67,8 @@ export const NumberInput: React.ForwardRefExoticComponent
   },
 );
 
-NumberInput.displayName = "NumberInput";
+_NumberInput.displayName = "NumberInput";
+
+export const NumberInput = _NumberInput as React.ForwardRefExoticComponent
+  NumberInputProps & React.RefAttributes<HTMLInputElement>
+>;
