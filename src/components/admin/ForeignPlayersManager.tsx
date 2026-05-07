@@ -59,9 +59,15 @@ export const ForeignPlayersManager = () => {
     if (!editing) return;
     const payload = { ...editing };
     delete (payload as any).id;
+
+    // Adicionamos "as any" no payload para ignorar a trava do TS do Supabase
     const { error } = editing.id
-      ? await supabase.from("foreign_market_players").update(payload).eq("id", editing.id)
-      : await supabase.from("foreign_market_players").insert(payload);
+      ? await supabase
+          .from("foreign_market_players")
+          .update(payload as any)
+          .eq("id", editing.id)
+      : await supabase.from("foreign_market_players").insert(payload as any);
+
     if (error) return toast.error(error.message);
     toast.success("Salvo");
     setEditing(null);
@@ -110,7 +116,10 @@ export const ForeignPlayersManager = () => {
   const confirmImport = async () => {
     if (!importPreview) return;
     setImporting(true);
-    const { error } = await supabase.from("foreign_market_players").insert(importPreview);
+
+    // Forçamos o tipo para ignorar a restrição de colunas inexistentes no database.types.ts
+    const { error } = await supabase.from("foreign_market_players").insert(importPreview as any);
+
     setImporting(false);
     if (error) return toast.error(error.message);
     toast.success(`${importPreview.length} jogadores importados`);
