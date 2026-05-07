@@ -4,7 +4,14 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Globe2, Check, X, MessageSquare, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
@@ -21,20 +28,58 @@ export const ExternalProposalsInbox = ({ clubId }: Props) => {
   const [busy, setBusy] = useState(false);
 
   const load = async () => {
-    // Pega propostas pendentes de jogadores deste clube
-    const { data: pls } = await supabase.from("players").select("id,name,habilidade").eq("club_id", clubId);
+    // Busca jogadores do clube
+    const { data: pls } = await supabase.from("players").select("id, name, habilidade, position").eq("club_id", clubId);
+
     const ids = (pls || []).map((p) => p.id);
     if (ids.length === 0) {
       setProps_([]);
       return;
     }
-    const { data } = await supabase
+
+    // Busca propostas pendentes para esses jogadores
+    const { data: proposals, error } = await supabase
       .from("external_proposals")
-      .select("*, external_clubs(name, country, crest, prestige), players(name, habilidade, position)")
+      .select("*")
       .in("player_id", ids)
       .eq("status", "pendente")
       .order("created_at", { ascending: false });
-    setProps_(data || []);
+
+    if (error) {
+      console.error("external_proposals error:", error);
+      setProps_([]);
+      return;
+    }
+    if (!proposals || proposals.length === 0) {
+      setProps_([]);
+      return;
+    }
+
+    // Busca clubes externos separadamente
+    const ecIds = [...new Set(proposals.map((p) => p.external_club_id))];
+    const { data: ecs } = await supabase
+      .from("external_clubs")
+      .select("id, name, country, crest, prestige")
+      .in("id", ecIds);
+
+    const ecMap: Record<string, any> = {};
+    (ecs || []).forEach((ec) => {
+      ecMap[ec.id] = ec;
+    });
+
+    const plMap: Record<string, any> = {};
+    (pls || []).forEach((pl) => {
+      plMap[pl.id] = pl;
+    });
+
+    // Monta lista enriquecida
+    const enriched = proposals.map((p) => ({
+      ...p,
+      external_club: ecMap[p.external_club_id] || null,
+      player: plMap[p.player_id] || null,
+    }));
+
+    setProps_(enriched);
   };
 
   useEffect(() => {
@@ -66,7 +111,6 @@ export const ExternalProposalsInbox = ({ clubId }: Props) => {
       setBusy(false);
       return toast.error(error.message);
     }
-    // dispara IA
     await supabase.functions.invoke("external-ai-respond", { body: { proposal_id: nova } });
     setBusy(false);
     setCounter(null);
@@ -78,7 +122,7 @@ export const ExternalProposalsInbox = ({ clubId }: Props) => {
 
   if (props_.length === 0) {
     return (
-      <Card className="p-4 text-sm text-muted-foreground">
+      <Card className="p-4 text-sm text-muted-foreground bg-gradient-card border-border/50">
         <Globe2 className="h-4 w-4 inline mr-2" />
         Nenhuma proposta de clubes estrangeiros no momento.
       </Card>
@@ -88,29 +132,42 @@ export const ExternalProposalsInbox = ({ clubId }: Props) => {
   return (
     <div className="space-y-2">
       {props_.map((p) => (
-        <Card key={p.id} className="p-3 flex flex-wrap items-center gap-3">
-          {p.external_clubs?.crest && (
-            <img src={p.external_clubs.crest} alt="" className="h-10 w-10 object-contain" />
-          )}
+        <Card key={p.id} className="p-3 bg-gradient-card border-border/50 flex flex-wrap items-center gap-3">
+          {p.external_club?.crest && <img src={p.external_club.crest} alt="" className="h-10 w-10 object-contain" />}
           <div className="flex-1 min-w-0">
             <div className="font-medium">
-              {p.external_clubs?.name}{" "}
-              <span className="text-xs text-muted-foreground">({p.external_clubs?.country})</span>
+              {p.external_club?.name ?? "Clube desconhecido"}{" "}
+              <span className="text-xs text-muted-foreground">({p.external_club?.country ?? "—"})</span>
             </div>
             <div className="text-sm text-muted-foreground">
-              Oferta por <strong>{p.players?.name}</strong> ({p.players?.position} · OVR {p.players?.habilidade})
+              Oferta por <strong>{p.player?.name ?? "Jogador"}</strong> ({p.player?.position ?? "—"} · OVR{" "}
+              {p.player?.habilidade ?? "—"})
             </div>
-            <div className="text-xs">
+            <div className="text-xs mt-0.5">
               Valor: <strong>{formatCurrency(p.valor_ofertado)}</strong> · Salário:{" "}
-              <strong>{formatCurrency(p.salario_ofertado)}</strong>
-              {p.mensagem && <span className="ml-2 italic">"{p.mensagem}"</span>}
+              <strong>{formatCurrency(p.salario_ofertado)}/ano</strong>
+              {p.mensagem && <span className="ml-2 italic text-muted-foreground">"{p.mensagem}"</span>}
             </div>
           </div>
-          <div className="flex gap-1">
-            <Button size="sm" onClick={() => responder(p.id, "aceitar")} disabled={busy}>
+          <div className="flex gap-1 shrink-0">
+            <Button
+              size="sm"
+              onClick={() => responder(p.id, "aceitar")}
+              disabled={busy}
+              className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+            >
               <Check className="h-3.5 w-3.5 mr-1" /> Aceitar
             </Button>
-            <Button size="sm" variant="outline" onClick={() => { setCounter(p); setCValor(String(p.valor_ofertado)); setCSalario(String(p.salario_ofertado)); }}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setCounter(p);
+                setCValor(String(p.valor_ofertado));
+                setCSalario(String(p.salario_ofertado));
+              }}
+              className="border-primary/40 text-primary hover:bg-primary/10"
+            >
               <MessageSquare className="h-3.5 w-3.5 mr-1" /> Contra-propor
             </Button>
             <Button size="sm" variant="ghost" onClick={() => responder(p.id, "recusar")} disabled={busy}>
@@ -123,21 +180,28 @@ export const ExternalProposalsInbox = ({ clubId }: Props) => {
       <Dialog open={!!counter} onOpenChange={(o) => !o && setCounter(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Contraproposta para {counter?.external_clubs?.name}</DialogTitle>
+            <DialogTitle>Contraproposta para {counter?.external_club?.name}</DialogTitle>
+            <DialogDescription>Edite os valores e envie sua contraproposta.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>Novo valor pedido</Label>
+              <Label>Novo valor pedido (€)</Label>
               <Input type="number" value={cValor} onChange={(e) => setCValor(e.target.value)} />
             </div>
             <div>
-              <Label>Novo salário</Label>
+              <Label>Novo salário (€/ano)</Label>
               <Input type="number" value={cSalario} onChange={(e) => setCSalario(e.target.value)} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setCounter(null)}>Cancelar</Button>
-            <Button onClick={enviarContraproposta} disabled={busy}>
+            <Button variant="outline" onClick={() => setCounter(null)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={enviarContraproposta}
+              disabled={busy}
+              className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+            >
               {busy && <Loader2 className="h-4 w-4 mr-1 animate-spin" />} Enviar
             </Button>
           </DialogFooter>
