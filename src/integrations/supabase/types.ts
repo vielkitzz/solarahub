@@ -336,6 +336,189 @@ export type Database = {
         }
         Relationships: []
       }
+      external_clubs: {
+        Row: {
+          active: boolean
+          budget_tier: Database["public"]["Enums"]["external_budget_tier"]
+          country: string | null
+          created_at: string
+          crest: string | null
+          id: string
+          league: string | null
+          name: string
+          prestige: number
+          region: Database["public"]["Enums"]["external_region"]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          budget_tier?: Database["public"]["Enums"]["external_budget_tier"]
+          country?: string | null
+          created_at?: string
+          crest?: string | null
+          id?: string
+          league?: string | null
+          name: string
+          prestige?: number
+          region?: Database["public"]["Enums"]["external_region"]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          budget_tier?: Database["public"]["Enums"]["external_budget_tier"]
+          country?: string | null
+          created_at?: string
+          crest?: string | null
+          id?: string
+          league?: string | null
+          name?: string
+          prestige?: number
+          region?: Database["public"]["Enums"]["external_region"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      external_proposals: {
+        Row: {
+          created_at: string
+          external_club_id: string
+          id: string
+          luvas: number
+          mensagem: string | null
+          origem: string
+          parent_id: string | null
+          player_id: string
+          salario_ofertado: number
+          status: Database["public"]["Enums"]["external_proposal_status"]
+          temporada_validade: number | null
+          updated_at: string
+          valor_ofertado: number
+        }
+        Insert: {
+          created_at?: string
+          external_club_id: string
+          id?: string
+          luvas?: number
+          mensagem?: string | null
+          origem?: string
+          parent_id?: string | null
+          player_id: string
+          salario_ofertado?: number
+          status?: Database["public"]["Enums"]["external_proposal_status"]
+          temporada_validade?: number | null
+          updated_at?: string
+          valor_ofertado?: number
+        }
+        Update: {
+          created_at?: string
+          external_club_id?: string
+          id?: string
+          luvas?: number
+          mensagem?: string | null
+          origem?: string
+          parent_id?: string | null
+          player_id?: string
+          salario_ofertado?: number
+          status?: Database["public"]["Enums"]["external_proposal_status"]
+          temporada_validade?: number | null
+          updated_at?: string
+          valor_ofertado?: number
+        }
+        Relationships: []
+      }
+      foreign_market_players: {
+        Row: {
+          age: number | null
+          club_origin: string | null
+          created_at: string
+          id: string
+          league_origin: string | null
+          market_value: number
+          name: string
+          nationality: string | null
+          overall: number
+          position: string
+          salary_demand: number
+          temporada: number | null
+          updated_at: string
+        }
+        Insert: {
+          age?: number | null
+          club_origin?: string | null
+          created_at?: string
+          id?: string
+          league_origin?: string | null
+          market_value?: number
+          name: string
+          nationality?: string | null
+          overall?: number
+          position: string
+          salary_demand?: number
+          temporada?: number | null
+          updated_at?: string
+        }
+        Update: {
+          age?: number | null
+          club_origin?: string | null
+          created_at?: string
+          id?: string
+          league_origin?: string | null
+          market_value?: number
+          name?: string
+          nationality?: string | null
+          overall?: number
+          position?: string
+          salary_demand?: number
+          temporada?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      free_agents: {
+        Row: {
+          age: number | null
+          created_at: string
+          id: string
+          last_club: string | null
+          name: string
+          nationality: string | null
+          overall: number
+          position: string
+          salary_demand: number
+          source_player_id: string | null
+          temporada: number | null
+          updated_at: string
+        }
+        Insert: {
+          age?: number | null
+          created_at?: string
+          id?: string
+          last_club?: string | null
+          name: string
+          nationality?: string | null
+          overall?: number
+          position: string
+          salary_demand?: number
+          source_player_id?: string | null
+          temporada?: number | null
+          updated_at?: string
+        }
+        Update: {
+          age?: number | null
+          created_at?: string
+          id?: string
+          last_club?: string | null
+          name?: string
+          nationality?: string | null
+          overall?: number
+          position?: string
+          salary_demand?: number
+          source_player_id?: string | null
+          temporada?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       interest_list: {
         Row: {
           created_at: string
@@ -905,11 +1088,13 @@ export type Database = {
       }
       current_discord_id: { Args: never; Returns: string }
       envelhecer_todos_jogadores: { Args: never; Returns: number }
+      expirar_propostas_externas: { Args: never; Returns: number }
       gerar_elenco_para_clube: {
         Args: { _club_id: string; _quantidade: number }
         Returns: number
       }
       gerar_potenciais_em_massa: { Args: never; Returns: number }
+      gerar_propostas_externas: { Args: never; Returns: number }
       get_owner_display_info: {
         Args: { _user_id: string }
         Returns: {
@@ -1019,6 +1204,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      responder_proposta_externa: {
+        Args: {
+          _acao: string
+          _id: string
+          _novo_salario?: number
+          _novo_valor?: number
+        }
+        Returns: string
+      }
       scout_academy_player: {
         Args: { _scouter_club_id: string; _target_player_id: string }
         Returns: Json
@@ -1062,6 +1256,14 @@ export type Database = {
         | "costas_superior"
         | "manga"
         | "lateral"
+      external_budget_tier: "baixo" | "medio" | "alto" | "elite"
+      external_proposal_status:
+        | "pendente"
+        | "aceita"
+        | "recusada"
+        | "contraproposta"
+        | "expirada"
+      external_region: "europeu" | "brasileiro" | "arabe"
       transfer_status: "pendente" | "aceita" | "recusada" | "contraproposta"
       transfer_type: "compra" | "emprestimo" | "troca"
     }
@@ -1209,6 +1411,15 @@ export const Constants = {
         "manga",
         "lateral",
       ],
+      external_budget_tier: ["baixo", "medio", "alto", "elite"],
+      external_proposal_status: [
+        "pendente",
+        "aceita",
+        "recusada",
+        "contraproposta",
+        "expirada",
+      ],
+      external_region: ["europeu", "brasileiro", "arabe"],
       transfer_status: ["pendente", "aceita", "recusada", "contraproposta"],
       transfer_type: ["compra", "emprestimo", "troca"],
     },
