@@ -35,6 +35,8 @@ import {
   XCircle,
   Clock,
   Heart,
+  Globe2,
+  UserMinus,
 } from "lucide-react";
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
 import { getFlagUrl } from "@/lib/countries";
