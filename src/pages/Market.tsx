@@ -121,12 +121,10 @@ const Market = () => {
   };
 
   const loadSeasonAndRumors = async () => {
-    // Temporada atual
     const { data: cfg } = await supabase.from("settings").select("value").eq("key", "temporada_atual").maybeSingle();
     const temp = Number((cfg?.value as any)?.ano) || new Date().getFullYear();
     setTemporadaAtual(temp);
 
-    // Transferências aceitas (todas globais — usamos transactions categoria=transferencia tipo=entrada para deduplicar por op)
     const { data: tx } = await supabase
       .from("transactions")
       .select("*")
@@ -137,7 +135,6 @@ const Market = () => {
       .limit(200);
     setSeasonTransfers(tx || []);
 
-    // Rumores: pendentes + aceitas/recusadas das últimas 48h
     const since = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
     const { data: rs } = await supabase
       .from("transferencias")
@@ -159,7 +156,6 @@ const Market = () => {
     loadProposals();
   }, [activeClubId]);
 
-  // Vitrine pública: jogadores à venda + livres + filtros
   const filteredVitrine = useMemo(() => {
     return players
       .filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))
@@ -171,7 +167,6 @@ const Market = () => {
       });
   }, [players, q, pos, onlyForSale]);
 
-  // Negociar: só jogadores de OUTROS clubes
   const filteredNegociar = useMemo(() => {
     return players
       .filter((p) => p.club_id && p.club_id !== activeClubId)
@@ -190,7 +185,6 @@ const Market = () => {
     setTarget(player);
     setTipo("compra");
     setValor(String(Math.round(Number(player.valor_base_calculado))));
-    // Sugere salário coerente: 10% do valor base / ano (via RPC)
     let sugerido = Math.round(Number(player.valor_base_calculado || 0) * 0.1);
     try {
       const { data } = await supabase.rpc("sugerir_salario_jogador", { _jogador_id: player.id });
@@ -309,16 +303,13 @@ const Market = () => {
   };
 
   const inbox = useMemo(() => {
-    // Propostas que VOCÊ precisa responder ou confirmar:
     return proposals.filter((p) => {
       if (!["pendente", "aguardando_confirmacao"].includes(p.status)) return false;
       const isCounter = !!p.proposta_pai_id;
       if (p.status === "aguardando_confirmacao") {
-        // só o comprador pode confirmar/cancelar
         return p.clube_comprador_id === activeClubId;
       }
       if (isCounter) {
-        // contraproposta: responde quem NÃO criou (qualquer um dos dois lados)
         if (p.created_by && user && p.created_by === user.id) return false;
         return p.clube_vendedor_id === activeClubId || p.clube_comprador_id === activeClubId;
       }
@@ -422,7 +413,7 @@ const Market = () => {
           </TabsList>
         </div>
 
-        {/* VITRINE PÚBLICA - aparece pra todos */}
+        {/* ─── VITRINE ─────────────────────────────────────────────────────── */}
         <TabsContent value="vitrine" className="mt-4 space-y-3">
           <Filters
             q={q}
@@ -432,95 +423,111 @@ const Market = () => {
             onlyForSale={onlyForSale}
             setOnlyForSale={setOnlyForSale}
           />
-          <div className="space-y-2">
-            {filteredVitrine.map((p) => {
-              const club = p.club_id ? clubs[p.club_id] : null;
-              return (
-                <Card
-                  key={p.id}
-                  className={`p-3 sm:p-4 bg-gradient-card border-border/50 transition-all ${p.a_venda ? "border-primary/40 shadow-gold/20" : ""}`}
-                >
-                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
-                    <Badge
-                      variant="outline"
-                      className="font-bold w-12 sm:w-14 justify-center border-primary/40 text-primary shrink-0 text-xs"
-                    >
-                      {p.position}
-                    </Badge>
-                    <div className="flex-1 min-w-0 order-1 sm:order-none basis-full sm:basis-auto">
-                      <div className="font-bold truncate flex items-center gap-2">
-                        <button
-                          onClick={() => setProfilePlayerId(p.id)}
-                          className="hover:text-primary transition-colors text-left truncate"
-                        >
-                          {p.name}
-                        </button>
-                        {p.a_venda && (
-                          <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0 shrink-0">
-                            <Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="text-xs text-muted-foreground truncate flex items-center gap-1.5">
-                        {p.age ? `${p.age} anos` : ""}
-                        {p.nationality && <FlagImg nationality={p.nationality} />}
-                      </div>
-                    </div>
-                    {club ? (
-                      <Link
-                        to={`/clubes/${club.id}`}
-                        className="flex items-center gap-2 text-xs hover:text-primary transition-colors shrink-0"
-                      >
-                        <div className="h-7 w-7 sm:h-8 sm:w-8 flex items-center justify-center">
-                          {club.crest_url && (
-                            <img src={club.crest_url} alt={club.name} className="w-full h-full object-contain" />
+          <Card className="bg-gradient-card border-border/50 overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="w-16">Posição</TableHead>
+                  <TableHead>Jogador</TableHead>
+                  <TableHead className="w-20 hidden sm:table-cell"></TableHead>
+                  <TableHead>Clube</TableHead>
+                  <TableHead className="text-center w-16 hidden sm:table-cell">Idade</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
+                  {hasClub && <TableHead className="w-24"></TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredVitrine.map((p) => {
+                  const club = p.club_id ? clubs[p.club_id] : null;
+                  return (
+                    <TableRow key={p.id} className={p.a_venda ? "bg-primary/5" : ""}>
+                      <TableCell>
+                        <Badge variant="outline" className="border-primary/40 text-primary">
+                          {p.position}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <button
+                            onClick={() => setProfilePlayerId(p.id)}
+                            className="hover:text-primary transition-colors text-left"
+                          >
+                            {p.name}
+                          </button>
+                          {p.a_venda && (
+                            <Badge className="bg-primary/20 text-primary border-primary/40 text-[10px] px-1.5 py-0">
+                              <Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA
+                            </Badge>
                           )}
                         </div>
-                        <span className="hidden md:inline">{club.name}</span>
-                      </Link>
-                    ) : (
-                      <Badge variant="secondary" className="text-xs">
-                        Sem clube
-                      </Badge>
-                    )}
-                    <div className="text-right shrink-0 ml-auto sm:ml-0">
-                      <div className="text-[10px] text-muted-foreground uppercase">Valor</div>
-                      <div className="font-display font-bold text-primary text-sm sm:text-base">
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell py-2 w-10">
+                        {p.nationality && <FlagImg nationality={p.nationality} />}
+                      </TableCell>
+                      <TableCell>
+                        {club ? (
+                          <Link
+                            to={`/clubes/${club.id}`}
+                            className="flex items-center gap-2 hover:text-primary transition-colors"
+                          >
+                            <div className="h-7 w-7 shrink-0 flex items-center justify-center">
+                              {club.crest_url && (
+                                <img src={club.crest_url} alt={club.name} className="w-full h-full object-contain" />
+                              )}
+                            </div>
+                            <span className="text-sm hidden md:inline">{club.name}</span>
+                          </Link>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs">
+                            Sem clube
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center hidden sm:table-cell text-sm">{p.age || "—"}</TableCell>
+                      <TableCell className="text-right font-display font-bold text-primary">
                         {formatCurrency(Number(p.market_value))}
-                      </div>
-                    </div>
-                    {p.a_venda && hasClub && p.club_id !== activeClubId && (
-                      <Button
-                        size="sm"
-                        onClick={() => openProposal(p)}
-                        className="bg-gradient-gold text-primary-foreground hover:opacity-90 shrink-0"
-                      >
-                        <ArrowRightLeft className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Negociar</span>
-                      </Button>
-                    )}
-                  </div>
-                </Card>
-              );
-            })}
-            {filteredVitrine.length === 0 && (
-              <Card className="p-12 text-center bg-gradient-card border-border/50 text-muted-foreground">
-                Nenhum jogador encontrado.
-              </Card>
-            )}
-            {!user && (
-              <Card className="p-6 text-center bg-gradient-card border-primary/30 mt-4">
-                <p className="text-sm text-muted-foreground mb-3">
-                  Quer enviar propostas? Entre com Discord para acessar negociações.
-                </p>
-                <Button onClick={signInWithDiscord} className="bg-[#5865F2] hover:bg-[#4752c4] text-white">
-                  <LogIn className="h-4 w-4" /> Entrar com Discord
-                </Button>
-              </Card>
-            )}
-          </div>
+                      </TableCell>
+                      {hasClub && (
+                        <TableCell>
+                          {p.a_venda && p.club_id !== activeClubId ? (
+                            <Button
+                              size="sm"
+                              onClick={() => openProposal(p)}
+                              className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+                            >
+                              Negociar
+                            </Button>
+                          ) : (
+                            <span />
+                          )}
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })}
+                {filteredVitrine.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={hasClub ? 7 : 6} className="text-center text-muted-foreground py-10">
+                      Nenhum jogador encontrado.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </Card>
+          {!user && (
+            <Card className="p-6 text-center bg-gradient-card border-primary/30">
+              <p className="text-sm text-muted-foreground mb-3">
+                Quer enviar propostas? Entre com Discord para acessar negociações.
+              </p>
+              <Button onClick={signInWithDiscord} className="bg-[#5865F2] hover:bg-[#4752c4] text-white">
+                <LogIn className="h-4 w-4" /> Entrar com Discord
+              </Button>
+            </Card>
+          )}
         </TabsContent>
 
-        {/* NEGOCIAR */}
+        {/* ─── NEGOCIAR ────────────────────────────────────────────────────── */}
         {hasClub && (
           <TabsContent value="negociar" className="space-y-3 mt-4">
             <Filters
@@ -618,7 +625,7 @@ const Market = () => {
           </TabsContent>
         )}
 
-        {/* RUMORES */}
+        {/* ─── RUMORES ─────────────────────────────────────────────────────── */}
         <TabsContent value="rumores" className="space-y-2 mt-4">
           <Card className="p-3 bg-gradient-card border-border/50 text-xs text-muted-foreground flex items-center gap-2">
             <Radio className="h-4 w-4 text-primary" />
@@ -712,7 +719,17 @@ const Market = () => {
           })}
         </TabsContent>
 
-        {/* TRANSFERÊNCIAS DA TEMPORADA */}
+        {/* ─── MERCADO ESTRANGEIRO ─────────────────────────────────────────── */}
+        <TabsContent value="estrangeiro" className="mt-4">
+          <ForeignMarketTab activeClubId={activeClubId} hasClub={hasClub} onNegotiate={openProposal} />
+        </TabsContent>
+
+        {/* ─── PASSES LIVRES ───────────────────────────────────────────────── */}
+        <TabsContent value="livres" className="mt-4">
+          <FreeAgentsTab activeClubId={activeClubId} hasClub={hasClub} onProfileOpen={setProfilePlayerId} />
+        </TabsContent>
+
+        {/* ─── TRANSFERÊNCIAS DA TEMPORADA ─────────────────────────────────── */}
         <TabsContent value="temporada" className="space-y-3 mt-4">
           <Card className="p-3 bg-gradient-card border-border/50 text-xs text-muted-foreground flex items-center gap-2">
             <History className="h-4 w-4 text-primary" />
@@ -811,7 +828,7 @@ const Market = () => {
           </Card>
         </TabsContent>
 
-        {/* INBOX */}
+        {/* ─── INBOX ───────────────────────────────────────────────────────── */}
         {hasClub && (
           <TabsContent value="inbox" className="space-y-2 mt-4">
             {inbox.length === 0 && (
@@ -824,7 +841,9 @@ const Market = () => {
               const oferecido = t.jogador_trocado_id ? playerById(t.jogador_trocado_id) : null;
               const isCounter = !!t.proposta_pai_id;
               const fromClub = isCounter
-                ? (t.clube_vendedor_id === activeClubId ? clubs[t.clube_comprador_id] : clubs[t.clube_vendedor_id])
+                ? t.clube_vendedor_id === activeClubId
+                  ? clubs[t.clube_comprador_id]
+                  : clubs[t.clube_vendedor_id]
                 : clubs[t.clube_comprador_id];
               const base = Number(player?.valor_base_calculado || 0);
               return (
@@ -921,7 +940,7 @@ const Market = () => {
           </TabsContent>
         )}
 
-        {/* SENT */}
+        {/* ─── SENT ────────────────────────────────────────────────────────── */}
         {hasClub && (
           <TabsContent value="sent" className="space-y-2 mt-4">
             {sent.length === 0 && (
@@ -962,7 +981,11 @@ const Market = () => {
                     </div>
                     <Badge
                       variant={
-                        t.status === "aceita" ? "default" : t.status === "recusada" || t.status === "cancelada" ? "destructive" : "secondary"
+                        t.status === "aceita"
+                          ? "default"
+                          : t.status === "recusada" || t.status === "cancelada"
+                            ? "destructive"
+                            : "secondary"
                       }
                       className={t.status === "aceita" ? "bg-primary text-primary-foreground" : ""}
                     >
@@ -980,7 +1003,7 @@ const Market = () => {
           </TabsContent>
         )}
 
-        {/* INTERESSES */}
+        {/* ─── INTERESSES ──────────────────────────────────────────────────── */}
         {user && (
           <TabsContent value="interesses" className="space-y-2 mt-4">
             <Card className="p-3 bg-gradient-card border-border/50 text-xs text-muted-foreground flex items-center gap-2">
@@ -1048,14 +1071,9 @@ const Market = () => {
             })}
           </TabsContent>
         )}
-        <TabsContent value="estrangeiro" className="mt-4">
-          <ForeignMarketTab />
-        </TabsContent>
-        <TabsContent value="livres" className="mt-4">
-          <FreeAgentsTab />
-        </TabsContent>
       </Tabs>
-      {/* PROPOSAL MODAL */}
+
+      {/* ─── MODAL: PROPOSTA ─────────────────────────────────────────────── */}
       <Dialog open={!!target} onOpenChange={(o) => !o && setTarget(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -1075,7 +1093,6 @@ const Market = () => {
                 <TabsTrigger value="emprestimo">Empréstimo</TabsTrigger>
                 <TabsTrigger value="troca">Troca</TabsTrigger>
               </TabsList>
-
               <TabsContent value="compra" className="space-y-3 mt-3">
                 <div>
                   <Label>Valor da transferência (€)</Label>
@@ -1107,7 +1124,6 @@ const Market = () => {
                   </div>
                 </div>
               </TabsContent>
-
               <TabsContent value="emprestimo" className="space-y-3 mt-3">
                 <div>
                   <Label>Duração (temporadas)</Label>
@@ -1124,7 +1140,6 @@ const Market = () => {
                   <NumberInput value={salario} onChange={(v) => setSalario(String(v))} min={0} />
                 </div>
               </TabsContent>
-
               <TabsContent value="troca" className="space-y-3 mt-3">
                 <div>
                   <Label>Jogador que você oferece</Label>
@@ -1150,7 +1165,6 @@ const Market = () => {
                   <NumberInput value={salario} onChange={(v) => setSalario(String(v))} min={0} />
                 </div>
               </TabsContent>
-
               {fpError && (
                 <div className="flex items-start gap-2 p-3 mt-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
                   <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" /> {fpError}
@@ -1183,7 +1197,7 @@ const Market = () => {
         </DialogContent>
       </Dialog>
 
-      {/* CONTRAPROPOSTA MODAL */}
+      {/* ─── MODAL: CONTRAPROPOSTA ───────────────────────────────────────── */}
       <Dialog open={!!counterTarget} onOpenChange={(o) => !o && setCounterTarget(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -1232,6 +1246,8 @@ const Market = () => {
     </div>
   );
 };
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
 
 function FlagImg({ nationality }: { nationality: string }) {
   const url = getFlagUrl(nationality);
@@ -1287,13 +1303,20 @@ const Filters = ({ q, setQ, pos, setPos, onlyForSale, setOnlyForSale }: FiltersP
   </div>
 );
 
-export default Market;
+// ─── MERCADO ESTRANGEIRO ──────────────────────────────────────────────────────
 
-// ============ MERCADO ESTRANGEIRO ============
-const ForeignMarketTab = () => {
+interface ForeignMarketTabProps {
+  activeClubId: string;
+  hasClub: boolean;
+  onNegotiate: (player: any) => void;
+}
+
+const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: ForeignMarketTabProps) => {
   const [rows, setRows] = useState<any[]>([]);
   const [pos, setPos] = useState("all");
   const [temp, setTemp] = useState<string>("all");
+  const [q, setQ] = useState("");
+
   useEffect(() => {
     supabase
       .from("foreign_market_players")
@@ -1301,60 +1324,97 @@ const ForeignMarketTab = () => {
       .order("overall", { ascending: false })
       .then(({ data }) => setRows(data || []));
   }, []);
+
   const temporadas = useMemo(
     () => Array.from(new Set(rows.map((r) => r.temporada).filter(Boolean))).sort((a, b) => b - a),
-    [rows]
+    [rows],
   );
+
   const filtered = rows.filter(
-    (r) => (pos === "all" || r.position === pos) && (temp === "all" || String(r.temporada) === temp)
+    (r) =>
+      (pos === "all" || r.position === pos) &&
+      (temp === "all" || String(r.temporada) === temp) &&
+      (!q || r.name.toLowerCase().includes(q.toLowerCase())),
   );
+
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2">
-        <Select value={pos} onValueChange={setPos}>
-          <SelectTrigger className="w-40"><SelectValue placeholder="Posição" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas posições</SelectItem>
-            {POSITIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={temp} onValueChange={setTemp}>
-          <SelectTrigger className="w-40"><SelectValue placeholder="Temporada" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas temporadas</SelectItem>
-            {temporadas.map((t) => <SelectItem key={t} value={String(t)}>{t}</SelectItem>)}
-          </SelectContent>
-        </Select>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar jogador..." className="pl-10" />
+        </div>
+        <div className="flex gap-2">
+          <Select value={pos} onValueChange={setPos}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Posição" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas posições</SelectItem>
+              {POSITIONS.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {p}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={temp} onValueChange={setTemp}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Temporada" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas temporadas</SelectItem>
+              {temporadas.map((t) => (
+                <SelectItem key={t} value={String(t)}>
+                  {t}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      <Card className="overflow-x-auto">
+      <Card className="bg-gradient-card border-border/50 overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead><TableHead>Pos</TableHead><TableHead>OVR</TableHead>
-              <TableHead>Idade</TableHead><TableHead>Nac.</TableHead>
-              <TableHead>Clube/Liga</TableHead><TableHead>Valor</TableHead><TableHead>Salário</TableHead>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-16">Posição</TableHead>
+              <TableHead>Jogador</TableHead>
+              <TableHead className="hidden sm:table-cell w-20"></TableHead>
+              <TableHead>Clube / Liga</TableHead>
+              <TableHead className="text-center w-16 hidden sm:table-cell">Idade</TableHead>
+              <TableHead className="text-right">Valor</TableHead>
+              <TableHead className="text-right">Salário</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.map((r) => (
               <TableRow key={r.id}>
+                <TableCell>
+                  <Badge variant="outline" className="border-primary/40 text-primary">
+                    {r.position}
+                  </Badge>
+                </TableCell>
                 <TableCell className="font-medium">{r.name}</TableCell>
-                <TableCell>{r.position}</TableCell>
-                <TableCell>{r.overall}</TableCell>
-                <TableCell>{r.age ?? "-"}</TableCell>
-                <TableCell className="flex items-center gap-1">
-                  {r.nationality && <img src={getFlagUrl(r.nationality)} alt="" className="h-3" />}
-                  <span className="text-xs">{r.nationality}</span>
+                <TableCell className="hidden sm:table-cell py-2">
+                  {r.nationality && <FlagImg nationality={r.nationality} />}
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
-                  {r.club_origin}{r.league_origin ? ` / ${r.league_origin}` : ""}
+                  {r.club_origin}
+                  {r.league_origin ? ` / ${r.league_origin}` : ""}
                 </TableCell>
-                <TableCell>{formatCurrency(r.market_value)}</TableCell>
-                <TableCell>{formatCurrency(r.salary_demand)}</TableCell>
+                <TableCell className="text-center hidden sm:table-cell text-sm">{r.age ?? "—"}</TableCell>
+                <TableCell className="text-right font-display font-bold text-primary">
+                  {formatCurrency(r.market_value)}
+                </TableCell>
+                <TableCell className="text-right text-sm">{formatCurrency(r.salary_demand)}</TableCell>
               </TableRow>
             ))}
             {filtered.length === 0 && (
-              <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-6">Nenhum jogador</TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
+                  Nenhum jogador encontrado.
+                </TableCell>
+              </TableRow>
             )}
           </TableBody>
         </Table>
@@ -1363,20 +1423,33 @@ const ForeignMarketTab = () => {
   );
 };
 
-// ============ PASSES LIVRES ============
-const FreeAgentsTab = () => {
+// ─── PASSES LIVRES ────────────────────────────────────────────────────────────
+
+interface FreeAgentsTabProps {
+  activeClubId: string;
+  hasClub: boolean;
+  onProfileOpen: (id: string) => void;
+}
+
+const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen }: FreeAgentsTabProps) => {
   const [rows, setRows] = useState<any[]>([]);
   const [pos, setPos] = useState("all");
+  const [q, setQ] = useState("");
+
   useEffect(() => {
     (async () => {
       const [{ data: fa }, { data: pls }] = await Promise.all([
         supabase.from("free_agents").select("*"),
-        supabase.from("players").select("id,name,position,age,nationality,habilidade,salario_atual").is("club_id", null),
+        supabase
+          .from("players")
+          .select("id,name,position,age,nationality,habilidade,salario_atual")
+          .is("club_id", null),
       ]);
       const merged = [
         ...(fa || []).map((r: any) => ({ ...r, _src: "free_agents" })),
         ...(pls || []).map((p: any) => ({
           id: "p_" + p.id,
+          _realId: p.id,
           name: p.name,
           position: p.position,
           age: p.age,
@@ -1387,47 +1460,87 @@ const FreeAgentsTab = () => {
           _src: "players",
         })),
       ];
-      // dedup por source_player_id se houver
       const seen = new Set((fa || []).map((r: any) => r.source_player_id).filter(Boolean));
       setRows(merged.filter((r: any) => !(r._src === "players" && seen.has(r.id.replace("p_", "")))));
     })();
   }, []);
-  const filtered = rows.filter((r) => pos === "all" || r.position === pos);
+
+  const filtered = rows
+    .filter((r) => pos === "all" || r.position === pos)
+    .filter((r) => !q || r.name.toLowerCase().includes(q.toLowerCase()))
+    .sort((a, b) => Number(b.overall || 0) - Number(a.overall || 0));
+
   return (
     <div className="space-y-3">
-      <Select value={pos} onValueChange={setPos}>
-        <SelectTrigger className="w-40"><SelectValue placeholder="Posição" /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todas posições</SelectItem>
-          {POSITIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-        </SelectContent>
-      </Select>
-      <Card className="overflow-x-auto">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar jogador..." className="pl-10" />
+        </div>
+        <Select value={pos} onValueChange={setPos}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Posição" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas posições</SelectItem>
+            {POSITIONS.map((p) => (
+              <SelectItem key={p} value={p}>
+                {p}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <Card className="bg-gradient-card border-border/50 overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead><TableHead>Pos</TableHead><TableHead>OVR</TableHead>
-              <TableHead>Idade</TableHead><TableHead>Nac.</TableHead>
-              <TableHead>Último clube</TableHead><TableHead>Salário pedido</TableHead>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-16">Posição</TableHead>
+              <TableHead>Jogador</TableHead>
+              <TableHead className="hidden sm:table-cell w-20"></TableHead>
+              <TableHead className="text-center w-16 hidden sm:table-cell">Idade</TableHead>
+              <TableHead>Último clube</TableHead>
+              <TableHead className="text-right">OVR</TableHead>
+              <TableHead className="text-right">Salário pedido</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.map((r) => (
               <TableRow key={r.id}>
-                <TableCell className="font-medium">{r.name}</TableCell>
-                <TableCell>{r.position}</TableCell>
-                <TableCell>{r.overall}</TableCell>
-                <TableCell>{r.age ?? "-"}</TableCell>
-                <TableCell className="flex items-center gap-1">
-                  {r.nationality && <img src={getFlagUrl(r.nationality)} alt="" className="h-3" />}
-                  <span className="text-xs">{r.nationality}</span>
+                <TableCell>
+                  <Badge variant="outline" className="border-primary/40 text-primary">
+                    {r.position}
+                  </Badge>
                 </TableCell>
-                <TableCell className="text-xs text-muted-foreground">{r.last_club}</TableCell>
-                <TableCell>{formatCurrency(r.salary_demand || 0)}</TableCell>
+                <TableCell className="font-medium">
+                  {r._src === "players" ? (
+                    <button
+                      onClick={() => onProfileOpen(r._realId)}
+                      className="hover:text-primary transition-colors text-left"
+                    >
+                      {r.name}
+                    </button>
+                  ) : (
+                    r.name
+                  )}
+                </TableCell>
+                <TableCell className="hidden sm:table-cell py-2">
+                  {r.nationality && <FlagImg nationality={r.nationality} />}
+                </TableCell>
+                <TableCell className="text-center hidden sm:table-cell text-sm">{r.age ?? "—"}</TableCell>
+                <TableCell className="text-xs text-muted-foreground">{r.last_club || "—"}</TableCell>
+                <TableCell className="text-right font-bold">{r.overall ?? "—"}</TableCell>
+                <TableCell className="text-right font-display font-bold text-primary">
+                  {formatCurrency(r.salary_demand || 0)}
+                </TableCell>
               </TableRow>
             ))}
             {filtered.length === 0 && (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-6">Nenhum jogador</TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
+                  Nenhum jogador encontrado.
+                </TableCell>
+              </TableRow>
             )}
           </TableBody>
         </Table>
@@ -1435,3 +1548,5 @@ const FreeAgentsTab = () => {
     </div>
   );
 };
+
+export default Market;
