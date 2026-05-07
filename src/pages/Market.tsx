@@ -565,9 +565,11 @@ const Market = () => {
       externalClubId = newClub?.id;
     }
     if (!externalClubId) return;
+
+    // @ts-ignore - Bypass de tipagem rígida gerada pelo Supabase
     await supabase
       .from("players")
-      .update({ club_id: null, external_club_id: externalClubId, a_venda: false } as any)
+      .update({ club_id: null, external_club_id: externalClubId, a_venda: false })
       .eq("id", playerId);
   };
 
@@ -624,13 +626,11 @@ const Market = () => {
       setSalario(String(foreignResponse.salario_sugerido));
       setLuvas(String(foreignResponse.luvas_sugeridas));
       setAnosContrato("1");
-      setOpcaoCompra("0");
+      setOpCompra("0");
       setPercentualRevenda("0");
       setJogadorTrocado("");
     }
   };
-
-  if (loading) return null;
 
   const hasClub = myClubs.length > 0;
 
@@ -657,10 +657,9 @@ const Market = () => {
     });
   }, [proposals, activeClubId, user]);
 
-  // ✅ 2. DEPOIS: FAÇA O EARLY RETURN (Agora é seguro!)
+  // AQUI FICAVA O ERRO DE HOOKS! Agora o loading só barra a tela DEPOIS que todos os Hooks foram carregados
   if (loading) return null;
 
-  // ✅ 3. VARIÁVEIS COMUNS E O RETURN DO JSX
   const playerById = (id: string) => players.find((p) => p.id === id);
   const tipoLabel = (t: TransferType) => (t === "compra" ? "Compra" : t === "emprestimo" ? "Empréstimo" : "Troca");
 
@@ -1445,7 +1444,7 @@ const Market = () => {
                     </div>
                     <div>
                       <Label>Opção de compra (€) — opcional</Label>
-                      <NumberInput value={opcaoCompra} onChange={(v) => setOpcaoCompra(String(v))} min={0} />
+                      <NumberInput value={opcaoCompra} onChange={(v) => setOpCompra(String(v))} min={0} />
                       <div className="text-[11px] text-muted-foreground mt-1">
                         Valor fixado para compra definitiva ao final do empréstimo.
                       </div>
