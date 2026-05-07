@@ -210,9 +210,9 @@ const Market = () => {
   const [temporadaAtual, setTemporadaAtual] = useState<number>(new Date().getFullYear());
 
   // filtros
-  const [q, setQ] = useState("");
   const [pos, setPos] = useState<string>("all");
-  const [onlyForSale, setOnlyForSale] = useState(false);
+  const [temp, setTemp] = useState<string>("all");
+  const [q, setQ] = useState<string>("");
 
   // proposta modal
   const [target, setTarget] = useState<any>(null);
@@ -631,7 +631,6 @@ const Market = () => {
 
   if (loading) return null;
 
-  const inboxCount = inbox.length;
   const hasClub = myClubs.length > 0;
 
   const inbox = useMemo(() => {
@@ -646,6 +645,8 @@ const Market = () => {
       return p.clube_vendedor_id === activeClubId;
     });
   }, [proposals, activeClubId, user]);
+
+  const inboxCount = inbox.length; // Movido para cá!
 
   const sent = useMemo(() => {
     return proposals.filter((p) => {
@@ -1720,9 +1721,9 @@ interface ForeignMarketTabProps {
 }
 const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: ForeignMarketTabProps) => {
   const [rows, setRows] = useState<any[]>([]);
-  const [pos, setPos] = useState("all");
+  const [pos, setPos] = useState<string>("all");
   const [temp, setTemp] = useState<string>("all");
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState<string>("");
 
   useEffect(() => {
     supabase
