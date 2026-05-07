@@ -1444,15 +1444,15 @@ const Market = () => {
           <div className="space-y-3">
             <div>
               <Label>Valor da transferência (€)</Label>
-              <NumberInput value={cValor} onChange={(v) => setCValor(String(v))} min={0} />
+              <NumberInput value={cValor} onChange={(v: number) => setCValor(String(v))} min={0} />
             </div>
             <div>
               <Label>Salário (€/ano)</Label>
-              <NumberInput value={cSalario} onChange={(v) => setCSalario(String(v))} min={0} />
+              <NumberInput value={cSalario} onChange={(v: number) => setCSalario(String(v))} min={0} />
             </div>
             <div>
               <Label>Luvas (€)</Label>
-              <NumberInput value={cLuvas} onChange={(v) => setCLuvas(String(v))} min={0} />
+              <NumberInput value={cLuvas} onChange={(v: number) => setCLuvas(String(v))} min={0} />
             </div>
           </div>
           <DialogFooter>
