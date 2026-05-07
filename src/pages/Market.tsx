@@ -518,11 +518,13 @@ const Market = () => {
 
   const openCounter = (proposal: any) => {
     setCounterTarget(proposal);
-    setCValor(String(Math.round(Number(proposal.valor_ofertado || 0))));
-    setCSalario(String(Math.round(Number(proposal.salario_ofertado || 0))));
-    setCLuvas(String(Math.round(Number(proposal.luvas || 0))));
+    const v1: string = String(Math.round(Number(proposal.valor_ofertado || 0)));
+    const v2: string = String(Math.round(Number(proposal.salario_ofertado || 0)));
+    const v3: string = String(Math.round(Number(proposal.luvas || 0)));
+    setCValor(v1);
+    setCSalario(v2);
+    setCLuvas(v3);
   };
-
   const sendCounter = async () => {
     if (!counterTarget) return;
     const { error } = await supabase.rpc("criar_contraproposta", {

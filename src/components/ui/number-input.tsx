@@ -25,7 +25,9 @@ export interface NumberInputProps extends Omit<
  * - Clamp em min/max no blur (a menos que `unbounded`)
  * - Bloqueio de digitação fora dos limites quando `unbounded=false`
  */
-export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
+export const NumberInput: React.ForwardRefExoticComponent
+  NumberInputProps & React.RefAttributes<HTMLInputElement>
+> = React.forwardRef<HTMLInputElement, NumberInputProps>(
   (
     { value, onChange, min, max, allowNegative, unbounded = false, thousands = true, onBlur, className, ...rest },
     ref,
