@@ -36,6 +36,10 @@ import { BulkBudgetAdjuster } from "@/components/admin/BulkBudgetAdjuster";
 import { PlayerBulkActions } from "@/components/admin/PlayerBulkActions";
 import { CampanhasManager } from "@/components/admin/CampanhasManager";
 import { SquadGenerator } from "@/components/admin/SquadGenerator";
+import { ForeignPlayersManager } from "@/components/admin/ForeignPlayersManager";
+import { FreeAgentsManager } from "@/components/admin/FreeAgentsManager";
+import { ExternalClubsManager } from "@/components/admin/ExternalClubsManager";
+import { Globe2, UserMinus, Building2 } from "lucide-react";
 import { parseSquadJson, ImportedPlayer } from "@/lib/squad-import";
 import { useSeason } from "@/contexts/SeasonContext";
 
