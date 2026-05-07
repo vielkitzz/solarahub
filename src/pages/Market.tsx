@@ -246,11 +246,6 @@ const Market = () => {
 
   // contraproposta modal
   const [counterTarget, setCounterTarget] = useState<any>(null);
-  const [counterForm, setCounterForm] = useState<{ valor: string; salario: string; luvas: string }>({
-    valor: "",
-    salario: "",
-    luvas: "",
-  });
   const [cSalario, setCSalario] = useState<string>("");
   const [cLuvas, setCLuvas] = useState<string>("");
 
