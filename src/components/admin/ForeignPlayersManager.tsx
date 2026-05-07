@@ -217,6 +217,22 @@ export const ForeignPlayersManager = () => {
                 />
               </div>
               <div>
+                <Label>Potencial Mín</Label>
+                <Input
+                  type="number"
+                  value={editing.potential_min}
+                  onChange={(e) => setEditing({ ...editing, potential_min: Number(e.target.value) })}
+                />
+              </div>
+              <div>
+                <Label>Potencial Máx</Label>
+                <Input
+                  type="number"
+                  value={editing.potential_max}
+                  onChange={(e) => setEditing({ ...editing, potential_max: Number(e.target.value) })}
+                />
+              </div>
+              <div>
                 <Label>Idade</Label>
                 <Input
                   type="number"
