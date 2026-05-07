@@ -567,7 +567,7 @@ const Market = () => {
     if (!externalClubId) return;
     await supabase
       .from("players")
-      .update({ club_id: null, external_club_id: externalClubId, a_venda: false })
+      .update({ club_id: null, external_club_id: externalClubId, a_venda: false } as any)
       .eq("id", playerId);
   };
 
