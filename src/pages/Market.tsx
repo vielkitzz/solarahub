@@ -960,12 +960,17 @@ const Market = () => {
                     </div>
                     <Badge
                       variant={
-                        t.status === "aceita" ? "default" : t.status === "recusada" ? "destructive" : "secondary"
+                        t.status === "aceita" ? "default" : t.status === "recusada" || t.status === "cancelada" ? "destructive" : "secondary"
                       }
                       className={t.status === "aceita" ? "bg-primary text-primary-foreground" : ""}
                     >
                       {t.status}
                     </Badge>
+                    {t.status === "pendente" && (
+                      <Button size="sm" variant="ghost" onClick={() => removerProposta(t.id)}>
+                        Remover
+                      </Button>
+                    )}
                   </div>
                 </Card>
               );
