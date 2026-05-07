@@ -218,11 +218,28 @@ const Market = () => {
     if (caixaError) return toast.error(caixaError);
     if (trocaError) return toast.error(trocaError);
     if (!salario || parseFloat(salario) < 0) return toast.error("Salário inválido");
+    setSubmitting(true);
 
-    // Jogadores estrangeiros/passes livres sem clube não podem ser negociados via tabela transferencias
-    if (target._isForeign || target._isFreeAgent) {
-      return toast.error("Jogadores estrangeiros são contratados diretamente — use o fluxo de contratação direta.");
+    const isDirect = target._isForeign || target._isFreeAgent || !target.club_id;
+
+    if (isDirect) {
+      const { error } = await supabase.rpc("contratar_jogador_direto" as any, {
+        _clube_id: activeClubId,
+        _jogador_id: target.id,
+        _salario: parseFloat(salario),
+        _luvas: luvasNum,
+        _valor: valorNum,
+        _tipo: target._isForeign ? "estrangeiro" : "livre",
+        _user_id: user.id,
+      });
+      setSubmitting(false);
+      if (error) return toast.error(error.message);
+      toast.success("Contratação realizada!");
+      setTarget(null);
+      await Promise.all([loadAll(), loadProposals(), loadSeasonAndRumors()]);
+      return;
     }
+
     const payload: any = {
       jogador_id: target.id,
       clube_comprador_id: activeClubId,
