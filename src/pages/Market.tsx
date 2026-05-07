@@ -626,7 +626,7 @@ const Market = () => {
       setSalario(String(foreignResponse.salario_sugerido));
       setLuvas(String(foreignResponse.luvas_sugeridas));
       setAnosContrato("1");
-      setOpCompra("0");
+      setOpcaoCompra("0");
       setPercentualRevenda("0");
       setJogadorTrocado("");
     }
@@ -1444,7 +1444,7 @@ const Market = () => {
                     </div>
                     <div>
                       <Label>Opção de compra (€) — opcional</Label>
-                      <NumberInput value={opcaoCompra} onChange={(v) => setOpCompra(String(v))} min={0} />
+                      <NumberInput value={opcaoCompra} onChange={(v) => setOpcaoCompra(String(v))} min={0} />
                       <div className="text-[11px] text-muted-foreground mt-1">
                         Valor fixado para compra definitiva ao final do empréstimo.
                       </div>
