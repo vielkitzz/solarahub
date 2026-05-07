@@ -874,27 +874,42 @@ const Market = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => respond(t.id, false)}>
-                          Recusar
-                        </Button>
-                        {!isCounter && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openCounter(t)}
-                            className="border-primary/40 text-primary hover:bg-primary/10"
-                          >
-                            <MessageSquare className="h-3.5 w-3.5" /> Contra-propor
-                          </Button>
+                      <div className="flex gap-2 flex-wrap">
+                        {t.status === "aguardando_confirmacao" ? (
+                          <>
+                            <Button size="sm" variant="outline" onClick={() => cancelarConf(t.id)}>
+                              Cancelar
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => confirmar(t.id)}
+                              className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+                            >
+                              Confirmar contratação
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button size="sm" variant="outline" onClick={() => respond(t.id, false)}>
+                              Recusar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openCounter(t)}
+                              className="border-primary/40 text-primary hover:bg-primary/10"
+                            >
+                              <MessageSquare className="h-3.5 w-3.5" /> Contra-propor
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => respond(t.id, true)}
+                              className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+                            >
+                              Aceitar
+                            </Button>
+                          </>
                         )}
-                        <Button
-                          size="sm"
-                          onClick={() => respond(t.id, true)}
-                          className="bg-gradient-gold text-primary-foreground hover:opacity-90"
-                        >
-                          Aceitar
-                        </Button>
                       </div>
                     </div>
                   </div>
