@@ -209,13 +209,15 @@ const Market = () => {
   const [rumores, setRumores] = useState<any[]>([]);
   const [temporadaAtual, setTemporadaAtual] = useState<number>(new Date().getFullYear());
 
-  // filtros
+  // filtros (agora com o onlyForSale no lugar certo e único)
   const [pos, setPos] = useState<string>("all");
   const [temp, setTemp] = useState<string>("all");
   const [q, setQ] = useState<string>("");
   const [onlyForSale, setOnlyForSale] = useState<boolean>(false);
 
-  // proposta modal
+  // proposta modal (aqui estavam os perdidos target e tipo!)
+  const [target, setTarget] = useState<any>(null);
+  const [tipo, setTipo] = useState<TransferType>("compra");
   const [valor, setValor] = useState<string>("");
   const [salario, setSalario] = useState<string>("");
   const [luvas, setLuvas] = useState<string>("");
@@ -224,11 +226,11 @@ const Market = () => {
   const [opcaoCompra, setOpcaoCompra] = useState<string>("0");
   const [percentualRevenda, setPercentualRevenda] = useState<string>("0");
   const [jogadorTrocado, setJogadorTrocado] = useState<string>("");
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
   // resposta da IA estrangeira
   const [foreignResponse, setForeignResponse] = useState<ForeignResponse | null>(null);
-  const [foreignLoading, setForeignLoading] = useState(false);
+  const [foreignLoading, setForeignLoading] = useState<boolean>(false);
 
   // contraproposta modal
   const [counterTarget, setCounterTarget] = useState<any>(null);
@@ -1869,8 +1871,8 @@ interface FreeAgentsTabProps {
 }
 const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen, onNegotiate }: FreeAgentsTabProps) => {
   const [rows, setRows] = useState<any[]>([]);
-  const [pos, setPos] = useState("all");
-  const [q, setQ] = useState("");
+  const [pos, setPos] = useState<string>("all");
+  const [q, setQ] = useState<string>("");
 
   useEffect(() => {
     (async () => {
