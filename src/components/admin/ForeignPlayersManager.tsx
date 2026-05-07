@@ -22,8 +22,6 @@ type Row = {
   club_origin: string | null;
   league_origin: string | null;
   temporada: number | null;
-  potential_min: number | null;
-  potential_max: number | null;
 };
 
 const empty: Row = {
@@ -37,8 +35,6 @@ const empty: Row = {
   club_origin: "",
   league_origin: "",
   temporada: new Date().getFullYear(),
-  potential_min: null,
-  potential_max: null,
 };
 
 export const ForeignPlayersManager = () => {
@@ -94,8 +90,6 @@ export const ForeignPlayersManager = () => {
           club_origin: r.club_origin || null,
           league_origin: r.league_origin || null,
           temporada: r.temporada != null ? Number(r.temporada) : null,
-          potential_min: r.potential_min != null ? Number(r.potential_min) : null,
-          potential_max: r.potential_max != null ? Number(r.potential_max) : null,
         }));
         setImportPreview(parsed);
       } catch (err: any) {
@@ -141,7 +135,6 @@ export const ForeignPlayersManager = () => {
               <TableHead>Nome</TableHead>
               <TableHead>Pos</TableHead>
               <TableHead>OVR</TableHead>
-              <TableHead>Potencial</TableHead>
               <TableHead>Idade</TableHead>
               <TableHead>Nac.</TableHead>
               <TableHead>Clube/Liga</TableHead>
@@ -157,9 +150,6 @@ export const ForeignPlayersManager = () => {
                 <TableCell className="font-medium">{r.name}</TableCell>
                 <TableCell>{r.position}</TableCell>
                 <TableCell>{r.overall}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {r.potential_min != null && r.potential_max != null ? `${r.potential_min}–${r.potential_max}` : "—"}
-                </TableCell>
                 <TableCell>{r.age ?? "-"}</TableCell>
                 <TableCell>{r.nationality}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">
@@ -197,102 +187,44 @@ export const ForeignPlayersManager = () => {
               </div>
               <div>
                 <Label>Posição</Label>
-                <Input
-                  value={editing.position}
-                  onChange={(e) => setEditing({ ...editing, position: e.target.value.toUpperCase() })}
-                />
+                <Input value={editing.position} onChange={(e) => setEditing({ ...editing, position: e.target.value.toUpperCase() })} />
               </div>
               <div>
                 <Label>Overall</Label>
-                <Input
-                  type="number"
-                  value={editing.overall}
-                  onChange={(e) => setEditing({ ...editing, overall: Number(e.target.value) })}
-                />
-              </div>
-              <div>
-                <Label>Potencial mínimo</Label>
-                <Input
-                  type="number"
-                  value={editing.potential_min ?? ""}
-                  placeholder="ex: 78"
-                  onChange={(e) =>
-                    setEditing({ ...editing, potential_min: e.target.value ? Number(e.target.value) : null })
-                  }
-                />
-              </div>
-              <div>
-                <Label>Potencial máximo</Label>
-                <Input
-                  type="number"
-                  value={editing.potential_max ?? ""}
-                  placeholder="ex: 85"
-                  onChange={(e) =>
-                    setEditing({ ...editing, potential_max: e.target.value ? Number(e.target.value) : null })
-                  }
-                />
+                <Input type="number" value={editing.overall} onChange={(e) => setEditing({ ...editing, overall: Number(e.target.value) })} />
               </div>
               <div>
                 <Label>Idade</Label>
-                <Input
-                  type="number"
-                  value={editing.age ?? ""}
-                  onChange={(e) => setEditing({ ...editing, age: e.target.value ? Number(e.target.value) : null })}
-                />
+                <Input type="number" value={editing.age ?? ""} onChange={(e) => setEditing({ ...editing, age: e.target.value ? Number(e.target.value) : null })} />
               </div>
               <div>
                 <Label>Nacionalidade</Label>
-                <Input
-                  value={editing.nationality ?? ""}
-                  onChange={(e) => setEditing({ ...editing, nationality: e.target.value })}
-                />
+                <Input value={editing.nationality ?? ""} onChange={(e) => setEditing({ ...editing, nationality: e.target.value })} />
               </div>
               <div>
                 <Label>Clube origem</Label>
-                <Input
-                  value={editing.club_origin ?? ""}
-                  onChange={(e) => setEditing({ ...editing, club_origin: e.target.value })}
-                />
+                <Input value={editing.club_origin ?? ""} onChange={(e) => setEditing({ ...editing, club_origin: e.target.value })} />
               </div>
               <div>
                 <Label>Liga origem</Label>
-                <Input
-                  value={editing.league_origin ?? ""}
-                  onChange={(e) => setEditing({ ...editing, league_origin: e.target.value })}
-                />
+                <Input value={editing.league_origin ?? ""} onChange={(e) => setEditing({ ...editing, league_origin: e.target.value })} />
               </div>
               <div>
                 <Label>Valor de mercado</Label>
-                <Input
-                  type="number"
-                  value={editing.market_value}
-                  onChange={(e) => setEditing({ ...editing, market_value: Number(e.target.value) })}
-                />
+                <Input type="number" value={editing.market_value} onChange={(e) => setEditing({ ...editing, market_value: Number(e.target.value) })} />
               </div>
               <div>
                 <Label>Salário pedido</Label>
-                <Input
-                  type="number"
-                  value={editing.salary_demand}
-                  onChange={(e) => setEditing({ ...editing, salary_demand: Number(e.target.value) })}
-                />
+                <Input type="number" value={editing.salary_demand} onChange={(e) => setEditing({ ...editing, salary_demand: Number(e.target.value) })} />
               </div>
               <div>
                 <Label>Temporada</Label>
-                <Input
-                  type="number"
-                  value={editing.temporada ?? ""}
-                  onChange={(e) =>
-                    setEditing({ ...editing, temporada: e.target.value ? Number(e.target.value) : null })
-                  }
-                />
+                <Input type="number" value={editing.temporada ?? ""} onChange={(e) => setEditing({ ...editing, temporada: e.target.value ? Number(e.target.value) : null })} />
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setEditing(null)}>
-              Cancelar
-            </Button>
+            <Button variant="ghost" onClick={() => setEditing(null)}>Cancelar</Button>
             <Button onClick={save}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
@@ -311,7 +243,6 @@ export const ForeignPlayersManager = () => {
                   <TableHead>Nome</TableHead>
                   <TableHead>Pos</TableHead>
                   <TableHead>OVR</TableHead>
-                  <TableHead>Potencial</TableHead>
                   <TableHead>Valor</TableHead>
                   <TableHead>Salário</TableHead>
                   <TableHead>Origem</TableHead>
@@ -323,11 +254,6 @@ export const ForeignPlayersManager = () => {
                     <TableCell>{r.name}</TableCell>
                     <TableCell>{r.position}</TableCell>
                     <TableCell>{r.overall}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {r.potential_min != null && r.potential_max != null
-                        ? `${r.potential_min}–${r.potential_max}`
-                        : "—"}
-                    </TableCell>
                     <TableCell>{formatCurrency(r.market_value)}</TableCell>
                     <TableCell>{formatCurrency(r.salary_demand)}</TableCell>
                     <TableCell className="text-xs">{r.club_origin}</TableCell>
@@ -337,9 +263,7 @@ export const ForeignPlayersManager = () => {
             </Table>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setImportPreview(null)}>
-              Cancelar
-            </Button>
+            <Button variant="ghost" onClick={() => setImportPreview(null)}>Cancelar</Button>
             <Button onClick={confirmImport} disabled={importing}>
               <Upload className="h-4 w-4 mr-2" />
               Confirmar importação
