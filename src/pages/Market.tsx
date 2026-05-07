@@ -1239,3 +1239,150 @@ const Filters = ({ q, setQ, pos, setPos, onlyForSale, setOnlyForSale }: FiltersP
 );
 
 export default Market;
+
+// ============ MERCADO ESTRANGEIRO ============
+const ForeignMarketTab = () => {
+  const [rows, setRows] = useState<any[]>([]);
+  const [pos, setPos] = useState("all");
+  const [temp, setTemp] = useState<string>("all");
+  useEffect(() => {
+    supabase
+      .from("foreign_market_players")
+      .select("*")
+      .order("overall", { ascending: false })
+      .then(({ data }) => setRows(data || []));
+  }, []);
+  const temporadas = useMemo(
+    () => Array.from(new Set(rows.map((r) => r.temporada).filter(Boolean))).sort((a, b) => b - a),
+    [rows]
+  );
+  const filtered = rows.filter(
+    (r) => (pos === "all" || r.position === pos) && (temp === "all" || String(r.temporada) === temp)
+  );
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-2">
+        <Select value={pos} onValueChange={setPos}>
+          <SelectTrigger className="w-40"><SelectValue placeholder="Posição" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas posições</SelectItem>
+            {POSITIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={temp} onValueChange={setTemp}>
+          <SelectTrigger className="w-40"><SelectValue placeholder="Temporada" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas temporadas</SelectItem>
+            {temporadas.map((t) => <SelectItem key={t} value={String(t)}>{t}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+      <Card className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead><TableHead>Pos</TableHead><TableHead>OVR</TableHead>
+              <TableHead>Idade</TableHead><TableHead>Nac.</TableHead>
+              <TableHead>Clube/Liga</TableHead><TableHead>Valor</TableHead><TableHead>Salário</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.map((r) => (
+              <TableRow key={r.id}>
+                <TableCell className="font-medium">{r.name}</TableCell>
+                <TableCell>{r.position}</TableCell>
+                <TableCell>{r.overall}</TableCell>
+                <TableCell>{r.age ?? "-"}</TableCell>
+                <TableCell className="flex items-center gap-1">
+                  {r.nationality && <img src={getFlagUrl(r.nationality)} alt="" className="h-3" />}
+                  <span className="text-xs">{r.nationality}</span>
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  {r.club_origin}{r.league_origin ? ` / ${r.league_origin}` : ""}
+                </TableCell>
+                <TableCell>{formatCurrency(r.market_value)}</TableCell>
+                <TableCell>{formatCurrency(r.salary_demand)}</TableCell>
+              </TableRow>
+            ))}
+            {filtered.length === 0 && (
+              <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-6">Nenhum jogador</TableCell></TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </Card>
+    </div>
+  );
+};
+
+// ============ PASSES LIVRES ============
+const FreeAgentsTab = () => {
+  const [rows, setRows] = useState<any[]>([]);
+  const [pos, setPos] = useState("all");
+  useEffect(() => {
+    (async () => {
+      const [{ data: fa }, { data: pls }] = await Promise.all([
+        supabase.from("free_agents").select("*"),
+        supabase.from("players").select("id,name,position,age,nationality,habilidade,salario_atual").is("club_id", null),
+      ]);
+      const merged = [
+        ...(fa || []).map((r: any) => ({ ...r, _src: "free_agents" })),
+        ...(pls || []).map((p: any) => ({
+          id: "p_" + p.id,
+          name: p.name,
+          position: p.position,
+          age: p.age,
+          nationality: p.nationality,
+          overall: p.habilidade,
+          salary_demand: p.salario_atual,
+          last_club: null,
+          _src: "players",
+        })),
+      ];
+      // dedup por source_player_id se houver
+      const seen = new Set((fa || []).map((r: any) => r.source_player_id).filter(Boolean));
+      setRows(merged.filter((r: any) => !(r._src === "players" && seen.has(r.id.replace("p_", "")))));
+    })();
+  }, []);
+  const filtered = rows.filter((r) => pos === "all" || r.position === pos);
+  return (
+    <div className="space-y-3">
+      <Select value={pos} onValueChange={setPos}>
+        <SelectTrigger className="w-40"><SelectValue placeholder="Posição" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Todas posições</SelectItem>
+          {POSITIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <Card className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead><TableHead>Pos</TableHead><TableHead>OVR</TableHead>
+              <TableHead>Idade</TableHead><TableHead>Nac.</TableHead>
+              <TableHead>Último clube</TableHead><TableHead>Salário pedido</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.map((r) => (
+              <TableRow key={r.id}>
+                <TableCell className="font-medium">{r.name}</TableCell>
+                <TableCell>{r.position}</TableCell>
+                <TableCell>{r.overall}</TableCell>
+                <TableCell>{r.age ?? "-"}</TableCell>
+                <TableCell className="flex items-center gap-1">
+                  {r.nationality && <img src={getFlagUrl(r.nationality)} alt="" className="h-3" />}
+                  <span className="text-xs">{r.nationality}</span>
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">{r.last_club}</TableCell>
+                <TableCell>{formatCurrency(r.salary_demand || 0)}</TableCell>
+              </TableRow>
+            ))}
+            {filtered.length === 0 && (
+              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-6">Nenhum jogador</TableCell></TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </Card>
+    </div>
+  );
+};
