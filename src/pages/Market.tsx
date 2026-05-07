@@ -213,7 +213,6 @@ const Market = () => {
   const [pos, setPos] = useState<string>("all");
   const [temp, setTemp] = useState<string>("all");
   const [q, setQ] = useState<string>("");
-  const [onlyForSale, setOnlyForSale] = useState<boolean>(false);
 
   // proposta modal (aqui estavam os perdidos target e tipo!)
   const [target, setTarget] = useState<any>(null);
