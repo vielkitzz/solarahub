@@ -17,6 +17,8 @@ type Row = {
   age: number | null;
   nationality: string | null;
   overall: number;
+  potential_min: number; // Adicione esta linha
+  potential_max: number; // Adicione esta linha
   market_value: number;
   salary_demand: number;
   club_origin: string | null;
@@ -30,8 +32,8 @@ const empty: Row = {
   age: 25,
   nationality: "",
   overall: 75,
-  potential_min: 75, // Adicionado
-  potential_max: 85, // Adicionado
+  potential_min: 75, // Adicione esta linha
+  potential_max: 85, // Adicione esta linha
   market_value: 0,
   salary_demand: 0,
   club_origin: "",
