@@ -723,6 +723,18 @@ const Admin = () => {
           <CampanhasManager />
         </TabsContent>
 
+        <TabsContent value="foreign" className="mt-6">
+          <ForeignPlayersManager />
+        </TabsContent>
+
+        <TabsContent value="freeagents" className="mt-6">
+          <FreeAgentsManager />
+        </TabsContent>
+
+        <TabsContent value="externalclubs" className="mt-6">
+          <ExternalClubsManager />
+        </TabsContent>
+
         <TabsContent value="config" className="mt-6">
           <Card className="p-5 bg-gradient-card border-border/50 max-w-lg relative overflow-hidden">
             <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-gold opacity-40" />
