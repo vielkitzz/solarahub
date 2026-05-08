@@ -309,12 +309,17 @@ const Market = () => {
     const { data: tx } = await supabase
       .from("transactions")
       .select("*")
-      .eq("categoria", "transferencia")
+      .in("categoria", ["transferencia", "transferencia_externa"])
       .eq("tipo", "entrada")
       .eq("temporada", tempValue)
       .order("created_at", { ascending: false })
       .limit(200);
     setSeasonTransfers(tx || []);
+
+    const { data: ecs } = await supabase.from("external_clubs").select("id, name, crest, country");
+    const ecMap: Record<string, any> = {};
+    (ecs || []).forEach((c: any) => { ecMap[c.id] = c; });
+    setExternalClubsMap(ecMap);
 
     const since = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
     const { data: rs } = await supabase
