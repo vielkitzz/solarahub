@@ -395,9 +395,12 @@ const Market = () => {
   const luvasNum = parseFloat(luvas) || 0;
   const totalDevido = valorNum + luvasNum;
 
-  const fpError = target && tipo === "compra" ? fairPlayCheck(valorNum, Number(target.valor_base_calculado)) : null;
+  const fpError =
+    target && tipo === "compra" && !target._isFreeAgent
+      ? fairPlayCheck(valorNum, Number(target.valor_base_calculado))
+      : null;
   const caixaError =
-    target && tipo !== "emprestimo" && totalDevido > caixaComprador
+    target && tipo !== "emprestimo" && !target._isFreeAgent && totalDevido > caixaComprador
       ? `Caixa insuficiente: necessário ${formatCurrency(totalDevido)}, disponível ${formatCurrency(caixaComprador)}`
       : null;
   const trocaError = tipo === "troca" && !jogadorTrocado ? "Selecione um jogador para oferecer na troca" : null;
