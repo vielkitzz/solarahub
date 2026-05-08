@@ -367,13 +367,10 @@ const Market = () => {
     const enriched = { ...player, valor_base_calculado: base };
     setTarget(enriched);
 
-    if (player._isFreeAgent) {
-      setTipo("compra");
-    } else {
-      setTipo("compra");
-    }
+    setTipo("compra");
 
-    setValor(String(Math.round(base)));
+    // Passes livres são gratuitos em relação ao valor de mercado
+    setValor(player._isFreeAgent ? "0" : String(Math.round(base)));
     let sugerido = Math.round(base * 0.1);
     if (base > 0 && !player._isForeign && !player._isFreeAgent) {
       try {
