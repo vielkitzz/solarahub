@@ -281,13 +281,16 @@ const ClubDetail = () => {
     if (!valorBase) return;
 
     // Busca clubes estrangeiros ativos como proponentes
-    const { data: extClubes } = await supabase
-      .from("external_clubs")
+    const { data: extClubes, error: erroExt } = await (supabase.from("external_clubs") as any)
       .select("id, name, crest, country")
-      .eq("active", true)
       .limit(30);
 
-    if (!extClubes || extClubes.length === 0) return;
+    console.log("[AutoProposta] external_clubs:", extClubes, "erro:", erroExt);
+
+    if (!extClubes || extClubes.length === 0) {
+      console.warn("[AutoProposta] Nenhum clube estrangeiro encontrado.");
+      return;
+    }
 
     // Sorteia um clube estrangeiro aleatório
     const clube = extClubes[Math.floor(Math.random() * extClubes.length)];
@@ -299,7 +302,6 @@ const ClubDetail = () => {
     const salarioOfertado = Math.round(salarioBase * (0.85 + Math.random() * 0.25));
     const anosContrato = Math.floor(Math.random() * 3) + 1; // 1–3 anos
 
-    // Insere como proposta externa (external_proposals) para cair no inbox correto
     const { error: erroProposta } = await (supabase.from("external_proposals") as any).insert({
       player_id: playerId,
       external_club_id: clube.id,
@@ -309,6 +311,8 @@ const ClubDetail = () => {
       status: "pendente",
       is_auto_proposal: true,
     });
+
+    console.log("[AutoProposta] insert resultado — erro:", erroProposta);
 
     if (erroProposta) {
       console.warn("Proposta automática estrangeira falhou:", erroProposta.message);
