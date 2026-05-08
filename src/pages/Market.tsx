@@ -245,6 +245,8 @@ const Market = () => {
   const [profilePlayerId, setProfilePlayerId] = useState<string | null>(null);
   const { items: interestItems, has: inInterest, toggle: toggleInterest } = useInterestList();
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   useEffect(() => {
     document.title = "Mercado — Solara Hub";
   }, []);
