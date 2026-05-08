@@ -250,79 +250,14 @@ const ClubDetail = () => {
     }
   };
 
-  // ─── 1. Adicione este import no topo do arquivo (junto aos outros do supabase) ───
-  // (já existe: import { supabase } from "@/integrations/supabase/client";)
-
-  // ─── 2. Substitua a função toggleSale existente por esta versão expandida ───────
-
   const toggleSale = async (playerId: string, value: boolean) => {
     const { error } = await supabase.from("players").update({ a_venda: value }).eq("id", playerId);
 
     if (error) return toast.error(error.message);
-
+    // só atualiza o estado local após confirmar o save
     setPlayers((prev) => prev.map((p) => (p.id === playerId ? { ...p, a_venda: value } : p)));
     toast.success(value ? "Jogador colocado à venda" : "Jogador removido da vitrine");
-
-    // ── Proposta automática ──────────────────────────────────────────────────────
-    if (!value) return; // só dispara ao colocar à venda
-
-    // Verifica quantas propostas automáticas já foram feitas para este jogador
-    const { count } = await (supabase.from("external_proposals") as any)
-      .select("id", { count: "exact", head: true })
-      .eq("player_id", playerId);
-
-    if ((count ?? 0) >= 2) return; // limite de 2 propostas automáticas
-
-    const player = players.find((p) => p.id === playerId);
-    if (!player) return;
-
-    const valorBase = Number(player.valor_base_calculado || player.market_value || 0);
-    if (!valorBase) return;
-
-    // Busca clubes estrangeiros ativos como proponentes
-    const { data: extClubes, error: erroExt } = await (supabase.from("external_clubs") as any)
-      .select("id, name, crest, country")
-      .limit(30);
-
-    console.log("[AutoProposta] external_clubs:", extClubes, "erro:", erroExt);
-
-    if (!extClubes || extClubes.length === 0) {
-      console.warn("[AutoProposta] Nenhum clube estrangeiro encontrado.");
-      return;
-    }
-
-    // Sorteia um clube estrangeiro aleatório
-    const clube = extClubes[Math.floor(Math.random() * extClubes.length)];
-
-    // Gera valores com variação realista (70–95% do valor base)
-    const fatorValor = 0.7 + Math.random() * 0.25;
-    const valorOfertado = Math.round(valorBase * fatorValor);
-    const salarioBase = Number(player.salario_atual || valorBase * 0.08);
-    const salarioOfertado = Math.round(salarioBase * (0.85 + Math.random() * 0.25));
-    const anosContrato = Math.floor(Math.random() * 3) + 1; // 1–3 anos
-
-    const { error: erroProposta } = await (supabase.from("external_proposals") as any).insert({
-      player_id: playerId,
-      external_club_id: clube.id,
-      valor_ofertado: valorOfertado,
-      salario_ofertado: salarioOfertado,
-      status: "pendente",
-    });
-
-    console.log("[AutoProposta] insert resultado — erro:", erroProposta);
-
-    if (erroProposta) {
-      console.warn("Proposta automática estrangeira falhou:", erroProposta.message);
-      return;
-    }
-
-    toast.info(`💼 ${clube.name} enviou uma proposta por ${player.name}! Confira sua caixa de entrada no Mercado.`, {
-      duration: 6000,
-    });
-
-    load();
   };
-
   if (!club) return <div className="text-center py-20 text-muted-foreground">Clube não encontrado.</div>;
 
   const folhaSalarial = players.reduce((s, p) => s + Number(p.salario_atual || 0), 0);
