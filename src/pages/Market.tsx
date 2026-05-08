@@ -1055,17 +1055,28 @@ const Market = () => {
                       </TableCell>
                       <TableCell>
                         {compradorClub ? (
-                          <Link
-                            to={`/clubes/${compradorClub.id}`}
-                            className="flex items-center gap-2 hover:text-primary"
-                          >
-                            <div className="h-6 w-6 shrink-0">
-                              {compradorClub.crest_url && (
-                                <img src={compradorClub.crest_url} className="w-full h-full object-contain" alt="" />
-                              )}
+                          compradorClub.id ? (
+                            <Link
+                              to={`/clubes/${compradorClub.id}`}
+                              className="flex items-center gap-2 hover:text-primary"
+                            >
+                              <div className="h-6 w-6 shrink-0">
+                                {compradorClub.crest_url && (
+                                  <img src={compradorClub.crest_url} className="w-full h-full object-contain" alt="" />
+                                )}
+                              </div>
+                              <span className="text-sm hidden md:inline">{compradorClub.name}</span>
+                            </Link>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 shrink-0">
+                                {compradorClub.crest_url && (
+                                  <img src={compradorClub.crest_url} className="w-full h-full object-contain" alt="" />
+                                )}
+                              </div>
+                              <span className="text-sm hidden md:inline">{compradorClub.name}</span>
                             </div>
-                            <span className="text-sm hidden md:inline">{compradorClub.name}</span>
-                          </Link>
+                          )
                         ) : (
                           "—"
                         )}
