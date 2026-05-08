@@ -1000,9 +1000,17 @@ const Market = () => {
                 )}
                 {seasonTransfers.map((tx) => {
                   const player = players.find((p) => p.id === tx.related_player_id);
-                  const compradorClub = clubs[tx.related_club_id];
+                  const isExternalSale = tx.categoria === "transferencia_externa";
+                  const externalClub = isExternalSale
+                    ? externalClubsMap[(tx.metadata as any)?.external_club_id]
+                    : null;
+                  const compradorClub = isExternalSale
+                    ? (externalClub
+                        ? { id: null, name: externalClub.name + (externalClub.country ? ` (${externalClub.country})` : ""), crest_url: externalClub.crest }
+                        : { id: null, name: "Clube estrangeiro", crest_url: null })
+                    : clubs[tx.related_club_id];
                   const vendedorClub = clubs[tx.club_id];
-                  const tipoOp = (tx.metadata as any)?.tipo_op || "compra";
+                  const tipoOp = isExternalSale ? "venda externa" : ((tx.metadata as any)?.tipo_op || "compra");
                   const isEstrangeiro = tipoOp === "estrangeiro";
                   const isLivre = tipoOp === "livre";
                   const vendedorDisplay = isEstrangeiro
