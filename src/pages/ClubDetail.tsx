@@ -274,54 +274,44 @@ const ClubDetail = () => {
 
     if ((count ?? 0) >= 2) return; // limite de 2 propostas automáticas
 
-    // Busca clubes elegíveis: com dono, saldo positivo, sem o próprio clube
-    const { data: candidatos } = await supabase
-      .from("clubs")
-      .select("id, name, budget, rate")
-      .not("owner_id", "is", null)
-      .neq("id", id!) // id vem do useParams
-      .order("budget", { ascending: false })
-      .limit(20);
-
-    if (!candidatos || candidatos.length === 0) return;
-
     const player = players.find((p) => p.id === playerId);
     if (!player) return;
 
     const valorBase = Number(player.valor_base_calculado || player.market_value || 0);
     if (!valorBase) return;
 
-    // Filtra clubes que têm caixa para pagar pelo menos 60% do valor
-    const aptos = candidatos.filter((c: any) => Number(c.budget || 0) >= valorBase * 0.6);
-    if (aptos.length === 0) return;
+    // Busca clubes estrangeiros ativos como proponentes
+    const { data: extClubes } = await supabase
+      .from("external_clubs")
+      .select("id, name, crest, country")
+      .eq("active", true)
+      .limit(30);
 
-    // Sorteia um clube aleatório entre os aptos
-    const clube = aptos[Math.floor(Math.random() * aptos.length)];
+    if (!extClubes || extClubes.length === 0) return;
+
+    // Sorteia um clube estrangeiro aleatório
+    const clube = extClubes[Math.floor(Math.random() * extClubes.length)];
 
     // Gera valores com variação realista (70–95% do valor base)
-    const fatorValor = 0.7 + Math.random() * 0.25; // 70–95%
+    const fatorValor = 0.7 + Math.random() * 0.25;
     const valorOfertado = Math.round(valorBase * fatorValor);
     const salarioBase = Number(player.salario_atual || valorBase * 0.08);
     const salarioOfertado = Math.round(salarioBase * (0.85 + Math.random() * 0.25));
     const anosContrato = Math.floor(Math.random() * 3) + 1; // 1–3 anos
 
-    // Insere a proposta marcada como automática
-    const { error: erroProposta } = await supabase.from("transferencias").insert({
-      jogador_id: playerId,
-      clube_comprador_id: clube.id,
-      clube_vendedor_id: id, // clube atual (dono da página)
+    // Insere como proposta externa (external_proposals) para cair no inbox correto
+    const { error: erroProposta } = await (supabase.from("external_proposals") as any).insert({
+      player_id: playerId,
+      external_club_id: clube.id,
       valor_ofertado: valorOfertado,
       salario_ofertado: salarioOfertado,
-      luvas: 0,
-      tipo: "compra",
       anos_contrato: anosContrato,
-      created_by: null, // proposta do sistema
-      is_auto_proposal: true, // ← flag para contagem
       status: "pendente",
-    } as any);
+      is_auto_proposal: true,
+    });
 
     if (erroProposta) {
-      console.warn("Proposta automática falhou:", erroProposta.message);
+      console.warn("Proposta automática estrangeira falhou:", erroProposta.message);
       return;
     }
 
@@ -329,7 +319,6 @@ const ClubDetail = () => {
       duration: 6000,
     });
 
-    // Recarrega para refletir o novo rumor na aba Finanças
     load();
   };
   if (!club) return <div className="text-center py-20 text-muted-foreground">Clube não encontrado.</div>;
