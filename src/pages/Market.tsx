@@ -720,7 +720,7 @@ const Market = () => {
         )}
       </header>
 
-      <Tabs defaultValue={hasClub ? "negociar" : "rumores"}>
+      <Tabs value={tabValue} onValueChange={(v) => setSearchParams({ tab: v })}>
         <div className="-mx-3 sm:-mx-4 md:mx-0 overflow-x-auto scrollbar-thin">
           <TabsList className="bg-secondary/50 mx-3 sm:mx-4 md:mx-0 w-max">
             {hasClub && (
