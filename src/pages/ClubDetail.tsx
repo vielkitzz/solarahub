@@ -267,10 +267,9 @@ const ClubDetail = () => {
     if (!value) return; // só dispara ao colocar à venda
 
     // Verifica quantas propostas automáticas já foram feitas para este jogador
-    const { count } = await (supabase.from("transferencias") as any)
+    const { count } = await (supabase.from("external_proposals") as any)
       .select("id", { count: "exact", head: true })
-      .eq("jogador_id", playerId)
-      .eq("is_auto_proposal", true);
+      .eq("player_id", playerId);
 
     if ((count ?? 0) >= 2) return; // limite de 2 propostas automáticas
 
@@ -307,9 +306,7 @@ const ClubDetail = () => {
       external_club_id: clube.id,
       valor_ofertado: valorOfertado,
       salario_ofertado: salarioOfertado,
-      anos_contrato: anosContrato,
       status: "pendente",
-      is_auto_proposal: true,
     });
 
     console.log("[AutoProposta] insert resultado — erro:", erroProposta);
@@ -325,6 +322,7 @@ const ClubDetail = () => {
 
     load();
   };
+
   if (!club) return <div className="text-center py-20 text-muted-foreground">Clube não encontrado.</div>;
 
   const folhaSalarial = players.reduce((s, p) => s + Number(p.salario_atual || 0), 0);
