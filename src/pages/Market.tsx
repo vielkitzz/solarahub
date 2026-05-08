@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -207,6 +207,7 @@ const Market = () => {
   const [activeClubId, setActiveClubId] = useState<string>("");
   const [proposals, setProposals] = useState<any[]>([]);
   const [seasonTransfers, setSeasonTransfers] = useState<any[]>([]);
+  const [externalClubsMap, setExternalClubsMap] = useState<Record<string, any>>({});
   const [rumores, setRumores] = useState<any[]>([]);
   const [temporadaAtual, setTemporadaAtual] = useState<number>(new Date().getFullYear());
 
@@ -243,6 +244,8 @@ const Market = () => {
   // perfil do jogador
   const [profilePlayerId, setProfilePlayerId] = useState<string | null>(null);
   const { items: interestItems, has: inInterest, toggle: toggleInterest } = useInterestList();
+
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     document.title = "Mercado — Solara Hub";
@@ -308,12 +311,17 @@ const Market = () => {
     const { data: tx } = await supabase
       .from("transactions")
       .select("*")
-      .eq("categoria", "transferencia")
+      .in("categoria", ["transferencia", "transferencia_externa"])
       .eq("tipo", "entrada")
       .eq("temporada", tempValue)
       .order("created_at", { ascending: false })
       .limit(200);
     setSeasonTransfers(tx || []);
+
+    const { data: ecs } = await supabase.from("external_clubs").select("id, name, crest, country");
+    const ecMap: Record<string, any> = {};
+    (ecs || []).forEach((c: any) => { ecMap[c.id] = c; });
+    setExternalClubsMap(ecMap);
 
     const since = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
     const { data: rs } = await supabase
@@ -714,7 +722,7 @@ const Market = () => {
         )}
       </header>
 
-      <Tabs defaultValue={hasClub ? "negociar" : "rumores"}>
+      <Tabs value={searchParams.get("tab") || (hasClub ? "negociar" : "rumores")} onValueChange={(v) => setSearchParams({ tab: v })}>
         <div className="-mx-3 sm:-mx-4 md:mx-0 overflow-x-auto scrollbar-thin">
           <TabsList className="bg-secondary/50 mx-3 sm:mx-4 md:mx-0 w-max">
             {hasClub && (
@@ -994,9 +1002,17 @@ const Market = () => {
                 )}
                 {seasonTransfers.map((tx) => {
                   const player = players.find((p) => p.id === tx.related_player_id);
-                  const compradorClub = clubs[tx.related_club_id];
+                  const isExternalSale = tx.categoria === "transferencia_externa";
+                  const externalClub = isExternalSale
+                    ? externalClubsMap[(tx.metadata as any)?.external_club_id]
+                    : null;
+                  const compradorClub = isExternalSale
+                    ? (externalClub
+                        ? { id: null, name: externalClub.name + (externalClub.country ? ` (${externalClub.country})` : ""), crest_url: externalClub.crest }
+                        : { id: null, name: "Clube estrangeiro", crest_url: null })
+                    : clubs[tx.related_club_id];
                   const vendedorClub = clubs[tx.club_id];
-                  const tipoOp = (tx.metadata as any)?.tipo_op || "compra";
+                  const tipoOp = isExternalSale ? "venda externa" : ((tx.metadata as any)?.tipo_op || "compra");
                   const isEstrangeiro = tipoOp === "estrangeiro";
                   const isLivre = tipoOp === "livre";
                   const vendedorDisplay = isEstrangeiro
@@ -1041,17 +1057,28 @@ const Market = () => {
                       </TableCell>
                       <TableCell>
                         {compradorClub ? (
-                          <Link
-                            to={`/clubes/${compradorClub.id}`}
-                            className="flex items-center gap-2 hover:text-primary"
-                          >
-                            <div className="h-6 w-6 shrink-0">
-                              {compradorClub.crest_url && (
-                                <img src={compradorClub.crest_url} className="w-full h-full object-contain" alt="" />
-                              )}
+                          compradorClub.id ? (
+                            <Link
+                              to={`/clubes/${compradorClub.id}`}
+                              className="flex items-center gap-2 hover:text-primary"
+                            >
+                              <div className="h-6 w-6 shrink-0">
+                                {compradorClub.crest_url && (
+                                  <img src={compradorClub.crest_url} className="w-full h-full object-contain" alt="" />
+                                )}
+                              </div>
+                              <span className="text-sm hidden md:inline">{compradorClub.name}</span>
+                            </Link>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 shrink-0">
+                                {compradorClub.crest_url && (
+                                  <img src={compradorClub.crest_url} className="w-full h-full object-contain" alt="" />
+                                )}
+                              </div>
+                              <span className="text-sm hidden md:inline">{compradorClub.name}</span>
                             </div>
-                            <span className="text-sm hidden md:inline">{compradorClub.name}</span>
-                          </Link>
+                          )
                         ) : (
                           "—"
                         )}

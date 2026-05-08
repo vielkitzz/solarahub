@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import { Inbox } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -10,63 +10,104 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
+/**
+ * Conta propostas que aguardam ação do usuário logado, somando todos os clubes dele:
+ *  - Internas: como vendedor (proposta inicial pendente), como comprador/vendedor
+ *    em contraproposta pendente vinda do outro lado, ou aguardando confirmação.
+ *  - Externas: propostas pendentes de clubes estrangeiros pelos jogadores do clube.
+ *
+ * Usa COUNT server-side e atualiza via Realtime nas tabelas relevantes.
+ */
 function useInboxCount() {
   const { user } = useAuth();
   const [count, setCount] = useState(0);
 
-  useEffect(() => {
+  const fetchCount = useCallback(async () => {
     if (!user) {
       setCount(0);
       return;
     }
 
-    const fetchCount = async () => {
-      // Busca os clubes do usuário logado
-      const { data: clubs } = await supabase.from("clubs").select("id").eq("owner_id", user.id);
+    const { data: clubs } = await supabase.from("clubs").select("id").eq("owner_id", user.id);
+    const clubIds = (clubs || []).map((c) => c.id);
+    if (clubIds.length === 0) {
+      setCount(0);
+      return;
+    }
 
-      if (!clubs || clubs.length === 0) {
-        setCount(0);
-        return;
-      }
+    const sellerQ = supabase
+      .from("transferencias")
+      .select("id", { count: "exact", head: true })
+      .in("clube_vendedor_id", clubIds)
+      .eq("status", "pendente")
+      .is("proposta_pai_id", null);
 
-      const clubIds = clubs.map((c) => c.id);
+    const counterQ = supabase
+      .from("transferencias")
+      .select("id, created_by, clube_vendedor_id, clube_comprador_id")
+      .or(
+        `clube_vendedor_id.in.(${clubIds.join(",")}),clube_comprador_id.in.(${clubIds.join(",")})`,
+      )
+      .eq("status", "pendente")
+      .not("proposta_pai_id", "is", null);
 
-      // Propostas pendentes onde o usuário precisa responder:
-      // - normais (sem proposta_pai_id): usuário é vendedor
-      // - contrapropostas (com proposta_pai_id): usuário é comprador
-      const { data: proposals } = await supabase
-        .from("transferencias")
-        .select("id, clube_vendedor_id, clube_comprador_id, proposta_pai_id, status")
-        .in("status", ["pendente", "contraproposta"]);
+    const confirmQ = supabase
+      .from("transferencias")
+      .select("id", { count: "exact", head: true })
+      .in("clube_comprador_id", clubIds)
+      .eq("status", "aguardando_confirmacao");
 
-      if (!proposals) {
-        setCount(0);
-        return;
-      }
+    const playersQ = supabase.from("players").select("id").in("club_id", clubIds);
 
-      const pending = proposals.filter((p) => {
-        const isCounter = !!p.proposta_pai_id;
-        if (isCounter) {
-          return clubIds.includes(p.clube_comprador_id) && p.status === "pendente";
-        }
-        return clubIds.includes(p.clube_vendedor_id) && p.status === "pendente";
-      });
+    const [sellerRes, counterRes, confirmRes, playersRes] = await Promise.all([
+      sellerQ,
+      counterQ,
+      confirmQ,
+      playersQ,
+    ]);
 
-      setCount(pending.length);
-    };
+    const sellerCount = sellerRes.count || 0;
+    const confirmCount = confirmRes.count || 0;
+    const counterCount = (counterRes.data || []).filter(
+      (p: any) => p.created_by !== user.id,
+    ).length;
 
+    let externalCount = 0;
+    const playerIds = (playersRes.data || []).map((p) => p.id);
+    if (playerIds.length > 0) {
+      const { count: c } = await supabase
+        .from("external_proposals")
+        .select("id", { count: "exact", head: true })
+        .in("player_id", playerIds)
+        .eq("status", "pendente");
+      externalCount = c || 0;
+    }
+
+    setCount(sellerCount + counterCount + confirmCount + externalCount);
+  }, [user]);
+
+  useEffect(() => {
     fetchCount();
+    if (!user) return;
 
-    // Atualiza em tempo real via realtime
     const channel = supabase
-      .channel("inbox-count")
-      .on("postgres_changes", { event: "*", schema: "public", table: "transferencias" }, () => fetchCount())
+      .channel("inbox-count-" + user.id)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "transferencias" },
+        fetchCount,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "external_proposals" },
+        fetchCount,
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, fetchCount]);
 
   return count;
 }
@@ -74,10 +115,6 @@ function useInboxCount() {
 export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const inboxCount = useInboxCount();
-
-  const goToInbox = () => {
-    navigate("/mercado?tab=inbox");
-  };
 
   return (
     <SidebarProvider>
@@ -93,7 +130,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   variant="ghost"
                   size="icon"
                   aria-label="Caixa de entrada do mercado"
-                  onClick={goToInbox}
+                  onClick={() => navigate("/mercado?tab=inbox")}
                   className="relative"
                 >
                   <Inbox className="h-5 w-5" />
