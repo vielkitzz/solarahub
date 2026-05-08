@@ -267,11 +267,10 @@ const ClubDetail = () => {
     if (!value) return; // só dispara ao colocar à venda
 
     // Verifica quantas propostas automáticas já foram feitas para este jogador
-    const { count } = await supabase
-      .from("transferencias")
+    const { count } = await (supabase.from("transferencias") as any)
       .select("id", { count: "exact", head: true })
       .eq("jogador_id", playerId)
-      .eq("is_auto_proposal", true); // ← coluna flag (veja nota abaixo)
+      .eq("is_auto_proposal", true);
 
     if ((count ?? 0) >= 2) return; // limite de 2 propostas automáticas
 
