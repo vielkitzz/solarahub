@@ -438,6 +438,8 @@ export type Database = {
           nationality: string | null
           overall: number
           position: string
+          potential_max: number | null
+          potential_min: number | null
           salary_demand: number
           temporada: number | null
           updated_at: string
@@ -453,6 +455,8 @@ export type Database = {
           nationality?: string | null
           overall?: number
           position: string
+          potential_max?: number | null
+          potential_min?: number | null
           salary_demand?: number
           temporada?: number | null
           updated_at?: string
@@ -468,6 +472,8 @@ export type Database = {
           nationality?: string | null
           overall?: number
           position?: string
+          potential_max?: number | null
+          potential_min?: number | null
           salary_demand?: number
           temporada?: number | null
           updated_at?: string
@@ -653,6 +659,7 @@ export type Database = {
           club_id: string | null
           contrato_ate: number | null
           created_at: string
+          external_club_id: string | null
           habilidade: number | null
           habilidade_anterior: number | null
           id: string
@@ -675,6 +682,7 @@ export type Database = {
           club_id?: string | null
           contrato_ate?: number | null
           created_at?: string
+          external_club_id?: string | null
           habilidade?: number | null
           habilidade_anterior?: number | null
           id?: string
@@ -697,6 +705,7 @@ export type Database = {
           club_id?: string | null
           contrato_ate?: number | null
           created_at?: string
+          external_club_id?: string | null
           habilidade?: number | null
           habilidade_anterior?: number | null
           id?: string
@@ -932,8 +941,9 @@ export type Database = {
       }
       transferencias: {
         Row: {
+          anos_contrato: number
           clube_comprador_id: string
-          clube_vendedor_id: string
+          clube_vendedor_id: string | null
           created_at: string
           created_by: string | null
           duracao_emprestimo: number | null
@@ -941,6 +951,8 @@ export type Database = {
           jogador_id: string
           jogador_trocado_id: string | null
           luvas: number
+          opcao_compra: number | null
+          percentual_revenda: number | null
           proposta_pai_id: string | null
           salario_ofertado: number
           status: Database["public"]["Enums"]["transfer_status"]
@@ -949,8 +961,9 @@ export type Database = {
           valor_ofertado: number
         }
         Insert: {
+          anos_contrato?: number
           clube_comprador_id: string
-          clube_vendedor_id: string
+          clube_vendedor_id?: string | null
           created_at?: string
           created_by?: string | null
           duracao_emprestimo?: number | null
@@ -958,6 +971,8 @@ export type Database = {
           jogador_id: string
           jogador_trocado_id?: string | null
           luvas?: number
+          opcao_compra?: number | null
+          percentual_revenda?: number | null
           proposta_pai_id?: string | null
           salario_ofertado: number
           status?: Database["public"]["Enums"]["transfer_status"]
@@ -966,8 +981,9 @@ export type Database = {
           valor_ofertado: number
         }
         Update: {
+          anos_contrato?: number
           clube_comprador_id?: string
-          clube_vendedor_id?: string
+          clube_vendedor_id?: string | null
           created_at?: string
           created_by?: string | null
           duracao_emprestimo?: number | null
@@ -975,6 +991,8 @@ export type Database = {
           jogador_id?: string
           jogador_trocado_id?: string | null
           luvas?: number
+          opcao_compra?: number | null
+          percentual_revenda?: number | null
           proposta_pai_id?: string | null
           salario_ofertado?: number
           status?: Database["public"]["Enums"]["transfer_status"]
@@ -1086,6 +1104,33 @@ export type Database = {
         Args: { _transfer_id: string }
         Returns: undefined
       }
+      contratar_jogador_direto:
+        | {
+            Args: {
+              _clube_id: string
+              _jogador_id: string
+              _luvas?: number
+              _salario: number
+              _tipo?: string
+              _user_id?: string
+              _valor?: number
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _anos_contrato: number
+              _clube_id: string
+              _jogador_id: string
+              _luvas: number
+              _percentual_revenda?: number
+              _salario: number
+              _tipo: string
+              _user_id: string
+              _valor: number
+            }
+            Returns: undefined
+          }
       criar_contraproposta: {
         Args: {
           _luvas: number
