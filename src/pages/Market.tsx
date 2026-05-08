@@ -367,13 +367,10 @@ const Market = () => {
     const enriched = { ...player, valor_base_calculado: base };
     setTarget(enriched);
 
-    if (player._isFreeAgent) {
-      setTipo("compra");
-    } else {
-      setTipo("compra");
-    }
+    setTipo("compra");
 
-    setValor(String(Math.round(base)));
+    // Passes livres são gratuitos em relação ao valor de mercado
+    setValor(player._isFreeAgent ? "0" : String(Math.round(base)));
     let sugerido = Math.round(base * 0.1);
     if (base > 0 && !player._isForeign && !player._isFreeAgent) {
       try {
@@ -398,9 +395,12 @@ const Market = () => {
   const luvasNum = parseFloat(luvas) || 0;
   const totalDevido = valorNum + luvasNum;
 
-  const fpError = target && tipo === "compra" ? fairPlayCheck(valorNum, Number(target.valor_base_calculado)) : null;
+  const fpError =
+    target && tipo === "compra" && !target._isFreeAgent
+      ? fairPlayCheck(valorNum, Number(target.valor_base_calculado))
+      : null;
   const caixaError =
-    target && tipo !== "emprestimo" && totalDevido > caixaComprador
+    target && tipo !== "emprestimo" && !target._isFreeAgent && totalDevido > caixaComprador
       ? `Caixa insuficiente: necessário ${formatCurrency(totalDevido)}, disponível ${formatCurrency(caixaComprador)}`
       : null;
   const trocaError = tipo === "troca" && !jogadorTrocado ? "Selecione um jogador para oferecer na troca" : null;
@@ -467,9 +467,9 @@ const Market = () => {
         _clube_id: activeClubId,
         _jogador_id: target.id,
         _salario: parseFloat(salario),
-        _luvas: luvasNum,
-        _valor: valorNum,
-        _tipo: "livre",
+        _luvas: target._isFreeAgent ? 0 : luvasNum,
+        _valor: target._isFreeAgent ? 0 : valorNum,
+        _tipo: target._isFreeAgent ? "livre" : "livre",
         _user_id: user.id,
         _anos_contrato: anos,
         _percentual_revenda: 0,

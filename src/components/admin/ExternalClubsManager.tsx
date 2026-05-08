@@ -8,17 +8,28 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, Send } from "lucide-react";
+import { Plus, Pencil, Trash2, Send, FileJson, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ImageUpload";
+
+type Region = "america_sul" | "america_norte_central" | "europa" | "asia" | "africa" | "oceania";
+type Tier = "baixo" | "medio" | "alto" | "elite";
+
+const REGION_LABELS: Record<Region, string> = {
+  america_sul: "América do Sul",
+  america_norte_central: "América do Norte/Central",
+  europa: "Europa",
+  asia: "Ásia",
+  africa: "África",
+  oceania: "Oceania",
+};
 
 type Row = {
   id?: string;
   name: string;
   country: string | null;
-  league: string | null;
-  region: "europeu" | "brasileiro" | "arabe";
-  budget_tier: "baixo" | "medio" | "alto" | "elite";
+  region: Region;
+  budget_tier: Tier;
   prestige: number;
   active: boolean;
   crest: string | null;
@@ -27,8 +38,7 @@ type Row = {
 const empty: Row = {
   name: "",
   country: "",
-  league: "",
-  region: "europeu",
+  region: "europa",
   budget_tier: "medio",
   prestige: 5,
   active: true,
@@ -39,6 +49,8 @@ export const ExternalClubsManager = () => {
   const [rows, setRows] = useState<Row[]>([]);
   const [editing, setEditing] = useState<Row | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [importPreview, setImportPreview] = useState<Row[] | null>(null);
+  const [importing, setImporting] = useState(false);
 
   const load = async () => {
     const { data } = await supabase.from("external_clubs").select("*").order("name");
@@ -50,8 +62,8 @@ export const ExternalClubsManager = () => {
 
   const save = async () => {
     if (!editing) return;
-    const payload = { ...editing };
-    delete (payload as any).id;
+    const payload: any = { ...editing };
+    delete payload.id;
     const { error } = editing.id
       ? await supabase.from("external_clubs").update(payload).eq("id", editing.id)
       : await supabase.from("external_clubs").insert(payload);
@@ -83,6 +95,45 @@ export const ExternalClubsManager = () => {
     toast.success(`${data ?? 0} propostas geradas`);
   };
 
+  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const arr = JSON.parse(String(reader.result));
+        if (!Array.isArray(arr)) throw new Error("Esperado array");
+        const validRegions: Region[] = ["america_sul", "america_norte_central", "europa", "asia", "africa", "oceania"];
+        const validTiers: Tier[] = ["baixo", "medio", "alto", "elite"];
+        const parsed: Row[] = arr.map((r: any) => ({
+          name: String(r.name),
+          country: r.country ?? null,
+          region: validRegions.includes(r.region) ? r.region : "europa",
+          budget_tier: validTiers.includes(r.budget_tier) ? r.budget_tier : "medio",
+          prestige: Math.min(10, Math.max(1, Number(r.prestige ?? 5))),
+          active: r.active !== false,
+          crest: r.crest ?? null,
+        }));
+        setImportPreview(parsed);
+      } catch (err: any) {
+        toast.error("JSON inválido: " + err.message);
+      }
+    };
+    reader.readAsText(f);
+    e.target.value = "";
+  };
+
+  const confirmImport = async () => {
+    if (!importPreview) return;
+    setImporting(true);
+    const { error } = await supabase.from("external_clubs").insert(importPreview as any);
+    setImporting(false);
+    if (error) return toast.error(error.message);
+    toast.success(`${importPreview.length} clubes importados`);
+    setImportPreview(null);
+    load();
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2 items-center justify-between">
@@ -91,6 +142,12 @@ export const ExternalClubsManager = () => {
           <Button size="sm" variant="secondary" onClick={gerarPropostas} disabled={generating}>
             <Send className="h-4 w-4 mr-1" /> Gerar propostas da janela
           </Button>
+          <label className="cursor-pointer">
+            <input type="file" accept=".json" hidden onChange={onFile} />
+            <span className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-border hover:bg-secondary">
+              <FileJson className="h-4 w-4" /> Importar JSON
+            </span>
+          </label>
           <Button size="sm" onClick={() => setEditing({ ...empty })}>
             <Plus className="h-4 w-4 mr-1" /> Novo
           </Button>
@@ -103,7 +160,7 @@ export const ExternalClubsManager = () => {
             <TableRow>
               <TableHead></TableHead>
               <TableHead>Nome</TableHead>
-              <TableHead>País / Liga</TableHead>
+              <TableHead>País</TableHead>
               <TableHead>Região</TableHead>
               <TableHead>Tier</TableHead>
               <TableHead>Prestígio</TableHead>
@@ -118,11 +175,8 @@ export const ExternalClubsManager = () => {
                   {r.crest && <img src={r.crest} alt={r.name} className="h-8 w-8 object-contain" />}
                 </TableCell>
                 <TableCell className="font-medium">{r.name}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {r.country}
-                  {r.league ? ` / ${r.league}` : ""}
-                </TableCell>
-                <TableCell>{r.region}</TableCell>
+                <TableCell className="text-xs text-muted-foreground">{r.country}</TableCell>
+                <TableCell>{REGION_LABELS[r.region]}</TableCell>
                 <TableCell>{r.budget_tier}</TableCell>
                 <TableCell>{r.prestige}</TableCell>
                 <TableCell>
@@ -158,23 +212,19 @@ export const ExternalClubsManager = () => {
                 <Input value={editing.country ?? ""} onChange={(e) => setEditing({ ...editing, country: e.target.value })} />
               </div>
               <div>
-                <Label>Liga</Label>
-                <Input value={editing.league ?? ""} onChange={(e) => setEditing({ ...editing, league: e.target.value })} />
-              </div>
-              <div>
                 <Label>Região</Label>
-                <Select value={editing.region} onValueChange={(v: any) => setEditing({ ...editing, region: v })}>
+                <Select value={editing.region} onValueChange={(v: Region) => setEditing({ ...editing, region: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="europeu">Europeu</SelectItem>
-                    <SelectItem value="brasileiro">Brasileiro</SelectItem>
-                    <SelectItem value="arabe">Árabe</SelectItem>
+                    {(Object.keys(REGION_LABELS) as Region[]).map((k) => (
+                      <SelectItem key={k} value={k}>{REGION_LABELS[k]}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <Label>Tier de orçamento</Label>
-                <Select value={editing.budget_tier} onValueChange={(v: any) => setEditing({ ...editing, budget_tier: v })}>
+                <Select value={editing.budget_tier} onValueChange={(v: Tier) => setEditing({ ...editing, budget_tier: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="baixo">Baixo</SelectItem>
@@ -202,6 +252,41 @@ export const ExternalClubsManager = () => {
           <DialogFooter>
             <Button variant="ghost" onClick={() => setEditing(null)}>Cancelar</Button>
             <Button onClick={save}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!importPreview} onOpenChange={(o) => !o && setImportPreview(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Prévia ({importPreview?.length ?? 0})</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-96 overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead><TableHead>País</TableHead>
+                  <TableHead>Região</TableHead><TableHead>Tier</TableHead><TableHead>Prest.</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {importPreview?.map((r, i) => (
+                  <TableRow key={i}>
+                    <TableCell>{r.name}</TableCell>
+                    <TableCell>{r.country}</TableCell>
+                    <TableCell>{REGION_LABELS[r.region]}</TableCell>
+                    <TableCell>{r.budget_tier}</TableCell>
+                    <TableCell>{r.prestige}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setImportPreview(null)}>Cancelar</Button>
+            <Button onClick={confirmImport} disabled={importing}>
+              <Upload className="h-4 w-4 mr-2" /> Confirmar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
