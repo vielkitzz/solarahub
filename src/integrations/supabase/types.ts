@@ -344,7 +344,6 @@ export type Database = {
           created_at: string
           crest: string | null
           id: string
-          league: string | null
           name: string
           prestige: number
           region: Database["public"]["Enums"]["external_region"]
@@ -357,7 +356,6 @@ export type Database = {
           created_at?: string
           crest?: string | null
           id?: string
-          league?: string | null
           name: string
           prestige?: number
           region?: Database["public"]["Enums"]["external_region"]
@@ -370,7 +368,6 @@ export type Database = {
           created_at?: string
           crest?: string | null
           id?: string
-          league?: string | null
           name?: string
           prestige?: number
           region?: Database["public"]["Enums"]["external_region"]
@@ -1318,7 +1315,13 @@ export type Database = {
         | "recusada"
         | "contraproposta"
         | "expirada"
-      external_region: "europeu" | "brasileiro" | "arabe"
+      external_region:
+        | "america_sul"
+        | "america_norte_central"
+        | "europa"
+        | "asia"
+        | "africa"
+        | "oceania"
       transfer_status:
         | "pendente"
         | "aceita"
@@ -1480,7 +1483,14 @@ export const Constants = {
         "contraproposta",
         "expirada",
       ],
-      external_region: ["europeu", "brasileiro", "arabe"],
+      external_region: [
+        "america_sul",
+        "america_norte_central",
+        "europa",
+        "asia",
+        "africa",
+        "oceania",
+      ],
       transfer_status: [
         "pendente",
         "aceita",
