@@ -320,7 +320,9 @@ const Market = () => {
 
     const { data: ecs } = await supabase.from("external_clubs").select("id, name, crest, country");
     const ecMap: Record<string, any> = {};
-    (ecs || []).forEach((c: any) => { ecMap[c.id] = c; });
+    (ecs || []).forEach((c: any) => {
+      ecMap[c.id] = c;
+    });
     setExternalClubsMap(ecMap);
 
     const since = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
@@ -722,7 +724,10 @@ const Market = () => {
         )}
       </header>
 
-      <Tabs value={searchParams.get("tab") || (hasClub ? "negociar" : "rumores")} onValueChange={(v) => setSearchParams({ tab: v })}>
+      <Tabs
+        value={searchParams.get("tab") || (hasClub ? "negociar" : "rumores")}
+        onValueChange={(v) => setSearchParams({ tab: v })}
+      >
         <div className="-mx-3 sm:-mx-4 md:mx-0 overflow-x-auto scrollbar-thin">
           <TabsList className="bg-secondary/50 mx-3 sm:mx-4 md:mx-0 w-max">
             {hasClub && (
@@ -1003,16 +1008,14 @@ const Market = () => {
                 {seasonTransfers.map((tx) => {
                   const player = players.find((p) => p.id === tx.related_player_id);
                   const isExternalSale = tx.categoria === "transferencia_externa";
-                  const externalClub = isExternalSale
-                    ? externalClubsMap[(tx.metadata as any)?.external_club_id]
-                    : null;
+                  const externalClub = isExternalSale ? externalClubsMap[(tx.metadata as any)?.external_club_id] : null;
                   const compradorClub = isExternalSale
-                    ? (externalClub
-                        ? { id: null, name: externalClub.name + (externalClub.country ? ` (${externalClub.country})` : ""), crest_url: externalClub.crest }
-                        : { id: null, name: "Clube estrangeiro", crest_url: null })
+                    ? externalClub
+                      ? { id: null, name: externalClub.name, crest_url: externalClub.crest }
+                      : { id: null, name: "Clube estrangeiro", crest_url: null }
                     : clubs[tx.related_club_id];
                   const vendedorClub = clubs[tx.club_id];
-                  const tipoOp = isExternalSale ? "venda externa" : ((tx.metadata as any)?.tipo_op || "compra");
+                  const tipoOp = isExternalSale ? "venda externa" : (tx.metadata as any)?.tipo_op || "compra";
                   const isEstrangeiro = tipoOp === "estrangeiro";
                   const isLivre = tipoOp === "livre";
                   const vendedorDisplay = isEstrangeiro
