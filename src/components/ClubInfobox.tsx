@@ -2,6 +2,7 @@ import { Shield, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useState } from "react";
 
@@ -35,6 +36,11 @@ interface Props {
 
 const Row = ({ label, value, readOnly }: { label: string; value?: string | number | null; readOnly?: boolean }) => {
   if (value === null || value === undefined || value === "") return null;
+
+  const lines = String(value)
+    .split("\n")
+    .filter((l) => l.trim() !== "");
+
   return (
     <tr className="border-b border-border/40 last:border-0">
       <th
@@ -43,7 +49,17 @@ const Row = ({ label, value, readOnly }: { label: string; value?: string | numbe
       >
         {label}
       </th>
-      <td className="py-1.5 text-sm font-serif text-foreground">{value}</td>
+      <td className="py-1.5 text-sm font-serif text-foreground">
+        {lines.length > 1 ? (
+          <ul className="space-y-0.5 list-none">
+            {lines.map((line, i) => (
+              <li key={i}>{line}</li>
+            ))}
+          </ul>
+        ) : (
+          String(value)
+        )}
+      </td>
     </tr>
   );
 };
@@ -126,16 +142,29 @@ export function ClubInfobox({ club, infobox, canEdit, onSave }: Props) {
               <div className="grid gap-3 py-2">
                 {(
                   [
-                    ["alcunhas", "Alcunhas (apelidos do clube)"],
-                    ["torcedor", "Torcedor(a) / Adepto(a)"],
-                    ["rival", "Rival principal"],
-                    ["presidente", "Presidente"],
-                    ["competicao", "Competição"],
+                    ["alcunhas", "Alcunhas (apelidos do clube)", true],
+                    ["torcedor", "Torcedor(a) / Adepto(a)", false],
+                    ["rival", "Rival principal", true],
+                    ["presidente", "Presidente", false],
+                    ["competicao", "Competição", false],
                   ] as const
-                ).map(([key, label]) => (
+                ).map(([key, label, multiline]) => (
                   <div key={key} className="space-y-1">
-                    <Label className="text-xs">{label}</Label>
-                    <Input value={draft[key] ?? ""} onChange={(e) => setDraft({ ...draft, [key]: e.target.value })} />
+                    <Label className="text-xs">
+                      {label}
+                      {multiline && <span className="ml-1 text-muted-foreground font-normal">(uma por linha)</span>}
+                    </Label>
+                    {multiline ? (
+                      <Textarea
+                        value={draft[key] ?? ""}
+                        onChange={(e) => setDraft({ ...draft, [key]: e.target.value })}
+                        rows={3}
+                        className="resize-none text-sm"
+                        placeholder={"Exemplo 1\nExemplo 2\nExemplo 3"}
+                      />
+                    ) : (
+                      <Input value={draft[key] ?? ""} onChange={(e) => setDraft({ ...draft, [key]: e.target.value })} />
+                    )}
                   </div>
                 ))}
                 <p className="text-xs text-muted-foreground">
