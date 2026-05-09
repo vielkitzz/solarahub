@@ -380,6 +380,7 @@ export type Database = {
           created_at: string
           external_club_id: string
           id: string
+          is_auto_proposal: boolean
           luvas: number
           mensagem: string | null
           origem: string
@@ -395,6 +396,7 @@ export type Database = {
           created_at?: string
           external_club_id: string
           id?: string
+          is_auto_proposal?: boolean
           luvas?: number
           mensagem?: string | null
           origem?: string
@@ -410,6 +412,7 @@ export type Database = {
           created_at?: string
           external_club_id?: string
           id?: string
+          is_auto_proposal?: boolean
           luvas?: number
           mensagem?: string | null
           origem?: string
@@ -945,6 +948,7 @@ export type Database = {
           created_by: string | null
           duracao_emprestimo: number | null
           id: string
+          is_auto_proposal: boolean
           jogador_id: string
           jogador_trocado_id: string | null
           luvas: number
@@ -965,6 +969,7 @@ export type Database = {
           created_by?: string | null
           duracao_emprestimo?: number | null
           id?: string
+          is_auto_proposal?: boolean
           jogador_id: string
           jogador_trocado_id?: string | null
           luvas?: number
@@ -985,6 +990,7 @@ export type Database = {
           created_by?: string | null
           duracao_emprestimo?: number | null
           id?: string
+          is_auto_proposal?: boolean
           jogador_id?: string
           jogador_trocado_id?: string | null
           luvas?: number
