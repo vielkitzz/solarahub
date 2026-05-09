@@ -30,7 +30,7 @@ export const transfersService = {
   async reject(transferId: string) {
     const { error } = await supabase
       .from("transferencias")
-      .update({ status: "rejeitada" })
+      .update({ status: "recusada" })
       .eq("id", transferId);
     if (error) throw error;
   },
