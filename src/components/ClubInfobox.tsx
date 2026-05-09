@@ -143,10 +143,10 @@ export function ClubInfobox({ club, infobox, canEdit, onSave }: Props) {
                 {(
                   [
                     ["alcunhas", "Alcunhas (apelidos do clube)", true],
-                    ["torcedor", "Torcedor(a) / Adepto(a)", false],
+                    ["torcedor", "Torcedor(a) / Adepto(a)", true],
                     ["rival", "Rival principal", true],
                     ["presidente", "Presidente", false],
-                    ["competicao", "Competição", false],
+                    ["competicao", "Competição", true],
                   ] as const
                 ).map(([key, label, multiline]) => (
                   <div key={key} className="space-y-1">
