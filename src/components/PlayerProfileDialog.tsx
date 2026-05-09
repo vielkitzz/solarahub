@@ -23,6 +23,7 @@ import {
 import { useInterestList } from "@/hooks/useInterestList";
 import { ContractRenewalDialog } from "@/components/ContractRenewalDialog";
 import { MultaRescisoriaDialog } from "@/components/MultaRescisoriaDialog";
+import { estimarPotencialOwn } from "@/lib/scout";
 
 interface Props {
   playerId: string | null;
@@ -142,17 +143,18 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
   const potDisplay = useMemo(() => {
     if (!player) return null;
 
-    if (isOwn) {
-      const min = player.potential_min;
-      const max = player.potential_max;
-      if (min == null || max == null) return null;
-      const sameValue = min === max;
-      return {
-        value: max,
-        min: sameValue ? undefined : min,
-        label: sameValue ? String(max) : `${min}-${max}`,
-        tooltip: "Potencial real (visto apenas pelo dono)",
-      };
+    if (isOwn && myClub) {
+      // Usa a mesma estimativa com margem de erro do ClubDetail
+      const est = estimarPotencialOwn(player, myClub.id, myClub.nivel_base);
+      if (est) {
+        return {
+          value: est.pmax,
+          min: est.pmin,
+          label: `${est.pmin}-${est.pmax}`,
+          tooltip: `Estimativa do seu olheiro (±${est.margem})`,
+        };
+      }
+      return null;
     }
 
     if (report) {
@@ -165,7 +167,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
     }
 
     return null;
-  }, [player, isOwn, report]);
+  }, [player, isOwn, myClub, report]);
 
   const contratoLabel = useMemo(() => {
     if (player?.contrato_ate == null) return "—";
