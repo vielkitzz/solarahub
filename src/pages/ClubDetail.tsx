@@ -597,7 +597,7 @@ const ClubDetail = () => {
         </TabsContent>
 
         <TabsContent value="base" className="mt-4">
-          <AcademyManager club={club} canEdit={canEdit} onChange={load} />
+          <AcademyManager club={club} canEdit={canEdit} onChange={load} myClub={myClub} />
         </TabsContent>
 
         <TabsContent value="wiki" className="mt-4">

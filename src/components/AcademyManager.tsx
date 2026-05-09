@@ -36,6 +36,7 @@ interface Props {
   club: any;
   canEdit: boolean;
   onChange: () => void;
+  myClub?: any | null; // ← novo
 }
 
 interface AcademyPlayer {
@@ -448,7 +449,7 @@ function AcademyTable({
 }
 
 // ─── Gerenciador Principal ────────────────────────────────────────────────────
-export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
+export const AcademyManager = ({ club, canEdit, onChange, myClub }: Props) => {
   const [players, setPlayers] = useState<AcademyPlayer[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -490,10 +491,9 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
       if (oa !== ob) return oa - ob;
       return (b.development_progress || 0) - (a.development_progress || 0);
     });
+
     setPlayers(sorted);
 
-    // Se é o dono, mostra potencial real direto
-    // Se não é, busca apenas relatórios de olheiro já feitos
     if (canEdit) {
       const reportsMap: Record<string, any> = {};
       ((playersData as AcademyPlayer[]) || []).forEach((p) => {
@@ -504,20 +504,16 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
         };
       });
       setScoutReports(reportsMap);
-    } else {
+    } else if (myClub) {
       try {
-        const { data: academyIds } = await supabase.from("academy_players").select("id").eq("club_id", club.id);
-
-        const ids = (academyIds || []).map((r) => r.id);
-
+        const ids = ((playersData as AcademyPlayer[]) || []).map((p) => p.id);
         const { data: reportsData } = await supabase
           .from("scout_reports")
           .select("*")
-          .eq("scouter_club_id", club.id)
+          .eq("scouter_club_id", myClub.id)
           .in("target_player_id", ids.length > 0 ? ids : ["00000000-0000-0000-0000-000000000000"]);
-
         const reportsMap: Record<string, any> = {};
-        (reportsData || []).forEach((r) => {
+        (reportsData || []).forEach((r: any) => {
           reportsMap[r.target_player_id] = {
             potential_min_revelado: r.potential_min_revelado,
             potential_max_revelado: r.potential_max_revelado,
@@ -527,7 +523,10 @@ export const AcademyManager = ({ club, canEdit, onChange }: Props) => {
         setScoutReports(reportsMap);
       } catch (e) {
         console.warn("Erro ao carregar relatórios de olheiro.");
+        setScoutReports({});
       }
+    } else {
+      setScoutReports({});
     }
 
     setLoading(false);
