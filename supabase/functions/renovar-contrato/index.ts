@@ -52,17 +52,16 @@ Deno.serve(async (req) => {
     const idade = jogador.age ?? 25;
     const habilidade = jogador.habilidade ?? 70;
 
-    const systemPrompt = `Você é um agente de jogadores de futebol experiente e duro nas negociações.
-Avalie a proposta de renovação de contrato e responda SOMENTE chamando a função "decidir_renovacao".
+    const systemPrompt = `Você é um agente de jogadores de futebol experiente.
+Avalie a proposta de renovação de contrato.
 
-Regras de avaliação:
-- Salário esperado mínimo é ~10% do valor base anual do jogador.
-- Jogadores jovens (≤22) com habilidade alta pedem mais (até +30%).
-- Jogadores veteranos (≥31) aceitam menos (-20%).
-- Contratos curtos (1 ano) são aceitáveis para veteranos; jovens preferem 3-5 anos.
-- Se a proposta for muito abaixo do esperado (>15% abaixo), recuse.
-- Caso contrário, aceite.
-- Justifique sempre em 1-2 frases curtas, em português, em primeira pessoa do agente.`;
+Diretrizes:
+- Use o "Salário atual" como principal referência para negociar um aumento.
+- O "Salário mínimo esperado" (10% do valor base) é apenas uma meta ideal do agente, não uma regra obrigatória.
+- Se o jogador for reserva ou estiver em fim de carreira (idade alta), ele pode aceitar manter o salário atual ou até reduzi-lo para renovar.
+- Se o jogador for um jovem talento com habilidade alta, ele exige um aumento significativo sobre o salário atual.
+- Aceite propostas realistas que valorizem o jogador, mesmo que fiquem abaixo dos 10% do valor de mercado.
+- Justifique sempre em 1-2 frases curtas, em português.`;
 
     const userPrompt = `Jogador: ${jogador.name}
 Posição: ${jogador.position}
