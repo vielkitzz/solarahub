@@ -1,114 +1,101 @@
-// supabase/functions/renovar-contrato/index.ts
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 Deno.serve(async (req) => {
+  // 1. Lida com chamadas de preflight (CORS)
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const authHeader = req.headers.get("Authorization");
+    // 2. Variáveis de ambiente (Verifique se estão no painel do Supabase!)
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!; // Usar Service Role para garantir a execução do RPC
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const LOVABLE_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    if (!LOVABLE_API_KEY) return json({ error: "LOVABLE_API_KEY ausente" }, 500);
+    if (!LOVABLE_KEY) {
+      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY não configurada" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    // Cliente com Service Role para garantir que o RPC funcione
+    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
 
+    // 3. Lê o corpo da requisição
     const { jogador_id, salario_proposto, anos_proposto } = await req.json();
 
+    // 4. Busca dados do jogador
     const { data: jogador, error: jErr } = await supabase
       .from("players")
-      .select("id, name, age, habilidade, position, salario_atual, valor_base_calculado")
+      .select("name, age, habilidade, salario_atual, valor_base_calculado")
       .eq("id", jogador_id)
       .maybeSingle();
 
-    if (jErr || !jogador) return json({ error: "Jogador não encontrado" }, 404);
+    if (jErr || !jogador) throw new Error("Jogador não encontrado");
 
-    const salarioMinimoEsperado = Number(jogador.valor_base_calculado || 0) * 0.1;
-
-    const systemPrompt = `Você é um agente de jogadores de futebol experiente.
-Avalie a proposta de renovação de contrato.
-Diretrizes:
-- Use o "Salário atual" como principal referência.
-- O "Salário mínimo esperado" (10% do valor base) é uma meta ideal, não obrigatória.
-- Jogadores veteranos (31+) ou reservas podem aceitar manter ou reduzir o salário.
-- Jovens talentos exigem aumento sobre o salário atual.
-- Justifique em 1-2 frases curtas em português.`;
-
-    const userPrompt = `Jogador: ${jogador.name} | Idade: ${jogador.age} | Habilidade: ${jogador.habilidade}
-Salário atual: € ${Number(jogador.salario_atual).toFixed(0)}
-Salário mínimo esperado (10% mercado): € ${salarioMinimoEsperado.toFixed(0)}
-Proposta: € ${salario_proposto} por ${anos_proposto} ano(s).`;
+    // 5. Chamada para a IA
+    const prompt = `Você é um agente. Jogador: ${jogador.name}, ${jogador.age} anos, OVR ${jogador.habilidade}. 
+    Salário Atual: €${jogador.salario_atual}. 
+    A proposta é: €${salario_proposto} por ${anos_proposto} anos. 
+    Decida se aceita ou recuse.`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${LOVABLE_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
+        messages: [{ role: "user", content: prompt }],
         tools: [
           {
             type: "function",
             function: {
-              name: "decidir_renovacao",
+              name: "decidir",
               parameters: {
                 type: "object",
                 properties: {
                   aceita: { type: "boolean" },
                   justificativa: { type: "string" },
-                  contraproposta_salario: { type: "number" },
-                  contraproposta_anos: { type: "number" },
+                  contra_salario: { type: "number" },
+                  contra_anos: { type: "number" },
                 },
                 required: ["aceita", "justificativa"],
               },
             },
           },
         ],
-        tool_choice: { type: "function", function: { name: "decidir_renovacao" } },
+        tool_choice: { type: "function", function: { name: "decidir" } },
       }),
     });
 
     const aiData = await aiResp.json();
-    const args = aiData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    const decision = JSON.parse(aiData.choices[0].message.tool_calls[0].function.arguments);
 
-    if (!args) throw new Error("A IA não retornou uma resposta válida.");
-    const decision = JSON.parse(args);
-
+    // 6. Se aceito, executa a renovação no banco
     if (decision.aceita) {
-      await supabase.rpc("renovar_contrato_jogador", {
+      const { error: rpcErr } = await supabase.rpc("renovar_contrato_jogador", {
         _jogador_id: jogador_id,
         _novo_salario: salario_proposto,
         _novos_anos: anos_proposto,
       });
+      if (rpcErr) throw rpcErr;
     }
 
-    return json({
-      aceita: decision.aceita,
-      justificativa: decision.justificativa,
-      contraproposta: decision.aceita
-        ? null
-        : {
-            salario: decision.contraproposta_salario || null,
-            anos: decision.contraproposta_anos || null,
-          },
+    return new Response(
+      JSON.stringify({
+        aceita: decision.aceita,
+        justificativa: decision.justificativa,
+        contraproposta: decision.aceita ? null : { salario: decision.contra_salario, anos: decision.contra_anos },
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  } catch (e: any) {
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (e) {
-    return json({ error: e.message }, 500);
   }
 });
-
-function json(data: any, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
