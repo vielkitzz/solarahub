@@ -53,6 +53,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getFlagUrl } from "@/lib/countries";
 import { PlayerProfileDialog } from "@/components/PlayerProfileDialog";
 import { SkillDisplay } from "@/components/SkillDisplay";
+import { SquadTable } from "@/components/club-detail/SquadTable";
+import { StatCard, Row, EvolutionTable } from "@/components/club-detail/EvolutionTable";
 
 const ClubDetail = () => {
   const { id } = useParams<{ id: string }>();
