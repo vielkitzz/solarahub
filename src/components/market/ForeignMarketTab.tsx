@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,17 +16,30 @@ interface ForeignMarketTabProps {
   onNegotiate: (player: any) => void;
 }
 
+type SortKey = "overall" | "age" | "market_value" | "salary_demand";
+type SortDir = "asc" | "desc";
+
+const SortIcon = ({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) => {
+  if (col !== sortKey) return <ArrowUpDown className="inline ml-1 h-3 w-3 opacity-40" />;
+  return sortDir === "asc" ? (
+    <ArrowUp className="inline ml-1 h-3 w-3 text-primary" />
+  ) : (
+    <ArrowDown className="inline ml-1 h-3 w-3 text-primary" />
+  );
+};
+
 export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: ForeignMarketTabProps) => {
   const [rows, setRows] = useState<any[]>([]);
   const [pos, setPos] = useState<string>("all");
   const [temp, setTemp] = useState<string>("all");
   const [q, setQ] = useState<string>("");
+  const [sortKey, setSortKey] = useState<SortKey>("overall");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   useEffect(() => {
     supabase
       .from("foreign_market_players")
       .select("*")
-      .order("overall", { ascending: false })
       .then(({ data }) => setRows(data || []));
   }, []);
 
@@ -35,12 +48,29 @@ export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: Foreign
     [rows],
   );
 
-  const filtered = rows.filter(
-    (r) =>
-      (pos === "all" || r.position === pos) &&
-      (temp === "all" || String(r.temporada) === temp) &&
-      (!q || r.name.toLowerCase().includes(q.toLowerCase())),
-  );
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("desc");
+    }
+  };
+
+  const filtered = useMemo(() => {
+    const base = rows.filter(
+      (r) =>
+        (pos === "all" || r.position === pos) &&
+        (temp === "all" || String(r.temporada) === temp) &&
+        (!q || r.name.toLowerCase().includes(q.toLowerCase())),
+    );
+
+    return [...base].sort((a, b) => {
+      const va = Number(a[sortKey]) || 0;
+      const vb = Number(b[sortKey]) || 0;
+      return sortDir === "asc" ? va - vb : vb - va;
+    });
+  }, [rows, pos, temp, q, sortKey, sortDir]);
 
   const buildForeignPlayer = (r: any) => ({
     id: r.id,
@@ -57,6 +87,13 @@ export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: Foreign
     a_venda: true,
     _isForeign: true,
   });
+
+  const SortableHead = ({ col, label, className = "" }: { col: SortKey; label: string; className?: string }) => (
+    <TableHead className={`cursor-pointer select-none whitespace-nowrap ${className}`} onClick={() => toggleSort(col)}>
+      {label}
+      <SortIcon col={col} sortKey={sortKey} sortDir={sortDir} />
+    </TableHead>
+  );
 
   return (
     <div className="space-y-3">
@@ -94,6 +131,7 @@ export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: Foreign
           </Select>
         </div>
       </div>
+
       <Card className="bg-gradient-card border-border/50 overflow-hidden">
         <Table>
           <TableHeader>
@@ -102,9 +140,10 @@ export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: Foreign
               <TableHead>Jogador</TableHead>
               <TableHead className="hidden sm:table-cell w-20"></TableHead>
               <TableHead>Clube / Liga</TableHead>
-              <TableHead className="text-center w-16 hidden sm:table-cell">Idade</TableHead>
-              <TableHead className="text-right">Valor</TableHead>
-              <TableHead className="text-right">Salário</TableHead>
+              <SortableHead col="overall" label="HAB" className="text-center w-16" />
+              <SortableHead col="age" label="Idade" className="text-center hidden sm:table-cell w-16" />
+              <SortableHead col="market_value" label="Valor" className="text-right" />
+              <SortableHead col="salary_demand" label="Salário" className="text-right" />
               {hasClub && <TableHead className="w-24"></TableHead>}
             </TableRow>
           </TableHeader>
@@ -123,6 +162,9 @@ export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: Foreign
                 <TableCell className="text-xs text-muted-foreground">
                   {r.club_origin}
                   {r.league_origin ? ` / ${r.league_origin}` : ""}
+                </TableCell>
+                <TableCell className="text-center">
+                  <Badge className="bg-primary/10 text-primary border-primary/30 font-bold">{r.overall ?? "—"}</Badge>
                 </TableCell>
                 <TableCell className="text-center hidden sm:table-cell text-sm">{r.age ?? "—"}</TableCell>
                 <TableCell className="text-right font-display font-bold text-primary">
@@ -144,7 +186,7 @@ export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: Foreign
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={hasClub ? 8 : 7} className="text-center text-muted-foreground py-10">
+                <TableCell colSpan={hasClub ? 9 : 8} className="text-center text-muted-foreground py-10">
                   Nenhum jogador encontrado.
                 </TableCell>
               </TableRow>
