@@ -11,6 +11,8 @@ type Params = {
   receita_base: { estadual: number; nacional: number; continental: number; mundial: number };
   bilheteria_por_nivel: number;
   manutencao_por_nivel_base: number;
+  manutencao_estadio_por_nivel: number;
+  custos_operacionais_pct: number;
   multiplicadores_evolucao: { "1": number; "2": number; "3": number; "4": number; "5": number };
   premiacao: {
     "1": number;
