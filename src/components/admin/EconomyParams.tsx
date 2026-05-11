@@ -30,6 +30,8 @@ const DEFAULT: Params = {
   receita_base: { estadual: 3010000, nacional: 8050000, continental: 16100000, mundial: 31500000 },
   bilheteria_por_nivel: 500000,
   manutencao_por_nivel_base: 300000,
+  manutencao_estadio_por_nivel: 200000,
+  custos_operacionais_pct: 0.25,
   multiplicadores_evolucao: { "1": 0.8, "2": 0.95, "3": 1.1, "4": 1.2, "5": 1.3 },
   premiacao: {
     "1": 20000000,
