@@ -557,9 +557,16 @@ const ClubDetail = () => {
 
           {/* Transferências e investimentos em infraestrutura */}
           <Card className="p-4 bg-gradient-card border-border/50">
-            <h4 className="font-display font-bold text-sm flex items-center gap-2 mb-3">
-              <ArrowUpDown className="h-4 w-4 text-primary" /> Transferências e investimentos
-            </h4>
+            <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+              <h4 className="font-display font-bold text-sm flex items-center gap-2">
+                <ArrowUpDown className="h-4 w-4 text-primary" /> Transferências e investimentos
+              </h4>
+              <div className="flex items-center gap-2 text-[10px]">
+                <Badge variant="outline" className="text-[10px]">↓ Compras: {transferStats.c}</Badge>
+                <Badge variant="outline" className="text-[10px]">↑ Vendas: {transferStats.v}</Badge>
+                <Badge variant="outline" className="text-[10px]">🌍 Exterior: {transferStats.e}</Badge>
+              </div>
+            </div>
             {recentTransactions.length === 0 ? (
               <div className="text-xs text-muted-foreground py-4 text-center">
                 Nenhuma transferência ou upgrade registrado.
