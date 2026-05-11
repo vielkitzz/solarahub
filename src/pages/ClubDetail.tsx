@@ -55,6 +55,7 @@ import { PlayerProfileDialog } from "@/components/PlayerProfileDialog";
 import { SkillDisplay } from "@/components/SkillDisplay";
 import { SquadTable } from "@/components/club-detail/SquadTable";
 import { StatCard, Row, EvolutionTable } from "@/components/club-detail/EvolutionTable";
+import { transfersService } from "@/services/transfers";
 
 const ClubDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -86,6 +87,12 @@ const ClubDetail = () => {
 
   const [direitosTv, setDireitosTv] = useState<number>(0);
   const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+  const [transferStats, setTransferStats] = useState<{ c: number; v: number; e: number }>({ c: 0, v: 0, e: 0 });
+  const [econParams, setEconParams] = useState<{
+    manut_base: number;
+    manut_estadio: number;
+    operacionais_pct: number;
+  }>({ manut_base: 300000, manut_estadio: 200000, operacionais_pct: 0.25 });
   const [imgSettings, setImgSettings] = useState<{ custo_pct: number; receita_pct: number }>({
     custo_pct: 0.03,
     receita_pct: 0.5,
@@ -109,7 +116,7 @@ const ClubDetail = () => {
       supabase.from("clubs").select("*").eq("id", id).maybeSingle(),
       supabase.from("players").select("*").eq("club_id", id),
       supabase.from("contratos_clube").select("valor_anual").eq("club_id", id).eq("ativo", true),
-      supabase.from("settings").select("key, value").in("key", ["temporada_atual", "direitos_imagem"]),
+      supabase.from("settings").select("key, value").in("key", ["temporada_atual", "direitos_imagem", "economia_params"]),
       supabase
         .from("contratos_clube")
         .select("empresa:empresas(nome), categoria")
@@ -142,6 +149,12 @@ const ClubDetail = () => {
           custo_pct: Number(s.value?.custo_pct ?? 0.03),
           receita_pct: Number(s.value?.receita_pct ?? 0.5),
         });
+      if (s.key === "economia_params")
+        setEconParams({
+          manut_base: Number(s.value?.manutencao_por_nivel_base ?? 300000),
+          manut_estadio: Number(s.value?.manutencao_estadio_por_nivel ?? 200000),
+          operacionais_pct: Number(s.value?.custos_operacionais_pct ?? 0.25),
+        });
     });
 
     setDireitosTv(Number(tvRightsValue || 0));
@@ -155,10 +168,18 @@ const ClubDetail = () => {
       .from("transactions")
       .select("*")
       .eq("club_id", id)
-      .in("categoria", ["transferencia", "upgrade_estadio", "upgrade_academia"])
+      .in("categoria", ["transferencia", "transferencia_externa", "upgrade_estadio", "upgrade_academia"])
       .order("created_at", { ascending: false })
       .limit(50);
     setRecentTransactions(tx || []);
+
+    // Contadores de transferências (todas as temporadas)
+    try {
+      const s = await transfersService.getStats(id);
+      setTransferStats({ c: s.total_compras, v: s.total_vendas, e: s.total_estrangeiros });
+    } catch {
+      setTransferStats({ c: 0, v: 0, e: 0 });
+    }
   };
 
   useEffect(() => {
@@ -277,7 +298,9 @@ const ClubDetail = () => {
     return 0;
   };
   const premiacao = premiacaoPorPosicao(club.posicao_ultima_temporada);
-  const manutencao = (club.nivel_base || 1) * 300_000;
+  const manutencao = (club.nivel_base || 1) * econParams.manut_base;
+  const manutencaoEstadio =
+    (club.nivel_estadio || 1) * econParams.manut_estadio * (Number(club.stadium_capacity || 0) / 10000);
   // Direitos de imagem
   const direitosImagemCusto = valorBaseFolha * imgSettings.custo_pct;
   const direitosImagemReceita = direitosImagemCusto * imgSettings.receita_pct;
@@ -290,8 +313,10 @@ const ClubDetail = () => {
       cap * ocInt * Number(club.preco_ingresso_internacional || 25)) /
     2;
   const bilheteria = recPorJogo * Number(club.jogos_por_temporada || 38);
+  const custosOperacionais = (contratosTotal + direitosTv + bilheteria) * econParams.operacionais_pct;
   const entradasAnuais = contratosTotal + direitosTv + direitosImagemReceita + premiacao + bilheteria;
-  const saidasAnuais = folhaSalarial + manutencao + direitosImagemCusto;
+  const saidasAnuais =
+    folhaSalarial + manutencao + manutencaoEstadio + direitosImagemCusto + custosOperacionais;
   const saldoPrevisto = entradasAnuais - saidasAnuais;
   const entradasMensais = entradasAnuais / 12;
   const saidasMensais = saidasAnuais / 12;
@@ -510,6 +535,8 @@ const ClubDetail = () => {
                 <Row label="Folha salarial" value={folhaSalarial} />
                 <Row label="Direitos de imagem (custo)" value={direitosImagemCusto} />
                 <Row label="Manutenção da base" value={manutencao} />
+                <Row label="Manutenção do estádio" value={manutencaoEstadio} />
+                <Row label={`Custos operacionais (${Math.round(econParams.operacionais_pct * 100)}%)`} value={custosOperacionais} />
                 <hr className="border-border/40" />
                 <Row label="Total" value={saidasAnuais} bold />
               </div>
@@ -530,9 +557,16 @@ const ClubDetail = () => {
 
           {/* Transferências e investimentos em infraestrutura */}
           <Card className="p-4 bg-gradient-card border-border/50">
-            <h4 className="font-display font-bold text-sm flex items-center gap-2 mb-3">
-              <ArrowUpDown className="h-4 w-4 text-primary" /> Transferências e investimentos
-            </h4>
+            <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+              <h4 className="font-display font-bold text-sm flex items-center gap-2">
+                <ArrowUpDown className="h-4 w-4 text-primary" /> Transferências e investimentos
+              </h4>
+              <div className="flex items-center gap-2 text-[10px]">
+                <Badge variant="outline" className="text-[10px]">↓ Compras: {transferStats.c}</Badge>
+                <Badge variant="outline" className="text-[10px]">↑ Vendas: {transferStats.v}</Badge>
+                <Badge variant="outline" className="text-[10px]">🌍 Exterior: {transferStats.e}</Badge>
+              </div>
+            </div>
             {recentTransactions.length === 0 ? (
               <div className="text-xs text-muted-foreground py-4 text-center">
                 Nenhuma transferência ou upgrade registrado.
@@ -553,12 +587,16 @@ const ClubDetail = () => {
                       const isIn = t.tipo === "entrada";
                       const catLabel =
                         t.categoria === "transferencia"
-                          ? "Transferência"
-                          : t.categoria === "upgrade_estadio"
-                            ? "Upgrade estádio"
-                            : t.categoria === "upgrade_academia"
-                              ? "Upgrade base"
-                              : t.categoria;
+                          ? isIn
+                            ? "Venda"
+                            : "Compra"
+                          : t.categoria === "transferencia_externa"
+                            ? "Venda (exterior)"
+                            : t.categoria === "upgrade_estadio"
+                              ? "Upgrade estádio"
+                              : t.categoria === "upgrade_academia"
+                                ? "Upgrade base"
+                                : t.categoria;
                       return (
                         <TableRow key={t.id} className="text-xs">
                           <TableCell className="text-muted-foreground">

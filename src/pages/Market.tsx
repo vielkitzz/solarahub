@@ -49,6 +49,7 @@ import { evaluateForeignProposal, type MarketTransferType as TransferType, type 
 import { Filters, FlagImg } from "@/components/market/Filters";
 import { ForeignMarketTab } from "@/components/market/ForeignMarketTab";
 import { FreeAgentsTab } from "@/components/market/FreeAgentsTab";
+import { transfersService } from "@/services/transfers";
 
 const Market = () => {
   const { user, loading, signInWithDiscord } = useAuth();
@@ -85,6 +86,7 @@ const Market = () => {
   const [foreignResponse, setForeignResponse] = useState<ForeignResponse | null>(null);
   const [foreignLoading, setForeignLoading] = useState<boolean>(false);
   const [externalInboxCount, setExternalInboxCount] = useState<number>(0);
+  const [marketStats, setMarketStats] = useState<{ c: number; v: number; e: number }>({ c: 0, v: 0, e: 0 });
 
   // contraproposta modal
   const [counterTarget, setCounterTarget] = useState<any>(null);
@@ -152,6 +154,12 @@ const Market = () => {
       .in("player_id", ids)
       .eq("status", "pendente");
     setExternalInboxCount(count || 0);
+    try {
+      const s = await transfersService.getStats(activeClubId);
+      setMarketStats({ c: s.total_compras, v: s.total_vendas, e: s.total_estrangeiros });
+    } catch {
+      setMarketStats({ c: 0, v: 0, e: 0 });
+    }
   };
 
   const loadSeasonAndRumors = async () => {
@@ -557,6 +565,13 @@ const Market = () => {
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Mercado da Bola</h1>
             <p className="text-xs sm:text-sm text-muted-foreground">Negociações, rumores e movimentações.</p>
+            {hasClub && (
+              <div className="flex items-center gap-1.5 mt-1.5 text-[10px]">
+                <Badge variant="outline" className="text-[10px]">↓ Compras: {marketStats.c}</Badge>
+                <Badge variant="outline" className="text-[10px]">↑ Vendas: {marketStats.v}</Badge>
+                <Badge variant="outline" className="text-[10px]">🌍 Exterior: {marketStats.e}</Badge>
+              </div>
+            )}
           </div>
         </div>
         {hasClub && myClubs.length > 1 && (

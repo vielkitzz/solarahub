@@ -16,6 +16,8 @@ type Row = {
   contratos: number;
   premiacao: number;
   manutencao: number;
+  manutencao_estadio: number;
+  custos_operacionais: number;
   folha: number;
   delta: number;
   novo_caixa: number;
@@ -82,7 +84,9 @@ export const SeasonPreview = () => {
                   <TableHead className="text-right">Bilheteria</TableHead>
                   <TableHead className="text-right">Patroc.</TableHead>
                   <TableHead className="text-right">Premiação</TableHead>
-                  <TableHead className="text-right text-destructive">Manut.</TableHead>
+                  <TableHead className="text-right text-destructive">Manut. base</TableHead>
+                  <TableHead className="text-right text-destructive">Manut. estádio</TableHead>
+                  <TableHead className="text-right text-destructive">Operacional</TableHead>
                   <TableHead className="text-right text-destructive">Folha</TableHead>
                   <TableHead className="text-right font-bold">Δ</TableHead>
                   <TableHead className="text-right">Novo caixa</TableHead>
@@ -97,6 +101,8 @@ export const SeasonPreview = () => {
                     <TableCell className="text-right text-xs tabular-nums">{formatCurrency(Number(r.contratos))}</TableCell>
                     <TableCell className="text-right text-xs tabular-nums">{formatCurrency(Number(r.premiacao))}</TableCell>
                     <TableCell className="text-right text-xs tabular-nums text-destructive">−{formatCurrency(Number(r.manutencao))}</TableCell>
+                    <TableCell className="text-right text-xs tabular-nums text-destructive">−{formatCurrency(Number(r.manutencao_estadio))}</TableCell>
+                    <TableCell className="text-right text-xs tabular-nums text-destructive">−{formatCurrency(Number(r.custos_operacionais))}</TableCell>
                     <TableCell className="text-right text-xs tabular-nums text-destructive">−{formatCurrency(Number(r.folha))}</TableCell>
                     <TableCell className={`text-right font-bold tabular-nums ${Number(r.delta) >= 0 ? "text-success" : "text-destructive"}`}>
                       {Number(r.delta) >= 0 ? "+" : ""}{formatCurrency(Number(r.delta))}

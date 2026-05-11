@@ -32,6 +32,8 @@ import { ImageUpload } from "@/components/ImageUpload";
 import { EmpresasManager } from "@/components/EmpresasManager";
 import { SeasonPreview } from "@/components/admin/SeasonPreview";
 import { EconomyParams } from "@/components/admin/EconomyParams";
+import { TransferWindowCard } from "@/components/admin/TransferWindowCard";
+import { transfersService } from "@/services/transfers";
 import { BulkBudgetAdjuster } from "@/components/admin/BulkBudgetAdjuster";
 import { PlayerBulkActions } from "@/components/admin/PlayerBulkActions";
 import { CampanhasManager } from "@/components/admin/CampanhasManager";
@@ -39,7 +41,7 @@ import { SquadGenerator } from "@/components/admin/SquadGenerator";
 import { ForeignPlayersManager } from "@/components/admin/ForeignPlayersManager";
 import { FreeAgentsManager } from "@/components/admin/FreeAgentsManager";
 import { ExternalClubsManager } from "@/components/admin/ExternalClubsManager";
-import { Globe2, UserMinus, Building2 } from "lucide-react";
+import { Globe2, UserMinus, Building2, Ban } from "lucide-react";
 import { parseSquadJson, ImportedPlayer } from "@/lib/squad-import";
 import { useSeason } from "@/contexts/SeasonContext";
 
@@ -48,6 +50,7 @@ const Admin = () => {
 
   // Dados globais
   const [clubs, setClubs] = useState<any[]>([]);
+  const [transferStats, setTransferStats] = useState<Record<string, { c: number; v: number; e: number }>>({});
   const [players, setPlayers] = useState<any[]>([]);
   const [searchPlayer, setSearchPlayer] = useState("");
 
@@ -84,6 +87,29 @@ const Admin = () => {
     ]);
     setClubs(cs || []);
     setPlayers(ps || []);
+    // carrega contadores de transferências em paralelo
+    const stats: Record<string, { c: number; v: number; e: number }> = {};
+    await Promise.all(
+      (cs || []).map(async (c: any) => {
+        try {
+          const s = await transfersService.getStats(c.id);
+          stats[c.id] = { c: s.total_compras, v: s.total_vendas, e: s.total_estrangeiros };
+        } catch {
+          stats[c.id] = { c: 0, v: 0, e: 0 };
+        }
+      }),
+    );
+    setTransferStats(stats);
+  };
+
+  const toggleTransferBan = async (clubId: string, current: boolean) => {
+    try {
+      await transfersService.setTransferBan(clubId, !current);
+      toast.success(!current ? "Transferban aplicado" : "Transferban removido");
+      load();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
   };
 
   useEffect(() => {
@@ -403,6 +429,7 @@ const Admin = () => {
 
         {/* CLUBES */}
         <TabsContent value="clubs" className="mt-6 space-y-4">
+          <TransferWindowCard />
           <BulkBudgetAdjuster clubs={clubs} onDone={load} />
 
           <div className="flex justify-between items-center pt-2">
@@ -436,15 +463,36 @@ const Admin = () => {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold truncate text-base leading-tight">{c.name}</div>
+                    <div className="font-bold truncate text-base leading-tight flex items-center gap-1.5">
+                      {c.name}
+                      {c.transfer_ban && (
+                        <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-destructive/20 text-destructive border border-destructive/40">
+                          BAN
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-muted-foreground truncate capitalize">
                       {c.status} · Rate {c.rate}
                     </div>
                   </div>
                 </div>
+                <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                  <span title="Compras">↓ {transferStats[c.id]?.c ?? 0}</span>
+                  <span title="Vendas">↑ {transferStats[c.id]?.v ?? 0}</span>
+                  <span title="Vendas ao exterior">🌍 {transferStats[c.id]?.e ?? 0}</span>
+                </div>
                 <div className="flex justify-between items-end mt-auto pt-2 border-t border-border/30">
                   <div className="text-sm font-bold text-primary">{formatCurrency(Number(c.budget))}</div>
                   <div className="flex gap-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className={`h-8 w-8 ${c.transfer_ban ? "text-destructive bg-destructive/10" : "hover:bg-destructive/20"}`}
+                      title={c.transfer_ban ? "Remover transferban" : "Aplicar transferban"}
+                      onClick={() => toggleTransferBan(c.id, !!c.transfer_ban)}
+                    >
+                      <Ban className="h-4 w-4" />
+                    </Button>
                     <Button
                       size="icon"
                       variant="ghost"

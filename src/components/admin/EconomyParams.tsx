@@ -11,6 +11,8 @@ type Params = {
   receita_base: { estadual: number; nacional: number; continental: number; mundial: number };
   bilheteria_por_nivel: number;
   manutencao_por_nivel_base: number;
+  manutencao_estadio_por_nivel: number;
+  custos_operacionais_pct: number;
   multiplicadores_evolucao: { "1": number; "2": number; "3": number; "4": number; "5": number };
   premiacao: {
     "1": number;
@@ -28,6 +30,8 @@ const DEFAULT: Params = {
   receita_base: { estadual: 3010000, nacional: 8050000, continental: 16100000, mundial: 31500000 },
   bilheteria_por_nivel: 500000,
   manutencao_por_nivel_base: 300000,
+  manutencao_estadio_por_nivel: 200000,
+  custos_operacionais_pct: 0.25,
   multiplicadores_evolucao: { "1": 0.8, "2": 0.95, "3": 1.1, "4": 1.2, "5": 1.3 },
   premiacao: {
     "1": 20000000,
@@ -114,6 +118,23 @@ export const EconomyParams = () => {
             type="number"
             value={p.manutencao_por_nivel_base}
             onChange={(e) => setP({ ...p, manutencao_por_nivel_base: num(e.target.value) })}
+          />
+        </div>
+        <div>
+          <Label className="text-xs">Manutenção do estádio por nível (€) — multiplicado por (capacidade/10k)</Label>
+          <Input
+            type="number"
+            value={p.manutencao_estadio_por_nivel}
+            onChange={(e) => setP({ ...p, manutencao_estadio_por_nivel: num(e.target.value) })}
+          />
+        </div>
+        <div>
+          <Label className="text-xs">Custos operacionais (% sobre receita base + bilheteria + patrocínios)</Label>
+          <Input
+            type="number"
+            step="0.01"
+            value={p.custos_operacionais_pct}
+            onChange={(e) => setP({ ...p, custos_operacionais_pct: num(e.target.value) })}
           />
         </div>
       </section>
