@@ -87,6 +87,29 @@ const Admin = () => {
     ]);
     setClubs(cs || []);
     setPlayers(ps || []);
+    // carrega contadores de transferências em paralelo
+    const stats: Record<string, { c: number; v: number; e: number }> = {};
+    await Promise.all(
+      (cs || []).map(async (c: any) => {
+        try {
+          const s = await transfersService.getStats(c.id);
+          stats[c.id] = { c: s.total_compras, v: s.total_vendas, e: s.total_estrangeiros };
+        } catch {
+          stats[c.id] = { c: 0, v: 0, e: 0 };
+        }
+      }),
+    );
+    setTransferStats(stats);
+  };
+
+  const toggleTransferBan = async (clubId: string, current: boolean) => {
+    try {
+      await transfersService.setTransferBan(clubId, !current);
+      toast.success(!current ? "Transferban aplicado" : "Transferban removido");
+      load();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
   };
 
   useEffect(() => {
