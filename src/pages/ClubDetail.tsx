@@ -298,7 +298,9 @@ const ClubDetail = () => {
     return 0;
   };
   const premiacao = premiacaoPorPosicao(club.posicao_ultima_temporada);
-  const manutencao = (club.nivel_base || 1) * 300_000;
+  const manutencao = (club.nivel_base || 1) * econParams.manut_base;
+  const manutencaoEstadio =
+    (club.nivel_estadio || 1) * econParams.manut_estadio * (Number(club.stadium_capacity || 0) / 10000);
   // Direitos de imagem
   const direitosImagemCusto = valorBaseFolha * imgSettings.custo_pct;
   const direitosImagemReceita = direitosImagemCusto * imgSettings.receita_pct;
@@ -311,8 +313,10 @@ const ClubDetail = () => {
       cap * ocInt * Number(club.preco_ingresso_internacional || 25)) /
     2;
   const bilheteria = recPorJogo * Number(club.jogos_por_temporada || 38);
+  const custosOperacionais = (contratosTotal + direitosTv + bilheteria) * econParams.operacionais_pct;
   const entradasAnuais = contratosTotal + direitosTv + direitosImagemReceita + premiacao + bilheteria;
-  const saidasAnuais = folhaSalarial + manutencao + direitosImagemCusto;
+  const saidasAnuais =
+    folhaSalarial + manutencao + manutencaoEstadio + direitosImagemCusto + custosOperacionais;
   const saldoPrevisto = entradasAnuais - saidasAnuais;
   const entradasMensais = entradasAnuais / 12;
   const saidasMensais = saidasAnuais / 12;
