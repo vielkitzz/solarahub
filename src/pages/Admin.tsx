@@ -429,6 +429,7 @@ const Admin = () => {
 
         {/* CLUBES */}
         <TabsContent value="clubs" className="mt-6 space-y-4">
+          <TransferWindowCard />
           <BulkBudgetAdjuster clubs={clubs} onDone={load} />
 
           <div className="flex justify-between items-center pt-2">
