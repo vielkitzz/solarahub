@@ -50,6 +50,7 @@ const Admin = () => {
 
   // Dados globais
   const [clubs, setClubs] = useState<any[]>([]);
+  const [transferStats, setTransferStats] = useState<Record<string, { c: number; v: number; e: number }>>({});
   const [players, setPlayers] = useState<any[]>([]);
   const [searchPlayer, setSearchPlayer] = useState("");
 
