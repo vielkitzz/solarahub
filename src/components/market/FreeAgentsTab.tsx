@@ -66,6 +66,7 @@ export const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen, onNegotiat
     nationality: r.nationality,
     valor_base_calculado: Number(r.valor_base_calculado) || Number(r.salary_demand) || 0,
     market_value: Number(r.valor_base_calculado) || Number(r.salary_demand) || 0,
+    salary_demand: Number(r.salary_demand) || 0,
     club_id: null,
     a_venda: true,
     _isFreeAgent: r._src !== "players",
