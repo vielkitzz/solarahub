@@ -84,7 +84,9 @@ export const SeasonPreview = () => {
                   <TableHead className="text-right">Bilheteria</TableHead>
                   <TableHead className="text-right">Patroc.</TableHead>
                   <TableHead className="text-right">Premiação</TableHead>
-                  <TableHead className="text-right text-destructive">Manut.</TableHead>
+                  <TableHead className="text-right text-destructive">Manut. base</TableHead>
+                  <TableHead className="text-right text-destructive">Manut. estádio</TableHead>
+                  <TableHead className="text-right text-destructive">Operacional</TableHead>
                   <TableHead className="text-right text-destructive">Folha</TableHead>
                   <TableHead className="text-right font-bold">Δ</TableHead>
                   <TableHead className="text-right">Novo caixa</TableHead>
