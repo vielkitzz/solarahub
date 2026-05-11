@@ -17,6 +17,8 @@ type Row = {
   age: number | null;
   nationality: string | null;
   overall: number;
+  potential_min: number | null;
+  potential_max: number | null;
   salary_demand: number;
   last_club: string | null;
   temporada: number | null;
@@ -28,6 +30,8 @@ const empty: Row = {
   age: 28,
   nationality: "",
   overall: 70,
+  potential_min: null,
+  potential_max: null,
   salary_demand: 0,
   last_club: "",
   temporada: new Date().getFullYear(),
@@ -81,6 +85,8 @@ export const FreeAgentsManager = () => {
           age: r.age != null ? Number(r.age) : null,
           nationality: r.nationality || null,
           overall: Number(r.overall || 70),
+          potential_min: r.potential_min != null ? Number(r.potential_min) : null,
+          potential_max: r.potential_max != null ? Number(r.potential_max) : null,
           salary_demand: Number(r.salary_demand || 0),
           last_club: r.last_club || null,
           temporada: r.temporada != null ? Number(r.temporada) : null,
@@ -129,6 +135,8 @@ export const FreeAgentsManager = () => {
               <TableHead>Nome</TableHead>
               <TableHead>Pos</TableHead>
               <TableHead>OVR</TableHead>
+              <TableHead>Pot. Min</TableHead>
+              <TableHead>Pot. Max</TableHead>
               <TableHead>Idade</TableHead>
               <TableHead>Nac.</TableHead>
               <TableHead>Último clube</TableHead>
@@ -143,7 +151,9 @@ export const FreeAgentsManager = () => {
                 <TableCell className="font-medium">{r.name}</TableCell>
                 <TableCell>{r.position}</TableCell>
                 <TableCell>{r.overall}</TableCell>
-                <TableCell>{r.age ?? "-"}</TableCell>
+                <TableCell>{r.potential_min ?? "—"}</TableCell>
+                <TableCell>{r.potential_max ?? "—"}</TableCell>
+                <TableCell>{r.age ?? "—"}</TableCell>
                 <TableCell>{r.nationality}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">{r.last_club}</TableCell>
                 <TableCell>{formatCurrency(r.salary_demand)}</TableCell>
@@ -175,36 +185,85 @@ export const FreeAgentsManager = () => {
               </div>
               <div>
                 <Label>Posição</Label>
-                <Input value={editing.position} onChange={(e) => setEditing({ ...editing, position: e.target.value.toUpperCase() })} />
+                <Input
+                  value={editing.position}
+                  onChange={(e) => setEditing({ ...editing, position: e.target.value.toUpperCase() })}
+                />
               </div>
               <div>
                 <Label>Overall</Label>
-                <Input type="number" value={editing.overall} onChange={(e) => setEditing({ ...editing, overall: Number(e.target.value) })} />
+                <Input
+                  type="number"
+                  value={editing.overall}
+                  onChange={(e) => setEditing({ ...editing, overall: Number(e.target.value) })}
+                />
+              </div>
+              <div>
+                <Label>Pot. Mínimo</Label>
+                <Input
+                  type="number"
+                  value={editing.potential_min ?? ""}
+                  onChange={(e) =>
+                    setEditing({ ...editing, potential_min: e.target.value ? Number(e.target.value) : null })
+                  }
+                />
+              </div>
+              <div>
+                <Label>Pot. Máximo</Label>
+                <Input
+                  type="number"
+                  value={editing.potential_max ?? ""}
+                  onChange={(e) =>
+                    setEditing({ ...editing, potential_max: e.target.value ? Number(e.target.value) : null })
+                  }
+                />
               </div>
               <div>
                 <Label>Idade</Label>
-                <Input type="number" value={editing.age ?? ""} onChange={(e) => setEditing({ ...editing, age: e.target.value ? Number(e.target.value) : null })} />
+                <Input
+                  type="number"
+                  value={editing.age ?? ""}
+                  onChange={(e) => setEditing({ ...editing, age: e.target.value ? Number(e.target.value) : null })}
+                />
               </div>
               <div>
                 <Label>Nacionalidade</Label>
-                <Input value={editing.nationality ?? ""} onChange={(e) => setEditing({ ...editing, nationality: e.target.value })} />
+                <Input
+                  value={editing.nationality ?? ""}
+                  onChange={(e) => setEditing({ ...editing, nationality: e.target.value })}
+                />
               </div>
               <div>
                 <Label>Último clube</Label>
-                <Input value={editing.last_club ?? ""} onChange={(e) => setEditing({ ...editing, last_club: e.target.value })} />
+                <Input
+                  value={editing.last_club ?? ""}
+                  onChange={(e) => setEditing({ ...editing, last_club: e.target.value })}
+                />
               </div>
               <div>
                 <Label>Salário pedido</Label>
-                <Input type="number" value={editing.salary_demand} onChange={(e) => setEditing({ ...editing, salary_demand: Number(e.target.value) })} />
+                <Input
+                  type="number"
+                  value={editing.salary_demand}
+                  onChange={(e) => setEditing({ ...editing, salary_demand: Number(e.target.value) })}
+                />
               </div>
               <div>
                 <Label>Temporada</Label>
-                <Input type="number" value={editing.temporada ?? ""} onChange={(e) => setEditing({ ...editing, temporada: e.target.value ? Number(e.target.value) : null })} />
+                <Input
+                  type="number"
+                  value={editing.temporada ?? ""}
+                  onChange={(e) =>
+                    setEditing({ ...editing, temporada: e.target.value ? Number(e.target.value) : null })
+                  }
+                />
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setEditing(null)}>Cancelar</Button>
+            <Button variant="ghost" onClick={() => setEditing(null)}>
+              Cancelar
+            </Button>
             <Button onClick={save}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
@@ -219,8 +278,13 @@ export const FreeAgentsManager = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead><TableHead>Pos</TableHead><TableHead>OVR</TableHead>
-                  <TableHead>Salário</TableHead><TableHead>Último clube</TableHead>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Pos</TableHead>
+                  <TableHead>OVR</TableHead>
+                  <TableHead>Pot. Min</TableHead>
+                  <TableHead>Pot. Max</TableHead>
+                  <TableHead>Salário</TableHead>
+                  <TableHead>Último clube</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -229,6 +293,8 @@ export const FreeAgentsManager = () => {
                     <TableCell>{r.name}</TableCell>
                     <TableCell>{r.position}</TableCell>
                     <TableCell>{r.overall}</TableCell>
+                    <TableCell>{r.potential_min ?? "—"}</TableCell>
+                    <TableCell>{r.potential_max ?? "—"}</TableCell>
                     <TableCell>{formatCurrency(r.salary_demand)}</TableCell>
                     <TableCell className="text-xs">{r.last_club}</TableCell>
                   </TableRow>
@@ -237,7 +303,9 @@ export const FreeAgentsManager = () => {
             </Table>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setImportPreview(null)}>Cancelar</Button>
+            <Button variant="ghost" onClick={() => setImportPreview(null)}>
+              Cancelar
+            </Button>
             <Button onClick={confirmImport} disabled={importing}>
               <Upload className="h-4 w-4 mr-2" /> Confirmar
             </Button>
