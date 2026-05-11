@@ -49,6 +49,7 @@ import { evaluateForeignProposal, type MarketTransferType as TransferType, type 
 import { Filters, FlagImg } from "@/components/market/Filters";
 import { ForeignMarketTab } from "@/components/market/ForeignMarketTab";
 import { FreeAgentsTab } from "@/components/market/FreeAgentsTab";
+import { transfersService } from "@/services/transfers";
 
 const Market = () => {
   const { user, loading, signInWithDiscord } = useAuth();
