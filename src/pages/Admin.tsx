@@ -32,6 +32,8 @@ import { ImageUpload } from "@/components/ImageUpload";
 import { EmpresasManager } from "@/components/EmpresasManager";
 import { SeasonPreview } from "@/components/admin/SeasonPreview";
 import { EconomyParams } from "@/components/admin/EconomyParams";
+import { TransferWindowCard } from "@/components/admin/TransferWindowCard";
+import { transfersService } from "@/services/transfers";
 import { BulkBudgetAdjuster } from "@/components/admin/BulkBudgetAdjuster";
 import { PlayerBulkActions } from "@/components/admin/PlayerBulkActions";
 import { CampanhasManager } from "@/components/admin/CampanhasManager";
