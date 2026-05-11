@@ -587,12 +587,16 @@ const ClubDetail = () => {
                       const isIn = t.tipo === "entrada";
                       const catLabel =
                         t.categoria === "transferencia"
-                          ? "Transferência"
-                          : t.categoria === "upgrade_estadio"
-                            ? "Upgrade estádio"
-                            : t.categoria === "upgrade_academia"
-                              ? "Upgrade base"
-                              : t.categoria;
+                          ? isIn
+                            ? "Venda"
+                            : "Compra"
+                          : t.categoria === "transferencia_externa"
+                            ? "Venda (exterior)"
+                            : t.categoria === "upgrade_estadio"
+                              ? "Upgrade estádio"
+                              : t.categoria === "upgrade_academia"
+                                ? "Upgrade base"
+                                : t.categoria;
                       return (
                         <TableRow key={t.id} className="text-xs">
                           <TableCell className="text-muted-foreground">
