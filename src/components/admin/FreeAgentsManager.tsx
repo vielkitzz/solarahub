@@ -56,8 +56,11 @@ export const FreeAgentsManager = () => {
     const payload = { ...editing };
     delete (payload as any).id;
     const { error } = editing.id
-      ? await supabase.from("free_agents").update(payload).eq("id", editing.id)
-      : await supabase.from("free_agents").insert(payload);
+      ? await supabase
+          .from("free_agents")
+          .update(payload as any)
+          .eq("id", editing.id)
+      : await supabase.from("free_agents").insert(payload as any);
     if (error) return toast.error(error.message);
     toast.success("Salvo");
     setEditing(null);
@@ -66,7 +69,7 @@ export const FreeAgentsManager = () => {
 
   const remove = async (id: string) => {
     if (!confirm("Remover?")) return;
-    const { error } = await supabase.from("free_agents").delete().eq("id", id);
+    const { error } = await supabase.from("free_agents").insert(importPreview as any);
     if (error) return toast.error(error.message);
     load();
   };
@@ -103,7 +106,7 @@ export const FreeAgentsManager = () => {
   const confirmImport = async () => {
     if (!importPreview) return;
     setImporting(true);
-    const { error } = await supabase.from("free_agents").insert(importPreview);
+    const { error } = await supabase.from("free_agents").insert(importPreview as any);
     setImporting(false);
     if (error) return toast.error(error.message);
     toast.success(`${importPreview.length} importados`);
