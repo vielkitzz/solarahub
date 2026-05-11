@@ -663,6 +663,7 @@ export type Database = {
           habilidade: number | null
           habilidade_anterior: number | null
           id: string
+          interesse_renovacao: boolean | null
           market_value: number
           master_player_id: string | null
           name: string
@@ -686,6 +687,7 @@ export type Database = {
           habilidade?: number | null
           habilidade_anterior?: number | null
           id?: string
+          interesse_renovacao?: boolean | null
           market_value?: number
           master_player_id?: string | null
           name: string
@@ -709,6 +711,7 @@ export type Database = {
           habilidade?: number | null
           habilidade_anterior?: number | null
           id?: string
+          interesse_renovacao?: boolean | null
           market_value?: number
           master_player_id?: string | null
           name?: string
@@ -1144,6 +1147,7 @@ export type Database = {
         Returns: string
       }
       current_discord_id: { Args: never; Returns: string }
+      encerrar_contratos_vencidos: { Args: never; Returns: number }
       envelhecer_todos_jogadores: { Args: never; Returns: number }
       expirar_propostas_externas: { Args: never; Returns: number }
       gerar_elenco_para_clube: {
