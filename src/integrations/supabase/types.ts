@@ -172,6 +172,7 @@ export type Database = {
           stadium_capacity: number
           stadium_name: string | null
           status: Database["public"]["Enums"]["club_status"]
+          transfer_ban: boolean
           updated_at: string
           wiki: Json
         }
@@ -202,6 +203,7 @@ export type Database = {
           stadium_capacity?: number
           stadium_name?: string | null
           status?: Database["public"]["Enums"]["club_status"]
+          transfer_ban?: boolean
           updated_at?: string
           wiki?: Json
         }
@@ -232,6 +234,7 @@ export type Database = {
           stadium_capacity?: number
           stadium_name?: string | null
           status?: Database["public"]["Enums"]["club_status"]
+          transfer_ban?: boolean
           updated_at?: string
           wiki?: Json
         }
@@ -1163,6 +1166,14 @@ export type Database = {
           display_name: string
         }[]
       }
+      get_transfer_stats: {
+        Args: { _club_id: string }
+        Returns: {
+          total_compras: number
+          total_estrangeiros: number
+          total_vendas: number
+        }[]
+      }
       get_tv_rights_value: { Args: { _club_id: string }; Returns: number }
       has_role: {
         Args: {
@@ -1196,9 +1207,11 @@ export type Database = {
           club_id: string
           club_name: string
           contratos: number
+          custos_operacionais: number
           delta: number
           folha: number
           manutencao: number
+          manutencao_estadio: number
           novo_caixa: number
           premiacao: number
           receita_base: number
