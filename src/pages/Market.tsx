@@ -45,7 +45,11 @@ import { useInterestList } from "@/hooks/useInterestList";
 import { ExternalProposalsInbox } from "@/components/ExternalProposalsInbox";
 import { toast } from "sonner";
 
-import { evaluateForeignProposal, type MarketTransferType as TransferType, type ForeignResponse } from "@/lib/foreign-ai";
+import {
+  evaluateForeignProposal,
+  type MarketTransferType as TransferType,
+  type ForeignResponse,
+} from "@/lib/foreign-ai";
 import { Filters, FlagImg } from "@/components/market/Filters";
 import { ForeignMarketTab } from "@/components/market/ForeignMarketTab";
 import { FreeAgentsTab } from "@/components/market/FreeAgentsTab";
@@ -240,13 +244,25 @@ const Market = () => {
 
     // Passes livres são gratuitos em relação ao valor de mercado
     setValor(player._isFreeAgent ? "0" : String(Math.round(base)));
-    let sugerido = Math.round(base * 0.1);
+    let sugerido = 0;
+
     if (base > 0 && !player._isForeign && !player._isFreeAgent) {
+      // Jogador de clube interno: usa a função do banco
       try {
         const { data } = await supabase.rpc("sugerir_salario_jogador", { _jogador_id: player.id });
         if (data) sugerido = Math.round(Number(data));
       } catch {}
+      sugerido = sugerido || Math.round(base * 0.1);
+    } else if (player._isFreeAgent && player.salary_demand > 0) {
+      // Passe livre: usa o salary_demand cadastrado como referência
+      sugerido = Math.round(Number(player.salary_demand));
+    } else if (player._isForeign && player.salary_demand > 0) {
+      // Estrangeiro: idem
+      sugerido = Math.round(Number(player.salary_demand));
+    } else {
+      sugerido = Math.round(base * 0.08);
     }
+
     setSalario(String(Math.max(50000, sugerido)));
     resetProposalFields();
   };
@@ -567,9 +583,15 @@ const Market = () => {
             <p className="text-xs sm:text-sm text-muted-foreground">Negociações, rumores e movimentações.</p>
             {hasClub && (
               <div className="flex items-center gap-1.5 mt-1.5 text-[10px]">
-                <Badge variant="outline" className="text-[10px]">↓ Compras: {marketStats.c}</Badge>
-                <Badge variant="outline" className="text-[10px]">↑ Vendas: {marketStats.v}</Badge>
-                <Badge variant="outline" className="text-[10px]">🌍 Exterior: {marketStats.e}</Badge>
+                <Badge variant="outline" className="text-[10px]">
+                  ↓ Compras: {marketStats.c}
+                </Badge>
+                <Badge variant="outline" className="text-[10px]">
+                  ↑ Vendas: {marketStats.v}
+                </Badge>
+                <Badge variant="outline" className="text-[10px]">
+                  🌍 Exterior: {marketStats.e}
+                </Badge>
               </div>
             )}
           </div>
