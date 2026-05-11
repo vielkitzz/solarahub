@@ -153,6 +153,12 @@ const Market = () => {
       .in("player_id", ids)
       .eq("status", "pendente");
     setExternalInboxCount(count || 0);
+    try {
+      const s = await transfersService.getStats(activeClubId);
+      setMarketStats({ c: s.total_compras, v: s.total_vendas, e: s.total_estrangeiros });
+    } catch {
+      setMarketStats({ c: 0, v: 0, e: 0 });
+    }
   };
 
   const loadSeasonAndRumors = async () => {
