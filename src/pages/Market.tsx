@@ -85,6 +85,7 @@ const Market = () => {
   const [foreignResponse, setForeignResponse] = useState<ForeignResponse | null>(null);
   const [foreignLoading, setForeignLoading] = useState<boolean>(false);
   const [externalInboxCount, setExternalInboxCount] = useState<number>(0);
+  const [marketStats, setMarketStats] = useState<{ c: number; v: number; e: number }>({ c: 0, v: 0, e: 0 });
 
   // contraproposta modal
   const [counterTarget, setCounterTarget] = useState<any>(null);
