@@ -101,6 +101,8 @@ export const SeasonPreview = () => {
                     <TableCell className="text-right text-xs tabular-nums">{formatCurrency(Number(r.contratos))}</TableCell>
                     <TableCell className="text-right text-xs tabular-nums">{formatCurrency(Number(r.premiacao))}</TableCell>
                     <TableCell className="text-right text-xs tabular-nums text-destructive">−{formatCurrency(Number(r.manutencao))}</TableCell>
+                    <TableCell className="text-right text-xs tabular-nums text-destructive">−{formatCurrency(Number(r.manutencao_estadio))}</TableCell>
+                    <TableCell className="text-right text-xs tabular-nums text-destructive">−{formatCurrency(Number(r.custos_operacionais))}</TableCell>
                     <TableCell className="text-right text-xs tabular-nums text-destructive">−{formatCurrency(Number(r.folha))}</TableCell>
                     <TableCell className={`text-right font-bold tabular-nums ${Number(r.delta) >= 0 ? "text-success" : "text-destructive"}`}>
                       {Number(r.delta) >= 0 ? "+" : ""}{formatCurrency(Number(r.delta))}
