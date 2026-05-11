@@ -117,7 +117,10 @@ const ClubDetail = () => {
       supabase.from("clubs").select("*").eq("id", id).maybeSingle(),
       supabase.from("players").select("*").eq("club_id", id),
       supabase.from("contratos_clube").select("valor_anual").eq("club_id", id).eq("ativo", true),
-      supabase.from("settings").select("key, value").in("key", ["temporada_atual", "direitos_imagem", "economia_params"]),
+      supabase
+        .from("settings")
+        .select("key, value")
+        .in("key", ["temporada_atual", "direitos_imagem", "economia_params"]),
       supabase
         .from("contratos_clube")
         .select("empresa:empresas(nome), categoria")
@@ -316,8 +319,7 @@ const ClubDetail = () => {
   const bilheteria = recPorJogo * Number(club.jogos_por_temporada || 38);
   const custosOperacionais = (contratosTotal + direitosTv + bilheteria) * econParams.operacionais_pct;
   const entradasAnuais = contratosTotal + direitosTv + direitosImagemReceita + premiacao + bilheteria;
-  const saidasAnuais =
-    folhaSalarial + manutencao + manutencaoEstadio + direitosImagemCusto + custosOperacionais;
+  const saidasAnuais = folhaSalarial + manutencao + manutencaoEstadio + direitosImagemCusto + custosOperacionais;
   const saldoPrevisto = entradasAnuais - saidasAnuais;
   const entradasMensais = entradasAnuais / 12;
   const saidasMensais = saidasAnuais / 12;
@@ -472,7 +474,11 @@ const ClubDetail = () => {
             />
           )}
         </TabsContent>
-        
+
+        <TabsContent value="escalacao" className="mt-4">
+          <LineupManager players={players} club={club} canEdit={canEdit} />
+        </TabsContent>
+
         {canEdit && (
           <TabsContent value="olheiros" className="mt-4">
             <ScoutsManager
@@ -538,7 +544,10 @@ const ClubDetail = () => {
                 <Row label="Direitos de imagem (custo)" value={direitosImagemCusto} />
                 <Row label="Manutenção da base" value={manutencao} />
                 <Row label="Manutenção do estádio" value={manutencaoEstadio} />
-                <Row label={`Custos operacionais (${Math.round(econParams.operacionais_pct * 100)}%)`} value={custosOperacionais} />
+                <Row
+                  label={`Custos operacionais (${Math.round(econParams.operacionais_pct * 100)}%)`}
+                  value={custosOperacionais}
+                />
                 <hr className="border-border/40" />
                 <Row label="Total" value={saidasAnuais} bold />
               </div>
@@ -564,9 +573,15 @@ const ClubDetail = () => {
                 <ArrowUpDown className="h-4 w-4 text-primary" /> Transferências e investimentos
               </h4>
               <div className="flex items-center gap-2 text-[10px]">
-                <Badge variant="outline" className="text-[10px]">↓ Compras: {transferStats.c}</Badge>
-                <Badge variant="outline" className="text-[10px]">↑ Vendas: {transferStats.v}</Badge>
-                <Badge variant="outline" className="text-[10px]">🌍 Exterior: {transferStats.e}</Badge>
+                <Badge variant="outline" className="text-[10px]">
+                  ↓ Compras: {transferStats.c}
+                </Badge>
+                <Badge variant="outline" className="text-[10px]">
+                  ↑ Vendas: {transferStats.v}
+                </Badge>
+                <Badge variant="outline" className="text-[10px]">
+                  🌍 Exterior: {transferStats.e}
+                </Badge>
               </div>
             </div>
             {recentTransactions.length === 0 ? (
