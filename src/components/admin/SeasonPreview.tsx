@@ -16,6 +16,8 @@ type Row = {
   contratos: number;
   premiacao: number;
   manutencao: number;
+  manutencao_estadio: number;
+  custos_operacionais: number;
   folha: number;
   delta: number;
   novo_caixa: number;
