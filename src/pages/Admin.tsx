@@ -463,15 +463,36 @@ const Admin = () => {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold truncate text-base leading-tight">{c.name}</div>
+                    <div className="font-bold truncate text-base leading-tight flex items-center gap-1.5">
+                      {c.name}
+                      {c.transfer_ban && (
+                        <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-destructive/20 text-destructive border border-destructive/40">
+                          BAN
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-muted-foreground truncate capitalize">
                       {c.status} · Rate {c.rate}
                     </div>
                   </div>
                 </div>
+                <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                  <span title="Compras">↓ {transferStats[c.id]?.c ?? 0}</span>
+                  <span title="Vendas">↑ {transferStats[c.id]?.v ?? 0}</span>
+                  <span title="Vendas ao exterior">🌍 {transferStats[c.id]?.e ?? 0}</span>
+                </div>
                 <div className="flex justify-between items-end mt-auto pt-2 border-t border-border/30">
                   <div className="text-sm font-bold text-primary">{formatCurrency(Number(c.budget))}</div>
                   <div className="flex gap-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className={`h-8 w-8 ${c.transfer_ban ? "text-destructive bg-destructive/10" : "hover:bg-destructive/20"}`}
+                      title={c.transfer_ban ? "Remover transferban" : "Aplicar transferban"}
+                      onClick={() => toggleTransferBan(c.id, !!c.transfer_ban)}
+                    >
+                      <Ban className="h-4 w-4" />
+                    </Button>
                     <Button
                       size="icon"
                       variant="ghost"
