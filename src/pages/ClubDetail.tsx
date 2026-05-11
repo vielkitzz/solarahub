@@ -56,6 +56,7 @@ import { SkillDisplay } from "@/components/SkillDisplay";
 import { SquadTable } from "@/components/club-detail/SquadTable";
 import { StatCard, Row, EvolutionTable } from "@/components/club-detail/EvolutionTable";
 import { transfersService } from "@/services/transfers";
+import { LineupManager } from "@/components/club-detail/LineupManager";
 
 const ClubDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -438,6 +439,7 @@ const ClubDetail = () => {
         <div className="-mx-3 sm:-mx-4 md:mx-0 overflow-x-auto scrollbar-thin">
           <TabsList className="bg-secondary/50 mx-3 sm:mx-4 md:mx-0 w-max">
             <TabsTrigger value="elenco">Elenco</TabsTrigger>
+            <TabsTrigger value="escalacao">Escalação</TabsTrigger>
             {canEdit && <TabsTrigger value="evolucao">Evolução</TabsTrigger>}
             <TabsTrigger value="financas">Finanças</TabsTrigger>
             <TabsTrigger value="estadio">Estádio</TabsTrigger>
@@ -470,7 +472,7 @@ const ClubDetail = () => {
             />
           )}
         </TabsContent>
-
+        
         {canEdit && (
           <TabsContent value="olheiros" className="mt-4">
             <ScoutsManager
