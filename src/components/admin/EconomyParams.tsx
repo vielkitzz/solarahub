@@ -120,6 +120,23 @@ export const EconomyParams = () => {
             onChange={(e) => setP({ ...p, manutencao_por_nivel_base: num(e.target.value) })}
           />
         </div>
+        <div>
+          <Label className="text-xs">Manutenção do estádio por nível (€) — multiplicado por (capacidade/10k)</Label>
+          <Input
+            type="number"
+            value={p.manutencao_estadio_por_nivel}
+            onChange={(e) => setP({ ...p, manutencao_estadio_por_nivel: num(e.target.value) })}
+          />
+        </div>
+        <div>
+          <Label className="text-xs">Custos operacionais (% sobre receita base + bilheteria + patrocínios)</Label>
+          <Input
+            type="number"
+            step="0.01"
+            value={p.custos_operacionais_pct}
+            onChange={(e) => setP({ ...p, custos_operacionais_pct: num(e.target.value) })}
+          />
+        </div>
       </section>
 
       <section className="space-y-2">
