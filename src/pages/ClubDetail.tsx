@@ -535,6 +535,8 @@ const ClubDetail = () => {
                 <Row label="Folha salarial" value={folhaSalarial} />
                 <Row label="Direitos de imagem (custo)" value={direitosImagemCusto} />
                 <Row label="Manutenção da base" value={manutencao} />
+                <Row label="Manutenção do estádio" value={manutencaoEstadio} />
+                <Row label={`Custos operacionais (${Math.round(econParams.operacionais_pct * 100)}%)`} value={custosOperacionais} />
                 <hr className="border-border/40" />
                 <Row label="Total" value={saidasAnuais} bold />
               </div>
