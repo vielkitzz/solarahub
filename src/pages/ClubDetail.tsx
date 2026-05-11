@@ -115,7 +115,7 @@ const ClubDetail = () => {
       supabase.from("clubs").select("*").eq("id", id).maybeSingle(),
       supabase.from("players").select("*").eq("club_id", id),
       supabase.from("contratos_clube").select("valor_anual").eq("club_id", id).eq("ativo", true),
-      supabase.from("settings").select("key, value").in("key", ["temporada_atual", "direitos_imagem"]),
+      supabase.from("settings").select("key, value").in("key", ["temporada_atual", "direitos_imagem", "economia_params"]),
       supabase
         .from("contratos_clube")
         .select("empresa:empresas(nome), categoria")
