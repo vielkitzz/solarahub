@@ -55,6 +55,7 @@ import { PlayerProfileDialog } from "@/components/PlayerProfileDialog";
 import { SkillDisplay } from "@/components/SkillDisplay";
 import { SquadTable } from "@/components/club-detail/SquadTable";
 import { StatCard, Row, EvolutionTable } from "@/components/club-detail/EvolutionTable";
+import { transfersService } from "@/services/transfers";
 
 const ClubDetail = () => {
   const { id } = useParams<{ id: string }>();
