@@ -565,6 +565,13 @@ const Market = () => {
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Mercado da Bola</h1>
             <p className="text-xs sm:text-sm text-muted-foreground">Negociações, rumores e movimentações.</p>
+            {hasClub && (
+              <div className="flex items-center gap-1.5 mt-1.5 text-[10px]">
+                <Badge variant="outline" className="text-[10px]">↓ Compras: {marketStats.c}</Badge>
+                <Badge variant="outline" className="text-[10px]">↑ Vendas: {marketStats.v}</Badge>
+                <Badge variant="outline" className="text-[10px]">🌍 Exterior: {marketStats.e}</Badge>
+              </div>
+            )}
           </div>
         </div>
         {hasClub && myClubs.length > 1 && (
