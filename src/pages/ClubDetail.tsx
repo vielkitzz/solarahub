@@ -148,6 +148,12 @@ const ClubDetail = () => {
           custo_pct: Number(s.value?.custo_pct ?? 0.03),
           receita_pct: Number(s.value?.receita_pct ?? 0.5),
         });
+      if (s.key === "economia_params")
+        setEconParams({
+          manut_base: Number(s.value?.manutencao_por_nivel_base ?? 300000),
+          manut_estadio: Number(s.value?.manutencao_estadio_por_nivel ?? 200000),
+          operacionais_pct: Number(s.value?.custos_operacionais_pct ?? 0.25),
+        });
     });
 
     setDireitosTv(Number(tvRightsValue || 0));
@@ -161,10 +167,18 @@ const ClubDetail = () => {
       .from("transactions")
       .select("*")
       .eq("club_id", id)
-      .in("categoria", ["transferencia", "upgrade_estadio", "upgrade_academia"])
+      .in("categoria", ["transferencia", "transferencia_externa", "upgrade_estadio", "upgrade_academia"])
       .order("created_at", { ascending: false })
       .limit(50);
     setRecentTransactions(tx || []);
+
+    // Contadores de transferências (todas as temporadas)
+    try {
+      const s = await transfersService.getStats(id);
+      setTransferStats({ c: s.total_compras, v: s.total_vendas, e: s.total_estrangeiros });
+    } catch {
+      setTransferStats({ c: 0, v: 0, e: 0 });
+    }
   };
 
   useEffect(() => {
