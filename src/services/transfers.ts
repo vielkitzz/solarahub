@@ -38,7 +38,7 @@ export const transfersService = {
   async getStats(clubId: string): Promise<{ total_compras: number; total_vendas: number; total_estrangeiros: number }> {
     const { data, error } = await supabase.rpc("get_transfer_stats" as never, { _club_id: clubId } as never);
     if (error) throw error;
-    const row = Array.isArray(data) ? data[0] : data;
+    const row = Array.isArray(data) ? (data as any[])[0] : data;
     return {
       total_compras: Number((row as any)?.total_compras ?? 0),
       total_vendas: Number((row as any)?.total_vendas ?? 0),
