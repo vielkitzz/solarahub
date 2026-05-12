@@ -949,13 +949,7 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                   key={p.id}
                   className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-primary/5 border border-transparent hover:border-border/40 transition-colors group"
                 >
-                  <ShirtIcon
-                    clubId={club?.id}
-                    number={player.shirt_number}
-                    highlighted={isSelected}
-                    size="w-9 h-9"
-                    isGK={player.position === "GOL"}
-                  />
+                  <ShirtIcon clubId={club?.id} number={p.shirt_number} size="w-9 h-9" isGK={p.position === "GOL"} />
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-semibold text-foreground truncate leading-tight">{p.name}</div>
                     <div className="flex items-center gap-1.5 mt-0.5">
@@ -1114,10 +1108,9 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                       <div className="flex items-center gap-2.5">
                         <ShirtIcon
                           clubId={club?.id}
-                          number={player.shirt_number}
-                          highlighted={isSelected}
+                          number={p.shirt_number}
                           size="w-9 h-9"
-                          isGK={player.position === "GOL"}
+                          isGK={p.position === "GOL"}
                         />
                         <div>
                           <div className="flex items-center gap-1.5">
