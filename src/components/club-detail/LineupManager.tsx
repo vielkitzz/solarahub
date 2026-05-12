@@ -561,7 +561,7 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
   const handleSave = async () => {
     if (!canEdit) return;
     setIsSaving(true);
-    
+
     try {
       if (onSave) {
         // Envia os dados atuais para o componente pai salvar no banco
@@ -696,18 +696,10 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                       ${!isDragging && !isSelected && !isHidden ? "hover:bg-white/10 cursor-pointer" : ""}
                     `}
                   >
-                  {/* Slot vazio visível */}
+                    {/* Slot vazio visível */}
                     {!player && !isHidden && template[cellKey] && (
                       <div className="w-9 h-9 rounded-full border-2 border-dashed border-white/40 flex items-center justify-center bg-black/20 backdrop-blur-sm">
                         <span className="text-[8px] text-white/90 font-bold uppercase">{template[cellKey]}</span>
-                      </div>
-                    )}
-                        {/* Slot da Formação Atual */}
-                        {template[cellKey] && (
-                          <div className="w-9 h-9 rounded-full border-2 border-dashed border-white/40 flex items-center justify-center bg-black/20 z-10 backdrop-blur-sm">
-                            <span className="text-[8px] text-white/90 font-bold uppercase">{template[cellKey]}</span>
-                          </div>
-                        )}
                       </div>
                     )}
 
