@@ -30,6 +30,9 @@ export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8" }: Shi
             zIndex: 10,
           }}
         >
-    {number}
-  </span>
-)}
+          {number}
+        </span>
+      )}
+    </div>
+  );
+}
