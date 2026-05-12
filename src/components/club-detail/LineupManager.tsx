@@ -45,7 +45,13 @@ interface LineupManagerProps {
   players: Player[];
   club: any;
   canEdit?: boolean;
-  onSave?: (data: any) => Promise<void> | void; // <-- Adicione esta linha
+  onSave?: (data: {
+    pitchPlayers: Record<string, Player>;
+    bench: Player[];
+    formation: string;
+    tactics: string[];
+    mentality: string;
+  }) => Promise<void> | void;
 }
 
 interface SubRecord {
@@ -84,7 +90,7 @@ const POS_COMPAT: Record<string, string[]> = {
   ATA: ["ATA", "SA", "PD", "PE"],
 };
 
-// ─── Mapeamento Global Baseado na Imagem Fornecida ─────────────────────────────
+// ─── Mapeamento do Grid conforme imagem ───────────────────────────────────────
 const GRID_LABELS: Record<string, string> = {
   "0-1": "ATA",
   "0-2": "ATA",
@@ -561,16 +567,16 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
   const handleSave = async () => {
     if (!canEdit) return;
     setIsSaving(true);
-
     try {
       if (onSave) {
-        // Envia os dados atuais para o componente pai salvar no banco
         await onSave({ pitchPlayers, bench, formation, tactics, mentality });
       } else {
-        await new Promise((r) => setTimeout(r, 900)); // mock temporário
+        await new Promise((r) => setTimeout(r, 900));
       }
-      toast.success("Escalação salva com sucesso!");
-    } catch (error) {
+      toast.success("Escalação salva com sucesso!", {
+        description: `${formation} · ${mentality} · ${tactics.length} instruções táticas`,
+      });
+    } catch {
       toast.error("Erro ao salvar a escalação.");
     } finally {
       setIsSaving(false);
@@ -696,10 +702,10 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                       ${!isDragging && !isSelected && !isHidden ? "hover:bg-white/10 cursor-pointer" : ""}
                     `}
                   >
-                    {/* Slot vazio visível */}
-                    {!player && !isHidden && template[cellKey] && (
+                    {/* Slot vazio — visível apenas ao arrastar ou selecionar */}
+                    {!player && !isHidden && (isDragging || selectedCell !== null) && template[cellKey] && (
                       <div className="w-9 h-9 rounded-full border-2 border-dashed border-white/40 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-                        <span className="text-[8px] text-white/90 font-bold uppercase">{template[cellKey]}</span>
+                        <span className="text-[8px] text-white/80 font-bold uppercase">{template[cellKey]}</span>
                       </div>
                     )}
 
