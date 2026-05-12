@@ -28,6 +28,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { ShirtIcon } from "@/components/club-detail/ShirtIcon";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 interface Player {
@@ -342,46 +343,39 @@ function ShirtIcon({
   number,
   size = "md",
   highlighted = false,
+  clubId,
 }: {
   number?: number | null;
   size?: "sm" | "md";
   highlighted?: boolean;
+  clubId?: string;
 }) {
   const dim = size === "sm" ? "w-8 h-8" : "w-10 h-10";
-  const txt = size === "sm" ? "text-[10px]" : "text-[12px]";
+
+  const shirtSrc = clubId
+    ? `/src/assets/flags/kits/${clubId}.svg`
+    : null;
+
   return (
     <div className={`relative flex justify-center items-center shrink-0 ${dim}`}>
-      <svg
-        viewBox="0 0 40 42"
-        className={`w-full h-full transition-all duration-300 ${highlighted ? "drop-shadow-[0_0_8px_hsl(44_100%_52%_/_0.8)]" : "drop-shadow-[0_2px_5px_rgba(0,0,0,0.6)]"}`}
-      >
-        <defs>
-          <path id="sh" d="M14 2 Q20 6 26 2 L38 8 L32 18 L28 14 L29 38 L20 40 L11 38 L12 14 L8 18 L2 8Z" />
-          <clipPath id="cl">
-            <use href="#sh" />
-          </clipPath>
-          <linearGradient id="shirtGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor={highlighted ? "hsl(44,100%,60%)" : "white"} />
-            <stop offset="100%" stopColor={highlighted ? "hsl(38,100%,48%)" : "#e5e7eb"} />
-          </linearGradient>
-        </defs>
-        <use href="#sh" fill="url(#shirtGrad)" />
-        <polygon
-          points="20,0 40,0 40,42 16,42"
-          fill={highlighted ? "hsl(38,100%,40%)" : "#d1d5db"}
-          clipPath="url(#cl)"
-          opacity="0.6"
+      {shirtSrc ? (
+        <img
+          src={shirtSrc}
+          alt="Camisa"
+          className={`w-full h-full object-contain transition-all duration-300 ${
+            highlighted
+              ? "drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+              : "drop-shadow-[0_2px_5px_rgba(0,0,0,0.6)]"
+          }`}
         />
-        <use
-          href="#sh"
-          fill="none"
-          stroke={highlighted ? "hsl(38,100%,35%)" : "#111827"}
-          strokeWidth="2"
-          strokeLinejoin="round"
-        />
-      </svg>
+      ) : (
+        <div className="w-full h-full bg-muted rounded-full" />
+      )}
+
       <span
-        className={`absolute font-black tracking-tighter select-none ${txt} ${highlighted ? "text-amber-900" : "text-slate-800"}`}
+        className={`absolute font-black tracking-tighter select-none ${
+          size === "sm" ? "text-[10px]" : "text-[12px]"
+        } text-white`}
         style={{ top: "48%", transform: "translateY(-50%)" }}
       >
         {number ?? "—"}
@@ -730,7 +724,7 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                         }}
                         className={`relative flex flex-col items-center z-10 ${canEdit ? "cursor-grab active:cursor-grabbing" : "cursor-default"} transition-transform duration-200 ${isSelected ? "scale-110 z-20" : "hover:scale-105"}`}
                       >
-                        <ShirtIcon number={player.shirt_number} highlighted={isSelected} />
+                        <ShirtIcon  clubId={club?.id} number={player.shirt_number} highlighted={isSelected} />
 
                         {/* Card FM-style (com feedback de adaptação) */}
                         <div
@@ -995,7 +989,7 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                   key={p.id}
                   className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-primary/5 border border-transparent hover:border-border/40 transition-colors group"
                 >
-                  <ShirtIcon number={p.shirt_number} size="sm" />
+                  <ShirtIcon  clubId={club?.id} number={p.shirt_number} size="sm" />
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-semibold text-foreground truncate leading-tight">{p.name}</div>
                     <div className="flex items-center gap-1.5 mt-0.5">
@@ -1152,7 +1146,7 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                       className={`flex items-center justify-between p-2.5 rounded-xl transition-colors border ${newLoss === 0 ? "border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10" : "border-transparent hover:bg-secondary/40 hover:border-border/40"}`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <ShirtIcon number={p.shirt_number} />
+                        <ShirtIcon  clubId={club?.id} number={p.shirt_number} />
                         <div>
                           <div className="flex items-center gap-1.5">
                             <span className="text-sm font-bold leading-tight">{p.name}</span>
