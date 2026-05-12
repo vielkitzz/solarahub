@@ -6,8 +6,8 @@ interface ShirtIconProps {
 }
 
 const SHIRT_NUMBER_COLOR: Record<string, string> = {
-  "3998bef5-9fc4-4955-87cd-a2b74db5daee": "#1E1E1E", // Córdoba
-  "263f38d8-b42e-48b3-a576-7a62da256fc3": "white", // Luciérnaga
+  "263f38d8-b42e-48b3-a576-7a62da256fc3": "#1E1E1E", // Córdoba
+  "3998bef5-9fc4-4955-87cd-a2b74db5daee": "white", // Luciérnaga
   // adicione os outros clubes aqui
 };
 
