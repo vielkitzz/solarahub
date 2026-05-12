@@ -25,13 +25,11 @@ export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8" }: Shi
           className="absolute inset-0 flex items-center justify-center font-bold"
           style={{
             fontSize: "clamp(10px, 45%, 20px)",
-            paddingTop: "15%",
             color: "black",
+            paddingBottom: "10%",
+            zIndex: 10,
           }}
         >
-          {number}
-        </span>
-      )}
-    </div>
-  );
-}
+    {number}
+  </span>
+)}
