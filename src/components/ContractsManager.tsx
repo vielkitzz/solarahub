@@ -864,6 +864,7 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
               variant="outline"
               onClick={() => {
                 setEmpresaParaConfirmar(null);
+                setRenewingContrato(null);
                 setDuracao("3");
               }}
             >
