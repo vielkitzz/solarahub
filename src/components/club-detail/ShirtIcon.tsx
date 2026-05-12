@@ -8,6 +8,7 @@ interface ShirtIconProps {
 const SHIRT_NUMBER_COLOR: Record<string, string> = {
   "263f38d8-b42e-48b3-a576-7a62da256fc3": "#1E1E1E", // Córdoba
   "3998bef5-9fc4-4955-87cd-a2b74db5daee": "white", // Luciérnaga
+  "7946f9fa-3980-46fa-9960-11bb8bc705df": "#1E1E1E", // Córdoba
   "2220870b-284f-40e7-91d8-9cd099e774c4": "white", // Guarani
   "6892f878-cfd5-4401-a005-a4fdc0487da9": "#1E1E1E", // Defensor de Resistencia
   "adc0e083-bb36-4d2d-8d7c-522a8ddeebd7": "white", // Sporting Victoria
