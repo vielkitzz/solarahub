@@ -7,6 +7,7 @@ interface ShirtIconProps {
 
 export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8" }: ShirtIconProps) {
   const src = clubId ? `/kits/${clubId}.svg` : "/placeholder.svg";
+  console.log("ShirtIcon number:", number);
 
   return (
     <div className={`relative ${size}`}>
