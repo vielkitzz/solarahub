@@ -23,7 +23,7 @@ export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8" }: Shi
       {number !== undefined && (
         <span
           className="absolute inset-0 flex items-center justify-center font-bold text-white"
-          style={{ fontSize: "clamp(8px, 50%, 14px)", paddingTop: "15%" }}
+          style={{ fontSize: "clamp(10px, 45%, 20px)", paddingTop: "15%" }}
         >
           {number}
         </span>
