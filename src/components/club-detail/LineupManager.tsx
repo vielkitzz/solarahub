@@ -696,16 +696,12 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                       ${!isDragging && !isSelected && !isHidden ? "hover:bg-white/10 cursor-pointer" : ""}
                     `}
                   >
-                  {/* Renderização do Slot Vazio (Visível apenas ao arrastar/selecionar) */}
-                    {!player && !isHidden && (isDragging || selectedCell !== null) && template[cellKey] && (
-                      <div className="relative w-full h-full flex items-center justify-center pointer-events-none transition-opacity duration-300">
-                        {/* Apenas o Slot da Formação Atual */}
-                        <div className="w-9 h-9 rounded-full border-2 border-dashed border-white/40 flex items-center justify-center bg-black/20 z-10 backdrop-blur-sm">
-                          <span className="text-[8px] text-white/90 font-bold uppercase">{template[cellKey]}</span>
-                        </div>
+                  {/* Slot vazio visível */}
+                    {!player && !isHidden && template[cellKey] && (
+                      <div className="w-9 h-9 rounded-full border-2 border-dashed border-white/40 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+                        <span className="text-[8px] text-white/90 font-bold uppercase">{template[cellKey]}</span>
                       </div>
                     )}
-                        )}
                         {/* Slot da Formação Atual */}
                         {template[cellKey] && (
                           <div className="w-9 h-9 rounded-full border-2 border-dashed border-white/40 flex items-center justify-center bg-black/20 z-10 backdrop-blur-sm">
