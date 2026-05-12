@@ -703,11 +703,16 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                     `}
                   >
                     {/* Slot vazio — visível apenas ao arrastar ou selecionar */}
-                    {!player && !isHidden && (isDragging || selectedCell !== null) && template[cellKey] && (
-                      <div className="w-9 h-9 rounded-full border-2 border-dashed border-white/40 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-                        <span className="text-[8px] text-white/80 font-bold uppercase">{template[cellKey]}</span>
-                      </div>
-                    )}
+                    {!player &&
+                      !isHidden &&
+                      (isDragging || selectedCell !== null) &&
+                      (gridLabel || template[cellKey]) && (
+                        <div className="w-9 h-9 rounded-full border-2 border-dashed border-white/40 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+                          <span className="text-[8px] text-white/80 font-bold uppercase">
+                            {gridLabel || template[cellKey]}
+                          </span>
+                        </div>
+                      )}
 
                     {player && (
                       <div
