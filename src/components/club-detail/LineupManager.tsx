@@ -594,128 +594,215 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
 
   const template = FORMATIONS[formation];
 
-  const renderPitch = () => {
-    const currentFormation = FORMATION_COORDS[formation] || FORMATION_COORDS["4-3-3"];
+  const renderPitch = () => (
+    <div
+      ref={pitchRef}
+      className="relative w-full aspect-[3/4] md:aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl border border-white/10 touch-none select-none"
+      style={{ background: "hsl(152,55%,18%)" }}
+    >
+      {/* Brilho de profundidade */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-black/25 pointer-events-none z-[1]" />
+      <PitchSVG />
 
-    return (
-      <div
-        ref={pitchRef}
-        className="relative w-full aspect-[3/4] md:aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl border border-white/10 touch-none select-none bg-[#113d2b]"
-      >
-        <PitchSVG />
+      {/* GRID TÁTICO */}
+      <div className="absolute inset-0 flex flex-col p-2 gap-0.5 z-10">
+        {Array.from({ length: GRID_ROWS }).map((_, r) => {
+          const isGkRow = r === GRID_ROWS - 1;
+          const rowHasCenter = !isGkRow && (!!pitchPlayers[`${r}-2`] || !!template[`${r}-2`] || isDragging);
 
-        {/* Container Absoluto para Jogadores */}
-        <div className="absolute inset-0 z-10">
-          {Object.entries(currentFormation).map(([slotKey, config]) => {
-            const player = pitchPlayers[slotKey];
-            const isSelected = selectedCell === slotKey;
-            const isDropZone = dropTarget === slotKey;
+          const cols = isGkRow ? [2] : rowHasCenter ? [0, 1, 2, 3, 4] : [0, 1, 3, 4];
+          const colConfig = isGkRow ? "1fr" : rowHasCenter ? "1fr 1fr 1fr 1fr 1fr" : "1fr 1fr 1fr 1fr";
 
-            return (
-              <div
-                key={slotKey}
-                style={{
-                  top: config.top,
-                  left: config.left,
-                  transform: "translate(-50%, -50%)",
-                }}
-                className="absolute transition-all duration-500 ease-out"
-              >
-                <div
-                  onClick={() => setSelectedCell(isSelected ? null : slotKey)}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    setDropTarget(slotKey);
-                  }}
-                  onDragLeave={() => setDropTarget(null)}
-                  onDrop={(e) => handleDrop(e, slotKey)}
-                  className={`
-                  relative flex flex-col items-center p-2 rounded-xl transition-all
-                  ${isDropZone ? "scale-125 bg-white/20 ring-2 ring-primary" : ""}
-                  ${isSelected ? "z-50 scale-110" : "z-20 hover:scale-105"}
-                `}
-                >
-                  {player ? (
-                    <div
-                      draggable={canEdit}
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData("text/plain", slotKey);
-                        setDragSource(slotKey);
-                        setIsDragging(true);
-                      }}
-                      onDragEnd={() => {
-                        setIsDragging(false);
-                        setDragSource(null);
-                        setDropTarget(null);
-                      }}
-                      className="flex flex-col items-center cursor-grab active:cursor-grabbing"
-                    >
-                      <ShirtIcon number={player.shirt_number} highlighted={isSelected} />
+          return (
+            <div
+              key={r}
+              className="flex-1 grid gap-0.5 transition-[grid-template-columns] duration-300"
+              style={{ gridTemplateColumns: colConfig }}
+            >
+              {cols.map((c) => {
+                const cellKey = `${r}-${c}`;
+                const player = pitchPlayers[cellKey];
+                const inTemplate = !!template[cellKey];
+                const isSelected = selectedCell === cellKey;
+                const isDropZone = dropTarget === cellKey && inTemplate;
+                const isSrcCell = dragSource === cellKey;
 
-                      {/* Badge do Jogador */}
+                return (
+                  <div
+                    key={cellKey}
+                    role={inTemplate ? "button" : undefined}
+                    tabIndex={inTemplate ? 0 : -1}
+                    aria-label={player ? `${player.name} - ${player.position}` : (template[cellKey] ?? undefined)}
+                    onDragOver={(e) => {
+                      if (inTemplate) {
+                        e.preventDefault();
+                        setDropTarget(cellKey);
+                      }
+                    }}
+                    onDragLeave={() => setDropTarget(null)}
+                    onDrop={(e) => handleDrop(e, cellKey)}
+                    onClick={() => {
+                      if (!inTemplate && !player) return;
+                      setSelectedCell(isSelected ? null : cellKey);
+                    }}
+                    onKeyDown={(e: KeyboardEvent) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelectedCell(isSelected ? null : cellKey);
+                      }
+                    }}
+                    className={[
+                      "relative flex items-center justify-center rounded-lg transition-all duration-200 outline-none",
+                      isDropZone ? "ring-2 ring-primary/70 bg-primary/15 scale-105" : "",
+                      isSelected ? "bg-primary/20 ring-2 ring-primary/60 scale-105" : "",
+                      isSrcCell ? "opacity-40" : "",
+                      !isDragging && !isSelected && inTemplate && player
+                        ? "hover:bg-white/10 focus-visible:bg-white/10 cursor-pointer"
+                        : "",
+                      isDragging && inTemplate && !isSrcCell ? "ring-1 ring-white/20 bg-white/5" : "",
+                    ].join(" ")}
+                  >
+                    {player && (
                       <div
-                        className={`
-                      mt-[-6px] px-2 py-0.5 rounded border backdrop-blur-md
-                      ${isSelected ? "bg-primary border-primary" : "bg-black/60 border-white/20"}
-                    `}
+                        draggable={canEdit}
+                        onDragStart={(e) => {
+                          e.stopPropagation();
+                          e.dataTransfer.setData("text/plain", cellKey);
+                          e.dataTransfer.effectAllowed = "move";
+                          setDragSource(cellKey);
+                          setTimeout(() => setIsDragging(true), 10);
+                        }}
+                        onDragEnd={() => {
+                          setIsDragging(false);
+                          setDragSource(null);
+                          setDropTarget(null);
+                        }}
+                        className={`relative flex flex-col items-center z-10 ${
+                          canEdit ? "cursor-grab active:cursor-grabbing" : "cursor-default"
+                        } transition-transform duration-200 ${isSelected ? "scale-110 z-20" : "hover:scale-105"}`}
                       >
-                        <div className="flex items-center gap-1">
-                          <span className={`text-[8px] font-bold ${getPosStyle(player.position).text}`}>
-                            {player.position}
-                          </span>
-                          <span className="text-[10px] font-black text-white">{player.habilidade}</span>
-                        </div>
-                        <div className="text-[9px] text-white font-medium truncate max-w-[60px]">
-                          {player.name.split(" ").pop()}
-                        </div>
-                      </div>
+                        <ShirtIcon number={player.shirt_number} highlighted={isSelected} />
 
-                      {/* Popover de Ações (Ajustado para o novo Grid) */}
-                      {isSelected && (
-                        <div className="absolute bottom-full mb-4 w-48 bg-card border border-border rounded-xl shadow-2xl p-3 z-[60]">
-                          <p className="font-bold text-xs truncate">{player.name}</p>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="w-full h-7 text-[10px] mt-2"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSubCell(slotKey);
-                              setSelectedCell(null);
-                            }}
+                        {/* Card FM-style */}
+                        <div
+                          className={`flex flex-col items-center mt-[-4px] z-30 rounded-md overflow-hidden min-w-[64px] border transition-all duration-200 ${
+                            isSelected ? "border-primary/70 shadow-lg shadow-primary/20" : "border-black/50"
+                          }`}
+                        >
+                          <div className="bg-card/95 backdrop-blur-sm w-full px-1.5 py-[2px] flex justify-center items-center gap-1 border-b border-border/40">
+                            <span className={`text-[8px] font-bold ${getPosStyle(player.position).text}`}>
+                              {player.position}
+                            </span>
+                            <span className="text-[9px] font-black text-primary">{player.habilidade ?? "—"}</span>
+                          </div>
+                          <div
+                            className={`w-full px-1.5 py-[2px] text-[9px] font-semibold text-center truncate max-w-[76px] transition-colors duration-200 ${
+                              isSelected
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-primary/80 text-primary-foreground"
+                            }`}
                           >
-                            <ArrowRightLeft className="h-3 w-3 mr-1" /> Substituir
-                          </Button>
-                          <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-card border-r border-b border-border rotate-45" />
+                            {player.name.split(" ").pop()}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  ) : (
-                    // Slot Vazio
-                    <div className="w-10 h-10 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center bg-black/10">
-                      <span className="text-[9px] text-white/40 font-bold">{config.role}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
 
-        {/* Indicadores de Rodapé (Formação e Stats) */}
-        <div className="absolute bottom-4 inset-x-4 flex justify-between items-end z-30 pointer-events-none">
-          <div className="bg-black/60 backdrop-blur-md p-2 rounded-lg border border-white/10 pointer-events-auto">
-            <div className="text-[10px] font-black text-primary tracking-tighter uppercase">{formation}</div>
-            <div className="text-[8px] text-white/60">{mentality}</div>
-          </div>
-          <div className="bg-black/60 backdrop-blur-md p-2 rounded-lg border border-white/10 pointer-events-auto text-right">
-            <div className="text-[8px] text-white/60 uppercase">Entrosamento</div>
-            <div className="text-[10px] font-black text-emerald-400">{compatibilityPct}%</div>
-          </div>
-        </div>
+                        {/* Popover */}
+                        {isSelected && (
+                          <div
+                            ref={popoverRef}
+                            className={`absolute ${
+                              r >= 4 ? "bottom-full mb-3" : "top-full mt-3"
+                            } left-1/2 -translate-x-1/2 w-56 bg-card border border-border/60 rounded-xl shadow-2xl z-50 p-3.5 text-sm`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {/* Header */}
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex-1 min-w-0 pr-2">
+                                <p className="font-bold text-foreground truncate leading-tight">{player.name}</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">
+                                  #{player.shirt_number ?? "—"} &middot; {player.age ?? "—"} anos
+                                  {player.nationality ? ` · ${player.nationality}` : ""}
+                                </p>
+                              </div>
+                              <div
+                                className={`h-9 w-9 rounded-lg flex flex-col items-center justify-center text-xs font-black border shrink-0 ${getPosStyle(player.position).badge}`}
+                              >
+                                <span className="text-[14px] leading-none">{player.habilidade ?? "—"}</span>
+                                <span className="text-[8px] opacity-70 leading-none mt-0.5">
+                                  {ratingLabel(player.habilidade ?? 0).label}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Barra de habilidade */}
+                            <div className="mb-3">
+                              <div className="h-1.5 rounded-full bg-secondary/60 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-gradient-to-r from-primary to-amber-400 transition-all duration-500"
+                                  style={{ width: `${Math.min(player.habilidade ?? 0, 100)}%` }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Ações */}
+                            {canEdit && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full text-xs h-8 border-primary/40 hover:bg-primary/10 hover:border-primary/60"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSubCell(cellKey);
+                                  setSelectedCell(null);
+                                }}
+                              >
+                                <ArrowRightLeft className="h-3 w-3 mr-1.5" />
+                                Substituir
+                              </Button>
+                            )}
+
+                            {/* seta indicadora */}
+                            {r >= 4 ? (
+                              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 border-x-8 border-x-transparent border-t-8 border-t-card" />
+                            ) : (
+                              <div className="absolute -top-2 left-1/2 -translate-x-1/2 border-x-8 border-x-transparent border-b-8 border-b-card" />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Slot vazio */}
+                    {!player && inTemplate && (
+                      <div className="w-9 h-9 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center">
+                        <span className="text-[8px] text-white/25 font-bold uppercase">{template[cellKey]}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
-    );
-  };
+
+      {/* Indicador de formação */}
+      <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm rounded-lg px-2.5 py-1.5 border border-white/10">
+        <span className="text-[11px] font-black text-primary tracking-widest">{formation}</span>
+        <span className="text-[9px] text-white/50 font-medium">{mentality}</span>
+      </div>
+
+      {/* Compatibilidade */}
+      <div className="absolute bottom-2 right-2 z-20 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm rounded-lg px-2.5 py-1.5 border border-white/10">
+        <div
+          className={`w-1.5 h-1.5 rounded-full ${
+            compatibilityPct >= 80 ? "bg-emerald-400" : compatibilityPct >= 60 ? "bg-amber-400" : "bg-rose-400"
+          }`}
+        />
+        <span className="text-[10px] font-bold text-white/70">{compatibilityPct}%</span>
+      </div>
+    </div>
+  );
 
   // ─── ANÁLISE ──────────────────────────────────────────────────────────────
 
