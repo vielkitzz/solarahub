@@ -652,25 +652,18 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                           isGK={player.position === "GOL"}
                         />
 
-                        {/* Card FM-style (com feedback de adaptação) */}
-                        <div
-                          className={`flex flex-col items-center mt-[-4px] z-30 rounded-md overflow-hidden min-w-[64px] border transition-all duration-200 ${isSelected ? "border-primary/70 shadow-lg shadow-primary/20" : loss === 0 ? "border-emerald-500/40" : loss <= 5 ? "border-amber-500/40" : "border-rose-500/40"}`}
-                        >
+                        {/* Card do jogador */}
+                        <div className="flex flex-col items-center mt-[-2px] z-30">
                           <div
-                            className={`bg-card/95 backdrop-blur-sm w-full px-1.5 py-[2px] flex justify-center items-center gap-1 border-b border-border/40 ${adaptBg}`}
-                          >
-                            <span className={`text-[8px] font-bold ${getPosStyle(player.position).text}`}>
-                              {player.position}
-                            </span>
-                            <div className={`flex items-center text-[9px] font-black ${color}`}>
-                              {effSkill}
-                              {loss > 0 && <span className="text-[6px] ml-0.5 opacity-80">(-{loss})</span>}
-                            </div>
-                          </div>
-                          <div
-                            className={`w-full px-1.5 py-[2px] text-[9px] font-semibold text-center truncate max-w-[76px] transition-colors duration-200 ${isSelected ? "bg-primary text-primary-foreground" : "bg-primary/80 text-primary-foreground"}`}
+                            className={`px-2 py-[3px] rounded-sm text-[9px] font-bold text-white/90 tracking-wide ${
+                              isSelected ? "bg-black/80" : "bg-black/60"
+                            }`}
                           >
                             {player.name.split(" ").pop()}
+                          </div>
+                          <div className={`text-[8px] font-medium mt-[1px] ${color}`}>
+                            {effSkill}
+                            {loss > 0 && <span className="opacity-70"> -{loss}</span>}
                           </div>
                         </div>
 
