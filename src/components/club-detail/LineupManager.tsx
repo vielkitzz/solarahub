@@ -361,6 +361,8 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
               ? "1fr 1fr 1fr 1fr 1fr"
               : "1fr 1fr 0px 1fr 1fr";
 
+          console.log(`Linha ${r}: rowHasCenter=${rowHasCenter}, colConfig="${colConfig}"`);
+
           return (
             <div
               key={r}
