@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Building2, Handshake, Plus, Trash2, Tv, Camera, AlertTriangle, Search } from "lucide-react";
+import { Building2, Handshake, Plus, Trash2, Tv, Camera, AlertTriangle, Search, RefreshCw } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 
 // IMPORTANDO O CATÁLOGO DO BRANDS.TS
@@ -84,6 +84,7 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
   const [duracao, setDuracao] = useState("3");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [empresaParaConfirmar, setEmpresaParaConfirmar] = useState<Empresa | null>(null);
+  const [renewingContrato, setRenewingContrato] = useState<Contrato | null>(null);
 
   const [logoApiKey, setLogoApiKey] = useState("");
   const [searchTerm, setSearchTerm] = useState(""); // Estado do buscador
@@ -294,6 +295,24 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
   const direitosImagemCusto = valorBaseFolha * 0.03;
   const direitosImagemReceita = direitosImagemCusto * 0.5;
 
+  const iniciarRenovacao = (c: Contrato) => {
+    if (!c.empresa) {
+      toast.error("Dados da empresa indisponíveis");
+      return;
+    }
+    const cat = c.categoria as PatrocinioCategoria;
+    const lista = empresasDaCategoria(cat);
+    const emp = lista.find((e) => e.nome === c.empresa!.nome);
+    if (!emp) {
+      toast.error("Marca não está mais disponível no catálogo");
+      return;
+    }
+    setRenewingContrato(c);
+    setSearchCategoria(cat);
+    setEmpresaParaConfirmar(emp);
+    setDuracao(String(c.anos_duracao || 3));
+  };
+
   const firmar = async (empresa: Empresa) => {
     if (!searchCategoria) {
       toast.error("Categoria não selecionada");
@@ -302,7 +321,11 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
 
     setIsSubmitting(true);
     const anos = Math.max(1, Math.min(10, parseInt(duracao) || 3));
-    const fim = temporadaAtual + anos;
+    // Renovação: começa quando o contrato atual terminar (ou na temporada atual se já expirou)
+    const inicio = renewingContrato
+      ? Math.max(temporadaAtual, renewingContrato.fim_temporada || temporadaAtual)
+      : temporadaAtual;
+    const fim = inicio + anos;
     // Valor anual efetivo com depreciação de 5% por ano adicional
     const valorAnualEfetivo = Math.round(Number(empresa.valor_anual_sugerido) * Math.pow(0.95, anos - 1));
 
@@ -345,13 +368,21 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
       dbEmpresaId = newEmp.id;
     }
 
-    // 2. Insere o contrato vinculado
+    // 2. Em renovação: encerra o contrato anterior na temporada que precede o início do novo
+    if (renewingContrato) {
+      await supabase
+        .from("contratos_clube")
+        .update({ fim_temporada: inicio, ativo: inicio > temporadaAtual })
+        .eq("id", renewingContrato.id);
+    }
+
+    // 3. Insere o novo contrato
     const { error } = await supabase.from("contratos_clube").insert({
       club_id: clubId,
       empresa_id: dbEmpresaId,
       categoria: searchCategoria,
       valor_anual: valorAnualEfetivo || 0,
-      inicio_temporada: temporadaAtual,
+      inicio_temporada: inicio,
       fim_temporada: fim,
       anos_duracao: anos,
       ativo: true,
@@ -363,8 +394,9 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
       return;
     }
 
-    toast.success(`Contrato firmado com ${empresa.nome}!`);
+    toast.success(renewingContrato ? `Renovação com ${empresa.nome} firmada!` : `Contrato firmado com ${empresa.nome}!`);
     setEmpresaParaConfirmar(null);
+    setRenewingContrato(null);
     setSearchCategoria(null);
     setSearchTerm("");
     setDuracao("3");
@@ -499,19 +531,32 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
                           </div>
                         </div>
                         {canEdit && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 text-destructive"
-                            onClick={() => rescindir(c)}
-                            title={`Rescindir (multa ${formatCurrency(
-                              (c.fim_temporada || temporadaAtual) - temporadaAtual <= 0
-                                ? Number(c.valor_anual) * 0.3
-                                : Number(c.valor_anual) * ((c.fim_temporada || temporadaAtual) - temporadaAtual) * 0.7,
-                            )})`}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-primary"
+                              onClick={() => iniciarRenovacao(c)}
+                              title={`Renovar contrato (inicia em ${Math.max(temporadaAtual, c.fim_temporada || temporadaAtual)})`}
+                            >
+                              <RefreshCw className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-destructive"
+                              onClick={() => rescindir(c)}
+                              title={`Rescindir (multa ${formatCurrency(
+                                (c.fim_temporada || temporadaAtual) - temporadaAtual <= 0
+                                  ? Number(c.valor_anual) * 0.3
+                                  : Number(c.valor_anual) *
+                                      ((c.fim_temporada || temporadaAtual) - temporadaAtual) *
+                                      0.7,
+                              )})`}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </>
                         )}
                       </div>
                     ))}
@@ -686,6 +731,7 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
         onOpenChange={(o) => {
           if (!o) {
             setEmpresaParaConfirmar(null);
+            setRenewingContrato(null);
             setDuracao("3");
           }
         }}
@@ -693,14 +739,18 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Handshake className="h-5 w-5 text-primary" /> Confirmar contrato
+              {renewingContrato ? <RefreshCw className="h-5 w-5 text-primary" /> : <Handshake className="h-5 w-5 text-primary" />}
+              {renewingContrato ? "Renovar contrato" : "Confirmar contrato"}
             </DialogTitle>
           </DialogHeader>
 
           {empresaParaConfirmar &&
             (() => {
               const anos = Math.max(1, Math.min(10, parseInt(duracao) || 3));
-              const fimContrato = temporadaAtual + anos;
+              const inicioContrato = renewingContrato
+                ? Math.max(temporadaAtual, renewingContrato.fim_temporada || temporadaAtual)
+                : temporadaAtual;
+              const fimContrato = inicioContrato + anos;
               const valorBase = Number(empresaParaConfirmar.valor_anual_sugerido);
               // Depreciação: cada ano adicional reduz 5% do valor anual
               // Ano 1 = 100%, Ano 2 = 95%, Ano 3 = 90%, etc.
@@ -713,6 +763,13 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
               const desconto = anos > 1 ? Math.round((1 - Math.pow(0.95, anos - 1)) * 100) : 0;
               return (
                 <div className="space-y-4">
+                  {renewingContrato && (
+                    <div className="bg-primary/10 border border-primary/30 rounded-lg p-2.5 text-[11px] text-primary/90">
+                      Renovação antecipada — o contrato atual vai até{" "}
+                      <strong>{renewingContrato.fim_temporada}</strong>. O novo entra em vigor em{" "}
+                      <strong>{inicioContrato}</strong>.
+                    </div>
+                  )}
                   {/* Cabeçalho da empresa */}
                   <div className="flex items-center gap-3 bg-background/40 rounded-lg p-3">
                     <div className="h-14 w-14 rounded overflow-hidden shrink-0">
@@ -754,7 +811,7 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
                         className="w-24"
                       />
                       <span className="text-xs text-muted-foreground">
-                        temporada {temporadaAtual} → {fimContrato}
+                        temporada {inicioContrato} → {fimContrato}
                       </span>
                     </div>
                     {anos > 1 && (
@@ -807,6 +864,7 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
               variant="outline"
               onClick={() => {
                 setEmpresaParaConfirmar(null);
+                setRenewingContrato(null);
                 setDuracao("3");
               }}
             >
