@@ -3,6 +3,7 @@ interface ShirtIconProps {
   number?: number;
   highlighted?: boolean;
   size?: string;
+  isGK?: boolean;
 }
 
 const SHIRT_NUMBER_COLOR: Record<string, string> = {
@@ -39,9 +40,9 @@ const SHIRT_NUMBER_COLOR: Record<string, string> = {
   // adicione os outros clubes aqui
 };
 
-export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8" }: ShirtIconProps) {
-  const src = clubId ? `/kits/${clubId}.svg` : "/placeholder.svg";
-  const numberColor = (clubId && SHIRT_NUMBER_COLOR[clubId]) || "white";
+export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8", isGK = false }: ShirtIconProps) {
+  const src = isGK ? "/kits/gk-shirt.svg" : clubId ? `/kits/${clubId}.svg` : "/placeholder.svg";
+  const numberColor = isGK ? "white" : (clubId && SHIRT_NUMBER_COLOR[clubId]) || "white";
 
   return (
     <div className={`relative ${size}`}>
