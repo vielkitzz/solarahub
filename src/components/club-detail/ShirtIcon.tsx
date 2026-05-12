@@ -59,7 +59,7 @@ export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8", isGK 
           style={{
             fontSize: "clamp(18px, 75%, 38px)",
             color: numberColor,
-            paddingBottom: "20%",
+            paddingBottom: "18%",
             zIndex: 10,
             fontFamily: "'Vina Sans', sans-serif",
           }}
