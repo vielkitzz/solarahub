@@ -21,34 +21,27 @@ export function getClubShirt(clubId?: string): string | null {
 export function injectShirtNumber(svg: string, number?: number): string {
   if (!svg) return "";
 
-  let result = svg.replace(/<svg([^>]*)>/, '<svg$1 width="100%" height="100%">');
+  // remove width/height fixos
+  let result = svg.replace(
+    /<svg([^>]*?)width="[^"]*"([^>]*?)height="[^"]*"([^>]*?)>/,
+    '<svg$1$2$3 viewBox="0 0 475 500" width="100%" height="100%">',
+  );
 
   if (number === undefined) return result;
 
   return result.replace(
     "</svg>",
     `
-    <style>
-      .shirt-number {
-        font-family: 'Vina Sans', sans-serif;
-      }
-    </style>
-
     <text
       x="237.5"
       y="235"
       text-anchor="middle"
       dominant-baseline="middle"
-      font-size="120"
-      class="shirt-number"
+      font-size="110"
+      font-family="'Vina Sans', sans-serif"
       font-weight="400"
       fill="white"
-      stroke="rgba(0,0,0,0.35)"
-      stroke-width="6"
-      paint-order="stroke"
-    >
-      ${number}
-    </text>
+    >${number}</text>
     </svg>`,
   );
 }
