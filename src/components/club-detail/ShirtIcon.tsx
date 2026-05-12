@@ -18,7 +18,7 @@ export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8" }: Shi
           highlighted ? "drop-shadow-[0_0_10px_rgba(255,255,255,0.7)]" : ""
         }`}
       />
-      {number !== undefined && (
+      {number != null && (
         <span
           className="absolute inset-0 flex items-center justify-center font-bold"
           style={{
