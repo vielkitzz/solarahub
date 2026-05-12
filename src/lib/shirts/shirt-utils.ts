@@ -21,7 +21,7 @@ export function getClubShirt(clubId?: string): string | null {
 export function injectShirtNumber(svg: string, number?: number): string {
   if (!svg) return "";
 
-  let result = svg.replace(/<svg/, '<svg width="100%" height="100%"');
+  let result = svg.replace(/<svg([^>]*)>/, '<svg$1 width="100%" height="100%">');
 
   if (number === undefined) return result;
 

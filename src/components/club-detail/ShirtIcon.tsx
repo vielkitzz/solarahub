@@ -11,6 +11,9 @@ export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8" }: Shi
   const rawSvg = getClubShirt(clubId || undefined);
 
   const svg = rawSvg ? injectShirtNumber(rawSvg, number) : null;
+  const shirtSvg = injectShirtNumber(svg, number);
+
+  console.log(shirtSvg);
 
   return (
     <div
