@@ -650,7 +650,7 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                           highlighted={isSelected}
                           size="w-12 h-12"
                           isGK={player.position === "GOL"}
-                          numberSize="clamp(14px, 70%, 32px)"
+                          numberSize="clamp(18px, 75%, 38px)"
                           numberPaddingBottom="18%"
                         />
 
@@ -926,7 +926,7 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                     size="w-8 h-8"
                     isGK={p.position === "GOL"}
                     numberSize="clamp(12px, 60%, 28px)"
-                    numberPaddingBottom="15%"
+                    numberPaddingBottom="13%"
                   />
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-semibold text-foreground truncate leading-tight">{p.name}</div>
@@ -1090,7 +1090,7 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                           size="w-8 h-8"
                           isGK={p.position === "GOL"}
                           numberSize="clamp(12px, 60%, 28px)"
-                          numberPaddingBottom="15%"
+                          numberPaddingBottom="13%"
                         />
                         <div>
                           <div className="flex items-center gap-1.5">
