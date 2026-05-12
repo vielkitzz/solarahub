@@ -563,7 +563,7 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
     <div
       ref={pitchRef}
       className="relative w-full aspect-[3/4] md:aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl border border-white/10 touch-none select-none"
-      style={{ background: "hsl(152,55%,18%)" }}
+      style={{ background: "hsl(171,45%,31%)" }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-black/25 pointer-events-none z-[1]" />
       <PitchSVG />
