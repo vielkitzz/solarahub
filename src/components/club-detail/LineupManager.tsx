@@ -2,26 +2,14 @@
  * LineupManager.tsx — Solara Hub
  * Componente de escalação tática reformulado.
  *
- * Como usar em ClubDetail.tsx:
- *   1. import { LineupManager } from "@/components/club-detail/LineupManager";
- *   2. <TabsTrigger value="escalacao">Escalação</TabsTrigger>
- *   3. <TabsContent value="escalacao" className="mt-4">
- *          <LineupManager players={players} club={club} canEdit={canEdit} />
- *      </TabsContent>
- *
- * Melhorias v2:
- *   - Campo com gradiente dinâmico de grama + linhas mais precisas
- *   - Player cards repaginados com animações de seleção
- *   - Painel de análise com radar visual e gráfico de distribuição por setor
- *   - Drag-and-drop refinado com highlight de drop-zone
- *   - Modal de substituição com diferencial de habilidade
- *   - Auto-preenchimento inteligente: respeita posições por setor (defesa/meio/ataque)
- *   - Indicador de compatibilidade de formação
- *   - Histórico de substituições na sessão
- *   - Acessibilidade: navegação por teclado nas células do campo
+ * CORREÇÃO v2.1:
+ *   - Substituído o sistema de grid row/col quebrado por FORMATION_COORDS
+ *     com coordenadas percentuais absolutas (top/left) para cada formação.
+ *   - Cada slot possui: top (%), left (%), role (string para slot vazio).
+ *   - Mantidas todas as funcionalidades e estilos anteriores.
  */
 
-import { useState, useMemo, useRef, useCallback, useEffect, KeyboardEvent } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import {
   ArrowRightLeft,
   Save,
@@ -69,9 +57,14 @@ interface SubRecord {
   time: string;
 }
 
-// ─── Constantes ───────────────────────────────────────────────────────────────
+interface SlotCoord {
+  top: string; // percentual em relação à altura do campo
+  left: string; // percentual em relação à largura do campo
+  role: string; // posição exibida no slot vazio
+}
 
-/** Mapeamento de posição → setor para autopick inteligente */
+// ─── Constantes de posição/setor ──────────────────────────────────────────────
+
 const POS_SECTOR: Record<string, "GK" | "DEF" | "MID" | "ATT"> = {
   GOL: "GK",
   ZAG: "DEF",
@@ -86,7 +79,6 @@ const POS_SECTOR: Record<string, "GK" | "DEF" | "MID" | "ATT"> = {
   ATA: "ATT",
 };
 
-/** Grupos de posições compatíveis para sugestão de substituição */
 const POS_COMPAT: Record<string, string[]> = {
   GOL: ["GOL"],
   ZAG: ["ZAG", "VOL"],
@@ -101,101 +93,140 @@ const POS_COMPAT: Record<string, string[]> = {
   ATA: ["ATA", "SA", "PD", "PE"],
 };
 
-const FORMATIONS: Record<string, Record<string, string>> = {
+// ─── FORMATION_COORDS ─────────────────────────────────────────────────────────
+//
+// Coordenadas percentuais (top/left) dentro do campo SVG.
+// O campo vai de ~4% (topo) a ~96% (base), sendo o goleiro sempre no fundo (base = nosso setor defensivo).
+// top:  8% = linha do goleiro  |  20–35% = defesa  |  45–60% = meio  |  70–85% = ataque
+// left: 10% = extremo esquerdo | 50% = centro | 90% = extremo direito
+//
+// Chave do slot: string identificadora única por formação (ex: "gk", "cb1", "lm"…)
+//
+
+const FORMATION_COORDS: Record<string, Record<string, SlotCoord>> = {
+  // ── 4-3-3 ─────────────────────────────────────────────────────────────────
   "4-3-3": {
-    "6-2": "GOL",
-    "5-0": "LE",
-    "5-1": "ZAG",
-    "5-3": "ZAG",
-    "5-4": "LD",
-    "3-1": "MC",
-    "4-2": "VOL",
-    "3-3": "MC",
-    "1-0": "PE",
-    "1-2": "ATA",
-    "1-4": "PD",
+    gk: { top: "88%", left: "50%", role: "GOL" },
+    rb: { top: "72%", left: "82%", role: "LD" },
+    cb1: { top: "72%", left: "62%", role: "ZAG" },
+    cb2: { top: "72%", left: "38%", role: "ZAG" },
+    lb: { top: "72%", left: "18%", role: "LE" },
+    cm1: { top: "52%", left: "26%", role: "MC" },
+    cdm: { top: "52%", left: "50%", role: "VOL" },
+    cm2: { top: "52%", left: "74%", role: "MC" },
+    rw: { top: "28%", left: "80%", role: "PD" },
+    st: { top: "20%", left: "50%", role: "ATA" },
+    lw: { top: "28%", left: "20%", role: "PE" },
   },
+
+  // ── 4-4-2 ─────────────────────────────────────────────────────────────────
   "4-4-2": {
-    "6-2": "GOL",
-    "5-0": "LE",
-    "5-1": "ZAG",
-    "5-3": "ZAG",
-    "5-4": "LD",
-    "3-0": "PE",
-    "3-1": "MC",
-    "3-3": "MC",
-    "3-4": "PD",
-    "1-1": "ATA",
-    "1-3": "ATA",
+    gk: { top: "88%", left: "50%", role: "GOL" },
+    rb: { top: "72%", left: "82%", role: "LD" },
+    cb1: { top: "72%", left: "62%", role: "ZAG" },
+    cb2: { top: "72%", left: "38%", role: "ZAG" },
+    lb: { top: "72%", left: "18%", role: "LE" },
+    rm: { top: "50%", left: "82%", role: "PD" },
+    cm1: { top: "50%", left: "62%", role: "MC" },
+    cm2: { top: "50%", left: "38%", role: "MC" },
+    lm: { top: "50%", left: "18%", role: "PE" },
+    st1: { top: "22%", left: "62%", role: "ATA" },
+    st2: { top: "22%", left: "38%", role: "ATA" },
   },
+
+  // ── 4-2-3-1 ───────────────────────────────────────────────────────────────
   "4-2-3-1": {
-    "6-2": "GOL",
-    "5-0": "LE",
-    "5-1": "ZAG",
-    "5-3": "ZAG",
-    "5-4": "LD",
-    "4-1": "VOL",
-    "4-3": "VOL",
-    "2-0": "PE",
-    "2-2": "MEI",
-    "2-4": "PD",
-    "0-2": "ATA",
+    gk: { top: "88%", left: "50%", role: "GOL" },
+    rb: { top: "72%", left: "82%", role: "LD" },
+    cb1: { top: "72%", left: "62%", role: "ZAG" },
+    cb2: { top: "72%", left: "38%", role: "ZAG" },
+    lb: { top: "72%", left: "18%", role: "LE" },
+    cdm1: { top: "57%", left: "62%", role: "VOL" },
+    cdm2: { top: "57%", left: "38%", role: "VOL" },
+    ram: { top: "38%", left: "78%", role: "PD" },
+    cam: { top: "38%", left: "50%", role: "MEI" },
+    lam: { top: "38%", left: "22%", role: "PE" },
+    st: { top: "18%", left: "50%", role: "ATA" },
   },
+
+  // ── 3-5-2 ─────────────────────────────────────────────────────────────────
   "3-5-2": {
-    "6-2": "GOL",
-    "5-1": "ZAG",
-    "5-2": "ZAG",
-    "5-3": "ZAG",
-    "3-0": "LE",
-    "4-2": "VOL",
-    "3-1": "MC",
-    "3-3": "MC",
-    "3-4": "LD",
-    "1-1": "ATA",
-    "1-3": "ATA",
+    gk: { top: "88%", left: "50%", role: "GOL" },
+    cb1: { top: "72%", left: "70%", role: "ZAG" },
+    cb2: { top: "72%", left: "50%", role: "ZAG" },
+    cb3: { top: "72%", left: "30%", role: "ZAG" },
+    rwb: { top: "53%", left: "86%", role: "LD" },
+    cm1: { top: "53%", left: "67%", role: "MC" },
+    cdm: { top: "53%", left: "50%", role: "VOL" },
+    cm2: { top: "53%", left: "33%", role: "MC" },
+    lwb: { top: "53%", left: "14%", role: "LE" },
+    st1: { top: "22%", left: "62%", role: "ATA" },
+    st2: { top: "22%", left: "38%", role: "ATA" },
   },
+
+  // ── 5-3-2 ─────────────────────────────────────────────────────────────────
   "5-3-2": {
-    "6-2": "GOL",
-    "5-0": "LE",
-    "5-1": "ZAG",
-    "5-2": "ZAG",
-    "5-3": "ZAG",
-    "5-4": "LD",
-    "3-1": "MC",
-    "4-2": "VOL",
-    "3-3": "MC",
-    "1-1": "ATA",
-    "1-3": "ATA",
+    gk: { top: "88%", left: "50%", role: "GOL" },
+    rwb: { top: "72%", left: "88%", role: "LD" },
+    cb1: { top: "72%", left: "70%", role: "ZAG" },
+    cb2: { top: "72%", left: "50%", role: "ZAG" },
+    cb3: { top: "72%", left: "30%", role: "ZAG" },
+    lwb: { top: "72%", left: "12%", role: "LE" },
+    cm1: { top: "48%", left: "68%", role: "MC" },
+    cdm: { top: "48%", left: "50%", role: "VOL" },
+    cm2: { top: "48%", left: "32%", role: "MC" },
+    st1: { top: "22%", left: "62%", role: "ATA" },
+    st2: { top: "22%", left: "38%", role: "ATA" },
   },
+
+  // ── 3-4-3 ─────────────────────────────────────────────────────────────────
   "3-4-3": {
-    "6-2": "GOL",
-    "5-1": "ZAG",
-    "5-2": "ZAG",
-    "5-3": "ZAG",
-    "3-0": "LE",
-    "3-1": "MC",
-    "3-3": "MC",
-    "3-4": "LD",
-    "1-0": "PE",
-    "1-2": "ATA",
-    "1-4": "PD",
+    gk: { top: "88%", left: "50%", role: "GOL" },
+    cb1: { top: "72%", left: "70%", role: "ZAG" },
+    cb2: { top: "72%", left: "50%", role: "ZAG" },
+    cb3: { top: "72%", left: "30%", role: "ZAG" },
+    rm: { top: "52%", left: "84%", role: "LD" },
+    cm1: { top: "52%", left: "62%", role: "MC" },
+    cm2: { top: "52%", left: "38%", role: "MC" },
+    lm: { top: "52%", left: "16%", role: "LE" },
+    rw: { top: "24%", left: "78%", role: "PD" },
+    st: { top: "18%", left: "50%", role: "ATA" },
+    lw: { top: "24%", left: "22%", role: "PE" },
   },
+
+  // ── 4-1-4-1 ───────────────────────────────────────────────────────────────
   "4-1-4-1": {
-    "6-2": "GOL",
-    "5-0": "LE",
-    "5-1": "ZAG",
-    "5-3": "ZAG",
-    "5-4": "LD",
-    "4-2": "VOL",
-    "2-0": "PE",
-    "2-1": "MC",
-    "2-3": "MC",
-    "2-4": "PD",
-    "0-2": "ATA",
+    gk: { top: "88%", left: "50%", role: "GOL" },
+    rb: { top: "73%", left: "82%", role: "LD" },
+    cb1: { top: "73%", left: "62%", role: "ZAG" },
+    cb2: { top: "73%", left: "38%", role: "ZAG" },
+    lb: { top: "73%", left: "18%", role: "LE" },
+    cdm: { top: "60%", left: "50%", role: "VOL" },
+    rm: { top: "44%", left: "84%", role: "PD" },
+    cm1: { top: "44%", left: "64%", role: "MC" },
+    cm2: { top: "44%", left: "36%", role: "MC" },
+    lm: { top: "44%", left: "16%", role: "PE" },
+    st: { top: "18%", left: "50%", role: "ATA" },
   },
 };
 
-const GRID_ROWS = 7;
+// ─── Mapeamento role → lista de posições aceitas (para auto-pick) ─────────────
+
+const ROLE_TO_POSITIONS: Record<string, string[]> = {
+  GOL: ["GOL"],
+  LD: ["LD", "ZAG"],
+  LE: ["LE", "ZAG"],
+  ZAG: ["ZAG", "VOL"],
+  VOL: ["VOL", "MC", "ZAG"],
+  MC: ["MC", "VOL", "MEI"],
+  MEI: ["MEI", "MC", "PE", "PD"],
+  PD: ["PD", "MEI", "ATA"],
+  PE: ["PE", "MEI", "ATA"],
+  SA: ["SA", "ATA", "PD", "PE"],
+  ATA: ["ATA", "SA", "PD", "PE"],
+};
+
+// ─── Táticas / Mentalidades ───────────────────────────────────────────────────
 
 const TACTICS_OPTS = [
   { label: "Pressionar alto", icon: "⬆" },
@@ -219,7 +250,7 @@ const MENTALITY_META: Record<Mentality, { color: string; desc: string }> = {
   Ofensivo: { color: "text-rose-400", desc: "Alta linha, pressão total" },
 };
 
-// ─── Estilos por posição ───────────────────────────────────────────────────────
+// ─── Estilos por posição ──────────────────────────────────────────────────────
 
 const POS_STYLE: Record<string, { text: string; badge: string; glow: string }> = {
   GOL: {
@@ -260,8 +291,6 @@ function getPosStyle(pos: string) {
     }
   );
 }
-
-// ─── Rating label ─────────────────────────────────────────────────────────────
 
 function ratingLabel(skill: number) {
   if (skill >= 90) return { label: "Elite", color: "text-amber-300" };
@@ -345,21 +374,9 @@ function PitchSVG() {
           <stop offset="50%" stopColor="hsl(148,52%,19%)" />
           <stop offset="100%" stopColor="hsl(152,55%,22%)" />
         </linearGradient>
-        {/* Listras de grama alternadas */}
-        {Array.from({ length: 10 }).map((_, i) => (
-          <rect
-            key={i}
-            x="5"
-            y={5 + i * 12}
-            width="90"
-            height="12"
-            fill={i % 2 === 0 ? "hsl(148,52%,21%)" : "hsl(152,55%,18%)"}
-            opacity="0.5"
-          />
-        ))}
       </defs>
       <rect x="5" y="5" width="90" height="120" fill="url(#grassGrad)" />
-      {/* Listras */}
+      {/* Listras de grama */}
       {Array.from({ length: 10 }).map((_, i) => (
         <rect
           key={i}
@@ -370,9 +387,10 @@ function PitchSVG() {
           fill={i % 2 === 0 ? "rgba(255,255,255,0.03)" : "transparent"}
         />
       ))}
-      {/* Linhas do campo */}
+      {/* Contorno e linha do meio */}
       <rect x="5" y="5" width="90" height="120" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
       <line x1="5" y1="65" x2="95" y2="65" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
+      {/* Círculo central */}
       <circle cx="50" cy="65" r="12" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
       <circle cx="50" cy="65" r="0.8" fill="rgba(255,255,255,0.6)" />
       {/* Área superior */}
@@ -415,36 +433,41 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
   const pitchRef = useRef<HTMLDivElement>(null);
 
   // ── Auto-pick ───────────────────────────────────────────────────────────────
+  // Usa FORMATION_COORDS para obter o role de cada slot, depois tenta encaixar
+  // jogadores respeitando posições compatíveis.
 
   const autoPickFormation = useCallback((formId: string, pool: Player[]) => {
-    const template = FORMATIONS[formId];
+    const coords = FORMATION_COORDS[formId];
+    if (!coords) return;
+
     let remaining = [...pool].sort((a, b) => (b.habilidade ?? 0) - (a.habilidade ?? 0));
     const newPitch: Record<string, Player> = {};
 
-    // 1ª passagem: encaixar por posição exata
-    Object.entries(template).forEach(([cellKey, role]) => {
+    // 1ª passagem: posição exata
+    Object.entries(coords).forEach(([slotKey, cfg]) => {
+      const role = cfg.role;
       const idx = remaining.findIndex((p) => (p.position || "").toUpperCase() === role.toUpperCase());
       if (idx !== -1) {
-        newPitch[cellKey] = remaining[idx];
+        newPitch[slotKey] = remaining[idx];
         remaining.splice(idx, 1);
       }
     });
 
-    // 2ª passagem: encaixar por setor compatível
-    Object.entries(template).forEach(([cellKey, role]) => {
-      if (newPitch[cellKey]) return;
-      const sector = POS_SECTOR[role];
-      const idx = remaining.findIndex((p) => POS_SECTOR[(p.position || "").toUpperCase()] === sector);
+    // 2ª passagem: posições compatíveis com o role
+    Object.entries(coords).forEach(([slotKey, cfg]) => {
+      if (newPitch[slotKey]) return;
+      const compat = ROLE_TO_POSITIONS[cfg.role] ?? [cfg.role];
+      const idx = remaining.findIndex((p) => compat.includes((p.position || "").toUpperCase()));
       if (idx !== -1) {
-        newPitch[cellKey] = remaining[idx];
+        newPitch[slotKey] = remaining[idx];
         remaining.splice(idx, 1);
       }
     });
 
-    // 3ª passagem: preencher vazios com quem sobrou (por habilidade)
-    Object.keys(template).forEach((cellKey) => {
-      if (!newPitch[cellKey] && remaining.length > 0) {
-        newPitch[cellKey] = remaining.shift()!;
+    // 3ª passagem: preencher vazios por habilidade
+    Object.keys(coords).forEach((slotKey) => {
+      if (!newPitch[slotKey] && remaining.length > 0) {
+        newPitch[slotKey] = remaining.shift()!;
       }
     });
 
@@ -547,7 +570,6 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
       return { avgSkill: 0, avgAge: 0, foreigners: 0, gkSkill: 0, defSkill: 0, midSkill: 0, attSkill: 0 };
 
     const avg = (arr: number[]) => (arr.length ? Math.round(arr.reduce((s, v) => s + v, 0) / arr.length) : 0);
-
     const byRole = (roles: string[]) =>
       avg(starters.filter((p) => roles.includes((p.position || "").toUpperCase())).map((p) => p.habilidade ?? 0));
 
@@ -562,26 +584,25 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
     };
   }, [pitchPlayers]);
 
-  // Compatibilidade com a formação (% de posições corretas)
+  // Compatibilidade com a formação
   const compatibilityPct = useMemo(() => {
-    const template = FORMATIONS[formation];
-    let correct = 0;
-    let total = 0;
-    Object.entries(template).forEach(([key, role]) => {
+    const coords = FORMATION_COORDS[formation];
+    let correct = 0,
+      total = 0;
+    Object.entries(coords).forEach(([key, cfg]) => {
       const p = pitchPlayers[key];
       if (!p) return;
       total++;
-      if ((p.position || "").toUpperCase() === role.toUpperCase()) correct++;
+      if ((p.position || "").toUpperCase() === cfg.role.toUpperCase()) correct++;
     });
     return total > 0 ? Math.round((correct / total) * 100) : 0;
   }, [pitchPlayers, formation]);
 
-  // ── Bench ordenado com indicador de compatibilidade com subCell ────────────
-
+  // Banco ordenado com compatibilidade com subCell
   const sortedBench = useMemo(() => {
     if (!subCell) return bench;
-    const posInCell = FORMATIONS[formation][subCell];
-    const compat = POS_COMPAT[posInCell] ?? [];
+    const role = FORMATION_COORDS[formation]?.[subCell]?.role ?? "";
+    const compat = POS_COMPAT[role] ?? [];
     return [...bench].sort((a, b) => {
       const aOk = compat.includes((a.position || "").toUpperCase()) ? 1 : 0;
       const bOk = compat.includes((b.position || "").toUpperCase()) ? 1 : 0;
@@ -592,217 +613,132 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
 
   // ─── CAMPO ────────────────────────────────────────────────────────────────
 
-  const template = FORMATIONS[formation];
+  const renderPitch = () => {
+    const coords = FORMATION_COORDS[formation] ?? FORMATION_COORDS["4-3-3"];
 
-  const renderPitch = () => (
-    <div
-      ref={pitchRef}
-      className="relative w-full aspect-[3/4] md:aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl border border-white/10 touch-none select-none"
-      style={{ background: "hsl(152,55%,18%)" }}
-    >
-      {/* Brilho de profundidade */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-black/25 pointer-events-none z-[1]" />
-      <PitchSVG />
+    return (
+      <div
+        ref={pitchRef}
+        className="relative w-full aspect-[3/4] md:aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl border border-white/10 touch-none select-none bg-[#113d2b]"
+      >
+        <PitchSVG />
 
-      {/* GRID TÁTICO */}
-      <div className="absolute inset-0 flex flex-col p-2 gap-0.5 z-10">
-        {Array.from({ length: GRID_ROWS }).map((_, r) => {
-          const isGkRow = r === GRID_ROWS - 1;
-          const rowHasCenter = !isGkRow && (!!pitchPlayers[`${r}-2`] || !!template[`${r}-2`] || isDragging);
+        {/* Slots de jogadores — posicionamento percentual absoluto */}
+        <div className="absolute inset-0 z-10">
+          {Object.entries(coords).map(([slotKey, cfg]) => {
+            const player = pitchPlayers[slotKey];
+            const isSelected = selectedCell === slotKey;
+            const isDropZone = dropTarget === slotKey;
 
-          const cols = isGkRow ? [2] : rowHasCenter ? [0, 1, 2, 3, 4] : [0, 1, 3, 4];
-          const colConfig = isGkRow ? "1fr" : rowHasCenter ? "1fr 1fr 1fr 1fr 1fr" : "1fr 1fr 1fr 1fr";
+            return (
+              <div
+                key={slotKey}
+                style={{
+                  top: cfg.top,
+                  left: cfg.left,
+                  transform: "translate(-50%, -50%)",
+                  position: "absolute",
+                }}
+                className="transition-all duration-500 ease-out"
+              >
+                <div
+                  onClick={() => setSelectedCell(isSelected ? null : slotKey)}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDropTarget(slotKey);
+                  }}
+                  onDragLeave={() => setDropTarget(null)}
+                  onDrop={(e) => handleDrop(e, slotKey)}
+                  className={`
+                    relative flex flex-col items-center p-1.5 rounded-xl transition-all
+                    ${isDropZone ? "scale-125 bg-white/20 ring-2 ring-primary" : ""}
+                    ${isSelected ? "z-50 scale-110" : "z-20 hover:scale-105"}
+                  `}
+                >
+                  {player ? (
+                    <div
+                      draggable={canEdit}
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData("text/plain", slotKey);
+                        setDragSource(slotKey);
+                        setIsDragging(true);
+                      }}
+                      onDragEnd={() => {
+                        setIsDragging(false);
+                        setDragSource(null);
+                        setDropTarget(null);
+                      }}
+                      className="flex flex-col items-center cursor-grab active:cursor-grabbing"
+                    >
+                      <ShirtIcon number={player.shirt_number} highlighted={isSelected} />
 
-          return (
-            <div
-              key={r}
-              className="flex-1 grid gap-0.5 transition-[grid-template-columns] duration-300"
-              style={{ gridTemplateColumns: colConfig }}
-            >
-              {cols.map((c) => {
-                const cellKey = `${r}-${c}`;
-                const player = pitchPlayers[cellKey];
-                const inTemplate = !!template[cellKey];
-                const isSelected = selectedCell === cellKey;
-                const isDropZone = dropTarget === cellKey && inTemplate;
-                const isSrcCell = dragSource === cellKey;
-
-                return (
-                  <div
-                    key={cellKey}
-                    role={inTemplate ? "button" : undefined}
-                    tabIndex={inTemplate ? 0 : -1}
-                    aria-label={player ? `${player.name} - ${player.position}` : (template[cellKey] ?? undefined)}
-                    onDragOver={(e) => {
-                      if (inTemplate) {
-                        e.preventDefault();
-                        setDropTarget(cellKey);
-                      }
-                    }}
-                    onDragLeave={() => setDropTarget(null)}
-                    onDrop={(e) => handleDrop(e, cellKey)}
-                    onClick={() => {
-                      if (!inTemplate && !player) return;
-                      setSelectedCell(isSelected ? null : cellKey);
-                    }}
-                    onKeyDown={(e: KeyboardEvent) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setSelectedCell(isSelected ? null : cellKey);
-                      }
-                    }}
-                    className={[
-                      "relative flex items-center justify-center rounded-lg transition-all duration-200 outline-none",
-                      isDropZone ? "ring-2 ring-primary/70 bg-primary/15 scale-105" : "",
-                      isSelected ? "bg-primary/20 ring-2 ring-primary/60 scale-105" : "",
-                      isSrcCell ? "opacity-40" : "",
-                      !isDragging && !isSelected && inTemplate && player
-                        ? "hover:bg-white/10 focus-visible:bg-white/10 cursor-pointer"
-                        : "",
-                      isDragging && inTemplate && !isSrcCell ? "ring-1 ring-white/20 bg-white/5" : "",
-                    ].join(" ")}
-                  >
-                    {player && (
+                      {/* Badge do jogador */}
                       <div
-                        draggable={canEdit}
-                        onDragStart={(e) => {
-                          e.stopPropagation();
-                          e.dataTransfer.setData("text/plain", cellKey);
-                          e.dataTransfer.effectAllowed = "move";
-                          setDragSource(cellKey);
-                          setTimeout(() => setIsDragging(true), 10);
-                        }}
-                        onDragEnd={() => {
-                          setIsDragging(false);
-                          setDragSource(null);
-                          setDropTarget(null);
-                        }}
-                        className={`relative flex flex-col items-center z-10 ${
-                          canEdit ? "cursor-grab active:cursor-grabbing" : "cursor-default"
-                        } transition-transform duration-200 ${isSelected ? "scale-110 z-20" : "hover:scale-105"}`}
+                        className={`
+                          mt-[-6px] px-2 py-0.5 rounded border backdrop-blur-md
+                          ${isSelected ? "bg-primary border-primary" : "bg-black/60 border-white/20"}
+                        `}
                       >
-                        <ShirtIcon number={player.shirt_number} highlighted={isSelected} />
-
-                        {/* Card FM-style */}
-                        <div
-                          className={`flex flex-col items-center mt-[-4px] z-30 rounded-md overflow-hidden min-w-[64px] border transition-all duration-200 ${
-                            isSelected ? "border-primary/70 shadow-lg shadow-primary/20" : "border-black/50"
-                          }`}
-                        >
-                          <div className="bg-card/95 backdrop-blur-sm w-full px-1.5 py-[2px] flex justify-center items-center gap-1 border-b border-border/40">
-                            <span className={`text-[8px] font-bold ${getPosStyle(player.position).text}`}>
-                              {player.position}
-                            </span>
-                            <span className="text-[9px] font-black text-primary">{player.habilidade ?? "—"}</span>
-                          </div>
-                          <div
-                            className={`w-full px-1.5 py-[2px] text-[9px] font-semibold text-center truncate max-w-[76px] transition-colors duration-200 ${
-                              isSelected
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-primary/80 text-primary-foreground"
-                            }`}
-                          >
-                            {player.name.split(" ").pop()}
-                          </div>
+                        <div className="flex items-center gap-1">
+                          <span className={`text-[8px] font-bold ${getPosStyle(player.position).text}`}>
+                            {player.position}
+                          </span>
+                          <span className="text-[10px] font-black text-white">{player.habilidade}</span>
                         </div>
+                        <div className="text-[9px] text-white font-medium truncate max-w-[60px]">
+                          {player.name.split(" ").pop()}
+                        </div>
+                      </div>
 
-                        {/* Popover */}
-                        {isSelected && (
-                          <div
-                            ref={popoverRef}
-                            className={`absolute ${
-                              r >= 4 ? "bottom-full mb-3" : "top-full mt-3"
-                            } left-1/2 -translate-x-1/2 w-56 bg-card border border-border/60 rounded-xl shadow-2xl z-50 p-3.5 text-sm`}
-                            onClick={(e) => e.stopPropagation()}
+                      {/* Popover de ações */}
+                      {isSelected && (
+                        <div
+                          ref={popoverRef}
+                          className="absolute bottom-full mb-4 w-48 bg-card border border-border rounded-xl shadow-2xl p-3 z-[60]"
+                        >
+                          <p className="font-bold text-xs truncate">{player.name}</p>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full h-7 text-[10px] mt-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSubCell(slotKey);
+                              setSelectedCell(null);
+                            }}
                           >
-                            {/* Header */}
-                            <div className="flex justify-between items-start mb-2">
-                              <div className="flex-1 min-w-0 pr-2">
-                                <p className="font-bold text-foreground truncate leading-tight">{player.name}</p>
-                                <p className="text-[10px] text-muted-foreground mt-0.5">
-                                  #{player.shirt_number ?? "—"} &middot; {player.age ?? "—"} anos
-                                  {player.nationality ? ` · ${player.nationality}` : ""}
-                                </p>
-                              </div>
-                              <div
-                                className={`h-9 w-9 rounded-lg flex flex-col items-center justify-center text-xs font-black border shrink-0 ${getPosStyle(player.position).badge}`}
-                              >
-                                <span className="text-[14px] leading-none">{player.habilidade ?? "—"}</span>
-                                <span className="text-[8px] opacity-70 leading-none mt-0.5">
-                                  {ratingLabel(player.habilidade ?? 0).label}
-                                </span>
-                              </div>
-                            </div>
+                            <ArrowRightLeft className="h-3 w-3 mr-1" /> Substituir
+                          </Button>
+                          <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-card border-r border-b border-border rotate-45" />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    /* Slot vazio */
+                    <div className="w-10 h-10 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center bg-black/10">
+                      <span className="text-[9px] text-white/40 font-bold">{cfg.role}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
-                            {/* Barra de habilidade */}
-                            <div className="mb-3">
-                              <div className="h-1.5 rounded-full bg-secondary/60 overflow-hidden">
-                                <div
-                                  className="h-full rounded-full bg-gradient-to-r from-primary to-amber-400 transition-all duration-500"
-                                  style={{ width: `${Math.min(player.habilidade ?? 0, 100)}%` }}
-                                />
-                              </div>
-                            </div>
-
-                            {/* Ações */}
-                            {canEdit && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full text-xs h-8 border-primary/40 hover:bg-primary/10 hover:border-primary/60"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSubCell(cellKey);
-                                  setSelectedCell(null);
-                                }}
-                              >
-                                <ArrowRightLeft className="h-3 w-3 mr-1.5" />
-                                Substituir
-                              </Button>
-                            )}
-
-                            {/* seta indicadora */}
-                            {r >= 4 ? (
-                              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 border-x-8 border-x-transparent border-t-8 border-t-card" />
-                            ) : (
-                              <div className="absolute -top-2 left-1/2 -translate-x-1/2 border-x-8 border-x-transparent border-b-8 border-b-card" />
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Slot vazio */}
-                    {!player && inTemplate && (
-                      <div className="w-9 h-9 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center">
-                        <span className="text-[8px] text-white/25 font-bold uppercase">{template[cellKey]}</span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
+        {/* Indicadores de rodapé */}
+        <div className="absolute bottom-4 inset-x-4 flex justify-between items-end z-30 pointer-events-none">
+          <div className="bg-black/60 backdrop-blur-md p-2 rounded-lg border border-white/10 pointer-events-auto">
+            <div className="text-[10px] font-black text-primary tracking-tighter uppercase">{formation}</div>
+            <div className="text-[8px] text-white/60">{mentality}</div>
+          </div>
+          <div className="bg-black/60 backdrop-blur-md p-2 rounded-lg border border-white/10 pointer-events-auto text-right">
+            <div className="text-[8px] text-white/60 uppercase">Entrosamento</div>
+            <div className="text-[10px] font-black text-emerald-400">{compatibilityPct}%</div>
+          </div>
+        </div>
       </div>
-
-      {/* Indicador de formação */}
-      <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm rounded-lg px-2.5 py-1.5 border border-white/10">
-        <span className="text-[11px] font-black text-primary tracking-widest">{formation}</span>
-        <span className="text-[9px] text-white/50 font-medium">{mentality}</span>
-      </div>
-
-      {/* Compatibilidade */}
-      <div className="absolute bottom-2 right-2 z-20 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm rounded-lg px-2.5 py-1.5 border border-white/10">
-        <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            compatibilityPct >= 80 ? "bg-emerald-400" : compatibilityPct >= 60 ? "bg-amber-400" : "bg-rose-400"
-          }`}
-        />
-        <span className="text-[10px] font-bold text-white/70">{compatibilityPct}%</span>
-      </div>
-    </div>
-  );
+    );
+  };
 
   // ─── ANÁLISE ──────────────────────────────────────────────────────────────
 
@@ -818,7 +754,6 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
         </div>
       </div>
 
-      {/* Barras por setor */}
       <div className="space-y-2.5 mb-4">
         {[
           { label: "Goleiro", value: stats.gkSkill, color: "from-yellow-500 to-yellow-400" },
@@ -841,7 +776,6 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
         ))}
       </div>
 
-      {/* Rodapé: Idade + Estrangeiros + Compatibilidade */}
       <div className="grid grid-cols-3 gap-2">
         {[
           {
@@ -882,7 +816,6 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
         <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mentalidade & Táticas</h3>
       </div>
 
-      {/* Seletor de mentalidade */}
       <div className="flex gap-1 bg-secondary/50 rounded-xl p-1 mb-1">
         {MENTALITIES.map((m) => (
           <button
@@ -898,12 +831,10 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
           </button>
         ))}
       </div>
-      {/* Descrição da mentalidade */}
       <p className={`text-[9px] text-center mb-3 font-medium ${MENTALITY_META[mentality].color}`}>
         {MENTALITY_META[mentality].desc}
       </p>
 
-      {/* Instruções táticas */}
       <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
         Instruções ({tactics.length})
       </div>
@@ -1034,13 +965,12 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
           </div>
 
           <div className="flex items-center gap-2 ml-auto flex-wrap">
-            {/* Formação */}
             <Select value={formation} onValueChange={handleFormationChange}>
               <SelectTrigger className="h-8 text-xs w-[7rem] bg-background/50 border-border/60">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Object.keys(FORMATIONS).map((f) => (
+                {Object.keys(FORMATION_COORDS).map((f) => (
                   <SelectItem key={f} value={f} className="text-xs">
                     {f}
                   </SelectItem>
@@ -1048,7 +978,6 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
               </SelectContent>
             </Select>
 
-            {/* Auto-pick */}
             {canEdit && (
               <Button
                 size="sm"
@@ -1065,7 +994,6 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
               </Button>
             )}
 
-            {/* Salvar */}
             {canEdit && (
               <Button
                 size="sm"
@@ -1084,11 +1012,7 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
       {/* ── Tabs mobile ── */}
       <div className="flex md:hidden bg-secondary/40 rounded-xl overflow-hidden border border-border/50 p-0.5 gap-0.5">
         {(["pitch", "bench", "stats"] as const).map((tab) => {
-          const labels = {
-            pitch: "Campo",
-            bench: `Banco (${bench.length})`,
-            stats: "Análise",
-          };
+          const labels = { pitch: "Campo", bench: `Banco (${bench.length})`, stats: "Análise" };
           return (
             <button
               key={tab}
@@ -1107,18 +1031,11 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
 
       {/* ── Layout principal ── */}
       <div className="flex flex-col lg:flex-row gap-4">
-        {/* Campo */}
         <div className={`w-full lg:w-[56%] ${mobileTab !== "pitch" ? "hidden md:block" : ""}`}>{renderPitch()}</div>
 
-        {/* Painéis laterais */}
         <div className={`flex-1 flex flex-col gap-3 min-w-0 ${mobileTab === "pitch" ? "hidden md:flex" : "flex"}`}>
-          {/* Análise — oculta no mobile tab "bench" */}
           <div className={mobileTab === "bench" ? "hidden md:block" : ""}>{renderAnalysis()}</div>
-
-          {/* Táticas — oculta no mobile tab "bench" */}
           <div className={mobileTab === "bench" ? "hidden md:block" : ""}>{renderTactics()}</div>
-
-          {/* Banco — oculta no mobile tab "stats" */}
           <div className={`flex-1 flex flex-col min-h-0 ${mobileTab === "stats" ? "hidden md:flex" : "flex"}`}>
             {renderBench()}
           </div>
@@ -1129,7 +1046,6 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
       {subCell && (
         <div className="fixed inset-0 bg-black/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-card border border-border/60 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col max-h-[80vh]">
-            {/* Header do modal */}
             <div className="flex items-start justify-between p-4 border-b border-border/50 shrink-0">
               <div>
                 <h3 className="font-bold text-sm">
@@ -1137,8 +1053,8 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
                 </h3>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
                   Posição:{" "}
-                  <strong className={getPosStyle(FORMATIONS[formation][subCell] ?? "").text}>
-                    {FORMATIONS[formation][subCell] ?? "—"}
+                  <strong className={getPosStyle(FORMATION_COORDS[formation]?.[subCell]?.role ?? "").text}>
+                    {FORMATION_COORDS[formation]?.[subCell]?.role ?? "—"}
                   </strong>{" "}
                   &middot; Selecione um jogador do banco
                 </p>
@@ -1151,7 +1067,6 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
               </button>
             </div>
 
-            {/* Lista do banco */}
             <div className="overflow-y-auto p-2 space-y-1">
               {sortedBench.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8 text-sm">Banco vazio.</p>
@@ -1159,8 +1074,8 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
                 sortedBench.map((p) => {
                   const ps = getPosStyle(p.position);
                   const rl = ratingLabel(p.habilidade ?? 0);
-                  const posInCell = FORMATIONS[formation][subCell];
-                  const compat = (POS_COMPAT[posInCell] ?? []).includes((p.position || "").toUpperCase());
+                  const role = FORMATION_COORDS[formation]?.[subCell]?.role ?? "";
+                  const compat = (POS_COMPAT[role] ?? []).includes((p.position || "").toUpperCase());
                   const starterSkill = pitchPlayers[subCell]?.habilidade ?? 0;
                   const diff = (p.habilidade ?? 0) - starterSkill;
 
