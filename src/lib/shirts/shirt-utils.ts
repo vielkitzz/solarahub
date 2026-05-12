@@ -1,33 +1,23 @@
-const modules = import.meta.glob(
-  "@/assets/kits/*.svg",
-  {
-    query: "?raw",
-    import: "default",
-    eager: true,
-  }
-);
+const modules = import.meta.glob("@/assets/kits/*.svg", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
 
 export const CLUB_SHIRTS = Object.fromEntries(
   Object.entries(modules).map(([path, svg]) => {
-    const id = path
-      .split("/")
-      .pop()
-      ?.replace(".svg", "");
+    const id = path.split("/").pop()?.replace(".svg", "");
 
     return [id, svg];
-  })
+  }),
 );
 
-export function getClubShirt(clubId?: string) {
+export function getClubShirt(clubId?: string): string | null {
   if (!clubId) return null;
-
-  return CLUB_SHIRTS[clubId] || null;
+  return (CLUB_SHIRTS[clubId] as string) || null;
 }
 
-export function injectShirtNumber(
-  svg: string,
-  number?: number
-) {
+export function injectShirtNumber(svg: string, number?: number) {
   if (!number) return svg;
 
   return svg.replace(
@@ -46,6 +36,6 @@ export function injectShirtNumber(
         ${number}
       </text>
     </svg>
-    `
+    `,
   );
 }
