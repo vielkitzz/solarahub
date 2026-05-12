@@ -651,7 +651,7 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                           size="w-12 h-12"
                           isGK={player.position === "GOL"}
                           numberSize="clamp(14px, 70%, 32px)"
-                          numberPaddingBottom="20%"
+                          numberPaddingBottom="18%"
                         />
 
                         {/* Card FM-style */}
@@ -920,7 +920,14 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                   key={p.id}
                   className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-primary/5 border border-transparent hover:border-border/40 transition-colors group"
                 >
-                  <ShirtIcon clubId={club?.id} number={p.shirt_number} size="w-8 h-8" isGK={p.position === "GOL"} />
+                  <ShirtIcon
+                    clubId={club?.id}
+                    number={p.shirt_number}
+                    size="w-8 h-8"
+                    isGK={p.position === "GOL"}
+                    numberSize="clamp(10px, 45%, 18px)"
+                    numberPaddingBottom="12%"
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-semibold text-foreground truncate leading-tight">{p.name}</div>
                     <div className="flex items-center gap-1.5 mt-0.5">
@@ -1080,8 +1087,10 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                         <ShirtIcon
                           clubId={club?.id}
                           number={p.shirt_number}
-                          size="w-9 h-9"
+                          size="w-8 h-8"
                           isGK={p.position === "GOL"}
+                          numberSize="clamp(10px, 45%, 18px)"
+                          numberPaddingBottom="12%"
                         />
                         <div>
                           <div className="flex items-center gap-1.5">
