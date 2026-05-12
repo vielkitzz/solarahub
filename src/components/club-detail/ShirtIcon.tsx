@@ -57,7 +57,7 @@ export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8", isGK 
         <span
           className="absolute inset-0 flex items-center justify-center"
           style={{
-            fontSize: "clamp(14px, 70%, 32px)",
+            fontSize: "clamp(16px, 75%, 36px)",
             color: numberColor,
             paddingBottom: "15%",
             zIndex: 10,
