@@ -9,6 +9,7 @@ interface ShirtIconProps {
 }
 
 export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8" }: ShirtIconProps) {
+  console.log("ShirtIcon number:", number); {
   const src = clubId ? `/kits/${clubId}.svg` : "/placeholder.svg";
 
   return (
