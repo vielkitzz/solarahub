@@ -9,22 +9,25 @@ interface ShirtIconProps {
 }
 
 export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8" }: ShirtIconProps) {
-  const rawSvg = getClubShirt(clubId ?? undefined);
-
-  console.log("clubId:", clubId);
-  console.log("rawSvg:", rawSvg?.slice(0, 200));
-
-  if (!rawSvg) {
-    return <div className={`relative ${size}`} />;
-  }
-
-  const svgWithNumber = injectShirtNumber(rawSvg, number);
+  const src = clubId ? `/kits/${clubId}.svg` : "/placeholder.svg";
 
   return (
-    <div
-      className={`relative ${size} ${highlighted ? "drop-shadow-[0_0_10px_rgba(255,255,255,0.7)]" : ""}`}
-      style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
-      dangerouslySetInnerHTML={{ __html: svgWithNumber }}
-    />
+    <div className={`relative ${size}`}>
+      <img
+        src={src}
+        alt="Camisa"
+        className={`w-full h-full object-contain transition-all duration-300 ${
+          highlighted ? "drop-shadow-[0_0_10px_rgba(255,255,255,0.7)]" : ""
+        }`}
+      />
+      {number !== undefined && (
+        <span
+          className="absolute inset-0 flex items-center justify-center font-bold text-white"
+          style={{ fontSize: "clamp(8px, 30%, 14px)", paddingTop: "15%" }}
+        >
+          {number}
+        </span>
+      )}
+    </div>
   );
 }
