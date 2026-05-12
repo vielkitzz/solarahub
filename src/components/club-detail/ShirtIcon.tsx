@@ -5,6 +5,7 @@ interface ShirtIconProps {
   size?: string;
   isGK?: boolean;
   numberSize?: string;
+  numberPaddingBottom?: string;
 }
 
 const SHIRT_NUMBER_COLOR: Record<string, string> = {
@@ -48,10 +49,10 @@ export function ShirtIcon({
   size = "w-8 h-8",
   isGK = false,
   numberSize = "clamp(14px, 70%, 32px)",
+  numberPaddingBottom = "18%",
 }: ShirtIconProps) {
   const src = isGK ? "/kits/gk-shirt.svg" : clubId ? `/kits/${clubId}.svg` : "/placeholder.svg";
   const numberColor = isGK ? "white" : (clubId && SHIRT_NUMBER_COLOR[clubId]) || "white";
-
   return (
     <div className={`relative ${size}`}>
       <img
@@ -65,9 +66,9 @@ export function ShirtIcon({
         <span
           className="absolute inset-0 flex items-center justify-center"
           style={{
-            fontSize: "clamp(18px, 75%, 38px)",
+            fontSize: numberSize,
             color: numberColor,
-            paddingBottom: "18%",
+            paddingBottom: numberPaddingBottom,
             zIndex: 10,
             fontFamily: "'Vina Sans', sans-serif",
           }}
