@@ -341,46 +341,12 @@ function getAdaptation(player: Player | undefined, cellKey: string, formationRol
 // ─── Campo SVG ────────────────────────────────────────────────────────────────
 function PitchSVG() {
   return (
-    <svg
-      viewBox="0 0 100 130"
+    <img
+      src="/Campo.svg"
+      alt="Campo"
       className="absolute inset-0 w-full h-full pointer-events-none z-0"
-      preserveAspectRatio="none"
-    >
-      <defs>
-        <linearGradient id="grassGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="hsl(152,55%,22%)" />
-          <stop offset="50%" stopColor="hsl(148,52%,19%)" />
-          <stop offset="100%" stopColor="hsl(152,55%,22%)" />
-        </linearGradient>
-      </defs>
-      <rect x="5" y="5" width="90" height="120" fill="url(#grassGrad)" />
-      {Array.from({ length: 10 }).map((_, i) => (
-        <rect
-          key={i}
-          x="5"
-          y={5 + i * 12}
-          width="90"
-          height="12"
-          fill={i % 2 === 0 ? "rgba(255,255,255,0.03)" : "transparent"}
-        />
-      ))}
-      <rect x="5" y="5" width="90" height="120" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
-      <line x1="5" y1="65" x2="95" y2="65" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
-      <circle cx="50" cy="65" r="12" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
-      <circle cx="50" cy="65" r="0.8" fill="rgba(255,255,255,0.6)" />
-      <rect x="20" y="5" width="60" height="18" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
-      <rect x="32" y="5" width="36" height="7" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.4" />
-      <path d="M40 23 A10 10 0 0 0 60 23" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.4" />
-      <circle cx="50" cy="16" r="0.7" fill="rgba(255,255,255,0.6)" />
-      <rect x="20" y="107" width="60" height="18" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
-      <rect x="32" y="118" width="36" height="7" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.4" />
-      <path d="M40 107 A10 10 0 0 1 60 107" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.4" />
-      <circle cx="50" cy="113" r="0.7" fill="rgba(255,255,255,0.6)" />
-      <path d="M5 8 A3 3 0 0 0 8 5" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.4" />
-      <path d="M92 5 A3 3 0 0 0 95 8" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.4" />
-      <path d="M5 122 A3 3 0 0 1 8 125" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.4" />
-      <path d="M95 122 A3 3 0 0 1 92 125" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.4" />
-    </svg>
+      style={{ objectFit: "fill" }}
+    />
   );
 }
 
