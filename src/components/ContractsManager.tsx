@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Building2, Handshake, Plus, Trash2, Tv, Camera, AlertTriangle, Search } from "lucide-react";
+import { Building2, Handshake, Plus, Trash2, Tv, Camera, AlertTriangle, Search, RefreshCw } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 
 // IMPORTANDO O CATÁLOGO DO BRANDS.TS
