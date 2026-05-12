@@ -811,7 +811,7 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
                         className="w-24"
                       />
                       <span className="text-xs text-muted-foreground">
-                        temporada {temporadaAtual} → {fimContrato}
+                        temporada {inicioContrato} → {fimContrato}
                       </span>
                     </div>
                     {anos > 1 && (
