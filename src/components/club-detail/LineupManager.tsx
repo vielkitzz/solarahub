@@ -352,9 +352,7 @@ function ShirtIcon({
 }) {
   const dim = size === "sm" ? "w-8 h-8" : "w-10 h-10";
 
-  const shirtSrc = clubId
-    ? `/src/assets/flags/kits/${clubId}.svg`
-    : null;
+  const shirtSrc = clubId ? `/kits/${clubId}.svg` : null;
 
   return (
     <div className={`relative flex justify-center items-center shrink-0 ${dim}`}>
@@ -363,9 +361,7 @@ function ShirtIcon({
           src={shirtSrc}
           alt="Camisa"
           className={`w-full h-full object-contain transition-all duration-300 ${
-            highlighted
-              ? "drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"
-              : "drop-shadow-[0_2px_5px_rgba(0,0,0,0.6)]"
+            highlighted ? "drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" : "drop-shadow-[0_2px_5px_rgba(0,0,0,0.6)]"
           }`}
         />
       ) : (
@@ -724,7 +720,7 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                         }}
                         className={`relative flex flex-col items-center z-10 ${canEdit ? "cursor-grab active:cursor-grabbing" : "cursor-default"} transition-transform duration-200 ${isSelected ? "scale-110 z-20" : "hover:scale-105"}`}
                       >
-                        <ShirtIcon  clubId={club?.id} number={player.shirt_number} highlighted={isSelected} />
+                        <ShirtIcon clubId={club?.id} number={player.shirt_number} highlighted={isSelected} />
 
                         {/* Card FM-style (com feedback de adaptação) */}
                         <div
@@ -989,7 +985,7 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                   key={p.id}
                   className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-primary/5 border border-transparent hover:border-border/40 transition-colors group"
                 >
-                  <ShirtIcon  clubId={club?.id} number={p.shirt_number} size="sm" />
+                  <ShirtIcon clubId={club?.id} number={p.shirt_number} size="sm" />
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-semibold text-foreground truncate leading-tight">{p.name}</div>
                     <div className="flex items-center gap-1.5 mt-0.5">
@@ -1146,7 +1142,7 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                       className={`flex items-center justify-between p-2.5 rounded-xl transition-colors border ${newLoss === 0 ? "border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10" : "border-transparent hover:bg-secondary/40 hover:border-border/40"}`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <ShirtIcon  clubId={club?.id} number={p.shirt_number} />
+                        <ShirtIcon clubId={club?.id} number={p.shirt_number} />
                         <div>
                           <div className="flex items-center gap-1.5">
                             <span className="text-sm font-bold leading-tight">{p.name}</span>
