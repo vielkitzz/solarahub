@@ -345,17 +345,16 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
 
   const renderPitch = () => (
     <div className="relative w-full aspect-[3/4] md:aspect-[4/5] bg-[#1a5c45] rounded-xl overflow-hidden shadow-2xl border border-[#0f3d2c]/80 touch-none select-none">
-      {/* sobreposição escura sutil */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20 z-0 pointer-events-none" />
       <PitchSVG />
 
-      {/* GRID TÁTICO */}
       <div className="absolute inset-0 flex flex-col p-1.5 gap-0.5 z-10">
         {Array.from({ length: GRID_ROWS }).map((_, r) => {
-          // Linha do GOL: sempre 1 coluna centralizada
           const isGkRow = r === GRID_ROWS - 1;
-          // Cada linha decide independentemente se tem jogador/template na coluna central
-          const rowHasCenter = isGkRow ? false : !!pitchPlayers[`${r}-2`] || !!template[`${r}-2`] || isDragging;
+
+          // ← cada linha verifica INDEPENDENTEMENTE se tem coluna central
+          const rowHasCenter = !isGkRow && (!!pitchPlayers[`${r}-2`] || !!template[`${r}-2`] || isDragging);
+
           const colConfig = isGkRow
             ? "0px 0px 1fr 0px 0px"
             : rowHasCenter
@@ -374,6 +373,7 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
                 const inTemplate = !!template[cellKey];
                 const isSelected = selectedCell === cellKey;
                 const isHidden = (isGkRow && c !== 2) || (!isGkRow && c === 2 && !rowHasCenter);
+                // ... resto igual
 
                 return (
                   <div
