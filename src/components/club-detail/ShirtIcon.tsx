@@ -26,7 +26,7 @@ export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8" }: Shi
       />
       {number != null && (
         <span
-          className="absolute inset-0 flex items-center justify-center font-bold"
+          className="absolute inset-0 flex items-center justify-center"
           style={{
             fontSize: "clamp(14px, 70%, 32px)",
             color: numberColor,
