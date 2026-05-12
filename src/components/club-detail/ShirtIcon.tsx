@@ -11,6 +11,9 @@ interface ShirtIconProps {
 export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8" }: ShirtIconProps) {
   const rawSvg = getClubShirt(clubId ?? undefined);
 
+  console.log("clubId:", clubId);
+  console.log("rawSvg:", rawSvg?.slice(0, 200));
+
   if (!rawSvg) {
     return <div className={`relative ${size}`} />;
   }
