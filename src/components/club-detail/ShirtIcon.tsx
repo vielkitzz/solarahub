@@ -5,9 +5,15 @@ interface ShirtIconProps {
   size?: string;
 }
 
+const SHIRT_NUMBER_COLOR: Record<string, string> = {
+  "3998bef5-9fc4-4955-87cd-a2b74db5daee": "black", // Córdoba
+  "263f38d8-b42e-48b3-a576-7a62da256fc3": "black", // Luciérnaga
+  // adicione os outros clubes aqui
+};
+
 export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8" }: ShirtIconProps) {
   const src = clubId ? `/kits/${clubId}.svg` : "/placeholder.svg";
-  console.log("ShirtIcon number:", number);
+  const numberColor = (clubId && SHIRT_NUMBER_COLOR[clubId]) || "white";
 
   return (
     <div className={`relative ${size}`}>
@@ -23,7 +29,7 @@ export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8" }: Shi
           className="absolute inset-0 flex items-center justify-center font-bold"
           style={{
             fontSize: "clamp(14px, 70%, 32px)",
-            color: "black",
+            color: numberColor,
             paddingBottom: "15%",
             zIndex: 10,
             fontFamily: "'Vina Sans', sans-serif",
