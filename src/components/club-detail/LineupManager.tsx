@@ -925,8 +925,8 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                     number={p.shirt_number}
                     size="w-8 h-8"
                     isGK={p.position === "GOL"}
-                    numberSize="clamp(10px, 45%, 18px)"
-                    numberPaddingBottom="12%"
+                    numberSize="clamp(12px, 60%, 28px)"
+                    numberPaddingBottom="15%"
                   />
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-semibold text-foreground truncate leading-tight">{p.name}</div>
@@ -1089,8 +1089,8 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                           number={p.shirt_number}
                           size="w-8 h-8"
                           isGK={p.position === "GOL"}
-                          numberSize="clamp(10px, 45%, 18px)"
-                          numberPaddingBottom="12%"
+                          numberSize="clamp(12px, 60%, 28px)"
+                          numberPaddingBottom="15%"
                         />
                         <div>
                           <div className="flex items-center gap-1.5">
