@@ -345,23 +345,19 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
 
   const renderPitch = () => (
     <div className="relative w-full aspect-[3/4] md:aspect-[4/5] bg-[#1a5c45] rounded-xl overflow-hidden shadow-2xl border border-[#0f3d2c]/80 touch-none select-none">
+      {/* sobreposição escura sutil */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20 z-0 pointer-events-none" />
       <PitchSVG />
 
+      {/* GRID TÁTICO */}
       <div className="absolute inset-0 flex flex-col p-1.5 gap-0.5 z-10">
         {Array.from({ length: GRID_ROWS }).map((_, r) => {
           const isGkRow = r === GRID_ROWS - 1;
-
-          // ← cada linha verifica INDEPENDENTEMENTE se tem coluna central
           const rowHasCenter = !isGkRow && (!!pitchPlayers[`${r}-2`] || !!template[`${r}-2`] || isDragging);
 
-          const colConfig = isGkRow
-            ? "0px 0px 1fr 0px 0px"
-            : rowHasCenter
-              ? "1fr 1fr 1fr 1fr 1fr"
-              : "1fr 1fr 0px 1fr 1fr";
-
-          console.log(`Linha ${r}: rowHasCenter=${rowHasCenter}, colConfig="${colConfig}"`);
+          // Linha do GOL: só coluna central. Outras linhas: 4 colunas reais ou 5 se tiver centro.
+          const cols = isGkRow ? [2] : rowHasCenter ? [0, 1, 2, 3, 4] : [0, 1, 3, 4];
+          const colConfig = isGkRow ? "1fr" : rowHasCenter ? "1fr 1fr 1fr 1fr 1fr" : "1fr 1fr 1fr 1fr";
 
           return (
             <div
@@ -369,34 +365,27 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
               className="flex-1 grid gap-0.5 transition-[grid-template-columns] duration-300"
               style={{ gridTemplateColumns: colConfig }}
             >
-              {[0, 1, 2, 3, 4].map((c) => {
+              {cols.map((c) => {
                 const cellKey = `${r}-${c}`;
                 const player = pitchPlayers[cellKey];
                 const inTemplate = !!template[cellKey];
                 const isSelected = selectedCell === cellKey;
-                const isHidden = (isGkRow && c !== 2) || (!isGkRow && c === 2 && !rowHasCenter);
-                // ... resto igual
 
                 return (
                   <div
                     key={cellKey}
                     onDragOver={(e) => {
-                      if (!isHidden && inTemplate) e.preventDefault();
+                      if (inTemplate) e.preventDefault();
                     }}
                     onDrop={(e) => {
-                      if (!isHidden && inTemplate) handleDrop(e, cellKey);
+                      if (inTemplate) handleDrop(e, cellKey);
                     }}
-                    onClick={() => {
-                      if (!isHidden) setSelectedCell(isSelected ? null : cellKey);
-                    }}
+                    onClick={() => setSelectedCell(isSelected ? null : cellKey)}
                     className={[
                       "relative flex items-center justify-center rounded transition-all duration-300",
-                      isHidden ? "opacity-0 pointer-events-none overflow-hidden" : "opacity-100",
-                      isDragging && !isHidden && inTemplate
-                        ? "border border-white/20 bg-white/5"
-                        : "border border-transparent",
+                      isDragging && inTemplate ? "border border-white/20 bg-white/5" : "border border-transparent",
                       isSelected ? "bg-primary/30 border-primary/60" : "",
-                      !isHidden && !isDragging && !isSelected && inTemplate ? "hover:bg-white/10" : "",
+                      !isDragging && !isSelected && inTemplate ? "hover:bg-white/10" : "",
                     ].join(" ")}
                   >
                     {player && (
@@ -476,7 +465,7 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
                     )}
 
                     {/* Célula vazia no template */}
-                    {!player && inTemplate && !isHidden && (
+                    {!player && inTemplate && (
                       <div className="w-10 h-10 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center">
                         <span className="text-[9px] text-white/30 font-bold uppercase">{template[cellKey]}</span>
                       </div>
