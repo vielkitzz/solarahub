@@ -652,18 +652,28 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                           isGK={player.position === "GOL"}
                         />
 
-                        {/* Card do jogador */}
-                        <div className="flex flex-col items-center mt-[-2px] z-30">
+                        {/* Card FM-style */}
+                        <div className="flex flex-col items-center gap-1.5 mt-1 z-30">
                           <div
-                            className={`px-2 py-[3px] rounded-sm text-[9px] font-bold text-white/90 tracking-wide ${
-                              isSelected ? "bg-black/80" : "bg-black/60"
+                            className={`bg-black/75 rounded-sm px-2.5 py-1 text-center min-w-[68px] border-b-2 transition-all duration-200 ${
+                              isSelected
+                                ? "border-primary"
+                                : loss === 0
+                                  ? "border-emerald-500"
+                                  : loss <= 5
+                                    ? "border-amber-500"
+                                    : "border-rose-500"
                             }`}
                           >
-                            {player.name.split(" ").pop()}
-                          </div>
-                          <div className={`text-[8px] font-medium mt-[1px] ${color}`}>
-                            {effSkill}
-                            {loss > 0 && <span className="opacity-70"> -{loss}</span>}
+                            <div className="text-[10px] font-bold text-white tracking-wide leading-tight">
+                              {player.name.split(" ").pop()}
+                            </div>
+                            <div
+                              className={`text-[9px] leading-tight mt-0.5 font-medium ${getPosStyle(player.position).text}`}
+                            >
+                              {player.position} · {effSkill}
+                              {loss > 0 && <span className="text-rose-400"> (-{loss})</span>}
+                            </div>
                           </div>
                         </div>
 
