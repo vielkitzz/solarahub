@@ -650,6 +650,8 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
                           highlighted={isSelected}
                           size="w-12 h-12"
                           isGK={player.position === "GOL"}
+                          numberSize="clamp(14px, 70%, 32px)"
+                          numberPaddingBottom="20%"
                         />
 
                         {/* Card FM-style */}
