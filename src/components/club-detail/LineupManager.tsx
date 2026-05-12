@@ -14,11 +14,18 @@
 
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import {
-  ArrowRightLeft, Save, Activity, CheckCircle2, TrendingUp,
-  Settings, Users, X, Shield, BarChart2,
+  ArrowRightLeft,
+  Save,
+  Activity,
+  CheckCircle2,
+  TrendingUp,
+  Settings,
+  Users,
+  X,
+  Shield,
+  BarChart2,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -45,73 +52,122 @@ interface LineupManagerProps {
 const FORMATIONS: Record<string, Record<string, string>> = {
   "4-3-3": {
     "6-2": "GOL",
-    "5-0": "LE", "5-1": "ZAG", "5-3": "ZAG", "5-4": "LD",
-    "3-1": "MC", "4-2": "VOL", "3-3": "MC",
-    "1-0": "PE", "1-2": "ATA", "1-4": "PD",
+    "5-0": "LE",
+    "5-1": "ZAG",
+    "5-3": "ZAG",
+    "5-4": "LD",
+    "3-1": "MC",
+    "4-2": "VOL",
+    "3-3": "MC",
+    "1-0": "PE",
+    "1-2": "ATA",
+    "1-4": "PD",
   },
   "4-4-2": {
     "6-2": "GOL",
-    "5-0": "LE", "5-1": "ZAG", "5-3": "ZAG", "5-4": "LD",
-    "3-0": "PE", "3-1": "MC", "3-3": "MC", "3-4": "PD",
-    "1-1": "ATA", "1-3": "ATA",
+    "5-0": "LE",
+    "5-1": "ZAG",
+    "5-3": "ZAG",
+    "5-4": "LD",
+    "3-0": "PE",
+    "3-1": "MC",
+    "3-3": "MC",
+    "3-4": "PD",
+    "1-1": "ATA",
+    "1-3": "ATA",
   },
   "4-2-3-1": {
     "6-2": "GOL",
-    "5-0": "LE", "5-1": "ZAG", "5-3": "ZAG", "5-4": "LD",
-    "4-1": "VOL", "4-3": "VOL",
-    "2-0": "PE", "2-2": "MEI", "2-4": "PD",
+    "5-0": "LE",
+    "5-1": "ZAG",
+    "5-3": "ZAG",
+    "5-4": "LD",
+    "4-1": "VOL",
+    "4-3": "VOL",
+    "2-0": "PE",
+    "2-2": "MEI",
+    "2-4": "PD",
     "0-2": "ATA",
   },
   "3-5-2": {
     "6-2": "GOL",
-    "5-1": "ZAG", "5-2": "ZAG", "5-3": "ZAG",
-    "3-0": "LE", "4-2": "VOL", "3-1": "MC", "3-3": "MC", "3-4": "LD",
-    "1-1": "ATA", "1-3": "ATA",
+    "5-1": "ZAG",
+    "5-2": "ZAG",
+    "5-3": "ZAG",
+    "3-0": "LE",
+    "4-2": "VOL",
+    "3-1": "MC",
+    "3-3": "MC",
+    "3-4": "LD",
+    "1-1": "ATA",
+    "1-3": "ATA",
   },
   "5-3-2": {
     "6-2": "GOL",
-    "5-0": "LE", "5-1": "ZAG", "5-2": "ZAG", "5-3": "ZAG", "5-4": "LD",
-    "3-1": "MC", "4-2": "VOL", "3-3": "MC",
-    "1-1": "ATA", "1-3": "ATA",
+    "5-0": "LE",
+    "5-1": "ZAG",
+    "5-2": "ZAG",
+    "5-3": "ZAG",
+    "5-4": "LD",
+    "3-1": "MC",
+    "4-2": "VOL",
+    "3-3": "MC",
+    "1-1": "ATA",
+    "1-3": "ATA",
   },
   "3-4-3": {
     "6-2": "GOL",
-    "5-1": "ZAG", "5-2": "ZAG", "5-3": "ZAG",
-    "3-0": "LE", "3-1": "MC", "3-3": "MC", "3-4": "LD",
-    "1-0": "PE", "1-2": "ATA", "1-4": "PD",
+    "5-1": "ZAG",
+    "5-2": "ZAG",
+    "5-3": "ZAG",
+    "3-0": "LE",
+    "3-1": "MC",
+    "3-3": "MC",
+    "3-4": "LD",
+    "1-0": "PE",
+    "1-2": "ATA",
+    "1-4": "PD",
   },
 };
 
 const GRID_ROWS = 7;
 
 const TACTICS_OPTS = [
-  "Pressionar alto", "Posse de bola", "Cruzamentos", "Saída pelo goleiro",
-  "Faltas estratégicas", "Retrair na defesa", "Jogadas longas", "Marcar por zona",
+  "Pressionar alto",
+  "Posse de bola",
+  "Cruzamentos",
+  "Saída pelo goleiro",
+  "Faltas estratégicas",
+  "Retrair na defesa",
+  "Jogadas longas",
+  "Marcar por zona",
 ];
 
 const MENTALITIES = ["Defensivo", "Equilibrado", "Ofensivo"] as const;
-type Mentality = typeof MENTALITIES[number];
+type Mentality = (typeof MENTALITIES)[number];
 
 // Cores por posição — alinhadas com POSITION_COLORS do SquadTable
 const POS_STYLE: Record<string, { text: string; badge: string }> = {
-  GOL: { text: "text-yellow-300",   badge: "bg-yellow-400/20 border-yellow-400/50 text-yellow-300" },
-  ZAG: { text: "text-blue-300",     badge: "bg-blue-500/20 border-blue-400/50 text-blue-300" },
-  LD:  { text: "text-sky-300",      badge: "bg-sky-500/20 border-sky-400/50 text-sky-300" },
-  LE:  { text: "text-sky-300",      badge: "bg-sky-500/20 border-sky-400/50 text-sky-300" },
-  VOL: { text: "text-teal-300",     badge: "bg-teal-500/20 border-teal-400/50 text-teal-300" },
-  MC:  { text: "text-emerald-300",  badge: "bg-emerald-500/20 border-emerald-400/50 text-emerald-300" },
-  MEI: { text: "text-lime-300",     badge: "bg-lime-500/20 border-lime-400/50 text-lime-300" },
-  PD:  { text: "text-orange-300",   badge: "bg-orange-500/20 border-orange-400/50 text-orange-300" },
-  PE:  { text: "text-orange-300",   badge: "bg-orange-500/20 border-orange-400/50 text-orange-300" },
-  SA:  { text: "text-red-300",      badge: "bg-red-500/20 border-red-400/50 text-red-300" },
-  ATA: { text: "text-rose-300",     badge: "bg-rose-500/20 border-rose-400/50 text-rose-300" },
+  GOL: { text: "text-yellow-300", badge: "bg-yellow-400/20 border-yellow-400/50 text-yellow-300" },
+  ZAG: { text: "text-blue-300", badge: "bg-blue-500/20 border-blue-400/50 text-blue-300" },
+  LD: { text: "text-sky-300", badge: "bg-sky-500/20 border-sky-400/50 text-sky-300" },
+  LE: { text: "text-sky-300", badge: "bg-sky-500/20 border-sky-400/50 text-sky-300" },
+  VOL: { text: "text-teal-300", badge: "bg-teal-500/20 border-teal-400/50 text-teal-300" },
+  MC: { text: "text-emerald-300", badge: "bg-emerald-500/20 border-emerald-400/50 text-emerald-300" },
+  MEI: { text: "text-lime-300", badge: "bg-lime-500/20 border-lime-400/50 text-lime-300" },
+  PD: { text: "text-orange-300", badge: "bg-orange-500/20 border-orange-400/50 text-orange-300" },
+  PE: { text: "text-orange-300", badge: "bg-orange-500/20 border-orange-400/50 text-orange-300" },
+  SA: { text: "text-red-300", badge: "bg-red-500/20 border-red-400/50 text-red-300" },
+  ATA: { text: "text-rose-300", badge: "bg-rose-500/20 border-rose-400/50 text-rose-300" },
 };
 
 function getPosStyle(pos: string) {
-  return POS_STYLE[(pos || "").toUpperCase()] ?? {
-    text: "text-muted-foreground",
-    badge: "bg-secondary/30 border-border/30 text-muted-foreground",
-  };
+  return (
+    POS_STYLE[(pos || "").toUpperCase()] ?? {
+      text: "text-muted-foreground",
+      badge: "bg-secondary/30 border-border/30 text-muted-foreground",
+    }
+  );
 }
 
 // ─── Camisa FM-style ───────────────────────────────────────────────────────────
@@ -123,14 +179,18 @@ function ShirtIcon({ number, size = "md" }: { number?: number | null; size?: "sm
       <svg viewBox="0 0 40 42" className="w-full h-full drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]">
         <defs>
           <path id="sh" d="M14 2 Q20 6 26 2 L38 8 L32 18 L28 14 L29 38 L20 40 L11 38 L12 14 L8 18 L2 8Z" />
-          <clipPath id="cl"><use href="#sh" /></clipPath>
+          <clipPath id="cl">
+            <use href="#sh" />
+          </clipPath>
         </defs>
         <use href="#sh" fill="white" />
         <polygon points="20,0 40,0 40,42 16,42" fill="#d1d5db" clipPath="url(#cl)" opacity="0.75" />
         <use href="#sh" fill="none" stroke="#111827" strokeWidth="2.5" strokeLinejoin="round" />
       </svg>
-      <span className={`absolute font-black text-slate-800 tracking-tighter select-none ${txt}`}
-        style={{ top: "48%", transform: "translateY(-50%)" }}>
+      <span
+        className={`absolute font-black text-slate-800 tracking-tighter select-none ${txt}`}
+        style={{ top: "48%", transform: "translateY(-50%)" }}
+      >
         {number ?? "—"}
       </span>
     </div>
@@ -140,7 +200,11 @@ function ShirtIcon({ number, size = "md" }: { number?: number | null; size?: "sm
 // ─── Campo SVG inline ──────────────────────────────────────────────────────────
 function PitchSVG() {
   return (
-    <svg viewBox="0 0 100 130" className="absolute inset-0 w-full h-full pointer-events-none opacity-70 z-0" preserveAspectRatio="none">
+    <svg
+      viewBox="0 0 100 130"
+      className="absolute inset-0 w-full h-full pointer-events-none opacity-70 z-0"
+      preserveAspectRatio="none"
+    >
       <rect x="5" y="5" width="90" height="120" fill="none" stroke="white" strokeWidth="0.5" />
       <line x1="5" y1="65" x2="95" y2="65" stroke="white" strokeWidth="0.5" />
       <circle cx="50" cy="65" r="12" fill="none" stroke="white" strokeWidth="0.5" />
@@ -185,11 +249,14 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
     const newPitch: Record<string, Player> = {};
 
     Object.entries(template).forEach(([cellKey, role]) => {
-      const idx = remaining.findIndex(p => p.position === role);
-      if (idx !== -1) { newPitch[cellKey] = remaining[idx]; remaining.splice(idx, 1); }
+      const idx = remaining.findIndex((p) => p.position === role);
+      if (idx !== -1) {
+        newPitch[cellKey] = remaining[idx];
+        remaining.splice(idx, 1);
+      }
     });
     // preenche células vazias com quem sobrou
-    Object.keys(template).forEach(cellKey => {
+    Object.keys(template).forEach((cellKey) => {
       if (!newPitch[cellKey] && remaining.length > 0) {
         newPitch[cellKey] = remaining.shift()!;
       }
@@ -199,7 +266,9 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
     setBench(remaining);
   }, []);
 
-  useEffect(() => { autoPickFormation("4-3-3", players); }, [players, autoPickFormation]);
+  useEffect(() => {
+    autoPickFormation("4-3-3", players);
+  }, [players, autoPickFormation]);
 
   // fechar popover ao clicar fora
   useEffect(() => {
@@ -223,11 +292,12 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
     setIsDragging(false);
     const sourceKey = e.dataTransfer.getData("text/plain");
     if (!sourceKey || sourceKey === targetKey) return;
-    setPitchPlayers(prev => {
+    setPitchPlayers((prev) => {
       const next = { ...prev };
       const src = next[sourceKey];
       const tgt = next[targetKey];
-      if (tgt) next[sourceKey] = tgt; else delete next[sourceKey];
+      if (tgt) next[sourceKey] = tgt;
+      else delete next[sourceKey];
       next[targetKey] = src;
       return next;
     });
@@ -236,7 +306,7 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
 
   const handleSub = (benchPlayerId: string) => {
     if (!subCell) return;
-    const benchIdx = bench.findIndex(p => p.id === benchPlayerId);
+    const benchIdx = bench.findIndex((p) => p.id === benchPlayerId);
     const starterOut = pitchPlayers[subCell];
     const benchIn = bench[benchIdx];
     const newPitch = { ...pitchPlayers, [subCell]: benchIn };
@@ -250,12 +320,12 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
   };
 
   const toggleTactic = (t: string) =>
-    setTactics(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
+    setTactics((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
 
   const handleSave = async () => {
     if (!canEdit) return;
     setIsSaving(true);
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise((r) => setTimeout(r, 800));
     setIsSaving(false);
     toast.success("Escalação salva com sucesso!");
   };
@@ -263,16 +333,12 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
   // ── estatísticas ────────────────────────────────────────────────────────────
   const stats = useMemo(() => {
     const starters = Object.values(pitchPlayers).filter(Boolean);
-    if (!starters.length) return { avgSkill: 0, avgAge: "—", totalValue: 0, foreigners: 0 };
+    if (!starters.length) return { avgSkill: 0, avgAge: "—", foreigners: 0 };
     const avgSkill = Math.round(starters.reduce((s, p) => s + (p.habilidade ?? 0), 0) / starters.length);
     const avgAge = (starters.reduce((s, p) => s + (p.age ?? 0), 0) / starters.length).toFixed(1);
-    const totalValue = starters.reduce((s, p) => s + (p.market_value ?? 0), 0);
-    const foreigners = starters.filter(p => p.nationality && p.nationality !== "Solara").length;
-    return { avgSkill, avgAge, totalValue, foreigners };
+    const foreigners = starters.filter((p) => p.nationality && p.nationality !== "Solara").length;
+    return { avgSkill, avgAge, foreigners };
   }, [pitchPlayers]);
-
-  const formatMoney = (v: number) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", notation: "compact", maximumFractionDigits: 1 }).format(v);
 
   // ── grade do campo ─────────────────────────────────────────────────────────
   const template = FORMATIONS[formation];
@@ -286,31 +352,47 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
       {/* GRID TÁTICO */}
       <div className="absolute inset-0 flex flex-col p-1.5 gap-0.5 z-10">
         {Array.from({ length: GRID_ROWS }).map((_, r) => {
-          const hasCenter = !!pitchPlayers[`${r}-2`];
-          const showCenter = hasCenter || isDragging;
-          const colConfig = r === GRID_ROWS - 1
+          // Linha do GOL: sempre 1 coluna centralizada
+          const isGkRow = r === GRID_ROWS - 1;
+          // Cada linha decide independentemente se tem jogador/template na coluna central
+          const rowHasCenter = isGkRow ? false : !!pitchPlayers[`${r}-2`] || !!template[`${r}-2`] || isDragging;
+          const colConfig = isGkRow
             ? "0px 0px 1fr 0px 0px"
-            : showCenter ? "1fr 1fr 1fr 1fr 1fr" : "1fr 1fr 0px 1fr 1fr";
+            : rowHasCenter
+              ? "1fr 1fr 1fr 1fr 1fr"
+              : "1fr 1fr 0px 1fr 1fr";
 
           return (
-            <div key={r} className="flex-1 grid gap-0.5 transition-[grid-template-columns] duration-300"
-              style={{ gridTemplateColumns: colConfig }}>
-              {[0, 1, 2, 3, 4].map(c => {
+            <div
+              key={r}
+              className="flex-1 grid gap-0.5 transition-[grid-template-columns] duration-300"
+              style={{ gridTemplateColumns: colConfig }}
+            >
+              {[0, 1, 2, 3, 4].map((c) => {
                 const cellKey = `${r}-${c}`;
                 const player = pitchPlayers[cellKey];
                 const inTemplate = !!template[cellKey];
                 const isSelected = selectedCell === cellKey;
-                const isHidden = (r === GRID_ROWS - 1 && c !== 2) || (r !== GRID_ROWS - 1 && c === 2 && !showCenter);
+                const isHidden = (isGkRow && c !== 2) || (!isGkRow && c === 2 && !rowHasCenter);
 
                 return (
-                  <div key={cellKey}
-                    onDragOver={e => { if (!isHidden && inTemplate) e.preventDefault(); }}
-                    onDrop={e => { if (!isHidden && inTemplate) handleDrop(e, cellKey); }}
-                    onClick={() => { if (!isHidden) setSelectedCell(isSelected ? null : cellKey); }}
+                  <div
+                    key={cellKey}
+                    onDragOver={(e) => {
+                      if (!isHidden && inTemplate) e.preventDefault();
+                    }}
+                    onDrop={(e) => {
+                      if (!isHidden && inTemplate) handleDrop(e, cellKey);
+                    }}
+                    onClick={() => {
+                      if (!isHidden) setSelectedCell(isSelected ? null : cellKey);
+                    }}
                     className={[
                       "relative flex items-center justify-center rounded transition-all duration-300",
                       isHidden ? "opacity-0 pointer-events-none overflow-hidden" : "opacity-100",
-                      isDragging && !isHidden && inTemplate ? "border border-white/20 bg-white/5" : "border border-transparent",
+                      isDragging && !isHidden && inTemplate
+                        ? "border border-white/20 bg-white/5"
+                        : "border border-transparent",
                       isSelected ? "bg-primary/30 border-primary/60" : "",
                       !isHidden && !isDragging && !isSelected && inTemplate ? "hover:bg-white/10" : "",
                     ].join(" ")}
@@ -318,7 +400,11 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
                     {player && (
                       <div
                         draggable={canEdit}
-                        onDragStart={e => { e.stopPropagation(); e.dataTransfer.setData("text/plain", cellKey); setTimeout(() => setIsDragging(true), 10); }}
+                        onDragStart={(e) => {
+                          e.stopPropagation();
+                          e.dataTransfer.setData("text/plain", cellKey);
+                          setTimeout(() => setIsDragging(true), 10);
+                        }}
                         onDragEnd={() => setIsDragging(false)}
                         className={`relative flex flex-col items-center ${canEdit ? "cursor-grab active:cursor-grabbing" : "cursor-default"} transition-transform ${isSelected ? "scale-110 z-20" : "hover:scale-105 z-10"}`}
                       >
@@ -337,33 +423,51 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
 
                         {/* Popover ao selecionar */}
                         {isSelected && (
-                          <div ref={popoverRef}
+                          <div
+                            ref={popoverRef}
                             className={`absolute ${r >= 4 ? "bottom-full mb-3" : "top-full mt-3"} left-1/2 -translate-x-1/2 w-52 bg-card border border-border/70 rounded-xl shadow-2xl z-50 p-3.5 text-sm`}
-                            onClick={e => e.stopPropagation()}
+                            onClick={(e) => e.stopPropagation()}
                           >
                             <div className="flex justify-between items-start mb-2.5">
                               <div>
                                 <p className="font-bold text-foreground truncate w-32">{player.name}</p>
-                                <p className="text-[10px] text-muted-foreground">#{player.shirt_number ?? "—"} • {player.age ?? "—"} anos</p>
+                                <p className="text-[10px] text-muted-foreground">
+                                  #{player.shirt_number ?? "—"} • {player.age ?? "—"} anos
+                                </p>
                               </div>
-                              <div className={`h-8 w-8 rounded-lg flex items-center justify-center text-sm font-black border ${getPosStyle(player.position).badge}`}>
+                              <div
+                                className={`h-8 w-8 rounded-lg flex items-center justify-center text-sm font-black border ${getPosStyle(player.position).badge}`}
+                              >
                                 {player.habilidade ?? "—"}
                               </div>
                             </div>
                             <div className="flex justify-between text-[10px] text-muted-foreground mb-3">
-                              <span>Posição: <strong className={getPosStyle(player.position).text}>{player.position}</strong></span>
-                              {player.market_value ? <span className="text-primary font-semibold">{formatMoney(player.market_value)}</span> : null}
+                              <span>
+                                Posição:{" "}
+                                <strong className={getPosStyle(player.position).text}>{player.position}</strong>
+                              </span>
+                              <span>{player.age ?? "—"} anos</span>
                             </div>
                             {canEdit && (
-                              <Button variant="outline" size="sm" className="w-full text-xs h-8"
-                                onClick={e => { e.stopPropagation(); setSubCell(cellKey); setSelectedCell(null); }}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full text-xs h-8"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSubCell(cellKey);
+                                  setSelectedCell(null);
+                                }}
+                              >
                                 <ArrowRightLeft className="h-3 w-3 mr-1.5" /> Substituir
                               </Button>
                             )}
                             {/* seta */}
-                            {r >= 4
-                              ? <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 border-x-8 border-x-transparent border-t-8 border-t-card" />
-                              : <div className="absolute -top-2 left-1/2 -translate-x-1/2 border-x-8 border-x-transparent border-b-8 border-b-card" />}
+                            {r >= 4 ? (
+                              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 border-x-8 border-x-transparent border-t-8 border-t-card" />
+                            ) : (
+                              <div className="absolute -top-2 left-1/2 -translate-x-1/2 border-x-8 border-x-transparent border-b-8 border-b-card" />
+                            )}
                           </div>
                         )}
                       </div>
@@ -402,15 +506,26 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Object.keys(FORMATIONS).map(f => (
-                  <SelectItem key={f} value={f}>{f}</SelectItem>
+                {Object.keys(FORMATIONS).map((f) => (
+                  <SelectItem key={f} value={f}>
+                    {f}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
             {canEdit && (
-              <Button size="sm" className="h-8 text-xs bg-primary hover:bg-primary/90" onClick={handleSave} disabled={isSaving}>
-                {isSaving ? <Activity className="h-3.5 w-3.5 animate-spin mr-1" /> : <Save className="h-3.5 w-3.5 mr-1" />}
+              <Button
+                size="sm"
+                className="h-8 text-xs bg-primary hover:bg-primary/90"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <Activity className="h-3.5 w-3.5 animate-spin mr-1" />
+                ) : (
+                  <Save className="h-3.5 w-3.5 mr-1" />
+                )}
                 {isSaving ? "Salvando…" : "Salvar"}
               </Button>
             )}
@@ -420,11 +535,14 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
 
       {/* Mobile tabs */}
       <div className="flex md:hidden bg-secondary/40 rounded-lg overflow-hidden border border-border/50">
-        {(["pitch", "bench", "stats"] as const).map(tab => {
+        {(["pitch", "bench", "stats"] as const).map((tab) => {
           const labels = { pitch: "Campo", bench: `Banco (${bench.length})`, stats: "Análise" };
           return (
-            <button key={tab} onClick={() => setMobileTab(tab)}
-              className={`flex-1 py-2.5 text-xs font-bold transition-colors ${mobileTab === tab ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+            <button
+              key={tab}
+              onClick={() => setMobileTab(tab)}
+              className={`flex-1 py-2.5 text-xs font-bold transition-colors ${mobileTab === tab ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            >
               {labels[tab]}
             </button>
           );
@@ -433,15 +551,11 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
 
       {/* Layout principal */}
       <div className="flex flex-col lg:flex-row gap-4">
-
         {/* ── CAMPO ── */}
-        <div className={`w-full lg:w-[58%] ${mobileTab !== "pitch" ? "hidden md:block" : ""}`}>
-          {renderPitch()}
-        </div>
+        <div className={`w-full lg:w-[58%] ${mobileTab !== "pitch" ? "hidden md:block" : ""}`}>{renderPitch()}</div>
 
         {/* ── PAINÉIS DIREITOS ── */}
         <div className={`flex-1 flex flex-col gap-4 ${mobileTab === "pitch" ? "hidden md:flex" : "flex"}`}>
-
           {/* Análise */}
           <Card className={`p-4 bg-gradient-card border-border/50 ${mobileTab === "bench" ? "hidden md:block" : ""}`}>
             <div className="flex items-center gap-2 mb-3">
@@ -456,8 +570,10 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
                   <span className="font-bold text-primary">{stats.avgSkill}</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-secondary/60 overflow-hidden">
-                  <div className="h-full rounded-full bg-primary transition-all duration-500"
-                    style={{ width: `${Math.min(stats.avgSkill, 100)}%` }} />
+                  <div
+                    className="h-full rounded-full bg-primary transition-all duration-500"
+                    style={{ width: `${Math.min(stats.avgSkill, 100)}%` }}
+                  />
                 </div>
               </div>
               {/* Idade */}
@@ -467,19 +583,17 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
                   <span className="font-bold">{stats.avgAge} anos</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-secondary/60 overflow-hidden">
-                  <div className={`h-full rounded-full transition-all duration-500 ${Number(stats.avgAge) > 27 ? "bg-amber-500" : "bg-emerald-500"}`}
-                    style={{ width: `${Math.min((Number(stats.avgAge) / 40) * 100, 100)}%` }} />
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${Number(stats.avgAge) > 27 ? "bg-amber-500" : "bg-emerald-500"}`}
+                    style={{ width: `${Math.min((Number(stats.avgAge) / 40) * 100, 100)}%` }}
+                  />
                 </div>
               </div>
-              {/* grid 2 */}
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                <div className="bg-secondary/40 rounded-lg p-2.5 border border-border/40">
-                  <div className="text-[10px] text-muted-foreground mb-0.5">Estrangeiros</div>
-                  <div className="font-bold text-sm">{stats.foreigners} <span className="text-muted-foreground text-xs font-normal">/ 10</span></div>
-                </div>
-                <div className="bg-secondary/40 rounded-lg p-2.5 border border-border/40">
-                  <div className="text-[10px] text-muted-foreground mb-0.5">Valor Total</div>
-                  <div className="font-bold text-sm text-primary">{formatMoney(stats.totalValue)}</div>
+              {/* Estrangeiros */}
+              <div className="bg-secondary/40 rounded-lg p-2.5 border border-border/40">
+                <div className="text-[10px] text-muted-foreground mb-0.5">Estrangeiros</div>
+                <div className="font-bold text-sm">
+                  {stats.foreigners} <span className="text-muted-foreground text-xs font-normal">/ 10</span>
                 </div>
               </div>
             </div>
@@ -492,23 +606,31 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
               <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mentalidade</h3>
             </div>
             <div className="flex gap-1 bg-secondary/50 rounded-lg p-1 mb-4">
-              {MENTALITIES.map(m => (
-                <button key={m} onClick={() => canEdit && setMentality(m)}
-                  className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${mentality === m ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"} ${!canEdit ? "cursor-default" : "cursor-pointer"}`}>
+              {MENTALITIES.map((m) => (
+                <button
+                  key={m}
+                  onClick={() => canEdit && setMentality(m)}
+                  className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${mentality === m ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"} ${!canEdit ? "cursor-default" : "cursor-pointer"}`}
+                >
                   {m}
                 </button>
               ))}
             </div>
 
-            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Instruções Táticas</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+              Instruções Táticas
+            </div>
             <div className="flex flex-wrap gap-1.5">
-              {TACTICS_OPTS.map(t => {
+              {TACTICS_OPTS.map((t) => {
                 const active = tactics.includes(t);
                 return (
-                  <button key={t} onClick={() => canEdit && toggleTactic(t)}
+                  <button
+                    key={t}
+                    onClick={() => canEdit && toggleTactic(t)}
                     className={`px-2.5 py-1 text-[10px] font-semibold rounded-full border transition-colors flex items-center gap-1
                       ${active ? "bg-primary/20 border-primary/60 text-primary" : "bg-secondary/40 border-border/50 text-muted-foreground hover:border-border"}
-                      ${!canEdit ? "cursor-default" : "cursor-pointer"}`}>
+                      ${!canEdit ? "cursor-default" : "cursor-pointer"}`}
+                  >
                     {active && <CheckCircle2 className="h-3 w-3" />}
                     {t}
                   </button>
@@ -518,34 +640,44 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
           </Card>
 
           {/* Banco */}
-          <Card className={`p-4 bg-gradient-card border-border/50 flex-1 overflow-hidden flex flex-col ${mobileTab === "stats" ? "hidden md:flex" : ""}`}>
+          <Card
+            className={`p-4 bg-gradient-card border-border/50 flex-1 overflow-hidden flex flex-col ${mobileTab === "stats" ? "hidden md:flex" : ""}`}
+          >
             <div className="flex items-center gap-2 mb-3 shrink-0">
               <Users className="h-4 w-4 text-primary" />
               <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Banco de Reservas <span className="text-foreground">({bench.length})</span>
               </h3>
             </div>
-            <div className="overflow-y-auto space-y-1 flex-1 pr-1"
-              style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--border)) transparent" }}>
-              {bench.length === 0
-                ? <p className="text-center text-muted-foreground text-xs py-6">Nenhum jogador no banco.</p>
-                : bench.map(p => {
+            <div
+              className="overflow-y-auto space-y-1 flex-1 pr-1"
+              style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--border)) transparent" }}
+            >
+              {bench.length === 0 ? (
+                <p className="text-center text-muted-foreground text-xs py-6">Nenhum jogador no banco.</p>
+              ) : (
+                bench.map((p) => {
                   const ps = getPosStyle(p.position);
                   return (
-                    <div key={p.id}
-                      className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-primary/5 border border-transparent hover:border-border/40 transition-colors group">
+                    <div
+                      key={p.id}
+                      className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-primary/5 border border-transparent hover:border-border/40 transition-colors group"
+                    >
                       <ShirtIcon number={p.shirt_number} size="sm" />
                       <div className="flex-1 min-w-0">
                         <div className="text-xs font-semibold text-foreground truncate">{p.name}</div>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className={`text-[9px] font-bold px-1 py-0.5 rounded border ${ps.badge}`}>{p.position}</span>
+                          <span className={`text-[9px] font-bold px-1 py-0.5 rounded border ${ps.badge}`}>
+                            {p.position}
+                          </span>
                           <span className="text-[10px] text-muted-foreground">{p.age ? `${p.age}a` : "—"}</span>
                         </div>
                       </div>
                       <span className="text-xs font-black text-primary tabular-nums">{p.habilidade ?? "—"}</span>
                     </div>
                   );
-                })}
+                })
+              )}
             </div>
           </Card>
         </div>
@@ -557,42 +689,51 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
           <div className="bg-card border border-border/70 rounded-xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col max-h-[75vh]">
             <div className="flex items-center justify-between p-4 border-b border-border/50 shrink-0">
               <div>
-                <h3 className="font-bold text-sm">
-                  Substituir {pitchPlayers[subCell]?.name ?? "Posição vazia"}
-                </h3>
+                <h3 className="font-bold text-sm">Substituir {pitchPlayers[subCell]?.name ?? "Posição vazia"}</h3>
                 <p className="text-xs text-muted-foreground">Escolha um jogador do banco</p>
               </div>
-              <button onClick={() => setSubCell(null)}
-                className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-secondary/60 text-muted-foreground hover:text-foreground transition-colors">
+              <button
+                onClick={() => setSubCell(null)}
+                className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-secondary/60 text-muted-foreground hover:text-foreground transition-colors"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
             <div className="overflow-y-auto p-2 space-y-1">
-              {bench.length === 0
-                ? <p className="text-center text-muted-foreground py-8 text-sm">Banco vazio.</p>
-                : bench.map(p => {
+              {bench.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8 text-sm">Banco vazio.</p>
+              ) : (
+                bench.map((p) => {
                   const ps = getPosStyle(p.position);
                   return (
-                    <div key={p.id}
-                      className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/40 transition-colors border border-transparent hover:border-border/40">
+                    <div
+                      key={p.id}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/40 transition-colors border border-transparent hover:border-border/40"
+                    >
                       <div className="flex items-center gap-3">
                         <ShirtIcon number={p.shirt_number} />
                         <div>
                           <div className="text-sm font-bold">{p.name}</div>
                           <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
                             <span className={`px-1 py-0.5 rounded border font-bold ${ps.badge}`}>{p.position}</span>
-                            <span>Hab: <strong className="text-primary">{p.habilidade ?? "—"}</strong></span>
-                            {p.market_value ? <span>{formatMoney(p.market_value)}</span> : null}
+                            <span>
+                              Hab: <strong className="text-primary">{p.habilidade ?? "—"}</strong>
+                            </span>
                           </div>
                         </div>
                       </div>
-                      <Button size="sm" variant="outline" className="text-xs h-7 border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
-                        onClick={() => handleSub(p.id)}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-7 border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
+                        onClick={() => handleSub(p.id)}
+                      >
                         Escalar
                       </Button>
                     </div>
                   );
-                })}
+                })
+              )}
             </div>
           </div>
         </div>
