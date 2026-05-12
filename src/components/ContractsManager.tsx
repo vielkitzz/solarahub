@@ -368,13 +368,21 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
       dbEmpresaId = newEmp.id;
     }
 
-    // 2. Insere o contrato vinculado
+    // 2. Em renovação: encerra o contrato anterior na temporada que precede o início do novo
+    if (renewingContrato) {
+      await supabase
+        .from("contratos_clube")
+        .update({ fim_temporada: inicio, ativo: inicio > temporadaAtual })
+        .eq("id", renewingContrato.id);
+    }
+
+    // 3. Insere o novo contrato
     const { error } = await supabase.from("contratos_clube").insert({
       club_id: clubId,
       empresa_id: dbEmpresaId,
       categoria: searchCategoria,
       valor_anual: valorAnualEfetivo || 0,
-      inicio_temporada: temporadaAtual,
+      inicio_temporada: inicio,
       fim_temporada: fim,
       anos_duracao: anos,
       ativo: true,
@@ -386,8 +394,9 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
       return;
     }
 
-    toast.success(`Contrato firmado com ${empresa.nome}!`);
+    toast.success(renewingContrato ? `Renovação com ${empresa.nome} firmada!` : `Contrato firmado com ${empresa.nome}!`);
     setEmpresaParaConfirmar(null);
+    setRenewingContrato(null);
     setSearchCategoria(null);
     setSearchTerm("");
     setDuracao("3");
