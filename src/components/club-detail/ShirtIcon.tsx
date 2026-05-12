@@ -1,5 +1,6 @@
 import { getClubShirt, injectShirtNumber } from "@/lib/shirts/shirt-utils";
 
+// src/components/club-detail/ShirtIcon.tsx
 interface ShirtIconProps {
   clubId?: string | null;
   number?: number;
@@ -8,12 +9,29 @@ interface ShirtIconProps {
 }
 
 export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8" }: ShirtIconProps) {
-  const svg = injectShirtNumber(getClubShirt(clubId || undefined) || "", number);
+  const src = clubId ? `/kits/${clubId}.svg` : "/placeholder.svg";
 
   return (
-    <div
-      className={`${size} ${highlighted ? "drop-shadow-[0_0_10px_rgba(255,255,255,0.7)]" : ""}`}
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+    <div className={`relative ${size}`}>
+      <img
+        src={src}
+        alt="Camisa"
+        className={`w-full h-full object-contain transition-all duration-300 ${
+          highlighted ? "drop-shadow-[0_0_10px_rgba(255,255,255,0.7)]" : ""
+        }`}
+      />
+      {number !== undefined && (
+        <span
+          className="absolute inset-0 flex items-center justify-center font-bold"
+          style={{
+            fontSize: "clamp(10px, 45%, 20px)",
+            paddingTop: "15%",
+            color: "black",
+          }}
+        >
+          {number}
+        </span>
+      )}
+    </div>
   );
 }
