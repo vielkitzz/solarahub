@@ -292,6 +292,7 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
     setIsDragging(false);
     const sourceKey = e.dataTransfer.getData("text/plain");
     if (!sourceKey || sourceKey === targetKey) return;
+    if (!pitchPlayers[sourceKey]) return; // source sem jogador
     setPitchPlayers((prev) => {
       const next = { ...prev };
       const src = next[sourceKey];
@@ -374,12 +375,8 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
                 return (
                   <div
                     key={cellKey}
-                    onDragOver={(e) => {
-                      if (inTemplate) e.preventDefault();
-                    }}
-                    onDrop={(e) => {
-                      if (inTemplate) handleDrop(e, cellKey);
-                    }}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => handleDrop(e, cellKey)}
                     onClick={() => setSelectedCell(isSelected ? null : cellKey)}
                     className={[
                       "relative flex items-center justify-center rounded transition-all duration-300",
