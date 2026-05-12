@@ -731,6 +731,7 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
         onOpenChange={(o) => {
           if (!o) {
             setEmpresaParaConfirmar(null);
+            setRenewingContrato(null);
             setDuracao("3");
           }
         }}
@@ -738,14 +739,18 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Handshake className="h-5 w-5 text-primary" /> Confirmar contrato
+              {renewingContrato ? <RefreshCw className="h-5 w-5 text-primary" /> : <Handshake className="h-5 w-5 text-primary" />}
+              {renewingContrato ? "Renovar contrato" : "Confirmar contrato"}
             </DialogTitle>
           </DialogHeader>
 
           {empresaParaConfirmar &&
             (() => {
               const anos = Math.max(1, Math.min(10, parseInt(duracao) || 3));
-              const fimContrato = temporadaAtual + anos;
+              const inicioContrato = renewingContrato
+                ? Math.max(temporadaAtual, renewingContrato.fim_temporada || temporadaAtual)
+                : temporadaAtual;
+              const fimContrato = inicioContrato + anos;
               const valorBase = Number(empresaParaConfirmar.valor_anual_sugerido);
               // Depreciação: cada ano adicional reduz 5% do valor anual
               // Ano 1 = 100%, Ano 2 = 95%, Ano 3 = 90%, etc.
@@ -758,6 +763,13 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
               const desconto = anos > 1 ? Math.round((1 - Math.pow(0.95, anos - 1)) * 100) : 0;
               return (
                 <div className="space-y-4">
+                  {renewingContrato && (
+                    <div className="bg-primary/10 border border-primary/30 rounded-lg p-2.5 text-[11px] text-primary/90">
+                      Renovação antecipada — o contrato atual vai até{" "}
+                      <strong>{renewingContrato.fim_temporada}</strong>. O novo entra em vigor em{" "}
+                      <strong>{inicioContrato}</strong>.
+                    </div>
+                  )}
                   {/* Cabeçalho da empresa */}
                   <div className="flex items-center gap-3 bg-background/40 rounded-lg p-3">
                     <div className="h-14 w-14 rounded overflow-hidden shrink-0">
