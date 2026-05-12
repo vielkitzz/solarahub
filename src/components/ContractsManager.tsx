@@ -84,6 +84,7 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
   const [duracao, setDuracao] = useState("3");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [empresaParaConfirmar, setEmpresaParaConfirmar] = useState<Empresa | null>(null);
+  const [renewingContrato, setRenewingContrato] = useState<Contrato | null>(null);
 
   const [logoApiKey, setLogoApiKey] = useState("");
   const [searchTerm, setSearchTerm] = useState(""); // Estado do buscador
