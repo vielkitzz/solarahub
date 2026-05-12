@@ -12,31 +12,43 @@ export const CLUB_SHIRTS = Object.fromEntries(
   }),
 );
 
-// shirt-utils.ts
 export function getClubShirt(clubId?: string): string | null {
   if (!clubId) return null;
+
   return (CLUB_SHIRTS[clubId] as string) || null;
 }
 
 export function injectShirtNumber(svg: string, number?: number): string {
   if (!svg) return "";
 
-  // Garante que o SVG preencha o container
   let result = svg.replace(/<svg/, '<svg width="100%" height="100%"');
 
-  if (!number) return result;
+  if (number === undefined) return result;
 
   return result.replace(
     "</svg>",
-    `<text
-      x="238"
-      y="240"
+    `
+    <style>
+      .shirt-number {
+        font-family: 'Vina Sans', sans-serif;
+      }
+    </style>
+
+    <text
+      x="237.5"
+      y="235"
       text-anchor="middle"
       dominant-baseline="middle"
       font-size="120"
-      font-family="Vina Sans"
-      font-weight="800"
+      class="shirt-number"
+      font-weight="400"
       fill="white"
-    >${number}</text></svg>`,
+      stroke="rgba(0,0,0,0.35)"
+      stroke-width="6"
+      paint-order="stroke"
+    >
+      ${number}
+    </text>
+    </svg>`,
   );
 }
