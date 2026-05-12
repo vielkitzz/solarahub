@@ -295,6 +295,24 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
   const direitosImagemCusto = valorBaseFolha * 0.03;
   const direitosImagemReceita = direitosImagemCusto * 0.5;
 
+  const iniciarRenovacao = (c: Contrato) => {
+    if (!c.empresa) {
+      toast.error("Dados da empresa indisponíveis");
+      return;
+    }
+    const cat = c.categoria as PatrocinioCategoria;
+    const lista = empresasDaCategoria(cat);
+    const emp = lista.find((e) => e.nome === c.empresa!.nome);
+    if (!emp) {
+      toast.error("Marca não está mais disponível no catálogo");
+      return;
+    }
+    setRenewingContrato(c);
+    setSearchCategoria(cat);
+    setEmpresaParaConfirmar(emp);
+    setDuracao(String(c.anos_duracao || 3));
+  };
+
   const firmar = async (empresa: Empresa) => {
     if (!searchCategoria) {
       toast.error("Categoria não selecionada");
@@ -303,7 +321,11 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
 
     setIsSubmitting(true);
     const anos = Math.max(1, Math.min(10, parseInt(duracao) || 3));
-    const fim = temporadaAtual + anos;
+    // Renovação: começa quando o contrato atual terminar (ou na temporada atual se já expirou)
+    const inicio = renewingContrato
+      ? Math.max(temporadaAtual, renewingContrato.fim_temporada || temporadaAtual)
+      : temporadaAtual;
+    const fim = inicio + anos;
     // Valor anual efetivo com depreciação de 5% por ano adicional
     const valorAnualEfetivo = Math.round(Number(empresa.valor_anual_sugerido) * Math.pow(0.95, anos - 1));
 
