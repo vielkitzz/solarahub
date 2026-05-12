@@ -338,48 +338,6 @@ function getAdaptation(player: Player | undefined, cellKey: string, formationRol
   };
 }
 
-// ─── ShirtIcon ────────────────────────────────────────────────────────────────
-function ShirtIcon({
-  number,
-  size = "md",
-  highlighted = false,
-  clubId,
-}: {
-  number?: number | null;
-  size?: "sm" | "md";
-  highlighted?: boolean;
-  clubId?: string;
-}) {
-  const dim = size === "sm" ? "w-8 h-8" : "w-10 h-10";
-
-  const shirtSrc = clubId ? `/kits/${clubId}.svg` : null;
-
-  return (
-    <div className={`relative flex justify-center items-center shrink-0 ${dim}`}>
-      {shirtSrc ? (
-        <img
-          src={shirtSrc}
-          alt="Camisa"
-          className={`w-full h-full object-contain transition-all duration-300 ${
-            highlighted ? "drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" : "drop-shadow-[0_2px_5px_rgba(0,0,0,0.6)]"
-          }`}
-        />
-      ) : (
-        <div className="w-full h-full bg-muted rounded-full" />
-      )}
-
-      <span
-        className={`absolute font-black tracking-tighter select-none ${
-          size === "sm" ? "text-[10px]" : "text-[12px]"
-        } text-white`}
-        style={{ top: "48%", transform: "translateY(-50%)" }}
-      >
-        {number ?? "—"}
-      </span>
-    </div>
-  );
-}
-
 // ─── Campo SVG ────────────────────────────────────────────────────────────────
 function PitchSVG() {
   return (
