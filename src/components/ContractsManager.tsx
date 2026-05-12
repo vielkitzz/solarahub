@@ -531,19 +531,32 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
                           </div>
                         </div>
                         {canEdit && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 text-destructive"
-                            onClick={() => rescindir(c)}
-                            title={`Rescindir (multa ${formatCurrency(
-                              (c.fim_temporada || temporadaAtual) - temporadaAtual <= 0
-                                ? Number(c.valor_anual) * 0.3
-                                : Number(c.valor_anual) * ((c.fim_temporada || temporadaAtual) - temporadaAtual) * 0.7,
-                            )})`}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-primary"
+                              onClick={() => iniciarRenovacao(c)}
+                              title={`Renovar contrato (inicia em ${Math.max(temporadaAtual, c.fim_temporada || temporadaAtual)})`}
+                            >
+                              <RefreshCw className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-destructive"
+                              onClick={() => rescindir(c)}
+                              title={`Rescindir (multa ${formatCurrency(
+                                (c.fim_temporada || temporadaAtual) - temporadaAtual <= 0
+                                  ? Number(c.valor_anual) * 0.3
+                                  : Number(c.valor_anual) *
+                                      ((c.fim_temporada || temporadaAtual) - temporadaAtual) *
+                                      0.7,
+                              )})`}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </>
                         )}
                       </div>
                     ))}
