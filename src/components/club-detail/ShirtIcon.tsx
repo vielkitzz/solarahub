@@ -9,11 +9,8 @@ interface ShirtIconProps {
 
 export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8" }: ShirtIconProps) {
   const rawSvg = getClubShirt(clubId || undefined);
-
+  console.log("render shirt", clubId, number);
   const svg = rawSvg ? injectShirtNumber(rawSvg, number) : null;
-  const shirtSvg = injectShirtNumber(svg, number);
-
-  console.log(shirtSvg);
 
   return (
     <div
