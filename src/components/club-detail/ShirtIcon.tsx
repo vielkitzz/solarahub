@@ -24,7 +24,7 @@ export function ShirtIcon({ clubId, number, highlighted, size = "w-8 h-8" }: Shi
           style={{
             fontSize: "clamp(14px, 70%, 32px)",
             color: "black",
-            paddingBottom: "10%",
+            paddingBottom: "15%",
             zIndex: 10,
             fontFamily: "'Vina Sans', sans-serif",
           }}
