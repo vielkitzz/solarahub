@@ -45,6 +45,7 @@ interface LineupManagerProps {
   players: Player[];
   club: any;
   canEdit?: boolean;
+  onSave?: (data: any) => Promise<void> | void; // <-- Adicione esta linha
 }
 
 interface SubRecord {
@@ -430,7 +431,7 @@ function PitchSVG() {
 }
 
 // ─── Componente principal ─────────────────────────────────────────────────────
-export function LineupManager({ players, club, canEdit = false }: LineupManagerProps) {
+export function LineupManager({ players, club, canEdit = false, onSave }: LineupManagerProps) {
   const [formation, setFormation] = useState("4-3-3");
   const [pitchPlayers, setPitchPlayers] = useState<Record<string, Player>>({});
   const [bench, setBench] = useState<Player[]>([]);
@@ -560,11 +561,20 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
   const handleSave = async () => {
     if (!canEdit) return;
     setIsSaving(true);
-    await new Promise((r) => setTimeout(r, 900));
-    setIsSaving(false);
-    toast.success("Escalação salva com sucesso!", {
-      description: `${formation} · ${mentality} · ${tactics.length} instruções táticas`,
-    });
+    
+    try {
+      if (onSave) {
+        // Envia os dados atuais para o componente pai salvar no banco
+        await onSave({ pitchPlayers, bench, formation, tactics, mentality });
+      } else {
+        await new Promise((r) => setTimeout(r, 900)); // mock temporário
+      }
+      toast.success("Escalação salva com sucesso!");
+    } catch (error) {
+      toast.error("Erro ao salvar a escalação.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // ── Estatísticas com Punição de Posição ───────────────────────────────────
@@ -686,26 +696,15 @@ export function LineupManager({ players, club, canEdit = false }: LineupManagerP
                       ${!isDragging && !isSelected && !isHidden ? "hover:bg-white/10 cursor-pointer" : ""}
                     `}
                   >
-                    {/* Renderização do Slot Vazio + Label do Mapping (para orientar) */}
-                    {!player && !isHidden && (
-                      <div className="relative w-full h-full flex items-center justify-center pointer-events-none">
-                        {/* Identificador Fixo da Imagem */}
-                        {gridLabel && (
-                          <div
-                            className={`absolute inset-0 flex items-center justify-center ${template[cellKey] ? "opacity-10" : "opacity-25"}`}
-                          >
-                            <span className="text-[10px] sm:text-[11px] font-black text-white/80 uppercase text-center leading-tight tracking-widest drop-shadow-md">
-                              {gridLabel.includes("/") ? (
-                                <>
-                                  {gridLabel.split("/")[0]}
-                                  <br />
-                                  {gridLabel.split("/")[1]}
-                                </>
-                              ) : (
-                                gridLabel
-                              )}
-                            </span>
-                          </div>
+                  {/* Renderização do Slot Vazio (Visível apenas ao arrastar/selecionar) */}
+                    {!player && !isHidden && (isDragging || selectedCell !== null) && template[cellKey] && (
+                      <div className="relative w-full h-full flex items-center justify-center pointer-events-none transition-opacity duration-300">
+                        {/* Apenas o Slot da Formação Atual */}
+                        <div className="w-9 h-9 rounded-full border-2 border-dashed border-white/40 flex items-center justify-center bg-black/20 z-10 backdrop-blur-sm">
+                          <span className="text-[8px] text-white/90 font-bold uppercase">{template[cellKey]}</span>
+                        </div>
+                      </div>
+                    )}
                         )}
                         {/* Slot da Formação Atual */}
                         {template[cellKey] && (
