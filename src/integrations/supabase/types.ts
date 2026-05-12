@@ -493,6 +493,8 @@ export type Database = {
           nationality: string | null
           overall: number
           position: string
+          potential_max: number | null
+          potential_min: number | null
           salary_demand: number
           source_player_id: string | null
           temporada: number | null
@@ -507,6 +509,8 @@ export type Database = {
           nationality?: string | null
           overall?: number
           position: string
+          potential_max?: number | null
+          potential_min?: number | null
           salary_demand?: number
           source_player_id?: string | null
           temporada?: number | null
@@ -521,6 +525,8 @@ export type Database = {
           nationality?: string | null
           overall?: number
           position?: string
+          potential_max?: number | null
+          potential_min?: number | null
           salary_demand?: number
           source_player_id?: string | null
           temporada?: number | null
