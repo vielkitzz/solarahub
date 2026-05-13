@@ -480,20 +480,21 @@ const ClubDetail = () => {
             players={players}
             club={club}
             canEdit={canEdit}
-            initialLineup={{
-              formation: club.lineup_formation,
-              mentality: club.lineup_mentality,
-              pitchIds: club.lineup_pitch_ids,
-              benchIds: club.lineup_bench_ids,
-            }}
+            initialLineup={
+              club.lineup
+                ? {
+                    formation: (club.lineup as any).formation,
+                    mentality: (club.lineup as any).mentality,
+                    pitchIds: (club.lineup as any).pitchIds,
+                    benchIds: (club.lineup as any).benchIds,
+                  }
+                : null
+            }
             onSave={async ({ pitchIds, benchIds, formation, mentality }) => {
               const { error } = await supabase
                 .from("clubs")
                 .update({
-                  lineup_formation: formation,
-                  lineup_mentality: mentality,
-                  lineup_pitch_ids: pitchIds,
-                  lineup_bench_ids: benchIds,
+                  lineup: { formation, mentality, pitchIds, benchIds } as any,
                 })
                 .eq("id", id!);
               if (error) throw error;
