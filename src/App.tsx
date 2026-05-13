@@ -1,4 +1,9 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
+
+if (typeof window !== "undefined") {
+  // limpa o flag assim que a app carrega com sucesso
+  window.addEventListener("load", () => sessionStorage.removeItem("__chunk_reload__"));
+}
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Loader2 } from "lucide-react";
