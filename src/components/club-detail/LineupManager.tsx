@@ -47,11 +47,16 @@ interface LineupManagerProps {
   players: Player[];
   club: any;
   canEdit?: boolean;
+  initialLineup?: {
+    formation?: string;
+    mentality?: string;
+    pitchIds?: Record<string, string>;
+    benchIds?: string[];
+  } | null;
   onSave?: (data: {
-    pitchPlayers: Record<string, Player>;
-    bench: Player[];
+    pitchIds: Record<string, string>;
+    benchIds: string[];
     formation: string;
-    tactics: string[];
     mentality: string;
   }) => Promise<void> | void;
 }
