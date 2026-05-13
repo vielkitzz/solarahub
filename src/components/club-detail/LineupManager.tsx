@@ -477,67 +477,67 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
   };
 
   const handleDrop = (e: React.DragEvent, targetKey: string) => {
-    e.preventDefault();
-    setIsDragging(false);
-    setDropTarget(null);
-  
-    const benchPlayerId = e.dataTransfer.getData("bench-player-id");
-    const sourceKey = e.dataTransfer.getData("text/plain");
-  
-    // Drag do banco para o campo
-    if (benchPlayerId) {
-      const benchIdx = bench.findIndex((p) => p.id === benchPlayerId);
-      if (benchIdx === -1) return;
-      const benchIn = bench[benchIdx];
-      const starterOut = pitchPlayers[targetKey];
-  
-      // Impede mais de 11 se a célula alvo está vazia
-      const currentStarters = Object.values(pitchPlayers).filter(Boolean).length;
-      if (!starterOut && currentStarters >= 11) {
-        toast.error("Já há 11 jogadores em campo.");
+      e.preventDefault();
+      setIsDragging(false);
+      setDropTarget(null);
+      
+      const benchPlayerId = e.dataTransfer.getData("bench-player-id");
+      const sourceKey = e.dataTransfer.getData("text/plain");
+      
+      // Drag do banco para o campo
+      if (benchPlayerId) {
+        const benchIdx = bench.findIndex((p) => p.id === benchPlayerId);
+        if (benchIdx === -1) return;
+        const benchIn = bench[benchIdx];
+        const starterOut = pitchPlayers[targetKey];
+        
+        // Impede mais de 11 se a célula alvo está vazia
+        const currentStarters = Object.values(pitchPlayers).filter(Boolean).length;
+        if (!starterOut && currentStarters >= 11) {
+          toast.error("Já há 11 jogadores em campo.");
+          return;
+        }
+        
+        const newPitch = { ...pitchPlayers, [targetKey]: benchIn };
+        const newBench = [...bench];
+        if (starterOut) newBench[benchIdx] = starterOut;
+        else newBench.splice(benchIdx, 1);
+        
+        setPitchPlayers(newPitch);
+        setBench(newBench.sort((a, b) => (b.habilidade ?? 0) - (a.habilidade ?? 0)));
+        
+        if (starterOut) {
+          setSubHistory((prev) => [
+            {
+              out: starterOut,
+              inn: benchIn,
+              cell: targetKey,
+              time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+            },
+            ...prev,
+          ]);
+          toast.success(`${benchIn.name} entrou, ${starterOut.name} saiu`);
+        } else {
+          toast.success(`${benchIn.name} escalado`);
+        }
         return;
       }
-  
-      const newPitch = { ...pitchPlayers, [targetKey]: benchIn };
-      const newBench = [...bench];
-      if (starterOut) newBench[benchIdx] = starterOut;
-      else newBench.splice(benchIdx, 1);
-  
-      setPitchPlayers(newPitch);
-      setBench(newBench.sort((a, b) => (b.habilidade ?? 0) - (a.habilidade ?? 0)));
-  
-      if (starterOut) {
-        setSubHistory((prev) => [
-          {
-            out: starterOut,
-            inn: benchIn,
-            cell: targetKey,
-            time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
-          },
-          ...prev,
-        ]);
-        toast.success(`${benchIn.name} entrou, ${starterOut.name} saiu`);
-      } else {
-        toast.success(`${benchIn.name} escalado`);
-      }
-      return;
-    }
-  
-    // Drag de célula para célula (lógica original)
-    if (!sourceKey || sourceKey === targetKey) return;
-    if (!pitchPlayers[sourceKey]) return;
-  
-    setPitchPlayers((prev) => {
-      const next = { ...prev };
-      const src = next[sourceKey];
-      const tgt = next[targetKey];
-      if (tgt) next[sourceKey] = tgt;
-      else delete next[sourceKey];
-      next[targetKey] = src;
-      return next;
-    });
-    setSelectedCell(null);
-  };
+      
+      // Drag de célula para célula (lógica original)
+      if (!sourceKey || sourceKey === targetKey) return;
+      if (!pitchPlayers[sourceKey]) return;
+      
+      setPitchPlayers((prev) => {
+        const next = { ...prev };
+        const src = next[sourceKey];
+        const tgt = next[targetKey];
+        if (tgt) next[sourceKey] = tgt;
+        else delete next[sourceKey];
+        next[targetKey] = src;
+        return next;
+      });
+      setSelectedCell(null);
+    };
 
     // Drag de célula para célula (lógica original)
     if (!sourceKey || sourceKey === targetKey) return;
@@ -1030,6 +1030,7 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
           },
         }
       : {};
+    
 
     return (
       <Card className="p-4 bg-gradient-card border-border/50 flex-1 overflow-hidden flex flex-col">
