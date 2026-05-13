@@ -979,10 +979,10 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
           className="overflow-y-auto space-y-0.5 flex-1 pr-0.5"
           style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--border)) transparent" }}
         >
-          {bench.length === 0 ? (
+          {benchByPosition.length === 0 ? (
             <p className="text-center text-muted-foreground text-xs py-6">Todos em campo.</p>
           ) : (
-            bench.map((p) => {
+            benchByPosition.map((p) => {
               const ps = getPosStyle(p.position);
               const rl = ratingLabel(p.habilidade ?? 0);
               return (
