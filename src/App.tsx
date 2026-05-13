@@ -14,17 +14,45 @@ import { RequireAuth, RequireAdmin } from "@/components/auth/RouteGuards";
 // Home fica eager (LCP), demais ficam lazy para reduzir o bundle inicial.
 import Home from "./pages/Home";
 
-const Ranking = lazy(() => import("./pages/Ranking"));
-const ClubsList = lazy(() => import("./pages/ClubsList"));
-const ClubDetail = lazy(() => import("./pages/ClubDetail"));
-const Market = lazy(() => import("./pages/Market"));
-const WikiGlobal = lazy(() => import("./pages/WikiGlobal"));
-const MyClub = lazy(() => import("./pages/MyClub"));
-const Admin = lazy(() => import("./pages/Admin"));
-const Transferencias = lazy(() => import("./pages/Transferencias"));
-const Mapa = lazy(() => import("./pages/Mapa"));
-const Configuracoes = lazy(() => import("./pages/Configuracoes"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+// Wrapper que recupera de "Failed to fetch dynamically imported module"
+// (chunk antigo após hot-update / novo deploy): tenta novamente, e se falhar
+// força um reload para puxar o manifest atualizado.
+function lazyWithRetry<T extends { default: React.ComponentType<any> }>(
+  factory: () => Promise<T>,
+) {
+  return lazy(async () => {
+    try {
+      return await factory();
+    } catch (err: any) {
+      const msg = String(err?.message || err);
+      if (/dynamically imported module|Importing a module script failed/i.test(msg)) {
+        // tenta uma vez mais (cache pode estar quente)
+        try {
+          return await factory();
+        } catch {
+          // sinaliza reload único para evitar loop
+          if (!sessionStorage.getItem("__chunk_reload__")) {
+            sessionStorage.setItem("__chunk_reload__", "1");
+            window.location.reload();
+          }
+        }
+      }
+      throw err;
+    }
+  });
+}
+
+const Ranking = lazyWithRetry(() => import("./pages/Ranking"));
+const ClubsList = lazyWithRetry(() => import("./pages/ClubsList"));
+const ClubDetail = lazyWithRetry(() => import("./pages/ClubDetail"));
+const Market = lazyWithRetry(() => import("./pages/Market"));
+const WikiGlobal = lazyWithRetry(() => import("./pages/WikiGlobal"));
+const MyClub = lazyWithRetry(() => import("./pages/MyClub"));
+const Admin = lazyWithRetry(() => import("./pages/Admin"));
+const Transferencias = lazyWithRetry(() => import("./pages/Transferencias"));
+const Mapa = lazyWithRetry(() => import("./pages/Mapa"));
+const Configuracoes = lazyWithRetry(() => import("./pages/Configuracoes"));
+const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
