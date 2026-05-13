@@ -865,7 +865,7 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
         {[
           {
             label: "Idade Média",
-            value: `${stats.avgAge}a`,
+            value: `${stats.avgAge} anos`,
             sub: stats.avgAge > 27 ? "Experiente" : "Jovem",
             ok: stats.avgAge <= 27,
           },
