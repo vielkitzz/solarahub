@@ -373,7 +373,7 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
   const [subHistory, setSubHistory] = useState<SubRecord[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [pitchHeight, setPitchHeight] = useState<number | null>(null);
-  const hydrated = useRef(false);
+  const hydratedKey = useRef<string | null>(null);
 
   const popoverRef = useRef<HTMLDivElement>(null);
   const pitchRef = useRef<HTMLDivElement>(null);
@@ -425,7 +425,15 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
 
   useEffect(() => {
     if (!players?.length) return;
-    if (!hydrated.current && initialLineup?.pitchIds) {
+
+    // Cria uma chave única baseada no initialLineup para detectar mudanças
+    const key = JSON.stringify(initialLineup?.pitchIds ?? null);
+
+    // Já hidratou com essa mesma escalação — não faz nada
+    if (hydratedKey.current === key) return;
+    hydratedKey.current = key;
+
+    if (initialLineup?.pitchIds && Object.keys(initialLineup.pitchIds).length > 0) {
       const byId = new Map(players.map((p) => [p.id, p]));
       const newPitch: Record<string, Player> = {};
       Object.entries(initialLineup.pitchIds).forEach(([cell, pid]) => {
@@ -446,12 +454,10 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
       });
       setPitchPlayers(newPitch);
       setBench(benchOrdered);
-      hydrated.current = true;
-    } else if (!hydrated.current) {
+    } else {
       autoPickFormation(initialLineup?.formation || "4-3-3", players);
-      hydrated.current = true;
     }
-  }, [players, autoPickFormation, initialLineup]);
+  }, [players, initialLineup, autoPickFormation]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
