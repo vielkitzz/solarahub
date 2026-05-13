@@ -155,6 +155,7 @@ export type Database = {
           id: string
           jogos_por_temporada: number
           latitude: number | null
+          lineup: Json | null
           longitude: number | null
           name: string
           nivel_base: number
@@ -186,6 +187,7 @@ export type Database = {
           id?: string
           jogos_por_temporada?: number
           latitude?: number | null
+          lineup?: Json | null
           longitude?: number | null
           name: string
           nivel_base?: number
@@ -217,6 +219,7 @@ export type Database = {
           id?: string
           jogos_por_temporada?: number
           latitude?: number | null
+          lineup?: Json | null
           longitude?: number | null
           name?: string
           nivel_base?: number

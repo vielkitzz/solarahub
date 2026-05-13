@@ -47,11 +47,16 @@ interface LineupManagerProps {
   players: Player[];
   club: any;
   canEdit?: boolean;
+  initialLineup?: {
+    formation?: string;
+    mentality?: string;
+    pitchIds?: Record<string, string>;
+    benchIds?: string[];
+  } | null;
   onSave?: (data: {
-    pitchPlayers: Record<string, Player>;
-    bench: Player[];
+    pitchIds: Record<string, string>;
+    benchIds: string[];
     formation: string;
-    tactics: string[];
     mentality: string;
   }) => Promise<void> | void;
 }
@@ -352,12 +357,14 @@ function PitchSVG() {
 }
 
 // ─── Componente principal ─────────────────────────────────────────────────────
-export function LineupManager({ players, club, canEdit = false, onSave }: LineupManagerProps) {
-  const [formation, setFormation] = useState("4-3-3");
+export function LineupManager({ players, club, canEdit = false, initialLineup, onSave }: LineupManagerProps) {
+  const [formation, setFormation] = useState(initialLineup?.formation || "4-3-3");
   const [pitchPlayers, setPitchPlayers] = useState<Record<string, Player>>({});
   const [bench, setBench] = useState<Player[]>([]);
-  const [tactics, setTactics] = useState<string[]>(["Posse de bola", "Saída pelo goleiro"]);
-  const [mentality, setMentality] = useState<Mentality>("Equilibrado");
+  const [tactics, setTactics] = useState<string[]>([]);
+  const [mentality, setMentality] = useState<Mentality>(
+    (initialLineup?.mentality as Mentality) || "Equilibrado",
+  );
   const [selectedCell, setSelectedCell] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -367,9 +374,22 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
   const [isSaving, setIsSaving] = useState(false);
   const [subHistory, setSubHistory] = useState<SubRecord[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [pitchHeight, setPitchHeight] = useState<number | null>(null);
+  const hydrated = useRef(false);
 
   const popoverRef = useRef<HTMLDivElement>(null);
   const pitchRef = useRef<HTMLDivElement>(null);
+
+  // Mede altura do campo p/ alinhar a coluna direita (banco)
+  useEffect(() => {
+    if (!pitchRef.current) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const h = entry.contentRect.height;
+      if (h > 0) setPitchHeight(h);
+    });
+    ro.observe(pitchRef.current);
+    return () => ro.disconnect();
+  }, []);
 
   // ── Auto-pick ───────────────────────────────────────────────────────────────
   const autoPickFormation = useCallback((formId: string, pool: Player[]) => {
@@ -406,8 +426,34 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
   }, []);
 
   useEffect(() => {
-    autoPickFormation("4-3-3", players);
-  }, [players, autoPickFormation]);
+    if (!players?.length) return;
+    if (!hydrated.current && initialLineup?.pitchIds) {
+      const byId = new Map(players.map((p) => [p.id, p]));
+      const newPitch: Record<string, Player> = {};
+      Object.entries(initialLineup.pitchIds).forEach(([cell, pid]) => {
+        const p = byId.get(pid);
+        if (p) newPitch[cell] = p;
+      });
+      const usedIds = new Set(Object.values(newPitch).map((p) => p.id));
+      const benchOrdered: Player[] = [];
+      (initialLineup.benchIds || []).forEach((pid) => {
+        const p = byId.get(pid);
+        if (p && !usedIds.has(p.id)) {
+          benchOrdered.push(p);
+          usedIds.add(p.id);
+        }
+      });
+      players.forEach((p) => {
+        if (!usedIds.has(p.id)) benchOrdered.push(p);
+      });
+      setPitchPlayers(newPitch);
+      setBench(benchOrdered);
+      hydrated.current = true;
+    } else if (!hydrated.current) {
+      autoPickFormation(initialLineup?.formation || "4-3-3", players);
+      hydrated.current = true;
+    }
+  }, [players, autoPickFormation, initialLineup]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -483,13 +529,18 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
     if (!canEdit) return;
     setIsSaving(true);
     try {
+      const pitchIds: Record<string, string> = {};
+      Object.entries(pitchPlayers).forEach(([cell, p]) => {
+        if (p) pitchIds[cell] = p.id;
+      });
+      const benchIds = bench.map((p) => p.id);
       if (onSave) {
-        await onSave({ pitchPlayers, bench, formation, tactics, mentality });
+        await onSave({ pitchIds, benchIds, formation, mentality });
       } else {
-        await new Promise((r) => setTimeout(r, 900));
+        await new Promise((r) => setTimeout(r, 600));
       }
       toast.success("Escalação salva com sucesso!", {
-        description: `${formation} · ${mentality} · ${tactics.length} instruções táticas`,
+        description: `${formation} · ${mentality}`,
       });
     } catch {
       toast.error("Erro ao salvar a escalação.");
@@ -786,24 +837,31 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
       </div>
       <div className="space-y-2.5 mb-4">
         {[
-          { label: "Goleiro", value: stats.gkSkill, color: "from-yellow-500 to-yellow-400" },
-          { label: "Defesa", value: stats.defSkill, color: "from-blue-600 to-sky-400" },
-          { label: "Meio", value: stats.midSkill, color: "from-emerald-600 to-teal-400" },
-          { label: "Ataque", value: stats.attSkill, color: "from-rose-600 to-orange-400" },
-        ].map(({ label, value, color }) => (
-          <div key={label}>
-            <div className="flex justify-between text-[10px] mb-1">
-              <span className="text-muted-foreground font-medium">{label}</span>
-              <span className="font-black text-foreground tabular-nums">{value || "—"}</span>
+          { label: "Goleiro", value: stats.gkSkill },
+          { label: "Defesa", value: stats.defSkill },
+          { label: "Meio", value: stats.midSkill },
+          { label: "Ataque", value: stats.attSkill },
+        ].map(({ label, value }) => {
+          // Gradiente vermelho (pior) -> amarelo (bom), proporcional ao value (0-100)
+          const v = Math.max(0, Math.min(100, value));
+          // hue 0 (vermelho) -> 50 (amarelo)
+          const hue = Math.round((v / 100) * 50);
+          const barColor = `hsl(${hue}, 85%, 50%)`;
+          return (
+            <div key={label}>
+              <div className="flex justify-between text-[10px] mb-1">
+                <span className="text-muted-foreground font-medium">{label}</span>
+                <span className="font-black text-foreground tabular-nums">{value || "—"}</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-secondary/60 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${v}%`, backgroundColor: barColor }}
+                />
+              </div>
             </div>
-            <div className="h-1.5 rounded-full bg-secondary/60 overflow-hidden">
-              <div
-                className={`h-full rounded-full bg-gradient-to-r ${color} transition-all duration-700`}
-                style={{ width: `${Math.min(value, 100)}%` }}
-              />
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <div className="grid grid-cols-3 gap-2">
         {[
@@ -841,7 +899,7 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
     <Card className="p-4 bg-gradient-card border-border/50">
       <div className="flex items-center gap-2 mb-3">
         <Settings className="h-4 w-4 text-primary" />
-        <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mentalidade & Táticas</h3>
+        <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mentalidade</h3>
       </div>
       <div className="flex gap-1 bg-secondary/50 rounded-xl p-1 mb-1">
         {MENTALITIES.map((m) => (
@@ -854,28 +912,25 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
           </button>
         ))}
       </div>
-      <p className={`text-[9px] text-center mb-3 font-medium ${MENTALITY_META[mentality].color}`}>
+      <p className={`text-[9px] text-center font-medium ${MENTALITY_META[mentality].color}`}>
         {MENTALITY_META[mentality].desc}
       </p>
-      <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-        Instruções ({tactics.length})
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {TACTICS_OPTS.map(({ label, icon }) => {
-          const active = tactics.includes(label);
-          return (
-            <button
-              key={label}
-              onClick={() => canEdit && toggleTactic(label)}
-              className={`px-2 py-1 text-[9px] font-semibold rounded-full border transition-all duration-150 flex items-center gap-1 ${active ? "bg-primary/20 border-primary/60 text-primary shadow-sm" : "bg-secondary/40 border-border/40 text-muted-foreground hover:border-border/70 hover:text-foreground"} ${!canEdit ? "cursor-default" : "cursor-pointer"}`}
-            >
-              {active && <CheckCircle2 className="h-2.5 w-2.5" />}
-              <span>{icon}</span> {label}
-            </button>
-          );
-        })}
-      </div>
     </Card>
+  );
+
+  // ─── BANCO ────────────────────────────────────────────────────────────────
+  const POS_ORDER: Record<string, number> = {
+    GOL: 0, ZAG: 1, LD: 2, LE: 3, VOL: 4, MC: 5, MEI: 6, PD: 7, PE: 8, SA: 9, ATA: 10,
+  };
+  const benchByPosition = useMemo(
+    () =>
+      [...bench].sort((a, b) => {
+        const ao = POS_ORDER[(a.position || "").toUpperCase()] ?? 99;
+        const bo = POS_ORDER[(b.position || "").toUpperCase()] ?? 99;
+        if (ao !== bo) return ao - bo;
+        return (b.habilidade ?? 0) - (a.habilidade ?? 0);
+      }),
+    [bench],
   );
 
   // ─── BANCO ────────────────────────────────────────────────────────────────
@@ -925,10 +980,10 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
           className="overflow-y-auto space-y-0.5 flex-1 pr-0.5"
           style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--border)) transparent" }}
         >
-          {bench.length === 0 ? (
+          {benchByPosition.length === 0 ? (
             <p className="text-center text-muted-foreground text-xs py-6">Todos em campo.</p>
           ) : (
-            bench.map((p) => {
+            benchByPosition.map((p) => {
               const ps = getPosStyle(p.position);
               const rl = ratingLabel(p.habilidade ?? 0);
               return (
@@ -1044,7 +1099,10 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
       {/* ── Layout principal ── */}
       <div className="flex flex-col lg:flex-row gap-4">
         <div className={`w-full lg:w-[56%] ${mobileTab !== "pitch" ? "hidden md:block" : ""}`}>{renderPitch()}</div>
-        <div className={`flex-1 flex flex-col gap-3 min-w-0 ${mobileTab === "pitch" ? "hidden md:flex" : "flex"}`}>
+        <div
+          className={`flex-1 flex flex-col gap-3 min-w-0 min-h-0 ${mobileTab === "pitch" ? "hidden md:flex" : "flex"}`}
+          style={pitchHeight ? { maxHeight: `${pitchHeight}px` } : undefined}
+        >
           <div className={mobileTab === "bench" ? "hidden md:block" : ""}>{renderAnalysis()}</div>
           <div className={mobileTab === "bench" ? "hidden md:block" : ""}>{renderTactics()}</div>
           <div className={`flex-1 flex flex-col min-h-0 ${mobileTab === "stats" ? "hidden md:flex" : "flex"}`}>

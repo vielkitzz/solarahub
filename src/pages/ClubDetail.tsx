@@ -476,7 +476,19 @@ const ClubDetail = () => {
         </TabsContent>
 
         <TabsContent value="escalacao" className="mt-4">
-          <LineupManager players={players} club={club} canEdit={canEdit} />
+          <LineupManager
+            players={players}
+            club={club}
+            canEdit={canEdit}
+            initialLineup={(club as any)?.lineup ?? null}
+            onSave={async (data) => {
+              const { error } = await supabase
+                .from("clubs")
+                .update({ lineup: data } as any)
+                .eq("id", club.id);
+              if (error) throw error;
+            }}
+          />
         </TabsContent>
 
         {canEdit && (
