@@ -984,101 +984,127 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
   );
 
   // ─── BANCO ────────────────────────────────────────────────────────────────
-  const renderBench = () => (
-    <Card className="p-4 bg-gradient-card border-border/50 flex-1 overflow-hidden flex flex-col">
-      <div className="flex items-center justify-between mb-3 shrink-0">
-        <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-primary" />
-          <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-            Banco <span className="text-foreground">({bench.length})</span>
-          </h3>
-        </div>
-        {subHistory.length > 0 && (
-          <button
-            onClick={() => setShowHistory((v) => !v)}
-            className="flex items-center gap-1 text-[9px] text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <History className="h-3 w-3" /> {subHistory.length} subs
-          </button>
-        )}
-      </div>
-      {showHistory ? (
-        <div className="space-y-1 overflow-y-auto flex-1">
-          {subHistory.map((s, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-2 p-2 rounded-lg bg-secondary/20 border border-border/30 text-[10px]"
+  const renderBench = () => {
+    const dropProps = canEdit
+      ? {
+          onDragOver: (e: React.DragEvent) => e.preventDefault(),
+          onDrop: (e: React.DragEvent) => {
+            e.preventDefault();
+            const sourceKey = e.dataTransfer.getData("text/plain");
+            if (!sourceKey || !pitchPlayers[sourceKey]) return;
+            const playerOut = pitchPlayers[sourceKey];
+            setPitchPlayers((prev) => {
+              const next = { ...prev };
+              delete next[sourceKey];
+              return next;
+            });
+            setBench((prev) => {
+              const already = prev.find((p) => p.id === playerOut.id);
+              if (already) return prev;
+              return [...prev, playerOut].sort((a, b) => (b.habilidade ?? 0) - (a.habilidade ?? 0));
+            });
+            toast.success(`${playerOut.name} movido para o banco`);
+          },
+        }
+      : {};
+
+    return (
+      <Card className="p-4 bg-gradient-card border-border/50 flex-1 overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between mb-3 shrink-0">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-primary" />
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              Banco <span className="text-foreground">({bench.length})</span>
+            </h3>
+          </div>
+          {subHistory.length > 0 && (
+            <button
+              onClick={() => setShowHistory((v) => !v)}
+              className="flex items-center gap-1 text-[9px] text-muted-foreground hover:text-foreground transition-colors"
             >
-              <ArrowRightLeft className="h-3 w-3 text-primary shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="text-emerald-400 font-bold truncate">{s.inn.name}</span>
-                <span className="text-muted-foreground"> ↔ </span>
-                <span className="text-rose-400 font-bold truncate">{s.out.name}</span>
-              </div>
-              <span className="text-muted-foreground shrink-0">{s.time}</span>
-            </div>
-          ))}
-          <button
-            onClick={() => setShowHistory(false)}
-            className="w-full text-[9px] text-muted-foreground hover:text-foreground py-1 transition-colors"
-          >
-            ← Voltar ao banco
-          </button>
-        </div>
-      ) : (
-        <div
-          className="overflow-y-auto space-y-0.5 flex-1 pr-0.5"
-          style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--border)) transparent" }}
-        >
-          {benchByPosition.length === 0 ? (
-            <p className="text-center text-muted-foreground text-xs py-6">Todos em campo.</p>
-          ) : (
-            benchByPosition.map((p) => {
-              const ps = getPosStyle(p.position);
-              const rl = ratingLabel(p.habilidade ?? 0);
-              return (
-                <div
-                  key={p.id}
-                  draggable={canEdit}
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData("bench-player-id", p.id);
-                    setTimeout(() => setIsDragging(true), 10);
-                  }}
-                  onDragEnd={() => {
-                    setIsDragging(false);
-                    setDropTarget(null);
-                  }}
-                  className={`flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-primary/5 border border-transparent hover:border-border/40 transition-colors group ${canEdit ? "cursor-grab active:cursor-grabbing" : ""}`}
-                >
-                  <ShirtIcon
-                    clubId={club?.id}
-                    number={p.shirt_number}
-                    size="w-8 h-8"
-                    isGK={p.position === "GOL"}
-                    numberSize="clamp(12px, 60%, 28px)"
-                    numberPaddingBottom="13%"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-semibold text-foreground truncate leading-tight">{p.name}</div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className={`text-[8px] font-bold px-1 py-0.5 rounded border ${ps.badge}`}>
-                        {p.position}
-                      </span>
-                      <span className="text-[9px] text-muted-foreground">{p.age ? `${p.age}a` : "—"}</span>
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-xs font-black text-primary tabular-nums">{p.habilidade ?? "—"}</div>
-                    <div className={`text-[8px] font-medium ${rl.color}`}>{rl.label}</div>
-                  </div>
-                </div>
-              );
-            })
+              <History className="h-3 w-3" /> {subHistory.length} subs
+            </button>
           )}
         </div>
-      )}
-    </Card>
-  );
+        {showHistory ? (
+          <div className="space-y-1 overflow-y-auto flex-1">
+            {subHistory.map((s, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-2 p-2 rounded-lg bg-secondary/20 border border-border/30 text-[10px]"
+              >
+                <ArrowRightLeft className="h-3 w-3 text-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <span className="text-emerald-400 font-bold truncate">{s.inn.name}</span>
+                  <span className="text-muted-foreground"> ↔ </span>
+                  <span className="text-rose-400 font-bold truncate">{s.out.name}</span>
+                </div>
+                <span className="text-muted-foreground shrink-0">{s.time}</span>
+              </div>
+            ))}
+            <button
+              onClick={() => setShowHistory(false)}
+              className="w-full text-[9px] text-muted-foreground hover:text-foreground py-1 transition-colors"
+            >
+              ← Voltar ao banco
+            </button>
+          </div>
+        ) : (
+          <div
+            className="overflow-y-auto space-y-0.5 flex-1 pr-0.5"
+            style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--border)) transparent" }}
+            {...dropProps}
+          >
+            {benchByPosition.length === 0 ? (
+              <p className="text-center text-muted-foreground text-xs py-6">Todos em campo.</p>
+            ) : (
+              benchByPosition.map((p) => {
+                const ps = getPosStyle(p.position);
+                const rl = ratingLabel(p.habilidade ?? 0);
+                return (
+                  <div
+                    key={p.id}
+                    draggable={canEdit}
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData("bench-player-id", p.id);
+                      setTimeout(() => setIsDragging(true), 10);
+                    }}
+                    onDragEnd={() => {
+                      setIsDragging(false);
+                      setDropTarget(null);
+                    }}
+                    className={`flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-primary/5 border border-transparent hover:border-border/40 transition-colors group ${canEdit ? "cursor-grab active:cursor-grabbing" : ""}`}
+                  >
+                    <ShirtIcon
+                      clubId={club?.id}
+                      number={p.shirt_number}
+                      size="w-8 h-8"
+                      isGK={p.position === "GOL"}
+                      numberSize="clamp(12px, 60%, 28px)"
+                      numberPaddingBottom="13%"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-semibold text-foreground truncate leading-tight">{p.name}</div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className={`text-[8px] font-bold px-1 py-0.5 rounded border ${ps.badge}`}>
+                          {p.position}
+                        </span>
+                        <span className="text-[9px] text-muted-foreground">{p.age ? `${p.age}a` : "—"}</span>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-xs font-black text-primary tabular-nums">{p.habilidade ?? "—"}</div>
+                      <div className={`text-[8px] font-medium ${rl.color}`}>{rl.label}</div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+      </Card>
+    );
+  };
 
   // ─────────────────────────────────────────────────────────────────────────────
   return (
