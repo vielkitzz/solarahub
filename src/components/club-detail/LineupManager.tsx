@@ -898,7 +898,7 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
     <Card className="p-4 bg-gradient-card border-border/50">
       <div className="flex items-center gap-2 mb-3">
         <Settings className="h-4 w-4 text-primary" />
-        <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mentalidade & Táticas</h3>
+        <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mentalidade</h3>
       </div>
       <div className="flex gap-1 bg-secondary/50 rounded-xl p-1 mb-1">
         {MENTALITIES.map((m) => (
@@ -911,28 +911,25 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
           </button>
         ))}
       </div>
-      <p className={`text-[9px] text-center mb-3 font-medium ${MENTALITY_META[mentality].color}`}>
+      <p className={`text-[9px] text-center font-medium ${MENTALITY_META[mentality].color}`}>
         {MENTALITY_META[mentality].desc}
       </p>
-      <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-        Instruções ({tactics.length})
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {TACTICS_OPTS.map(({ label, icon }) => {
-          const active = tactics.includes(label);
-          return (
-            <button
-              key={label}
-              onClick={() => canEdit && toggleTactic(label)}
-              className={`px-2 py-1 text-[9px] font-semibold rounded-full border transition-all duration-150 flex items-center gap-1 ${active ? "bg-primary/20 border-primary/60 text-primary shadow-sm" : "bg-secondary/40 border-border/40 text-muted-foreground hover:border-border/70 hover:text-foreground"} ${!canEdit ? "cursor-default" : "cursor-pointer"}`}
-            >
-              {active && <CheckCircle2 className="h-2.5 w-2.5" />}
-              <span>{icon}</span> {label}
-            </button>
-          );
-        })}
-      </div>
     </Card>
+  );
+
+  // ─── BANCO ────────────────────────────────────────────────────────────────
+  const POS_ORDER: Record<string, number> = {
+    GOL: 0, ZAG: 1, LD: 2, LE: 3, VOL: 4, MC: 5, MEI: 6, PD: 7, PE: 8, SA: 9, ATA: 10,
+  };
+  const benchByPosition = useMemo(
+    () =>
+      [...bench].sort((a, b) => {
+        const ao = POS_ORDER[(a.position || "").toUpperCase()] ?? 99;
+        const bo = POS_ORDER[(b.position || "").toUpperCase()] ?? 99;
+        if (ao !== bo) return ao - bo;
+        return (b.habilidade ?? 0) - (a.habilidade ?? 0);
+      }),
+    [bench],
   );
 
   // ─── BANCO ────────────────────────────────────────────────────────────────
