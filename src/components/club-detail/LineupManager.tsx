@@ -528,13 +528,18 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
     if (!canEdit) return;
     setIsSaving(true);
     try {
+      const pitchIds: Record<string, string> = {};
+      Object.entries(pitchPlayers).forEach(([cell, p]) => {
+        if (p) pitchIds[cell] = p.id;
+      });
+      const benchIds = bench.map((p) => p.id);
       if (onSave) {
-        await onSave({ pitchPlayers, bench, formation, tactics, mentality });
+        await onSave({ pitchIds, benchIds, formation, mentality });
       } else {
-        await new Promise((r) => setTimeout(r, 900));
+        await new Promise((r) => setTimeout(r, 600));
       }
       toast.success("Escalação salva com sucesso!", {
-        description: `${formation} · ${mentality} · ${tactics.length} instruções táticas`,
+        description: `${formation} · ${mentality}`,
       });
     } catch {
       toast.error("Erro ao salvar a escalação.");
