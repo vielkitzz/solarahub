@@ -1098,7 +1098,10 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
       {/* ── Layout principal ── */}
       <div className="flex flex-col lg:flex-row gap-4">
         <div className={`w-full lg:w-[56%] ${mobileTab !== "pitch" ? "hidden md:block" : ""}`}>{renderPitch()}</div>
-        <div className={`flex-1 flex flex-col gap-3 min-w-0 ${mobileTab === "pitch" ? "hidden md:flex" : "flex"}`}>
+        <div
+          className={`flex-1 flex flex-col gap-3 min-w-0 min-h-0 ${mobileTab === "pitch" ? "hidden md:flex" : "flex"}`}
+          style={pitchHeight ? { maxHeight: `${pitchHeight}px` } : undefined}
+        >
           <div className={mobileTab === "bench" ? "hidden md:block" : ""}>{renderAnalysis()}</div>
           <div className={mobileTab === "bench" ? "hidden md:block" : ""}>{renderTactics()}</div>
           <div className={`flex-1 flex flex-col min-h-0 ${mobileTab === "stats" ? "hidden md:flex" : "flex"}`}>
