@@ -836,24 +836,31 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
       </div>
       <div className="space-y-2.5 mb-4">
         {[
-          { label: "Goleiro", value: stats.gkSkill, color: "from-yellow-500 to-yellow-400" },
-          { label: "Defesa", value: stats.defSkill, color: "from-blue-600 to-sky-400" },
-          { label: "Meio", value: stats.midSkill, color: "from-emerald-600 to-teal-400" },
-          { label: "Ataque", value: stats.attSkill, color: "from-rose-600 to-orange-400" },
-        ].map(({ label, value, color }) => (
-          <div key={label}>
-            <div className="flex justify-between text-[10px] mb-1">
-              <span className="text-muted-foreground font-medium">{label}</span>
-              <span className="font-black text-foreground tabular-nums">{value || "—"}</span>
+          { label: "Goleiro", value: stats.gkSkill },
+          { label: "Defesa", value: stats.defSkill },
+          { label: "Meio", value: stats.midSkill },
+          { label: "Ataque", value: stats.attSkill },
+        ].map(({ label, value }) => {
+          // Gradiente vermelho (pior) -> amarelo (bom), proporcional ao value (0-100)
+          const v = Math.max(0, Math.min(100, value));
+          // hue 0 (vermelho) -> 50 (amarelo)
+          const hue = Math.round((v / 100) * 50);
+          const barColor = `hsl(${hue}, 85%, 50%)`;
+          return (
+            <div key={label}>
+              <div className="flex justify-between text-[10px] mb-1">
+                <span className="text-muted-foreground font-medium">{label}</span>
+                <span className="font-black text-foreground tabular-nums">{value || "—"}</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-secondary/60 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${v}%`, backgroundColor: barColor }}
+                />
+              </div>
             </div>
-            <div className="h-1.5 rounded-full bg-secondary/60 overflow-hidden">
-              <div
-                className={`h-full rounded-full bg-gradient-to-r ${color} transition-all duration-700`}
-                style={{ width: `${Math.min(value, 100)}%` }}
-              />
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <div className="grid grid-cols-3 gap-2">
         {[
