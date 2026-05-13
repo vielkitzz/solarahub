@@ -4,11 +4,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ChevronsUp, ChevronsDown, Equal, LineChart } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 
-export const StatCard = ({ icon: Icon, label, value, positive }: any) => (
+export const StatCard = ({ icon: Icon, label, value, positive, iconClassName }: any) => (
   <Card className="p-4 bg-gradient-card border-border/50">
     <div className="flex items-center gap-3">
       <div
-        className={`h-9 w-9 rounded-lg flex items-center justify-center ${positive ? "bg-success/20 text-success" : "bg-primary/10 text-primary"}`}
+        className={`h-9 w-9 rounded-lg flex items-center justify-center ${iconClassName ? "bg-destructive/20 " + iconClassName : positive ? "bg-success/20 text-success" : "bg-primary/10 text-primary"}`}
       >
         <Icon className="h-4 w-4" />
       </div>
