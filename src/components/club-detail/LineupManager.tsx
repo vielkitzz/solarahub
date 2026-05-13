@@ -362,9 +362,7 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
   const [pitchPlayers, setPitchPlayers] = useState<Record<string, Player>>({});
   const [bench, setBench] = useState<Player[]>([]);
   const [tactics, setTactics] = useState<string[]>([]);
-  const [mentality, setMentality] = useState<Mentality>(
-    (initialLineup?.mentality as Mentality) || "Equilibrado",
-  );
+  const [mentality, setMentality] = useState<Mentality>((initialLineup?.mentality as Mentality) || "Equilibrado");
   const [selectedCell, setSelectedCell] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -832,7 +830,7 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
           <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Análise do Time</h3>
         </div>
         <div className="text-[10px] text-muted-foreground font-mono">
-          QMG <span className="text-primary font-black text-xs">{stats.avgSkill}</span>
+          Overall Médio <span className="text-primary font-black text-xs">{stats.avgSkill}</span>
         </div>
       </div>
       <div className="space-y-2.5 mb-4">
@@ -920,7 +918,17 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
 
   // ─── BANCO ────────────────────────────────────────────────────────────────
   const POS_ORDER: Record<string, number> = {
-    GOL: 0, ZAG: 1, LD: 2, LE: 3, VOL: 4, MC: 5, MEI: 6, PD: 7, PE: 8, SA: 9, ATA: 10,
+    GOL: 0,
+    ZAG: 1,
+    LD: 2,
+    LE: 3,
+    VOL: 4,
+    MC: 5,
+    MEI: 6,
+    PD: 7,
+    PE: 8,
+    SA: 9,
+    ATA: 10,
   };
   const benchByPosition = useMemo(
     () =>
