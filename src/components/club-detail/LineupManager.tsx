@@ -474,7 +474,43 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
     e.preventDefault();
     setIsDragging(false);
     setDropTarget(null);
+
+    const benchPlayerId = e.dataTransfer.getData("bench-player-id");
     const sourceKey = e.dataTransfer.getData("text/plain");
+
+    // Drag do banco para o campo
+    if (benchPlayerId) {
+      const benchIdx = bench.findIndex((p) => p.id === benchPlayerId);
+      if (benchIdx === -1) return;
+      const benchIn = bench[benchIdx];
+      const starterOut = pitchPlayers[targetKey];
+
+      const newPitch = { ...pitchPlayers, [targetKey]: benchIn };
+      const newBench = [...bench];
+      if (starterOut) newBench[benchIdx] = starterOut;
+      else newBench.splice(benchIdx, 1);
+
+      setPitchPlayers(newPitch);
+      setBench(newBench.sort((a, b) => (b.habilidade ?? 0) - (a.habilidade ?? 0)));
+
+      if (starterOut) {
+        setSubHistory((prev) => [
+          {
+            out: starterOut,
+            inn: benchIn,
+            cell: targetKey,
+            time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+          },
+          ...prev,
+        ]);
+        toast.success(`${benchIn.name} entrou, ${starterOut.name} saiu`);
+      } else {
+        toast.success(`${benchIn.name} escalado`);
+      }
+      return;
+    }
+
+    // Drag de célula para célula (lógica original)
     if (!sourceKey || sourceKey === targetKey) return;
     if (!pitchPlayers[sourceKey]) return;
 
@@ -997,7 +1033,16 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
               return (
                 <div
                   key={p.id}
-                  className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-primary/5 border border-transparent hover:border-border/40 transition-colors group"
+                  draggable={canEdit}
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("bench-player-id", p.id);
+                    setTimeout(() => setIsDragging(true), 10);
+                  }}
+                  onDragEnd={() => {
+                    setIsDragging(false);
+                    setDropTarget(null);
+                  }}
+                  className={`flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-primary/5 border border-transparent hover:border-border/40 transition-colors group ${canEdit ? "cursor-grab active:cursor-grabbing" : ""}`}
                 >
                   <ShirtIcon
                     clubId={club?.id}
