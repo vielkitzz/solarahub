@@ -384,7 +384,8 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
   useEffect(() => {
     if (!pitchRef.current) return;
     const ro = new ResizeObserver(([entry]) => {
-      setPitchHeight(entry.contentRect.height);
+      const h = entry.contentRect.height;
+      if (h > 0) setPitchHeight(h);
     });
     ro.observe(pitchRef.current);
     return () => ro.disconnect();
