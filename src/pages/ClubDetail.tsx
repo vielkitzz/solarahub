@@ -418,14 +418,24 @@ const ClubDetail = () => {
 
       <div className="stat-grid">
         <StatCard icon={Wallet} label="Entradas / mês" value={formatCurrency(entradasMensais)} positive />
-        <StatCard icon={TrendingDown} label="Saídas / mês" value={formatCurrency(saidasMensais)} />
+        <StatCard
+          icon={TrendingDown}
+          label="Saídas / mês"
+          value={formatCurrency(saidasMensais)}
+          iconClassName="text-destructive"
+        />
         <StatCard
           icon={TrendingUp}
           label="Lucro/Prejuízo previsto"
           value={formatCurrency(saldoPrevisto)}
           positive={saldoPrevisto >= 0}
         />
-        <StatCard icon={Users} label="Folha salarial" value={formatCurrency(folhaSalarial)} />
+        <StatCard
+          icon={Users}
+          label="Folha salarial"
+          value={formatCurrency(folhaSalarial)}
+          iconClassName="text-destructive"
+        />
       </div>
 
       <Tabs
