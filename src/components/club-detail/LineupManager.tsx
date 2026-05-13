@@ -491,6 +491,13 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
       const benchIn = bench[benchIdx];
       const starterOut = pitchPlayers[targetKey];
 
+      // Impede mais de 11 se a célula alvo está vazia
+      const currentStarters = Object.values(pitchPlayers).filter(Boolean).length;
+      if (!starterOut && currentStarters >= 11) {
+        toast.error("Já há 11 jogadores em campo.");
+        return;
+      }
+
       const newPitch = { ...pitchPlayers, [targetKey]: benchIn };
       const newBench = [...bench];
       if (starterOut) newBench[benchIdx] = starterOut;
