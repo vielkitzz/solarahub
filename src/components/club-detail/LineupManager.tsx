@@ -357,12 +357,14 @@ function PitchSVG() {
 }
 
 // ─── Componente principal ─────────────────────────────────────────────────────
-export function LineupManager({ players, club, canEdit = false, onSave }: LineupManagerProps) {
-  const [formation, setFormation] = useState("4-3-3");
+export function LineupManager({ players, club, canEdit = false, initialLineup, onSave }: LineupManagerProps) {
+  const [formation, setFormation] = useState(initialLineup?.formation || "4-3-3");
   const [pitchPlayers, setPitchPlayers] = useState<Record<string, Player>>({});
   const [bench, setBench] = useState<Player[]>([]);
-  const [tactics, setTactics] = useState<string[]>(["Posse de bola", "Saída pelo goleiro"]);
-  const [mentality, setMentality] = useState<Mentality>("Equilibrado");
+  const [tactics, setTactics] = useState<string[]>([]);
+  const [mentality, setMentality] = useState<Mentality>(
+    (initialLineup?.mentality as Mentality) || "Equilibrado",
+  );
   const [selectedCell, setSelectedCell] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -372,9 +374,21 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
   const [isSaving, setIsSaving] = useState(false);
   const [subHistory, setSubHistory] = useState<SubRecord[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [pitchHeight, setPitchHeight] = useState<number | null>(null);
+  const hydrated = useRef(false);
 
   const popoverRef = useRef<HTMLDivElement>(null);
   const pitchRef = useRef<HTMLDivElement>(null);
+
+  // Mede altura do campo p/ alinhar a coluna direita (banco)
+  useEffect(() => {
+    if (!pitchRef.current) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setPitchHeight(entry.contentRect.height);
+    });
+    ro.observe(pitchRef.current);
+    return () => ro.disconnect();
+  }, []);
 
   // ── Auto-pick ───────────────────────────────────────────────────────────────
   const autoPickFormation = useCallback((formId: string, pool: Player[]) => {
@@ -411,8 +425,34 @@ export function LineupManager({ players, club, canEdit = false, onSave }: Lineup
   }, []);
 
   useEffect(() => {
-    autoPickFormation("4-3-3", players);
-  }, [players, autoPickFormation]);
+    if (!players?.length) return;
+    if (!hydrated.current && initialLineup?.pitchIds) {
+      const byId = new Map(players.map((p) => [p.id, p]));
+      const newPitch: Record<string, Player> = {};
+      Object.entries(initialLineup.pitchIds).forEach(([cell, pid]) => {
+        const p = byId.get(pid);
+        if (p) newPitch[cell] = p;
+      });
+      const usedIds = new Set(Object.values(newPitch).map((p) => p.id));
+      const benchOrdered: Player[] = [];
+      (initialLineup.benchIds || []).forEach((pid) => {
+        const p = byId.get(pid);
+        if (p && !usedIds.has(p.id)) {
+          benchOrdered.push(p);
+          usedIds.add(p.id);
+        }
+      });
+      players.forEach((p) => {
+        if (!usedIds.has(p.id)) benchOrdered.push(p);
+      });
+      setPitchPlayers(newPitch);
+      setBench(benchOrdered);
+      hydrated.current = true;
+    } else if (!hydrated.current) {
+      autoPickFormation(initialLineup?.formation || "4-3-3", players);
+      hydrated.current = true;
+    }
+  }, [players, autoPickFormation, initialLineup]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
