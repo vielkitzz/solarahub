@@ -148,55 +148,6 @@ function ratingLabel(skill: number) {
   return { label: "Cria", color: "text-slate-400" };
 }
 
-// ─── Lógica de Punição de Overall por Adaptação ──────────────────────────────
-function getAdaptation(player: Player | undefined, cellKey: string, formationRole?: string) {
-  if (!player)
-    return {
-      loss: 0,
-      color: "text-emerald-400",
-      badge: "bg-emerald-500/20 border-emerald-500/50 text-emerald-400",
-      bg: "bg-emerald-500/10",
-    };
-
-  const playerPos = (player.position || "").toUpperCase();
-  const rawLabel = GRID_LABELS[cellKey] || formationRole || "";
-
-  // As roles alvo baseadas na imagem e na formação escolhida
-  const targetRoles = Array.from(new Set([...rawLabel.split("/").map((r) => r.trim()), formationRole].filter(Boolean)));
-
-  // Verde: Perfeitamente Adaptado
-  if (targetRoles.includes(playerPos) || targetRoles.length === 0) {
-    return {
-      loss: 0,
-      color: "text-emerald-400",
-      badge: "bg-emerald-500/20 border-emerald-500/50 text-emerald-400",
-      bg: "bg-emerald-500/10",
-    };
-  }
-
-  // Amarelo: Improvisado mas possui familiaridade com o setor
-  const playerCompat = POS_COMPAT[playerPos] || [playerPos];
-  const isCompatible = targetRoles.some(
-    (role) => playerCompat.includes(role) || (POS_COMPAT[role] || []).includes(playerPos),
-  );
-
-  if (isCompatible) {
-    return {
-      loss: 5,
-      color: "text-amber-400",
-      badge: "bg-amber-500/20 border-amber-500/50 text-amber-400",
-      bg: "bg-amber-500/15",
-    };
-  }
-
-  // Vermelho: Fora de posição
-  return {
-    loss: 15,
-    color: "text-rose-400",
-    badge: "bg-rose-500/20 border-rose-500/50 text-rose-400",
-    bg: "bg-rose-500/15",
-  };
-}
 
 // ─── Campo SVG ────────────────────────────────────────────────────────────────
 function PitchSVG() {
