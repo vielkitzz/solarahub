@@ -750,28 +750,43 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
   );
 
   // ─── TÁTICAS ──────────────────────────────────────────────────────────────
-  const renderTactics = () => (
-    <Card className="p-4 bg-gradient-card border-border/50">
-      <div className="flex items-center gap-2 mb-3">
-        <Settings className="h-4 w-4 text-primary" />
-        <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mentalidade</h3>
-      </div>
+  const renderToggleRow = <T extends string>(
+    title: string,
+    options: readonly T[],
+    value: T,
+    setValue: (v: T) => void,
+    meta: Record<T, { color: string; desc: string }>,
+  ) => (
+    <div>
+      <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">{title}</h4>
       <div className="flex gap-1 bg-secondary/50 rounded-xl p-1 mb-1">
-        {MENTALITIES.map((m) => (
+        {options.map((opt) => (
           <button
-            key={m}
-            onClick={() => canEdit && setMentality(m)}
-            className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all duration-200 ${mentality === m ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"} ${!canEdit ? "cursor-default" : "cursor-pointer"}`}
+            key={opt}
+            onClick={() => canEdit && setValue(opt)}
+            className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all duration-200 ${value === opt ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"} ${!canEdit ? "cursor-default" : "cursor-pointer"}`}
           >
-            {m}
+            {opt}
           </button>
         ))}
       </div>
-      <p className={`text-[9px] text-center font-medium ${MENTALITY_META[mentality].color}`}>
-        {MENTALITY_META[mentality].desc}
-      </p>
+      <p className={`text-[9px] text-center font-medium ${meta[value].color}`}>{meta[value].desc}</p>
+    </div>
+  );
+
+  const renderTactics = () => (
+    <Card className="p-4 bg-gradient-card border-border/50 space-y-3">
+      <div className="flex items-center gap-2">
+        <Settings className="h-4 w-4 text-primary" />
+        <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Tática</h3>
+      </div>
+      {renderToggleRow("Mentalidade", MENTALITIES, mentality, setMentality, MENTALITY_META)}
+      {renderToggleRow("Estilo de Jogo", PLAY_STYLES, playStyle, setPlayStyle, PLAY_STYLE_META)}
+      {renderToggleRow("Pressão", PRESSINGS, pressing, setPressing, PRESSING_META)}
+      {renderToggleRow("Bola Aérea", AERIALS, aerial, setAerial, AERIAL_META)}
     </Card>
   );
+
 
   // ─── BANCO ────────────────────────────────────────────────────────────────
   const POS_ORDER: Record<string, number> = {
