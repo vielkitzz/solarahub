@@ -30,18 +30,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { ShirtIcon } from "@/components/club-detail/ShirtIcon";
 import { createPortal } from "react-dom";
-
-// ─── Tipos ────────────────────────────────────────────────────────────────────
-interface Player {
-  id: string;
-  name: string;
-  position: string;
-  habilidade?: number;
-  age?: number;
-  nationality?: string;
-  shirt_number?: number;
-  market_value?: number;
-}
+import {
+  FORMATIONS,
+  POS_SECTOR,
+  GRID_LABELS,
+  getAdaptation,
+  PLAY_STYLES,
+  PRESSINGS,
+  AERIALS,
+  PLAY_STYLE_META,
+  PRESSING_META,
+  AERIAL_META,
+  type PlayStyle,
+  type Pressing,
+  type Aerial,
+  type LineupPlayer as Player,
+} from "@/components/club-detail/lineup-utils";
 
 interface LineupManagerProps {
   players: Player[];
@@ -52,12 +56,18 @@ interface LineupManagerProps {
     mentality?: string;
     pitchIds?: Record<string, string>;
     benchIds?: string[];
+    playStyle?: PlayStyle;
+    pressing?: Pressing;
+    aerial?: Aerial;
   } | null;
   onSave?: (data: {
     pitchIds: Record<string, string>;
     benchIds: string[];
     formation: string;
     mentality: string;
+    playStyle: PlayStyle;
+    pressing: Pressing;
+    aerial: Aerial;
   }) => Promise<void> | void;
 }
 
