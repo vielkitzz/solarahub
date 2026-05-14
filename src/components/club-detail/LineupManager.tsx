@@ -390,7 +390,7 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
       });
       const benchIds = bench.map((p) => p.id);
       if (onSave) {
-        await onSave({ pitchIds, benchIds, formation, mentality });
+        await onSave({ pitchIds, benchIds, formation, mentality, playStyle, pressing, aerial });
       } else {
         await new Promise((r) => setTimeout(r, 600));
       }
