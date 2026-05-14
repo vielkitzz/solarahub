@@ -156,6 +156,10 @@ export type Database = {
           jogos_por_temporada: number
           latitude: number | null
           lineup: Json | null
+          lineup_bench_ids: Json | null
+          lineup_formation: string | null
+          lineup_mentality: string | null
+          lineup_pitch_ids: Json | null
           longitude: number | null
           name: string
           nivel_base: number
@@ -188,6 +192,10 @@ export type Database = {
           jogos_por_temporada?: number
           latitude?: number | null
           lineup?: Json | null
+          lineup_bench_ids?: Json | null
+          lineup_formation?: string | null
+          lineup_mentality?: string | null
+          lineup_pitch_ids?: Json | null
           longitude?: number | null
           name: string
           nivel_base?: number
@@ -220,6 +228,10 @@ export type Database = {
           jogos_por_temporada?: number
           latitude?: number | null
           lineup?: Json | null
+          lineup_bench_ids?: Json | null
+          lineup_formation?: string | null
+          lineup_mentality?: string | null
+          lineup_pitch_ids?: Json | null
           longitude?: number | null
           name?: string
           nivel_base?: number

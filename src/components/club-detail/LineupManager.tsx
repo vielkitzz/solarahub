@@ -30,18 +30,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { ShirtIcon } from "@/components/club-detail/ShirtIcon";
 import { createPortal } from "react-dom";
-
-// ─── Tipos ────────────────────────────────────────────────────────────────────
-interface Player {
-  id: string;
-  name: string;
-  position: string;
-  habilidade?: number;
-  age?: number;
-  nationality?: string;
-  shirt_number?: number;
-  market_value?: number;
-}
+import {
+  FORMATIONS,
+  POS_SECTOR,
+  GRID_LABELS,
+  getAdaptation,
+  PLAY_STYLES,
+  PRESSINGS,
+  AERIALS,
+  PLAY_STYLE_META,
+  PRESSING_META,
+  AERIAL_META,
+  type PlayStyle,
+  type Pressing,
+  type Aerial,
+  type LineupPlayer as Player,
+} from "@/components/club-detail/lineup-utils";
 
 interface LineupManagerProps {
   players: Player[];
@@ -52,12 +56,18 @@ interface LineupManagerProps {
     mentality?: string;
     pitchIds?: Record<string, string>;
     benchIds?: string[];
+    playStyle?: PlayStyle;
+    pressing?: Pressing;
+    aerial?: Aerial;
   } | null;
   onSave?: (data: {
     pitchIds: Record<string, string>;
     benchIds: string[];
     formation: string;
     mentality: string;
+    playStyle: PlayStyle;
+    pressing: Pressing;
+    aerial: Aerial;
   }) => Promise<void> | void;
 }
 
@@ -67,162 +77,6 @@ interface SubRecord {
   cell: string;
   time: string;
 }
-
-// ─── Constantes ───────────────────────────────────────────────────────────────
-const POS_SECTOR: Record<string, "GK" | "DEF" | "MID" | "ATT"> = {
-  GOL: "GK",
-  ZAG: "DEF",
-  LD: "DEF",
-  LE: "DEF",
-  VOL: "MID",
-  MC: "MID",
-  MEI: "MID",
-  PD: "ATT",
-  PE: "ATT",
-  SA: "ATT",
-  ATA: "ATT",
-};
-
-const POS_COMPAT: Record<string, string[]> = {
-  GOL: ["GOL"],
-  ZAG: ["ZAG", "VOL"],
-  LD: ["LD", "ZAG", "MC", "MD", "PD"],
-  LE: ["LE", "ZAG", "MC", "ME", "PE"],
-  VOL: ["VOL", "MC", "ZAG"],
-  MC: ["MC", "VOL", "MEI"],
-  MEI: ["MEI", "MC", "PE", "PD", "SA"],
-  PD: ["PD", "MEI", "ATA"],
-  PE: ["PE", "MEI", "ATA"],
-  SA: ["SA", "ATA", "PD", "PE", "MEI"],
-  ATA: ["ATA", "SA", "PD", "PE"],
-};
-
-// ─── Mapeamento do Grid conforme imagem ───────────────────────────────────────
-const GRID_LABELS: Record<string, string> = {
-  "0-1": "ATA",
-  "0-2": "ATA",
-  "0-3": "ATA",
-  "1-0": "PE",
-  "1-1": "ATA",
-  "1-2": "SA",
-  "1-3": "ATA",
-  "1-4": "PD",
-  "2-0": "PE/LE",
-  "2-1": "MEI",
-  "2-2": "MEI",
-  "2-3": "MEI",
-  "2-4": "PD/LD",
-  "3-0": "PE/LE",
-  "3-1": "MC",
-  "3-2": "MEI",
-  "3-3": "MC",
-  "3-4": "PD/LD",
-  "4-0": "LE",
-  "4-1": "VOL",
-  "4-2": "VOL",
-  "4-3": "VOL",
-  "4-4": "LD",
-  "5-0": "LE",
-  "5-1": "ZAG",
-  "5-2": "ZAG",
-  "5-3": "ZAG",
-  "5-4": "LD",
-  "6-2": "GOL",
-};
-
-const FORMATIONS: Record<string, Record<string, string>> = {
-  "4-3-3": {
-    "6-2": "GOL",
-    "5-0": "LE",
-    "5-1": "ZAG",
-    "5-3": "ZAG",
-    "5-4": "LD",
-    "3-1": "MC",
-    "4-2": "VOL",
-    "3-3": "MC",
-    "1-0": "PE",
-    "1-2": "ATA",
-    "1-4": "PD",
-  },
-  "4-4-2": {
-    "6-2": "GOL",
-    "5-0": "LE",
-    "5-1": "ZAG",
-    "5-3": "ZAG",
-    "5-4": "LD",
-    "3-0": "PE",
-    "3-1": "MC",
-    "3-3": "MC",
-    "3-4": "PD",
-    "1-1": "ATA",
-    "1-3": "ATA",
-  },
-  "4-2-3-1": {
-    "6-2": "GOL",
-    "5-0": "LE",
-    "5-1": "ZAG",
-    "5-3": "ZAG",
-    "5-4": "LD",
-    "4-1": "VOL",
-    "4-3": "VOL",
-    "2-0": "PE",
-    "2-2": "MEI",
-    "2-4": "PD",
-    "0-2": "ATA",
-  },
-  "3-5-2": {
-    "6-2": "GOL",
-    "5-1": "ZAG",
-    "5-2": "ZAG",
-    "5-3": "ZAG",
-    "3-0": "LE",
-    "4-2": "VOL",
-    "3-1": "MC",
-    "3-3": "MC",
-    "3-4": "LD",
-    "1-1": "ATA",
-    "1-3": "ATA",
-  },
-  "5-3-2": {
-    "6-2": "GOL",
-    "5-0": "LE",
-    "5-1": "ZAG",
-    "5-2": "ZAG",
-    "5-3": "ZAG",
-    "5-4": "LD",
-    "3-1": "MC",
-    "4-2": "VOL",
-    "3-3": "MC",
-    "1-1": "ATA",
-    "1-3": "ATA",
-  },
-  "3-4-3": {
-    "6-2": "GOL",
-    "5-1": "ZAG",
-    "5-2": "ZAG",
-    "5-3": "ZAG",
-    "3-0": "LE",
-    "3-1": "MC",
-    "3-3": "MC",
-    "3-4": "LD",
-    "1-0": "PE",
-    "1-2": "ATA",
-    "1-4": "PD",
-  },
-  "4-1-4-1": {
-    "6-2": "GOL",
-    "5-0": "LE",
-    "5-1": "ZAG",
-    "5-3": "ZAG",
-    "5-4": "LD",
-    "4-2": "VOL",
-    "2-0": "PE",
-    "2-1": "MC",
-    "2-3": "MC",
-    "2-4": "PD",
-    "0-2": "ATA",
-  },
-};
 
 const GRID_ROWS = 7;
 const TACTICS_OPTS = [
@@ -294,55 +148,6 @@ function ratingLabel(skill: number) {
   return { label: "Cria", color: "text-slate-400" };
 }
 
-// ─── Lógica de Punição de Overall por Adaptação ──────────────────────────────
-function getAdaptation(player: Player | undefined, cellKey: string, formationRole?: string) {
-  if (!player)
-    return {
-      loss: 0,
-      color: "text-emerald-400",
-      badge: "bg-emerald-500/20 border-emerald-500/50 text-emerald-400",
-      bg: "bg-emerald-500/10",
-    };
-
-  const playerPos = (player.position || "").toUpperCase();
-  const rawLabel = GRID_LABELS[cellKey] || formationRole || "";
-
-  // As roles alvo baseadas na imagem e na formação escolhida
-  const targetRoles = Array.from(new Set([...rawLabel.split("/").map((r) => r.trim()), formationRole].filter(Boolean)));
-
-  // Verde: Perfeitamente Adaptado
-  if (targetRoles.includes(playerPos) || targetRoles.length === 0) {
-    return {
-      loss: 0,
-      color: "text-emerald-400",
-      badge: "bg-emerald-500/20 border-emerald-500/50 text-emerald-400",
-      bg: "bg-emerald-500/10",
-    };
-  }
-
-  // Amarelo: Improvisado mas possui familiaridade com o setor
-  const playerCompat = POS_COMPAT[playerPos] || [playerPos];
-  const isCompatible = targetRoles.some(
-    (role) => playerCompat.includes(role) || (POS_COMPAT[role] || []).includes(playerPos),
-  );
-
-  if (isCompatible) {
-    return {
-      loss: 5,
-      color: "text-amber-400",
-      badge: "bg-amber-500/20 border-amber-500/50 text-amber-400",
-      bg: "bg-amber-500/15",
-    };
-  }
-
-  // Vermelho: Fora de posição
-  return {
-    loss: 15,
-    color: "text-rose-400",
-    badge: "bg-rose-500/20 border-rose-500/50 text-rose-400",
-    bg: "bg-rose-500/15",
-  };
-}
 
 // ─── Campo SVG ────────────────────────────────────────────────────────────────
 function PitchSVG() {
@@ -363,6 +168,9 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
   const [bench, setBench] = useState<Player[]>([]);
   const [tactics, setTactics] = useState<string[]>([]);
   const [mentality, setMentality] = useState<Mentality>((initialLineup?.mentality as Mentality) || "Equilibrado");
+  const [playStyle, setPlayStyle] = useState<PlayStyle>(initialLineup?.playStyle || "Posse de Bola");
+  const [pressing, setPressing] = useState<Pressing>(initialLineup?.pressing || "Média");
+  const [aerial, setAerial] = useState<Aerial>(initialLineup?.aerial || "Evitar");
   const [selectedCell, setSelectedCell] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -582,7 +390,7 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
       });
       const benchIds = bench.map((p) => p.id);
       if (onSave) {
-        await onSave({ pitchIds, benchIds, formation, mentality });
+        await onSave({ pitchIds, benchIds, formation, mentality, playStyle, pressing, aerial });
       } else {
         await new Promise((r) => setTimeout(r, 600));
       }
@@ -942,28 +750,43 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
   );
 
   // ─── TÁTICAS ──────────────────────────────────────────────────────────────
-  const renderTactics = () => (
-    <Card className="p-4 bg-gradient-card border-border/50">
-      <div className="flex items-center gap-2 mb-3">
-        <Settings className="h-4 w-4 text-primary" />
-        <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mentalidade</h3>
-      </div>
+  const renderToggleRow = <T extends string>(
+    title: string,
+    options: readonly T[],
+    value: T,
+    setValue: (v: T) => void,
+    meta: Record<T, { color: string; desc: string }>,
+  ) => (
+    <div>
+      <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">{title}</h4>
       <div className="flex gap-1 bg-secondary/50 rounded-xl p-1 mb-1">
-        {MENTALITIES.map((m) => (
+        {options.map((opt) => (
           <button
-            key={m}
-            onClick={() => canEdit && setMentality(m)}
-            className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all duration-200 ${mentality === m ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"} ${!canEdit ? "cursor-default" : "cursor-pointer"}`}
+            key={opt}
+            onClick={() => canEdit && setValue(opt)}
+            className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all duration-200 ${value === opt ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"} ${!canEdit ? "cursor-default" : "cursor-pointer"}`}
           >
-            {m}
+            {opt}
           </button>
         ))}
       </div>
-      <p className={`text-[9px] text-center font-medium ${MENTALITY_META[mentality].color}`}>
-        {MENTALITY_META[mentality].desc}
-      </p>
+      <p className={`text-[9px] text-center font-medium ${meta[value].color}`}>{meta[value].desc}</p>
+    </div>
+  );
+
+  const renderTactics = () => (
+    <Card className="p-4 bg-gradient-card border-border/50 space-y-3">
+      <div className="flex items-center gap-2">
+        <Settings className="h-4 w-4 text-primary" />
+        <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Tática</h3>
+      </div>
+      {renderToggleRow("Mentalidade", MENTALITIES, mentality, setMentality, MENTALITY_META)}
+      {renderToggleRow("Estilo de Jogo", PLAY_STYLES, playStyle, setPlayStyle, PLAY_STYLE_META)}
+      {renderToggleRow("Pressão", PRESSINGS, pressing, setPressing, PRESSING_META)}
+      {renderToggleRow("Bola Aérea", AERIALS, aerial, setAerial, AERIAL_META)}
     </Card>
   );
+
 
   // ─── BANCO ────────────────────────────────────────────────────────────────
   const POS_ORDER: Record<string, number> = {
