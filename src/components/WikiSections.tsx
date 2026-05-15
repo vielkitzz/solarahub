@@ -302,10 +302,19 @@ function Section({
         )}
       </div>
 
-      <div
-        className="wiki-prose"
-        dangerouslySetInnerHTML={{ __html: html || '<p class="italic text-muted-foreground">Sem conteúdo.</p>' }}
-      />
+      <>
+        <style>{`
+          .wiki-prose [style*="text-align: center"] { text-align: center; }
+          .wiki-prose [style*="text-align: center"] img { display: inline-block; }
+          .wiki-prose [style*="text-align: right"] { text-align: right; }
+          .wiki-prose [style*="text-align: right"] img { display: inline-block; }
+          .wiki-prose [style*="text-align: left"] { text-align: left; }
+        `}</style>
+        <div
+          className="wiki-prose"
+          dangerouslySetInnerHTML={{ __html: html || '<p class="italic text-muted-foreground">Sem conteúdo.</p>' }}
+        />
+      </>
 
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         <DialogContent>
