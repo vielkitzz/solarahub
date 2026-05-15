@@ -612,7 +612,7 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                                 style={{
                                   background: "#131516",
                                   width: 76,
-                                  height: 35,
+                                  height: 40,
                                   outline: isSelected
                                     ? "1.5px solid var(--primary)"
                                     : "1.5px solid rgba(255,255,255,0.07)",
