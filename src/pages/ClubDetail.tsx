@@ -333,7 +333,7 @@ const ClubDetail = () => {
           className="absolute inset-0 opacity-20"
           style={
             club.primary_color
-              ? { background: `radial-gradient(circle at top right, ${club.primary_color}, transparent 60%)` }
+              ? { background: `radial-gradient(circle at top right, ${club.primary_color}, transparent 100%)` }
               : undefined
           }
         />
