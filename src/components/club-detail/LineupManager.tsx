@@ -79,18 +79,7 @@ interface SubRecord {
 }
 
 const GRID_ROWS = 7;
-const TACTICS_OPTS = [
-  { label: "Pressionar alto", icon: "⬆" },
-  { label: "Posse de bola", icon: "⟳" },
-  { label: "Cruzamentos", icon: "↗" },
-  { label: "Saída pelo goleiro", icon: "🧤" },
-  { label: "Faltas estratégicas", icon: "⚡" },
-  { label: "Retrair na defesa", icon: "⬇" },
-  { label: "Jogadas longas", icon: "↑" },
-  { label: "Marcar por zona", icon: "⬜" },
-  { label: "Pressão na saída", icon: "🔒" },
-  { label: "Contra-ataque", icon: "⚡" },
-];
+
 const MENTALITIES = ["Defensivo", "Equilibrado", "Ofensivo"] as const;
 type Mentality = (typeof MENTALITIES)[number];
 const MENTALITY_META: Record<Mentality, { color: string; desc: string }> = {
