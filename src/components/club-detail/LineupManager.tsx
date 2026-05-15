@@ -584,67 +584,93 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                           numberPaddingBottom="18%"
                         />
 
-                        {/* Card — modelo Modelos.svg */}
-                        <div className="flex flex-col items-center mt-1 z-30">
-                          <div
-                            className="rounded-sm overflow-hidden shadow-lg flex flex-col"
-                            style={{
-                              background: "#131516",
-                              width: 76,
-                              height: 35, // Altura total reduzida
-                              outline: isSelected ? "1.5px solid var(--primary)" : "1.5px solid rgba(255,255,255,0.07)",
-                            }}
-                          >
-                            {/* ── Header (Ocupa 1/3 do card = 15px) ── */}
-                            <div className="relative flex w-full" style={{ height: 20 }}>
-                              {/* Metade esquerda — posição */}
-                              <div className="relative flex items-center justify-center" style={{ width: "50%" }}>
-                                {/* Fundo com opacidade independente para não apagar o texto */}
-                                <div
-                                  className="absolute inset-0"
-                                  style={{ background: overallColor(effSkill), opacity: 0.35 }}
-                                />
-                                <span
-                                  className="relative font-black uppercase tracking-wide text-white leading-none"
-                                  style={{ fontSize: 10 }}
-                                >
-                                  {player.position}
-                                </span>
-                              </div>
+                        {/* Cores fiéis ao SVG (Você pode colocar isso fora do componente depois se preferir) */}
+                        {(() => {
+                          const POS_COLORS: Record<string, { bg: string; text: string }> = {
+                            GOL: { bg: "#423A17", text: "#F3CA4E" },
+                            ZAG: { bg: "#36455D", text: "#85A9E1" },
+                            LD: { bg: "#2B4B5C", text: "#71BCE2" },
+                            LE: { bg: "#2B4B5C", text: "#71BCE2" },
+                            VOL: { bg: "#264E4C", text: "#4EBDB5" },
+                            MC: { bg: "#2D513E", text: "#66C79E" },
+                            MEI: { bg: "#4D5A25", text: "#B4E15D" },
+                            PD: { bg: "#5F4127", text: "#D49A5E" },
+                            PE: { bg: "#5F4127", text: "#D49A5E" },
+                            SA: { bg: "#683A45", text: "#DB8A9B" },
+                            ATA: { bg: "#683A45", text: "#DB8A9B" },
+                          };
 
-                              {/* Metade direita — overall */}
+                          const pColor = POS_COLORS[(player.position || "").toUpperCase()] || {
+                            bg: "#333333",
+                            text: "#FFFFFF",
+                          };
+
+                          return (
+                            <div className="flex flex-col items-center mt-1 z-30 font-sans">
                               <div
-                                className="relative flex items-center justify-center"
-                                style={{ width: "50%", background: overallColor(effSkill) }}
+                                className="rounded-md overflow-hidden shadow-lg flex flex-col"
+                                style={{
+                                  background: "#161616",
+                                  width: 76,
+                                  height: 45,
+                                  outline: isSelected
+                                    ? "1.5px solid var(--primary)"
+                                    : "1.5px solid rgba(255,255,255,0.07)",
+                                }}
                               >
-                                <span className="font-black text-white leading-none" style={{ fontSize: 10 }}>
-                                  {effSkill}
-                                </span>
-                                {loss > 0 && (
-                                  <span
-                                    className="absolute bottom-0 right-0.5 font-bold text-white/80 leading-none"
-                                    style={{ fontSize: 6.5 }}
+                                {/* ── Header (18px de altura) ── */}
+                                <div className="flex w-full" style={{ height: 18 }}>
+                                  {/* Metade esquerda — Posição com cores corretas */}
+                                  <div
+                                    className="flex items-center justify-center"
+                                    style={{ width: "50%", background: pColor.bg }}
                                   >
-                                    -{loss}
+                                    <span
+                                      className="font-bold uppercase tracking-wider leading-none"
+                                      style={{ fontSize: 11, color: pColor.text }}
+                                    >
+                                      {player.position}
+                                    </span>
+                                  </div>
+
+                                  {/* Metade direita — Overall */}
+                                  <div
+                                    className="relative flex items-center justify-center"
+                                    style={{ width: "50%", background: overallColor(effSkill) }}
+                                  >
+                                    <span
+                                      className="font-bold text-white leading-none tracking-tight"
+                                      style={{ fontSize: 12 }}
+                                    >
+                                      {effSkill}
+                                    </span>
+                                    {loss > 0 && (
+                                      <span
+                                        className="absolute bottom-0.5 right-0.5 font-bold text-white/80 leading-none"
+                                        style={{ fontSize: 7 }}
+                                      >
+                                        -{loss}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* ── Inferior — Sobrenome (27px de altura) ── */}
+                                <div
+                                  className="flex items-center justify-center px-1.5 w-full"
+                                  style={{ height: 27, background: "#151515" }}
+                                >
+                                  <span
+                                    className="font-medium text-white/95 truncate text-center leading-none tracking-wide"
+                                    style={{ fontSize: 11 }}
+                                  >
+                                    {player.name.split(" ").pop()}
                                   </span>
-                                )}
+                                </div>
                               </div>
                             </div>
-
-                            {/* ── Inferior — Sobrenome (Ocupa 2/3 do card = 30px) ── */}
-                            <div
-                              className="flex items-center justify-center px-1 w-full"
-                              style={{ height: 25, background: "#131516" }}
-                            >
-                              <span
-                                className="font-bold text-white truncate text-center leading-none"
-                                style={{ fontSize: 10 }}
-                              >
-                                {player.name.split(" ").pop()}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
+                          );
+                        })()}
 
                         {/* Popover */}
                         {isSelected &&
