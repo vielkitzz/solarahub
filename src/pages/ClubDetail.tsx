@@ -696,7 +696,7 @@ const ClubDetail = () => {
         </TabsContent>
 
         <TabsContent value="wiki" className="mt-4">
-          <div className="flex flex-col md:flex-row-reverse gap-6 items-start">
+          <div className="flex flex-col md:flex-row gap-6 items-start">
             <ClubInfobox
               club={club}
               infobox={(wikiData.infobox as InfoboxData) || {}}

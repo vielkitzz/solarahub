@@ -103,7 +103,7 @@ export function ClubInfobox({ club, infobox, canEdit, onSave }: Props) {
   };
 
   return (
-    <aside className="wiki-surface w-full overflow-hidden">
+    <aside className="wiki-surface w-full md:w-[300px] lg:w-[340px] shrink-0 overflow-hidden">
       {/* header */}
       <div
         className="px-4 py-3 border-b border-border/60 text-center"
