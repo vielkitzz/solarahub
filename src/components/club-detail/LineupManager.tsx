@@ -149,16 +149,11 @@ function ratingLabel(skill: number) {
 }
 
 function overallColor(skill: number): string {
-  const MIN = 45,
-    MID = 72,
-    MAX = 99;
+  const MIN = 45, MID = 72, MAX = 99;
   const s = Math.max(MIN, Math.min(MAX, skill));
-
-  // Cores do gradiente (RGB)
-  const red = { r: 224, g: 49, b: 49 }; // #E03131
-  const yellow = { r: 252, g: 196, b: 25 }; // #FCC419
-  const green = { r: 43, g: 138, b: 62 }; // #2B8A3E
-
+  const red    = { r: 224, g: 49,  b: 49  }; // #E03131
+  const yellow = { r: 252, g: 196, b: 25  }; // #FCC419
+  const green  = { r: 43,  g: 138, b: 62  }; // #2B8A3E
   let r: number, g: number, b: number;
   if (s <= MID) {
     const t = (s - MIN) / (MID - MIN);
@@ -588,49 +583,61 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                         />
 
                         {/* Card — modelo Modelos.svg */}
-                        <div className="flex flex-col items-center mt-1 z-30" style={{ minWidth: 72 }}>
+                        <div className="flex flex-col items-center mt-1 z-30">
                           <div
-                            className="rounded-lg overflow-hidden shadow-lg select-none"
+                            className="rounded-xl overflow-hidden shadow-lg"
                             style={{
                               background: "#131516",
-                              width: 72,
-                              border: isSelected ? "1.5px solid var(--primary)" : "1.5px solid rgba(255,255,255,0.08)",
+                              width: 76,
+                              outline: isSelected ? "1.5px solid var(--primary)" : "1.5px solid rgba(255,255,255,0.07)",
                             }}
                           >
-                            {/* ── Header colorido ── */}
-                            <div className="relative flex items-center justify-between px-1.5" style={{ height: 28 }}>
-                              {/* fundo esquerdo: cor do overall com 35% opacidade */}
+                            {/* ── Header ── */}
+                            <div className="relative flex" style={{ height: 34 }}>
+                         
+                              {/* Metade esquerda — posição, cor a 35% */}
                               <div
-                                className="absolute inset-0"
-                                style={{ background: overallColor(effSkill), opacity: 0.35 }}
-                              />
-                              {/* fundo direito: cor sólida (metade direita) */}
-                              <div
-                                className="absolute top-0 right-0 bottom-0"
-                                style={{ width: "50%", background: overallColor(effSkill) }}
-                              />
-
-                              {/* Sobrenome — esquerda */}
-                              <span
-                                className="relative z-10 font-black leading-none truncate max-w-[38px]"
-                                style={{ fontSize: 9, color: "#fff", textShadow: "0 1px 3px rgba(0,0,0,0.7)" }}
+                                className="flex items-center justify-center"
+                                style={{ width: "50%", background: overallColor(effSkill), opacity: 0.35 }}
                               >
-                                {player.name.split(" ").pop()}
-                              </span>
-
-                              {/* Número + posição — direita */}
-                              <div className="relative z-10 flex flex-col items-end leading-none">
-                                <span className="font-black text-white" style={{ fontSize: 11 }}>
-                                  {player.shirt_number ?? "—"}
-                                </span>
                                 <span
-                                  className="font-bold text-white/80 uppercase tracking-wide"
-                                  style={{ fontSize: 7 }}
+                                  className="font-black uppercase tracking-wide text-white"
+                                  style={{ fontSize: 9 }}
                                 >
                                   {player.position}
                                 </span>
                               </div>
+                         
+                              {/* Metade direita — overall, cor sólida */}
+                              <div
+                                className="relative flex items-center justify-center"
+                                style={{ width: "50%", background: overallColor(effSkill) }}
+                              >
+                                <span className="font-black text-white leading-none" style={{ fontSize: 15 }}>
+                                  {effSkill}
+                                </span>
+                                {loss > 0 && (
+                                  <span className="absolute bottom-0.5 right-1 font-bold text-white/70 leading-none" style={{ fontSize: 7 }}>
+                                    -{loss}
+                                  </span>
+                                )}
+                              </div>
                             </div>
+                         
+                            {/* ── Inferior — Sobrenome ── */}
+                            <div
+                              className="flex items-center justify-center px-1.5"
+                              style={{ height: 26, background: "#131516" }}
+                            >
+                              <span
+                                className="font-bold text-white truncate text-center leading-none"
+                                style={{ fontSize: 10 }}
+                              >
+                                {player.name.split(" ").pop()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
 
                             {/* ── Overall + penalidade ── */}
                             <div className="flex items-center justify-center gap-1 px-1.5 py-1">
