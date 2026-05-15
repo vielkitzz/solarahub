@@ -596,7 +596,7 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                             }}
                           >
                             {/* ── Header (Ocupa 1/3 do card = 15px) ── */}
-                            <div className="relative flex w-full" style={{ height: 15 }}>
+                            <div className="relative flex w-full" style={{ height: 20 }}>
                               {/* Metade esquerda — posição */}
                               <div className="relative flex items-center justify-center" style={{ width: "50%" }}>
                                 {/* Fundo com opacidade independente para não apagar o texto */}
