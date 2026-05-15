@@ -587,7 +587,7 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                         {/* Card — modelo Modelos.svg */}
                         <div className="flex flex-col items-center mt-1 z-30">
                           <div
-                            className="rounded-xl overflow-hidden shadow-lg flex flex-col"
+                            className="rounded-sm overflow-hidden shadow-lg flex flex-col"
                             style={{
                               background: "#131516",
                               width: 76,
