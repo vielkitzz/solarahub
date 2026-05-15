@@ -393,16 +393,17 @@ const ClubDetail = () => {
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
               {club.city && (
                 <span className="flex items-center gap-1 min-w-0">
-                  <MapPin className="h-3 w-3 shrink-0" /> <span className="truncate">{club.city}</span>
+                  <MapPin className="h-3 w-3 shrink-0 text-primary" /> <span className="truncate">{club.city}</span>
                 </span>
               )}
               {club.stadium_name && (
                 <span className="flex items-center gap-1 min-w-0">
-                  <Building2 className="h-3 w-3 shrink-0" /> <span className="truncate">{club.stadium_name}</span>
+                  <Building2 className="h-3 w-3 shrink-0 text-primary" />{" "}
+                  <span className="truncate">{club.stadium_name}</span>
                 </span>
               )}
               <span className="flex items-center gap-1">
-                <Users className="h-3 w-3 shrink-0" /> {players.length}/35 jogadores ·{" "}
+                <Users className="h-3 w-3 shrink-0 text-primary" /> {players.length}/35 jogadores ·{" "}
                 {players.filter((p: any) => (p.nationality || "") !== "Solara").length}/10 estrangeiros
               </span>
             </div>
