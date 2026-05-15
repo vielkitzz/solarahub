@@ -635,14 +635,6 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                                     >
                                       {effSkill}
                                     </span>
-                                    {loss > 0 && (
-                                      <span
-                                        className="absolute bottom-0.5 right-0.5 font-bold text-white/80 leading-none"
-                                        style={{ fontSize: 7 }}
-                                      >
-                                        -{loss}
-                                      </span>
-                                    )}
                                   </div>
                                 </div>
 
