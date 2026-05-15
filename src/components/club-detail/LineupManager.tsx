@@ -658,7 +658,7 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                                 {/* ── Inferior — Sobrenome (27px de altura) ── */}
                                 <div
                                   className="flex items-center justify-center px-1.5 w-full"
-                                  style={{ height: 27, background: "#151515" }}
+                                  style={{ height: 30, background: "#131516" }}
                                 >
                                   <span
                                     className="font-medium text-white/95 truncate text-center leading-none tracking-wide"
