@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface InfoboxData {
   alcunhas?: string;
@@ -69,6 +70,31 @@ export function ClubInfobox({ club, infobox, canEdit, onSave }: Props) {
   const [draft, setDraft] = useState<InfoboxData>(infobox);
   const [saving, setSaving] = useState(false);
 
+  // Derived from active contracts
+  const [patrocinadorAtivo, setPatrocinadorAtivo] = useState<string | null>(null);
+  const [materialAtivo, setMaterialAtivo] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!club.id) return;
+
+    supabase
+      .from("contratos_clube")
+      .select("categoria, empresa:empresas(nome)")
+      .eq("club_id", club.id)
+      .eq("ativo", true)
+      .then(({ data, error }) => {
+        if (error || !data) return;
+
+        // "fornecedora" → material esportivo
+        const fornecedora = data.find((c) => c.categoria === "fornecedora");
+        // "master" → patrocinador principal
+        const master = data.find((c) => c.categoria === "master");
+
+        setMaterialAtivo((fornecedora?.empresa as any)?.nome ?? null);
+        setPatrocinadorAtivo((master?.empresa as any)?.nome ?? null);
+      });
+  }, [club.id]);
+
   const handleSave = async () => {
     setSaving(true);
     await onSave(draft);
@@ -116,8 +142,9 @@ export function ClubInfobox({ club, infobox, canEdit, onSave }: Props) {
             />
             <Row label="Cidade" value={club.city ?? undefined} />
             <Row label="Presidente" value={infobox.presidente} />
-            <Row label="Patrocinador" value={infobox.patrocinador} readOnly />
-            <Row label="Material" value={infobox.material} readOnly />
+            {/* Patrocinador e Material derivados dos contratos ativos */}
+            <Row label="Patrocinador" value={patrocinadorAtivo} readOnly />
+            <Row label="Material" value={materialAtivo} readOnly />
             <Row label="Competição" value={infobox.competicao} />
           </tbody>
         </table>
@@ -168,8 +195,8 @@ export function ClubInfobox({ club, infobox, canEdit, onSave }: Props) {
                   </div>
                 ))}
                 <p className="text-xs text-muted-foreground">
-                  Nome, escudo, fundação, estádio, capacidade e cidade são puxados do cadastro do clube. Patrocinador e
-                  material são sincronizados automaticamente com os contratos ativos.
+                  Nome, escudo, fundação, estádio, capacidade e cidade são puxados do cadastro do clube. Patrocinador
+                  (master) e material (fornecedora) são sincronizados automaticamente com os contratos ativos.
                 </p>
               </div>
               <DialogFooter>
