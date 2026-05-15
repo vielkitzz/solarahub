@@ -608,18 +608,18 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                           return (
                             <div className="flex flex-col items-center mt-1 z-30 font-sans">
                               <div
-                                className="rounded-md overflow-hidden shadow-lg flex flex-col"
+                                className="rounded-sm overflow-hidden shadow-lg flex flex-col"
                                 style={{
-                                  background: "#161616",
+                                  background: "#131516",
                                   width: 76,
-                                  height: 45,
+                                  height: 35,
                                   outline: isSelected
                                     ? "1.5px solid var(--primary)"
                                     : "1.5px solid rgba(255,255,255,0.07)",
                                 }}
                               >
                                 {/* ── Header (18px de altura) ── */}
-                                <div className="flex w-full" style={{ height: 18 }}>
+                                <div className="flex w-full" style={{ height: 20 }}>
                                   {/* Metade esquerda — Posição com cores corretas */}
                                   <div
                                     className="flex items-center justify-center"
@@ -658,7 +658,7 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                                 {/* ── Inferior — Sobrenome (27px de altura) ── */}
                                 <div
                                   className="flex items-center justify-center px-1.5 w-full"
-                                  style={{ height: 27, background: "#151515" }}
+                                  style={{ height: 25, background: "#151515" }}
                                 >
                                   <span
                                     className="font-medium text-white/95 truncate text-center leading-none tracking-wide"
