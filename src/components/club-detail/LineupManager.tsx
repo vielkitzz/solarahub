@@ -633,8 +633,8 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
 
                             {/* ── Inferior — Sobrenome (Ocupa 2/3 do card = 30px) ── */}
                             <div
-                              className="flex items-center justify-center px-1.5 w-full"
-                              style={{ height: 30, background: "#131516" }}
+                              className="flex items-center justify-center px-1 w-full"
+                              style={{ height: 20, background: "#131516" }}
                             >
                               <span
                                 className="font-bold text-white truncate text-center leading-none"
