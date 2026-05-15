@@ -591,7 +591,7 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                             style={{
                               background: "#131516",
                               width: 76,
-                              height: 45, // Altura total reduzida
+                              height: 35, // Altura total reduzida
                               outline: isSelected ? "1.5px solid var(--primary)" : "1.5px solid rgba(255,255,255,0.07)",
                             }}
                           >
@@ -634,7 +634,7 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                             {/* ── Inferior — Sobrenome (Ocupa 2/3 do card = 30px) ── */}
                             <div
                               className="flex items-center justify-center px-1 w-full"
-                              style={{ height: 20, background: "#131516" }}
+                              style={{ height: 25, background: "#131516" }}
                             >
                               <span
                                 className="font-bold text-white truncate text-center leading-none"
