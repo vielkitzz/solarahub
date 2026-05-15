@@ -587,37 +587,43 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                         {/* Card — modelo Modelos.svg */}
                         <div className="flex flex-col items-center mt-1 z-30">
                           <div
-                            className="rounded-xl overflow-hidden shadow-lg"
+                            className="rounded-xl overflow-hidden shadow-lg flex flex-col"
                             style={{
                               background: "#131516",
                               width: 76,
+                              height: 45, // Altura total reduzida
                               outline: isSelected ? "1.5px solid var(--primary)" : "1.5px solid rgba(255,255,255,0.07)",
                             }}
                           >
-                            {/* ── Header ── */}
-                            <div className="relative flex" style={{ height: 34 }}>
-                              {/* Metade esquerda — posição, cor a 35% */}
-                              <div
-                                className="flex items-center justify-center"
-                                style={{ width: "50%", background: overallColor(effSkill), opacity: 0.35 }}
-                              >
-                                <span className="font-black uppercase tracking-wide text-white" style={{ fontSize: 9 }}>
+                            {/* ── Header (Ocupa 1/3 do card = 15px) ── */}
+                            <div className="relative flex w-full" style={{ height: 15 }}>
+                              {/* Metade esquerda — posição */}
+                              <div className="relative flex items-center justify-center" style={{ width: "50%" }}>
+                                {/* Fundo com opacidade independente para não apagar o texto */}
+                                <div
+                                  className="absolute inset-0"
+                                  style={{ background: overallColor(effSkill), opacity: 0.35 }}
+                                />
+                                <span
+                                  className="relative font-black uppercase tracking-wide text-white leading-none"
+                                  style={{ fontSize: 10 }}
+                                >
                                   {player.position}
                                 </span>
                               </div>
 
-                              {/* Metade direita — overall, cor sólida */}
+                              {/* Metade direita — overall */}
                               <div
                                 className="relative flex items-center justify-center"
                                 style={{ width: "50%", background: overallColor(effSkill) }}
                               >
-                                <span className="font-black text-white leading-none" style={{ fontSize: 15 }}>
+                                <span className="font-black text-white leading-none" style={{ fontSize: 10 }}>
                                   {effSkill}
                                 </span>
                                 {loss > 0 && (
                                   <span
-                                    className="absolute bottom-0.5 right-1 font-bold text-white/70 leading-none"
-                                    style={{ fontSize: 7 }}
+                                    className="absolute bottom-0 right-0.5 font-bold text-white/80 leading-none"
+                                    style={{ fontSize: 6.5 }}
                                   >
                                     -{loss}
                                   </span>
@@ -625,10 +631,10 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                               </div>
                             </div>
 
-                            {/* ── Inferior — Sobrenome ── */}
+                            {/* ── Inferior — Sobrenome (Ocupa 2/3 do card = 30px) ── */}
                             <div
-                              className="flex items-center justify-center px-1.5"
-                              style={{ height: 26, background: "#131516" }}
+                              className="flex items-center justify-center px-1.5 w-full"
+                              style={{ height: 30, background: "#131516" }}
                             >
                               <span
                                 className="font-bold text-white truncate text-center leading-none"
