@@ -74,11 +74,15 @@ const ResizableImageComponent = ({ node, updateAttributes, deleteNode, selected 
 
   return (
     <NodeViewWrapper
-      as="span"
-      className="inline-block relative group my-4 select-none"
-      style={{ width: width ? `min(${width}px, 100%)` : "auto", maxWidth: "100%" }}
+      as="div"
+      className="relative group my-4 select-none"
+      style={{ textAlign: "inherit" }}
       data-drag-handle
     >
+      <img
+        ...
+        style={{ width: width ? `min(${width}px, 100%)` : "auto", maxWidth: "100%", display: "inline-block" }}
+      />
       <button
         onClick={deleteNode}
         className="absolute -top-2.5 -right-2.5 z-10 h-6 w-6 rounded-full bg-destructive text-destructive-foreground items-center justify-center shadow hidden group-hover:flex transition-opacity"
