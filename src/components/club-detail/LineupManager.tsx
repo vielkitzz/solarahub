@@ -149,11 +149,13 @@ function ratingLabel(skill: number) {
 }
 
 function overallColor(skill: number): string {
-  const MIN = 45, MID = 72, MAX = 99;
+  const MIN = 45,
+    MID = 72,
+    MAX = 99;
   const s = Math.max(MIN, Math.min(MAX, skill));
-  const red    = { r: 224, g: 49,  b: 49  }; // #E03131
-  const yellow = { r: 252, g: 196, b: 25  }; // #FCC419
-  const green  = { r: 43,  g: 138, b: 62  }; // #2B8A3E
+  const red = { r: 224, g: 49, b: 49 }; // #E03131
+  const yellow = { r: 252, g: 196, b: 25 }; // #FCC419
+  const green = { r: 43, g: 138, b: 62 }; // #2B8A3E
   let r: number, g: number, b: number;
   if (s <= MID) {
     const t = (s - MIN) / (MID - MIN);
@@ -594,20 +596,16 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                           >
                             {/* ── Header ── */}
                             <div className="relative flex" style={{ height: 34 }}>
-                         
                               {/* Metade esquerda — posição, cor a 35% */}
                               <div
                                 className="flex items-center justify-center"
                                 style={{ width: "50%", background: overallColor(effSkill), opacity: 0.35 }}
                               >
-                                <span
-                                  className="font-black uppercase tracking-wide text-white"
-                                  style={{ fontSize: 9 }}
-                                >
+                                <span className="font-black uppercase tracking-wide text-white" style={{ fontSize: 9 }}>
                                   {player.position}
                                 </span>
                               </div>
-                         
+
                               {/* Metade direita — overall, cor sólida */}
                               <div
                                 className="relative flex items-center justify-center"
@@ -617,13 +615,16 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                                   {effSkill}
                                 </span>
                                 {loss > 0 && (
-                                  <span className="absolute bottom-0.5 right-1 font-bold text-white/70 leading-none" style={{ fontSize: 7 }}>
+                                  <span
+                                    className="absolute bottom-0.5 right-1 font-bold text-white/70 leading-none"
+                                    style={{ fontSize: 7 }}
+                                  >
                                     -{loss}
                                   </span>
                                 )}
                               </div>
                             </div>
-                         
+
                             {/* ── Inferior — Sobrenome ── */}
                             <div
                               className="flex items-center justify-center px-1.5"
@@ -635,23 +636,6 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                               >
                                 {player.name.split(" ").pop()}
                               </span>
-                            </div>
-                          </div>
-                        </div>
-
-                            {/* ── Overall + penalidade ── */}
-                            <div className="flex items-center justify-center gap-1 px-1.5 py-1">
-                              <span
-                                className="font-black tabular-nums"
-                                style={{ fontSize: 13, color: overallColor(effSkill) }}
-                              >
-                                {effSkill}
-                              </span>
-                              {loss > 0 && (
-                                <span className="font-bold text-rose-400" style={{ fontSize: 8 }}>
-                                  -{loss}
-                                </span>
-                              )}
                             </div>
                           </div>
                         </div>
