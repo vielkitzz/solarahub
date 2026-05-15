@@ -611,7 +611,7 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                                 className="rounded-sm overflow-hidden shadow-lg flex flex-col"
                                 style={{
                                   background: "#131516",
-                                  width: 76,
+                                  width: 80,
                                   height: 40,
                                   outline: isSelected
                                     ? "1.5px solid var(--primary)"
