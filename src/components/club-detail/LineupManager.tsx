@@ -280,7 +280,14 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) setSelectedCell(null);
+      // Se o clique foi dentro do popover, ignora
+      if (popoverRef.current && popoverRef.current.contains(e.target as Node)) return;
+
+      // Se o clique foi em QUALQUER quadrado do campo, ignora (o onClick do quadrado resolve)
+      if ((e.target as Element).closest("[data-cell]")) return;
+
+      // Se clicou no fundo, fora de tudo, aí sim limpa a seleção
+      setSelectedCell(null);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
