@@ -568,7 +568,6 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                         <ShirtIcon
                           clubId={club?.id}
                           number={player.shirt_number}
-                          highlighted={isSelected}
                           size="w-12 h-12"
                           isGK={player.position === "GOL"}
                           numberSize="clamp(18px, 75%, 38px)"
