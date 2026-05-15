@@ -471,7 +471,8 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
   // ─── Helper de Grid ───────────────────────────────────────────────────────
   const getGridTemplateColumns = (rowIndex: number, showCenter: boolean) => {
     const col = "minmax(0, 1fr)";
-    if (rowIndex === GRID_ROWS - 1) return `0px 0px ${col} 0px 0px`;
+    // Mantém as 5 colunas iguais também para a linha do goleiro (para manter o tamanho do quadrado)
+    if (rowIndex === GRID_ROWS - 1) return `${col} ${col} ${col} ${col} ${col}`;
     if (!showCenter) return `${col} ${col} 0px ${col} ${col}`;
     return `${col} ${col} ${col} ${col} ${col}`;
   };
@@ -524,15 +525,16 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                     onDrop={(e) => {
                       if (!isHidden && canEdit) handleDrop(e, cellKey);
                     }}
+                    // Adicionado "&& player" para só permitir clique se houver jogador
                     onClick={() => {
-                      if (!isHidden && canEdit) setSelectedCell(isSelected ? null : cellKey);
+                      if (!isHidden && canEdit && player) setSelectedCell(isSelected ? null : cellKey);
                     }}
                     className={`relative flex items-center justify-center rounded-lg transition-all duration-200 outline-none
                       ${isHidden ? "opacity-0 pointer-events-none overflow-hidden" : "opacity-100"}
                       ${isDropZone && !isHidden ? "ring-2 ring-primary/70 bg-primary/15 scale-105" : ""}
                       ${isSelected && !isHidden ? "bg-primary/20 ring-2 ring-primary/60 scale-105" : ""}
                       ${isSrcCell && !isHidden ? "opacity-40" : ""}
-                      ${!isDragging && !isSelected && !isHidden ? "hover:bg-white/10 cursor-pointer" : ""}
+                      ${!isDragging && !isSelected && !isHidden && player ? "hover:bg-white/10 cursor-pointer" : ""}
                     `}
                   >
                     {/* Slot vazio — visível apenas ao arrastar ou selecionar */}
