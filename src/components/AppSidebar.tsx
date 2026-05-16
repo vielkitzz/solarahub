@@ -9,6 +9,7 @@ import {
   LogOut,
   LogIn,
   MapPin,
+  Shirt,
 } from "lucide-react";
 import {
   Sidebar,
@@ -40,6 +41,7 @@ const competicaoItems = [
 
 const conhecimentoItems = [
   { title: "Wiki Global", url: "/wiki", icon: BookOpen },
+  { title: "Histórico de Camisas", url: "/camisas", icon: Shirt },
 ];
 
 export function AppSidebar() {

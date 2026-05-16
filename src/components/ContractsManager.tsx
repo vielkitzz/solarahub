@@ -368,25 +368,34 @@ export function ContractsManager({ clubId, canEdit, reputacao, valorBaseFolha = 
       dbEmpresaId = newEmp.id;
     }
 
-    // 2. Em renovação: encerra o contrato anterior na temporada que precede o início do novo
+    // 2. Renovação substitui o contrato atual em vez de duplicar.
+    //    Atualiza a linha existente com os novos valores; senão insere uma nova.
+    let error: any = null;
     if (renewingContrato) {
-      await supabase
+      ({ error } = await supabase
         .from("contratos_clube")
-        .update({ fim_temporada: inicio, ativo: inicio > temporadaAtual })
-        .eq("id", renewingContrato.id);
+        .update({
+          empresa_id: dbEmpresaId,
+          categoria: searchCategoria,
+          valor_anual: valorAnualEfetivo || 0,
+          inicio_temporada: inicio,
+          fim_temporada: fim,
+          anos_duracao: anos,
+          ativo: true,
+        })
+        .eq("id", renewingContrato.id));
+    } else {
+      ({ error } = await supabase.from("contratos_clube").insert({
+        club_id: clubId,
+        empresa_id: dbEmpresaId,
+        categoria: searchCategoria,
+        valor_anual: valorAnualEfetivo || 0,
+        inicio_temporada: inicio,
+        fim_temporada: fim,
+        anos_duracao: anos,
+        ativo: true,
+      }));
     }
-
-    // 3. Insere o novo contrato
-    const { error } = await supabase.from("contratos_clube").insert({
-      club_id: clubId,
-      empresa_id: dbEmpresaId,
-      categoria: searchCategoria,
-      valor_anual: valorAnualEfetivo || 0,
-      inicio_temporada: inicio,
-      fim_temporada: fim,
-      anos_duracao: anos,
-      ativo: true,
-    });
 
     setIsSubmitting(false);
     if (error) {

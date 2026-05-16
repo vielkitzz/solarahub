@@ -57,6 +57,7 @@ const Admin = lazyWithRetry(() => import("./pages/Admin"));
 const Transferencias = lazyWithRetry(() => import("./pages/Transferencias"));
 const Mapa = lazyWithRetry(() => import("./pages/Mapa"));
 const Configuracoes = lazyWithRetry(() => import("./pages/Configuracoes"));
+const HistoricoCamisas = lazyWithRetry(() => import("./pages/HistoricoCamisas"));
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -94,6 +95,7 @@ const App = () => (
                     <Route path="/clubes/:id" element={<ClubDetail />} />
                     <Route path="/mapa" element={<Mapa />} />
                     <Route path="/wiki" element={<WikiGlobal />} />
+                    <Route path="/camisas" element={<HistoricoCamisas />} />
                     <Route path="/transferencias" element={<Transferencias />} />
 
                     {/* Exigem login */}
