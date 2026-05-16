@@ -68,6 +68,13 @@ export type Database = {
             referencedRelation: "clubs"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "academy_players_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       admin_discord_ids: {
@@ -142,7 +149,50 @@ export type Database = {
             referencedRelation: "clubs"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "campanhas_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_public"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      club_kits: {
+        Row: {
+          ano: number
+          club_id: string
+          created_at: string
+          descricao: string | null
+          fabricante: string | null
+          id: string
+          image_url: string
+          tipo: Database["public"]["Enums"]["kit_tipo"]
+          updated_at: string
+        }
+        Insert: {
+          ano: number
+          club_id: string
+          created_at?: string
+          descricao?: string | null
+          fabricante?: string | null
+          id?: string
+          image_url: string
+          tipo?: Database["public"]["Enums"]["kit_tipo"]
+          updated_at?: string
+        }
+        Update: {
+          ano?: number
+          club_id?: string
+          created_at?: string
+          descricao?: string | null
+          fabricante?: string | null
+          id?: string
+          image_url?: string
+          tipo?: Database["public"]["Enums"]["kit_tipo"]
+          updated_at?: string
+        }
+        Relationships: []
       }
       clubs: {
         Row: {
@@ -307,6 +357,13 @@ export type Database = {
             columns: ["club_id"]
             isOneToOne: false
             referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_clube_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_public"
             referencedColumns: ["id"]
           },
           {
@@ -757,6 +814,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "players_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "players_master_player_id_fkey"
             columns: ["master_player_id"]
             isOneToOne: false
@@ -1039,10 +1103,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "transferencias_clube_comprador_id_fkey"
+            columns: ["clube_comprador_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "transferencias_clube_vendedor_id_fkey"
             columns: ["clube_vendedor_id"]
             isOneToOne: false
             referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencias_clube_vendedor_id_fkey"
+            columns: ["clube_vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_public"
             referencedColumns: ["id"]
           },
           {
@@ -1117,7 +1195,114 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      clubs_public: {
+        Row: {
+          academy_scouting_count: number | null
+          budget: number | null
+          city: string | null
+          created_at: string | null
+          crest_url: string | null
+          founded_year: number | null
+          id: string | null
+          jogos_por_temporada: number | null
+          latitude: number | null
+          lineup: Json | null
+          lineup_bench_ids: Json | null
+          lineup_formation: string | null
+          lineup_mentality: string | null
+          lineup_pitch_ids: Json | null
+          longitude: number | null
+          name: string | null
+          nivel_base: number | null
+          nivel_estadio: number | null
+          owner_id: string | null
+          patrocinio_anual: number | null
+          posicao_ultima_temporada: number | null
+          preco_ingresso_internacional: number | null
+          preco_ingresso_nacional: number | null
+          primary_color: string | null
+          rate: number | null
+          reputacao: Database["public"]["Enums"]["club_reputation"] | null
+          scout_searches_used: number | null
+          stadium_capacity: number | null
+          stadium_name: string | null
+          status: Database["public"]["Enums"]["club_status"] | null
+          transfer_ban: boolean | null
+          updated_at: string | null
+          wiki: Json | null
+        }
+        Insert: {
+          academy_scouting_count?: number | null
+          budget?: number | null
+          city?: string | null
+          created_at?: string | null
+          crest_url?: string | null
+          founded_year?: number | null
+          id?: string | null
+          jogos_por_temporada?: number | null
+          latitude?: number | null
+          lineup?: Json | null
+          lineup_bench_ids?: Json | null
+          lineup_formation?: string | null
+          lineup_mentality?: string | null
+          lineup_pitch_ids?: Json | null
+          longitude?: number | null
+          name?: string | null
+          nivel_base?: number | null
+          nivel_estadio?: number | null
+          owner_id?: string | null
+          patrocinio_anual?: number | null
+          posicao_ultima_temporada?: number | null
+          preco_ingresso_internacional?: number | null
+          preco_ingresso_nacional?: number | null
+          primary_color?: string | null
+          rate?: number | null
+          reputacao?: Database["public"]["Enums"]["club_reputation"] | null
+          scout_searches_used?: number | null
+          stadium_capacity?: number | null
+          stadium_name?: string | null
+          status?: Database["public"]["Enums"]["club_status"] | null
+          transfer_ban?: boolean | null
+          updated_at?: string | null
+          wiki?: Json | null
+        }
+        Update: {
+          academy_scouting_count?: number | null
+          budget?: number | null
+          city?: string | null
+          created_at?: string | null
+          crest_url?: string | null
+          founded_year?: number | null
+          id?: string | null
+          jogos_por_temporada?: number | null
+          latitude?: number | null
+          lineup?: Json | null
+          lineup_bench_ids?: Json | null
+          lineup_formation?: string | null
+          lineup_mentality?: string | null
+          lineup_pitch_ids?: Json | null
+          longitude?: number | null
+          name?: string | null
+          nivel_base?: number | null
+          nivel_estadio?: number | null
+          owner_id?: string | null
+          patrocinio_anual?: number | null
+          posicao_ultima_temporada?: number | null
+          preco_ingresso_internacional?: number | null
+          preco_ingresso_nacional?: number | null
+          primary_color?: string | null
+          rate?: number | null
+          reputacao?: Database["public"]["Enums"]["club_reputation"] | null
+          scout_searches_used?: number | null
+          stadium_capacity?: number | null
+          stadium_name?: string | null
+          status?: Database["public"]["Enums"]["club_status"] | null
+          transfer_ban?: boolean | null
+          updated_at?: string | null
+          wiki?: Json | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_transfer: { Args: { _transfer_id: string }; Returns: undefined }
@@ -1366,6 +1551,7 @@ export type Database = {
         | "asia"
         | "africa"
         | "oceania"
+      kit_tipo: "titular" | "alternativo" | "terceiro" | "goleiro" | "especial"
       transfer_status:
         | "pendente"
         | "aceita"
@@ -1535,6 +1721,7 @@ export const Constants = {
         "africa",
         "oceania",
       ],
+      kit_tipo: ["titular", "alternativo", "terceiro", "goleiro", "especial"],
       transfer_status: [
         "pendente",
         "aceita",
