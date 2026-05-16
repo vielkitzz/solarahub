@@ -57,6 +57,7 @@ import { SquadTable } from "@/components/club-detail/SquadTable";
 import { StatCard, Row, EvolutionTable } from "@/components/club-detail/EvolutionTable";
 import { transfersService } from "@/services/transfers";
 import { LineupManager } from "@/components/club-detail/LineupManager";
+import { KitsGallery } from "@/components/KitsGallery";
 
 const ClubDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -459,6 +460,7 @@ const ClubDetail = () => {
             <TabsTrigger value="base">Base</TabsTrigger>
             {canEdit && <TabsTrigger value="olheiros">Olheiros</TabsTrigger>}
             <TabsTrigger value="wiki">Wiki</TabsTrigger>
+            <TabsTrigger value="camisas">Camisas</TabsTrigger>
             {canEdit && <TabsTrigger value="config">Configurações</TabsTrigger>}
           </TabsList>
         </div>
@@ -696,17 +698,24 @@ const ClubDetail = () => {
         </TabsContent>
 
         <TabsContent value="wiki" className="mt-4">
-          <div className="flex flex-col md:flex-row-reverse gap-6 items-start">
-            <ClubInfobox
-              club={club}
-              infobox={(wikiData.infobox as InfoboxData) || {}}
-              canEdit={canEdit}
-              onSave={saveInfobox}
-            />
-            <div className="flex-1 min-w-0 w-full">
+          <div className="clearfix">
+            <div className="md:float-right md:ml-6 md:mb-4 md:w-[320px] w-full mb-6">
+              <ClubInfobox
+                club={club}
+                infobox={(wikiData.infobox as InfoboxData) || {}}
+                canEdit={canEdit}
+                onSave={saveInfobox}
+              />
+            </div>
+            <div className="min-w-0">
               <WikiSectionsView wiki={wikiData} title={club.name} canEdit={canEdit} onSaveWiki={saveWiki} />
             </div>
+            <div className="clear-both" />
           </div>
+        </TabsContent>
+
+        <TabsContent value="camisas" className="mt-4">
+          <KitsGallery clubId={id!} canEdit={canEdit} />
         </TabsContent>
 
         {canEdit && (
