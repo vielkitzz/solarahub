@@ -66,10 +66,23 @@ export const KitsGallery = ({ clubId, canEdit }: Props) => {
     load();
   }, [clubId]);
 
+  const TIPO_ORDER: Record<KitTipo, number> = {
+    titular: 1,
+    alternativo: 2,
+    terceiro: 3,
+    goleiro: 4,
+    especial: 5,
+  };
+
   const grouped = kits.reduce<Record<number, ClubKit[]>>((acc, k) => {
     (acc[k.ano] ||= []).push(k);
     return acc;
   }, {});
+
+  Object.values(grouped).forEach((arr) => {
+    arr.sort((a, b) => TIPO_ORDER[a.tipo] - TIPO_ORDER[b.tipo]);
+  });
+
   const anos = Object.keys(grouped)
     .map(Number)
     .sort((a, b) => b - a);
