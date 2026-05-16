@@ -1,62 +1,69 @@
-## 1. Custos operacionais + manutenção do estádio
+# Plano de execução
 
-**`settings.economia_params`** ganha 2 chaves:
-- `custos_operacionais_pct` (default `0.25`) — % aplicado sobre `(receita_base + bilheteria + patrocínios)`.
-- `manutencao_estadio_por_nivel` (default `200000`) — multiplicado por `nivel_estadio × (stadium_capacity / 10000)`.
+## 1. Bugs de banco de dados
 
-**Funções `preview_season_turnover` e `process_season_turnover`** (migration):
-- `manutencao_estadio = nivel_estadio * manut_est_por_nivel * (stadium_capacity / 10000)`
-- `custos_operacionais = (rb + bilheteria + contratos) * pct`
-- `delta = rb + bilheteria + contratos + premiacao − manutencao_base − manutencao_estadio − custos_operacionais − folha`
-- Adicionar 2 INSERTS em `transactions` (`saida` / `manutencao_estadio` e `saida` / `operacional`).
+### 1a. Renovação de contrato duplica contratos
+- Investigar `renovar_contrato_jogador` no Supabase.
+- Ajustar para que, ao renovar, qualquer contrato/registro anterior do jogador no clube seja substituído pelo novo (atualizar in-place em vez de inserir nova linha) — remover duplicações.
 
-**UI:**
-- `EconomyParams.tsx`: 2 novos inputs.
-- `SeasonPreview.tsx`: 2 novas colunas (Manut. estádio, Operacional).
-- `ClubDetail.tsx` (aba Finanças → Despesas anuais): adicionar linhas "Manutenção do estádio" e "Custos operacionais" (calculados client-side com mesma fórmula).
+### 1b. Passes livres contam como entrada e saída
+- Mesmo padrão do bug do mercado estrangeiro.
+- Investigar a função RPC usada pelo `FreeAgentsTab` (provavelmente `contratar_jogador_direto` ou função específica de free agents) e remover o registro de `entrada` indevido. Manter apenas a `saida` (custo da contratação).
 
-## 2. Insatisfação por excesso de propostas recusadas
+### 1c. Contratos de empréstimo não executam
+- Investigar a função/rotina que processa empréstimos (`loans` table) ao avançar temporada — verificar se o cron/trigger de cobrança das parcelas existe e se está sendo chamado.
+- Garantir que cada `installments_paid` é incrementado, gera transação `saida` e marca `status = 'paid'` ao final.
 
-Trigger AFTER UPDATE em `transferencias` quando `status` muda para `recusada`:
-- Conta total de propostas `recusada` para `(jogador_id)` cujo comprador era um clube real (ou estrangeiro). Usar o jogador como chave.
-- Quando atinge 5, dispara 1 vez:
-  - notificação ao dono do clube atual (`tipo='player_unhappy'`) avisando que o jogador quer ser vendido OU não vai renovar (sorteio 50/50).
-  - marca `players.attributes.unhappy = true` e `players.a_venda = true` (se "quer sair") OU `interesse_renovacao=false` (se "não renova").
-- Para evitar disparo repetido: gravar `attributes.unhappy_triggered_at` e só avaliar se ainda não foi disparado nesta temporada.
+## 2. Layout da wiki do clube
 
-## 3. Janela de transferências + transferban
+- Em `ClubDetail.tsx` (aba wiki), o infobox hoje fica ao lado e o texto não envolve.
+- Trocar layout de grid para `float: right` no infobox (ou usar shape-outside) para que o texto quebre e flua por baixo do infobox quando ultrapassar sua altura, ocupando toda a largura disponível.
 
-**Settings:** chave `transfer_window` = `{ open: true }` (admin global).
-**Coluna nova:** `clubs.transfer_ban boolean default false`.
+## 3. Feature: Histórico de Camisas
 
-**Trigger BEFORE INSERT em `transferencias`:** se `transfer_window.open=false` → erro; se comprador OU vendedor está com `transfer_ban=true` → erro. Mesmo trigger em `external_proposals` (apenas o lado do clube real é o vendedor).
+### 3a. Banco
+- Tabela `club_kits`:
+  - `club_id` (uuid)
+  - `ano` (int)
+  - `tipo` (enum: `titular | alternativo | terceiro | goleiro | especial`)
+  - `fabricante` (text)
+  - `descricao` (text, opcional)
+  - `image_url` (text)
+  - `created_at`, `updated_at`
+- RLS:
+  - SELECT público
+  - INSERT/UPDATE/DELETE: dono do clube ou admin
+- Bucket de Storage `club-kits` público com policies (upload restrito a autenticados; donos do clube enviam para pasta `<club_id>/`).
 
-**Admin UI (`Admin.tsx`):**
-- Card "Janela de transferências" com toggle global.
-- Na tabela de clubes (existente), nova coluna "Transfers" (count) e botão "Transferban" por linha.
+### 3b. Página global `/camisas`
+- Item no `AppSidebar` em "Conhecimento": "Histórico de Camisas".
+- Lista de clubes (cada um como cartão clicável que leva à página do clube → aba camisas).
+- Visual estilo Football Kit Archive: fundo neutro, imagens grandes, badges por tipo.
 
-## 4. Contadores de transferências
+### 3c. Aba "Camisas" no `ClubDetail.tsx`
+- Galeria agrupada por ano (mais recente → mais antigo).
+- Cada kit: imagem grande, badge colorido por tipo, fabricante, descrição.
+- Para o dono: botões de adicionar / editar / remover (dialog com upload de imagem, ano, tipo, fabricante, descrição).
 
-**View/RPC:** `get_transfer_stats(_club_id)` retornando `{ total_compras, total_vendas, total_estrangeiros }` baseado em `transactions` (categoria `transferencia` / `transferencia_externa`).
+### 3d. Componentes novos
+- `src/components/KitsManager.tsx` — gerenciamento (dialog CRUD).
+- `src/components/KitsGallery.tsx` — visualização agrupada por ano.
+- `src/pages/HistoricoCamisas.tsx` — página global.
 
-**UI:**
-- `ClubDetail.tsx` (aba Finanças, topo do bloco "Transferências e investimentos"): 3 mini-cards com contadores.
-- `Market.tsx` (header próximo aos badges de inbox): 3 mini-badges.
+## Detalhes técnicos
 
-## 5. Fix: confusão venda × compra nas Finanças
+- Paleta dos badges por tipo:
+  - titular → primary
+  - alternativo → secondary
+  - terceiro → accent
+  - goleiro → green
+  - especial → gold
+- Reaproveitar `ImageUpload` existente para envio.
+- React Query para cache (`['club-kits', clubId]`).
+- Rotas: adicionar `/camisas` em `App.tsx` (lazy).
 
-Bug: o componente `ClubDetail` de fato lista corretamente apenas as transações daquele clube (filtra por `club_id`), mas a coluna "Categoria" mostra "Transferência" para os 2 lados igualmente. Correção:
-- Renderizar como **"Compra"** quando `tipo='saida'` e `categoria='transferencia'`, **"Venda"** quando `tipo='entrada'` e `categoria='transferencia'`, e **"Venda (estrangeiro)"** quando `categoria='transferencia_externa'`.
-- Garantir que duplicidade não vem do banco: revisar `confirmar_contratacao` — só insere entrada para `clube_vendedor_id` se `IS NOT NULL`. (Já está OK.) Adicionar `UNIQUE` lógico não é necessário.
+## Ordem de execução
 
-## Arquivos tocados
-
-- **migration SQL**: alter `clubs`, atualiza `economia_params`, recria `preview_season_turnover` + `process_season_turnover`, cria trigger `tg_check_transfer_window`, trigger `tg_player_unhappy_after_reject`, função `get_transfer_stats`, seta `transfer_window`.
-- `src/components/admin/EconomyParams.tsx` (novos campos)
-- `src/components/admin/SeasonPreview.tsx` (novas colunas)
-- `src/components/admin/TransferWindowCard.tsx` (NOVO)
-- `src/pages/Admin.tsx` (lista de clubes: count + transferban + monta TransferWindowCard)
-- `src/pages/ClubDetail.tsx` (despesas + contadores + label compra/venda)
-- `src/pages/Market.tsx` (badges contadores)
-- `src/services/transfers.ts` (helpers `getTransferStats`, `setTransferWindow`, `setClubTransferBan`)
-- `src/types/index.ts` (tipos derivados regerados após migration)
+1. Migration: tabela `club_kits` + bucket + RLS + correções nas funções RPC dos bugs 1a, 1b, 1c.
+2. Frontend: ajuste do layout da wiki.
+3. Frontend: componentes de Kits + página global + aba no ClubDetail + item no sidebar.
