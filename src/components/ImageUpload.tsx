@@ -13,41 +13,6 @@ interface ImageUploadProps {
   className?: string;
 }
 
-const handleFile = async (file: File) => {
-  if (!file.type.startsWith("image/")) {
-    toast.error("Selecione um arquivo de imagem");
-    return;
-  }
-
-  setUploading(true);
-
-  let fileToUpload: File = file;
-  try {
-    fileToUpload = await imageCompression(file, {
-      maxSizeMB: 0.3,
-      maxWidthOrHeight: 800,
-      useWebWorker: true,
-    });
-  } catch {
-    // se falhar a compressão, usa o original
-  }
-
-  const ext = file.name.split(".").pop() || "png";
-  const path = `${folder ? folder + "/" : ""}${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage
-    .from(bucket)
-    .upload(path, fileToUpload, { upsert: false, contentType: file.type });
-  if (error) {
-    toast.error(error.message);
-    setUploading(false);
-    return;
-  }
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-  onChange(data.publicUrl);
-  setUploading(false);
-  toast.success("Imagem enviada!");
-};
-
 export const ImageUpload = ({ value, onChange, bucket = "crests", folder = "", className }: ImageUploadProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -58,14 +23,25 @@ export const ImageUpload = ({ value, onChange, bucket = "crests", folder = "", c
       toast.error("Selecione um arquivo de imagem");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Imagem deve ter menos de 5MB");
-      return;
-    }
+
     setUploading(true);
+
+    let fileToUpload: File = file;
+    try {
+      fileToUpload = await imageCompression(file, {
+        maxSizeMB: 0.3,
+        maxWidthOrHeight: 800,
+        useWebWorker: true,
+      });
+    } catch {
+      // se falhar a compressão, usa o original
+    }
+
     const ext = file.name.split(".").pop() || "png";
     const path = `${folder ? folder + "/" : ""}${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: false, contentType: file.type });
+    const { error } = await supabase.storage
+      .from(bucket)
+      .upload(path, fileToUpload, { upsert: false, contentType: file.type });
     if (error) {
       toast.error(error.message);
       setUploading(false);
