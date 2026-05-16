@@ -171,7 +171,7 @@ export const KitsGallery = ({ clubId, canEdit }: Props) => {
               <ImageUpload
                 value={editing?.image_url}
                 onChange={(url) => setEditing((p) => ({ ...p!, image_url: url }))}
-                folder={`club-kits/${clubId}`}
+                folder={clubId}
                 bucket="club-kits"
               />
             </div>
