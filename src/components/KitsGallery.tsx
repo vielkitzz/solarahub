@@ -62,13 +62,17 @@ export const KitsGallery = ({ clubId, canEdit }: Props) => {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [clubId]);
+  useEffect(() => {
+    load();
+  }, [clubId]);
 
   const grouped = kits.reduce<Record<number, ClubKit[]>>((acc, k) => {
     (acc[k.ano] ||= []).push(k);
     return acc;
   }, {});
-  const anos = Object.keys(grouped).map(Number).sort((a, b) => b - a);
+  const anos = Object.keys(grouped)
+    .map(Number)
+    .sort((a, b) => b - a);
 
   const save = async () => {
     if (!editing) return;
@@ -85,7 +89,10 @@ export const KitsGallery = ({ clubId, canEdit }: Props) => {
       image_url: editing.image_url,
     };
     const { error } = editing.id
-      ? await supabase.from("club_kits" as any).update(payload).eq("id", editing.id)
+      ? await supabase
+          .from("club_kits" as any)
+          .update(payload)
+          .eq("id", editing.id)
       : await supabase.from("club_kits" as any).insert(payload);
     if (error) return toast.error(error.message);
     toast.success(editing.id ? "Camisa atualizada!" : "Camisa adicionada!");
@@ -95,7 +102,10 @@ export const KitsGallery = ({ clubId, canEdit }: Props) => {
 
   const remove = async (id: string) => {
     if (!confirm("Remover esta camisa?")) return;
-    const { error } = await supabase.from("club_kits" as any).delete().eq("id", id);
+    const { error } = await supabase
+      .from("club_kits" as any)
+      .delete()
+      .eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Camisa removida.");
     load();
@@ -134,12 +144,21 @@ export const KitsGallery = ({ clubId, canEdit }: Props) => {
               {grouped[ano].map((k) => (
                 <Card key={k.id} className="overflow-hidden bg-secondary/20 border-border/50 group">
                   <div className="aspect-square bg-gradient-to-br from-secondary/40 to-background/40 flex items-center justify-center p-4">
-                    <img src={k.image_url} alt={`${TIPO_LABEL[k.tipo]} ${k.ano}`} className="max-h-full max-w-full object-contain drop-shadow-lg" loading="lazy" />
+                    <img
+                      src={k.image_url}
+                      alt={`${TIPO_LABEL[k.tipo]} ${k.ano}`}
+                      className="max-h-full max-w-full object-contain drop-shadow-lg"
+                      loading="lazy"
+                    />
                   </div>
                   <div className="p-3 space-y-2">
                     <div className="flex items-center justify-between gap-2">
-                      <Badge variant="outline" className={`text-[10px] ${TIPO_BADGE[k.tipo]}`}>{TIPO_LABEL[k.tipo]}</Badge>
-                      {k.fabricante && <span className="text-[10px] text-muted-foreground truncate">{k.fabricante}</span>}
+                      <Badge variant="outline" className={`text-[10px] ${TIPO_BADGE[k.tipo]}`}>
+                        {TIPO_LABEL[k.tipo]}
+                      </Badge>
+                      {k.fabricante && (
+                        <span className="text-[10px] text-muted-foreground truncate">{k.fabricante}</span>
+                      )}
                     </div>
                     {k.descricao && <p className="text-xs text-muted-foreground line-clamp-2">{k.descricao}</p>}
                     {canEdit && (
@@ -147,7 +166,12 @@ export const KitsGallery = ({ clubId, canEdit }: Props) => {
                         <Button size="sm" variant="ghost" className="h-7 px-2 flex-1" onClick={() => setEditing(k)}>
                           <Pencil className="h-3 w-3" />
                         </Button>
-                        <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive" onClick={() => remove(k.id)}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-destructive"
+                          onClick={() => remove(k.id)}
+                        >
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
@@ -172,21 +196,29 @@ export const KitsGallery = ({ clubId, canEdit }: Props) => {
                 value={editing?.image_url}
                 onChange={(url) => setEditing((p) => ({ ...p!, image_url: url }))}
                 folder={clubId}
-                bucket="club-kits"
+                bucket="kits"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Ano</Label>
-                <Input type="number" value={editing?.ano ?? ""} onChange={(e) => setEditing((p) => ({ ...p!, ano: parseInt(e.target.value) || 0 }))} />
+                <Input
+                  type="number"
+                  value={editing?.ano ?? ""}
+                  onChange={(e) => setEditing((p) => ({ ...p!, ano: parseInt(e.target.value) || 0 }))}
+                />
               </div>
               <div>
                 <Label>Tipo</Label>
                 <Select value={editing?.tipo} onValueChange={(v) => setEditing((p) => ({ ...p!, tipo: v as KitTipo }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     {(Object.keys(TIPO_LABEL) as KitTipo[]).map((t) => (
-                      <SelectItem key={t} value={t}>{TIPO_LABEL[t]}</SelectItem>
+                      <SelectItem key={t} value={t}>
+                        {TIPO_LABEL[t]}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -194,16 +226,28 @@ export const KitsGallery = ({ clubId, canEdit }: Props) => {
             </div>
             <div>
               <Label>Fabricante</Label>
-              <Input value={editing?.fabricante ?? ""} onChange={(e) => setEditing((p) => ({ ...p!, fabricante: e.target.value }))} placeholder="Nike, Adidas..." />
+              <Input
+                value={editing?.fabricante ?? ""}
+                onChange={(e) => setEditing((p) => ({ ...p!, fabricante: e.target.value }))}
+                placeholder="Nike, Adidas..."
+              />
             </div>
             <div>
               <Label>Descrição (opcional)</Label>
-              <Textarea value={editing?.descricao ?? ""} onChange={(e) => setEditing((p) => ({ ...p!, descricao: e.target.value }))} rows={2} />
+              <Textarea
+                value={editing?.descricao ?? ""}
+                onChange={(e) => setEditing((p) => ({ ...p!, descricao: e.target.value }))}
+                rows={2}
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditing(null)}>Cancelar</Button>
-            <Button onClick={save} className="bg-gradient-gold text-primary-foreground">Salvar</Button>
+            <Button variant="outline" onClick={() => setEditing(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={save} className="bg-gradient-gold text-primary-foreground">
+              Salvar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
