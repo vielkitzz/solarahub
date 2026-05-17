@@ -174,9 +174,11 @@ const Market = () => {
     const { data: tx } = await supabase
       .from("transactions")
       .select("*")
-      .in("categoria", ["transferencia", "transferencia_externa"])
-      .eq("tipo", "entrada")
       .eq("temporada", tempValue)
+      .or(
+        "and(tipo.eq.entrada,categoria.in.(transferencia,transferencia_externa))," +
+          "and(tipo.eq.saida,categoria.eq.transferencia,metadata->>tipo_op.in.(estrangeiro,livre))",
+      )
       .order("created_at", { ascending: false })
       .limit(200);
     setSeasonTransfers(tx || []);
