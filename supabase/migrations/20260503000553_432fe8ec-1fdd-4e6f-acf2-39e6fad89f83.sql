@@ -63,7 +63,7 @@ $$;
 INSERT INTO public.settings (key, value)
 VALUES (
   'base_upgrade_custos',
-  jsonb_build_object('1_2', 5000000, '2_3', 12000000, '3_4', 25000000, '4_5', 50000000)
+  jsonb_build_object('1_2', 700000, '2_3', 4000000, '3_4', 18000000, '4_5', 35000000)
 )
 ON CONFLICT (key) DO NOTHING;
 
