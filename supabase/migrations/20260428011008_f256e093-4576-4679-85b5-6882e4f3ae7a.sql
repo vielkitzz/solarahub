@@ -145,7 +145,8 @@ CREATE OR REPLACE FUNCTION public.realizar_peneira_v2(
 RETURNS TABLE(
   scout_id uuid, scout_name text, scout_position text, scout_age integer,
   scout_nationality text, scout_skill integer,
-  scout_potential_min integer, scout_potential_max integer
+  scout_potential_min integer, scout_potential_max integer,
+  scout_development_progress numeric  -- ← adicionado
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -164,14 +165,12 @@ DECLARE
 BEGIN
   SELECT * INTO c FROM public.clubs WHERE id = _club_id;
   IF NOT FOUND THEN RAISE EXCEPTION 'Clube não encontrado'; END IF;
-
   IF COALESCE(c.academy_scouting_count, 0) >= 2 THEN
     RAISE EXCEPTION 'Limite de peneiras desta temporada atingido';
   END IF;
   IF _age_min < 14 OR _age_max > 23 OR _age_min > _age_max THEN
     RAISE EXCEPTION 'Faixa de idade inválida (14-23)';
   END IF;
-
   weights := CASE c.nivel_base
     WHEN 1 THEN ARRAY[50, 35, 12, 2.5, 0.5]
     WHEN 2 THEN ARRAY[30, 40, 22, 6.5, 1.5]
@@ -180,16 +179,12 @@ BEGIN
     WHEN 5 THEN ARRAY[3, 12, 50, 27, 8]
     ELSE ARRAY[50, 35, 12, 2.5, 0.5]
   END;
-
   qty := 3 + floor(random() * 6)::INTEGER;
-
-  -- Pool de posições: usa as escolhidas; se vazia/null, usa todas
   IF _positions IS NULL OR array_length(_positions, 1) IS NULL OR array_length(_positions, 1) = 0 THEN
     pool := all_positions;
   ELSE
     pool := _positions;
   END IF;
-
   FOR i IN 1..qty LOOP
     rand := random() * 100;
     acc := 0;
@@ -207,7 +202,6 @@ BEGIN
         EXIT;
       END IF;
     END LOOP;
-
     pmax := CASE faixa
       WHEN '60_69' THEN 60 + floor(random() * 10)::INTEGER
       WHEN '70_79' THEN 70 + floor(random() * 10)::INTEGER
@@ -218,12 +212,9 @@ BEGIN
     pmax := LEAST(94, pmax);
     pmin := pmax - (4 + floor(random() * 5)::INTEGER);
     pmin := GREATEST(45, pmin);
-
     age_v := _age_min + floor(random() * (_age_max - _age_min + 1))::INTEGER;
     skill_v := 30 + floor(random() * 23)::INTEGER;
-
     chosen_pos := pool[1 + floor(random() * array_length(pool, 1))::INTEGER];
-
     scout_id := gen_random_uuid();
     scout_name := 'Jogador ' || substr(scout_id::text, 1, 4);
     scout_position := chosen_pos;
@@ -232,9 +223,9 @@ BEGIN
     scout_skill := skill_v;
     scout_potential_min := pmin;
     scout_potential_max := pmax;
+    scout_development_progress := round((random() * 30)::numeric, 2); -- ← 0% a 30% inicial
     RETURN NEXT;
   END LOOP;
-
   UPDATE public.clubs SET academy_scouting_count = COALESCE(academy_scouting_count, 0) + 1 WHERE id = _club_id;
 END;
 $$;
