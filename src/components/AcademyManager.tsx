@@ -474,6 +474,7 @@ export const AcademyManager = ({ club, canEdit, onChange, myClub }: Props) => {
 
   const peneirasUsadas = club.academy_scouting_count ?? 0;
   const peneirasRestantes = Math.max(0, 2 - peneirasUsadas);
+  const baseCheia = players.length >= 20;
   const pesquisasRestantes = Math.max(0, 10 - searchesUsed);
 
   const load = async () => {
@@ -758,6 +759,7 @@ export const AcademyManager = ({ club, canEdit, onChange, myClub }: Props) => {
               <div className="font-display font-bold">Peneira</div>
               <div className="text-xs text-muted-foreground">
                 {peneirasRestantes} de 2 peneiras restantes nesta temporada
+                {baseCheia && <span className="ml-2 text-destructive font-medium">· Base cheia (20/20)</span>}
               </div>
             </div>
           </div>
@@ -768,7 +770,7 @@ export const AcademyManager = ({ club, canEdit, onChange, myClub }: Props) => {
                 setScoutResults(null);
                 setPicked(new Set());
               }}
-              disabled={peneirasRestantes <= 0}
+              disabled={peneirasRestantes <= 0 || baseCheia}
               className="bg-gradient-gold text-primary-foreground hover:opacity-90"
             >
               <Search className="h-4 w-4" />
