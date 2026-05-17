@@ -30,6 +30,7 @@ import { SkillDisplay } from "@/components/SkillDisplay";
 import { generateRandomName } from "@/lib/scouting-names";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
+import type { ScoutReport } from "@/lib/scout";
 
 interface Props {
   club: any;
