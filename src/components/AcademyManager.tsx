@@ -30,7 +30,6 @@ import { SkillDisplay } from "@/components/SkillDisplay";
 import { generateRandomName } from "@/lib/scouting-names";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import type { ScoutReport } from "@/lib/scout"; // Certifique-se de que essa exportação exista
 
 interface Props {
   club: any;
@@ -64,6 +63,7 @@ interface ScoutResult {
   scout_skill: number;
   scout_potential_min: number;
   scout_potential_max: number;
+  scout_development_progress?: number; // ← add this
 }
 
 const NIVEL_LABELS = ["—", "Modesto", "Regional", "Profissional", "Premium", "Elite"];
