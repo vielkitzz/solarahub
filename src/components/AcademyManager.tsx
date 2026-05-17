@@ -626,6 +626,7 @@ export const AcademyManager = ({ club, canEdit, onChange, myClub }: Props) => {
       skill: p.scout_skill,
       potential_min: p.scout_potential_min,
       potential_max: p.scout_potential_max,
+      development_progress: p.scout_development_progress ?? 0, // ← novo
     }));
     const { error } = await supabase.from("academy_players").insert(rows);
     setSavingScout(false);
