@@ -507,7 +507,7 @@ const Market = () => {
     toast.success("Contratação realizada!");
     setForeignResponse(null);
     setCounterTarget(null);
-    await Promise.all([loadAll(), loadProposals(), loadSeasonAndRumors()]);
+    await Promise.all([loadAll(), loadProposals(), loadSeasonAndRumors()]); // ← adicionar loadSeasonAndRumors
   };
 
   const retryForeignNegotiation = () => {
