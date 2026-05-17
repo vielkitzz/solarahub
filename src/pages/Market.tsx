@@ -903,7 +903,9 @@ const Market = () => {
                     ? externalClub
                       ? { id: null, name: externalClub.name, crest_url: externalClub.crest }
                       : { id: null, name: "Clube estrangeiro", crest_url: null }
-                    : clubs[tx.related_club_id];
+                    : isEstrangeiro || isLivre
+                      ? clubs[tx.club_id]
+                      : clubs[tx.related_club_id];
                   const vendedorClub = clubs[tx.club_id];
                   const tipoOp = isExternalSale ? "venda externa" : (tx.metadata as any)?.tipo_op || "compra";
                   const isEstrangeiro = tipoOp === "estrangeiro";
