@@ -738,6 +738,7 @@ export type Database = {
           age: number | null
           attributes: Json
           club_id: string | null
+          clube_revenda_id: string | null
           contrato_ate: number | null
           created_at: string
           external_club_id: string | null
@@ -749,6 +750,7 @@ export type Database = {
           master_player_id: string | null
           name: string
           nationality: string | null
+          percentual_revenda: number | null
           position: string
           potential_max: number | null
           potential_min: number | null
@@ -762,6 +764,7 @@ export type Database = {
           age?: number | null
           attributes?: Json
           club_id?: string | null
+          clube_revenda_id?: string | null
           contrato_ate?: number | null
           created_at?: string
           external_club_id?: string | null
@@ -773,6 +776,7 @@ export type Database = {
           master_player_id?: string | null
           name: string
           nationality?: string | null
+          percentual_revenda?: number | null
           position: string
           potential_max?: number | null
           potential_min?: number | null
@@ -786,6 +790,7 @@ export type Database = {
           age?: number | null
           attributes?: Json
           club_id?: string | null
+          clube_revenda_id?: string | null
           contrato_ate?: number | null
           created_at?: string
           external_club_id?: string | null
@@ -797,6 +802,7 @@ export type Database = {
           master_player_id?: string | null
           name?: string
           nationality?: string | null
+          percentual_revenda?: number | null
           position?: string
           potential_max?: number | null
           potential_min?: number | null
@@ -816,6 +822,20 @@ export type Database = {
           {
             foreignKeyName: "players_club_id_fkey"
             columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "players_clube_revenda_id_fkey"
+            columns: ["clube_revenda_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "players_clube_revenda_id_fkey"
+            columns: ["clube_revenda_id"]
             isOneToOne: false
             referencedRelation: "clubs_public"
             referencedColumns: ["id"]
@@ -1467,6 +1487,7 @@ export type Database = {
         }
         Returns: {
           scout_age: number
+          scout_development_progress: number
           scout_id: string
           scout_name: string
           scout_nationality: string
@@ -1506,6 +1527,7 @@ export type Database = {
         Args: { _jogador_id: string }
         Returns: number
       }
+      test_turnover_debug: { Args: never; Returns: string }
       upgrade_academia: {
         Args: { _club_id: string; _novo_nivel: number }
         Returns: undefined
