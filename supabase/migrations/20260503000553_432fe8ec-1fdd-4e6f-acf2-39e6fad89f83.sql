@@ -31,7 +31,7 @@ BEGIN
     custo_passo := COALESCE(
       (custos->>(i || '_' || (i+1)))::numeric,
       -- fallback caso a setting ainda não exista
-      CASE i WHEN 1 THEN 5000000 WHEN 2 THEN 12000000 WHEN 3 THEN 25000000 WHEN 4 THEN 50000000 ELSE 0 END
+      CASE i WHEN 1 THEN 700000 WHEN 2 THEN 4000000 WHEN 3 THEN 18000000 WHEN 4 THEN 35000000 ELSE 0 END
     );
     custo_total := custo_total + custo_passo;
   END LOOP;
