@@ -737,6 +737,7 @@ export type Database = {
           a_venda: boolean
           age: number | null
           attributes: Json
+          bloquear_propostas: boolean
           club_id: string | null
           clube_revenda_id: string | null
           contrato_ate: number | null
@@ -763,6 +764,7 @@ export type Database = {
           a_venda?: boolean
           age?: number | null
           attributes?: Json
+          bloquear_propostas?: boolean
           club_id?: string | null
           clube_revenda_id?: string | null
           contrato_ate?: number | null
@@ -789,6 +791,7 @@ export type Database = {
           a_venda?: boolean
           age?: number | null
           attributes?: Json
+          bloquear_propostas?: boolean
           club_id?: string | null
           clube_revenda_id?: string | null
           contrato_ate?: number | null
@@ -1354,7 +1357,7 @@ export type Database = {
           }
         | {
             Args: {
-              _anos_contrato: number
+              _anos_contrato?: number
               _clube_id: string
               _jogador_id: string
               _luvas: number
