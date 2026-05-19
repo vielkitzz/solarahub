@@ -903,10 +903,19 @@ const Market = () => {
                   const isExternalSale = tx.categoria === "transferencia_externa";
                   const externalClub = isExternalSale ? externalClubsMap[(tx.metadata as any)?.external_club_id] : null;
 
-                  // ← tipoOp, isEstrangeiro e isLivre PRIMEIRO
                   const tipoOp = isExternalSale ? "venda est." : (tx.metadata as any)?.tipo_op || "compra";
-                  const isEstrangeiro = tipoOp === "compra est.";
-                  const isLivre = tipoOp === "passes livres";
+                  const isEstrangeiro = tipoOp === "estrangeiro";
+                  const isLivre = tipoOp === "livre";
+
+                  // Label separado só para exibição no badge
+                  const tipoOpLabel: Record<string, string> = {
+                    estrangeiro: "compra est.",
+                    livre: "passes livres",
+                    "venda est.": "venda est.",
+                    compra: "compra",
+                    emprestimo: "empréstimo",
+                    troca: "troca",
+                  };
 
                   // ← compradorClub DEPOIS, já pode usar isEstrangeiro e isLivre
                   const compradorClub = isExternalSale
@@ -1011,8 +1020,8 @@ const Market = () => {
                         )}
                       </TableCell>
                       <TableCell className="text-center">
-                        <Badge variant="outline" className="text-[10px] uppercase border-primary/40 text-primary">
-                          {tipoOp}
+                        <Badge variant="outline" className="text-[10px] uppercase border-primary text-primary">
+                          {tipoOpLabel[tipoOp] ?? tipoOp}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right font-display font-bold text-primary">
