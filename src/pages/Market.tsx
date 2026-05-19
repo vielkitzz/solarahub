@@ -677,10 +677,10 @@ const Market = () => {
             />
             <Card className="bg-gradient-card border-border/50 overflow-hidden">
               <Table className="table-fixed w-full">
-                <TableHead className="w-32">Jogador</TableHead>
+                <TableHead className="w-36">Jogador</TableHead>
                 <TableHead className="w-44">De</TableHead>
                 <TableHead className="w-44">Para</TableHead>
-                <TableHead className="w-36 text-center">Tipo</TableHead>
+                <TableHead className="w-32 text-center">Tipo</TableHead>
                 <TableHead className="w-32 text-right">Valor</TableHead>
                 <TableHead className="w-24 text-right">Data</TableHead>
                 <TableBody>
