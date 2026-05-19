@@ -182,27 +182,28 @@ export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: Foreign
                       <span>{ext?.name || r.club_origin || "—"}</span>
                     </div>
                   </TableCell>
-                <TableCell className="text-center">
-                  <Badge className="bg-primary/10 text-primary border-primary/30 font-bold">{r.overall ?? "—"}</Badge>
-                </TableCell>
-                <TableCell className="text-center hidden sm:table-cell text-sm">{r.age ?? "—"}</TableCell>
-                <TableCell className="text-right font-display font-bold text-primary">
-                  {formatCurrency(r.market_value)}
-                </TableCell>
-                <TableCell className="text-right text-sm">{formatCurrency(r.salary_demand)}</TableCell>
-                {hasClub && (
-                  <TableCell>
-                    <Button
-                      size="sm"
-                      onClick={() => onNegotiate(buildForeignPlayer(r))}
-                      className="bg-gradient-gold text-primary-foreground hover:opacity-90"
-                    >
-                      Negociar
-                    </Button>
+                  <TableCell className="text-center">
+                    <Badge className="bg-primary/10 text-primary border-primary/30 font-bold">{r.overall ?? "—"}</Badge>
                   </TableCell>
-                )}
-              </TableRow>
-            ))}
+                  <TableCell className="text-center hidden sm:table-cell text-sm">{r.age ?? "—"}</TableCell>
+                  <TableCell className="text-right font-display font-bold text-primary">
+                    {formatCurrency(r.market_value)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm">{formatCurrency(r.salary_demand)}</TableCell>
+                  {hasClub && (
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        onClick={() => onNegotiate(buildForeignPlayer(r))}
+                        className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+                      >
+                        Negociar
+                      </Button>
+                    </TableCell>
+                  )}
+                </TableRow>
+              );
+            })}
             {filtered.length === 0 && (
               <TableRow>
                 <TableCell colSpan={hasClub ? 9 : 8} className="text-center text-muted-foreground py-10">
