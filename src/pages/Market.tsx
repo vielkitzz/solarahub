@@ -677,16 +677,12 @@ const Market = () => {
             />
             <Card className="bg-gradient-card border-border/50 overflow-hidden">
               <Table className="table-fixed w-full">
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-[16%]">Jogador</TableHead>
-                    <TableHead className="w-[22%]">De</TableHead>
-                    <TableHead className="w-[22%]">Para</TableHead>
-                    <TableHead className="w-[16%] text-center">Tipo</TableHead>
-                    <TableHead className="w-[14%] text-right">Valor</TableHead>
-                    <TableHead className="w-[10%] text-right">Data</TableHead>
-                  </TableRow>
-                </TableHeader>
+                <TableHead className="w-32">Jogador</TableHead>
+                <TableHead className="w-44">De</TableHead>
+                <TableHead className="w-44">Para</TableHead>
+                <TableHead className="w-36 text-center">Tipo</TableHead>
+                <TableHead className="w-32 text-right">Valor</TableHead>
+                <TableHead className="w-24 text-right">Data</TableHead>
                 <TableBody>
                   {filteredNegociar.map((p) => {
                     const club = clubs[p.club_id];
