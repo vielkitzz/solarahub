@@ -372,7 +372,7 @@ export function SquadTable({
           <TableBody>
             {filteredAndSorted.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={canEdit ? 12 : 10} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={canEdit ? 13 : 10} className="text-center py-8 text-muted-foreground">
                   Nenhum jogador encontrado.
                 </TableCell>
               </TableRow>
