@@ -404,13 +404,32 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                     </>
                   ) : (
                     <>
-                      <Button
-                        size="sm"
-                        className="bg-primary text-primary-foreground"
-                        onClick={() => (onNegotiate ? onNegotiate(player) : navigate("/mercado"))}
-                      >
-                        <ArrowRightLeft className="h-3.5 w-3.5 mr-2" /> Fazer proposta
-                      </Button>
+                      {(() => {
+                        const isOnLoan = history.some(
+                          (t: any) => t.tipo === "emprestimo" && t.clube_comprador_id === player.club_id,
+                        );
+                        const isSoldAbroad = !!player.external_club_id;
+                        const isBlocked = !!player.bloquear_propostas;
+                        const disabled = isOnLoan || isSoldAbroad || isBlocked;
+                        const reason = isSoldAbroad
+                          ? "Jogador vendido para o exterior"
+                          : isOnLoan
+                            ? "Jogador está emprestado"
+                            : isBlocked
+                              ? "Propostas bloqueadas pelo clube"
+                              : "";
+                        return (
+                          <Button
+                            size="sm"
+                            className="bg-primary text-primary-foreground"
+                            disabled={disabled}
+                            title={reason}
+                            onClick={() => (onNegotiate ? onNegotiate(player) : navigate("/mercado"))}
+                          >
+                            <ArrowRightLeft className="h-3.5 w-3.5 mr-2" /> Fazer proposta
+                          </Button>
+                        );
+                      })()}
                       <Button
                         size="sm"
                         variant="outline"
