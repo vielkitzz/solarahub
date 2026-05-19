@@ -964,7 +964,7 @@ const Market = () => {
                             <div className="flex items-center gap-2">
                               <div className="h-6 w-6 shrink-0 flex items-center justify-center">
                                 {vendedorDisplay.name === "Passes Livres" ? (
-                                  <ShieldUser className="w-5 h-5 text-muted-foreground/40" />
+                                  <ShieldUser className="w-6 h-6 text-muted-foreground" />
                                 ) : vendedorDisplay.crest_url ? (
                                   <img
                                     src={vendedorDisplay.crest_url}
@@ -972,7 +972,7 @@ const Market = () => {
                                     alt=""
                                   />
                                 ) : (
-                                  <Shield className="w-5 h-5 text-muted-foreground/40" />
+                                  <Shield className="w-6 h-6 text-muted-foreground" />
                                 )}
                               </div>
                               <span className="text-sm hidden md:inline">{vendedorDisplay.name}</span>
