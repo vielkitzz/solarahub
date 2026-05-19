@@ -922,10 +922,10 @@ const Market = () => {
                     : null;
                   const vendedorDisplay = isEstrangeiro
                     ? foreignOriginExt
-                      ? { name: foreignOriginExt.name, crest_url: foreignOriginExt.crest, id: null }
-                      : { name: foreignOriginName || "Mercado Estrangeiro", crest_url: null, id: null }
+                      ? { name: foreignOriginExt.name, crest_url: foreignOriginExt.crest, id: "external" }
+                      : { name: foreignOriginName || "Mercado Estrangeiro", crest_url: null, id: "external" }
                     : isLivre
-                      ? { name: "Passes Livres", crest_url: null, id: null }
+                      ? { name: "Passes Livres", crest_url: null, id: "external" }
                       : vendedorClub;
 
                   return (
@@ -940,7 +940,8 @@ const Market = () => {
                       </TableCell>
                       <TableCell>
                         {vendedorDisplay ? (
-                          vendedorDisplay.id ? (
+                          vendedorDisplay.id && vendedorDisplay.id !== "external" ? (
+                            // Clube interno com link
                             <Link
                               to={`/clubes/${vendedorDisplay.id}`}
                               className="flex items-center gap-2 hover:text-primary"
@@ -957,7 +958,19 @@ const Market = () => {
                               <span className="text-sm hidden md:inline">{vendedorDisplay.name}</span>
                             </Link>
                           ) : (
-                            <span className="text-sm text-muted-foreground italic">{vendedorDisplay.name}</span>
+                            // Clube externo ou passes livres — mesmo visual, sem link
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 shrink-0">
+                                {vendedorDisplay.crest_url && (
+                                  <img
+                                    src={vendedorDisplay.crest_url}
+                                    className="w-full h-full object-contain"
+                                    alt=""
+                                  />
+                                )}
+                              </div>
+                              <span className="text-sm hidden md:inline">{vendedorDisplay.name}</span>
+                            </div>
                           )
                         ) : (
                           "—"
