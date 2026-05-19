@@ -709,11 +709,8 @@ const ClubDetail = () => {
         </TabsContent>
 
         <TabsContent value="wiki" className="mt-4">
-          <div className="flex flex-col md:flex-row gap-6 items-start">
-            <div className="flex-1 min-w-0">
-              <WikiSectionsView wiki={wikiData} title={club.name} canEdit={canEdit} onSaveWiki={saveWiki} />
-            </div>
-            <div className="md:w-[320px] w-full shrink-0">
+          <div>
+            <div className="float-right ml-6 mb-4 w-full md:w-[320px]">
               <ClubInfobox
                 club={club}
                 infobox={(wikiData.infobox as InfoboxData) || {}}
@@ -721,6 +718,8 @@ const ClubDetail = () => {
                 onSave={saveInfobox}
               />
             </div>
+            <WikiSectionsView wiki={wikiData} title={club.name} canEdit={canEdit} onSaveWiki={saveWiki} />
+            <div className="clear-both" />
           </div>
         </TabsContent>
 
