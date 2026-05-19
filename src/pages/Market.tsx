@@ -1023,7 +1023,7 @@ const Market = () => {
                         {Number(tx.valor) > 0 ? (
                           formatCurrency(Number(tx.valor))
                         ) : (
-                          <span className="text-muted-foreground">—</span>
+                          <span className="text-center font-display font-bold text-primary">€ 0</span>
                         )}
                       </TableCell>
                       <TableCell className="text-right text-xs text-muted-foreground">
