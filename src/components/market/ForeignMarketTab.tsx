@@ -30,6 +30,7 @@ const SortIcon = ({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; s
 
 export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: ForeignMarketTabProps) => {
   const [rows, setRows] = useState<any[]>([]);
+  const [externalClubs, setExternalClubs] = useState<Record<string, { name: string; crest: string | null }>>({});
   const [pos, setPos] = useState<string>("all");
   const [temp, setTemp] = useState<string>("all");
   const [q, setQ] = useState<string>("");
@@ -41,6 +42,16 @@ export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: Foreign
       .from("foreign_market_players")
       .select("*")
       .then(({ data }) => setRows(data || []));
+    supabase
+      .from("external_clubs")
+      .select("id, name, crest")
+      .then(({ data }) => {
+        const map: Record<string, { name: string; crest: string | null }> = {};
+        (data || []).forEach((c: any) => {
+          map[String(c.name).trim().toLowerCase()] = { name: c.name, crest: c.crest };
+        });
+        setExternalClubs(map);
+      });
   }, []);
 
   const temporadas = useMemo(
