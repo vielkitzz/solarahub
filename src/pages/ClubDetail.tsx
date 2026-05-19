@@ -286,6 +286,16 @@ const ClubDetail = () => {
     setPlayers((prev) => prev.map((p) => (p.id === playerId ? { ...p, a_venda: value } : p)));
     toast.success(value ? "Jogador colocado à venda" : "Jogador removido da vitrine");
   };
+
+  const toggleBlockProposals = async (playerId: string, value: boolean) => {
+    const { error } = await supabase
+      .from("players")
+      .update({ bloquear_propostas: value } as any)
+      .eq("id", playerId);
+    if (error) return toast.error(error.message);
+    setPlayers((prev) => prev.map((p) => (p.id === playerId ? { ...p, bloquear_propostas: value } : p)));
+    toast.success(value ? "Propostas bloqueadas para esse jogador" : "Propostas liberadas");
+  };
   if (!club) return <div className="text-center py-20 text-muted-foreground">Clube não encontrado.</div>;
 
   const folhaSalarial = players.reduce((s, p) => s + Number(p.salario_atual || 0), 0);
