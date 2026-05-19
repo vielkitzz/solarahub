@@ -916,8 +916,14 @@ const Market = () => {
                       : clubs[tx.related_club_id];
 
                   const vendedorClub = clubs[tx.club_id];
+                  const foreignOriginName = (tx.metadata as any)?.club_origin;
+                  const foreignOriginExt = foreignOriginName
+                    ? externalClubsMap[`name:${String(foreignOriginName).trim().toLowerCase()}`]
+                    : null;
                   const vendedorDisplay = isEstrangeiro
-                    ? { name: "Mercado Estrangeiro", crest_url: null, id: null }
+                    ? foreignOriginExt
+                      ? { name: foreignOriginExt.name, crest_url: foreignOriginExt.crest, id: null }
+                      : { name: foreignOriginName || "Mercado Estrangeiro", crest_url: null, id: null }
                     : isLivre
                       ? { name: "Passes Livres", crest_url: null, id: null }
                       : vendedorClub;
