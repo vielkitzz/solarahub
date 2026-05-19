@@ -150,7 +150,7 @@ export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: Foreign
               <TableHead className="w-16">Posição</TableHead>
               <TableHead>Jogador</TableHead>
               <TableHead className="hidden sm:table-cell w-20"></TableHead>
-              <TableHead>Clube / Liga</TableHead>
+              <TableHead>Clube de Origem</TableHead>
               <SortableHead col="overall" label="HAB" className="text-center w-16" />
               <SortableHead col="age" label="Idade" className="text-center hidden sm:table-cell w-16" />
               <SortableHead col="market_value" label="Valor" className="text-right" />
@@ -159,21 +159,29 @@ export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: Foreign
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((r) => (
-              <TableRow key={r.id}>
-                <TableCell>
-                  <Badge variant="outline" className="border-primary/40 text-primary">
-                    {r.position}
-                  </Badge>
-                </TableCell>
-                <TableCell className="font-medium">{r.name}</TableCell>
-                <TableCell className="hidden sm:table-cell py-2">
-                  {r.nationality && <FlagImg nationality={r.nationality} />}
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {r.club_origin}
-                  {r.league_origin ? ` / ${r.league_origin}` : ""}
-                </TableCell>
+            {filtered.map((r) => {
+              const ext = r.club_origin
+                ? externalClubs[String(r.club_origin).trim().toLowerCase()]
+                : undefined;
+              return (
+                <TableRow key={r.id}>
+                  <TableCell>
+                    <Badge variant="outline" className="border-primary/40 text-primary">
+                      {r.position}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="font-medium">{r.name}</TableCell>
+                  <TableCell className="hidden sm:table-cell py-2">
+                    {r.nationality && <FlagImg nationality={r.nationality} />}
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      {ext?.crest ? (
+                        <img src={ext.crest} alt={ext.name} className="h-5 w-5 object-contain" />
+                      ) : null}
+                      <span>{ext?.name || r.club_origin || "—"}</span>
+                    </div>
+                  </TableCell>
                 <TableCell className="text-center">
                   <Badge className="bg-primary/10 text-primary border-primary/30 font-bold">{r.overall ?? "—"}</Badge>
                 </TableCell>
