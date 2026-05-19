@@ -36,6 +36,8 @@ import {
   Heart,
   Globe2,
   UserMinus,
+  Shield,
+  ShieldUser,
 } from "lucide-react";
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
 import { getFlagUrl } from "@/lib/countries";
@@ -941,32 +943,36 @@ const Market = () => {
                       <TableCell>
                         {vendedorDisplay ? (
                           vendedorDisplay.id && vendedorDisplay.id !== "external" ? (
-                            // Clube interno com link
                             <Link
                               to={`/clubes/${vendedorDisplay.id}`}
                               className="flex items-center gap-2 hover:text-primary"
                             >
-                              <div className="h-6 w-6 shrink-0">
-                                {vendedorDisplay.crest_url && (
+                              <div className="h-6 w-6 shrink-0 flex items-center justify-center">
+                                {vendedorDisplay.crest_url ? (
                                   <img
                                     src={vendedorDisplay.crest_url}
                                     className="w-full h-full object-contain"
                                     alt=""
                                   />
+                                ) : (
+                                  <Shield className="w-5 h-5 text-muted-foreground/40" />
                                 )}
                               </div>
                               <span className="text-sm hidden md:inline">{vendedorDisplay.name}</span>
                             </Link>
                           ) : (
-                            // Clube externo ou passes livres — mesmo visual, sem link
                             <div className="flex items-center gap-2">
-                              <div className="h-6 w-6 shrink-0">
-                                {vendedorDisplay.crest_url && (
+                              <div className="h-6 w-6 shrink-0 flex items-center justify-center">
+                                {vendedorDisplay.name === "Passes Livres" ? (
+                                  <ShieldUser className="w-5 h-5 text-muted-foreground/40" />
+                                ) : vendedorDisplay.crest_url ? (
                                   <img
                                     src={vendedorDisplay.crest_url}
                                     className="w-full h-full object-contain"
                                     alt=""
                                   />
+                                ) : (
+                                  <Shield className="w-5 h-5 text-muted-foreground/40" />
                                 )}
                               </div>
                               <span className="text-sm hidden md:inline">{vendedorDisplay.name}</span>
