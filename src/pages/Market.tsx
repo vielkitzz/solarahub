@@ -1019,7 +1019,7 @@ const Market = () => {
                           {tipoOpLabel[tipoOp] ?? tipoOp}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right font-display font-bold text-primary">
+                      <TableCell className="text-center font-display font-bold text-primary">
                         {Number(tx.valor) > 0 ? (
                           formatCurrency(Number(tx.valor))
                         ) : (
