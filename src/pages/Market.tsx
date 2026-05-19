@@ -876,13 +876,13 @@ const Market = () => {
           <Card className="bg-gradient-card border-border/50 overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead>Jogador</TableHead>
-                  <TableHead>De</TableHead>
-                  <TableHead>Para</TableHead>
-                  <TableHead className="text-center">Tipo</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
-                  <TableHead className="text-right">Data</TableHead>
+                <TableRow>
+                  <TableHead className="w-32">Jogador</TableHead>
+                  <TableHead className="w-44">De</TableHead>
+                  <TableHead className="w-44">Para</TableHead>
+                  <TableHead className="w-36 text-center">Tipo</TableHead>
+                  <TableHead className="w-32 text-center">Valor</TableHead>
+                  <TableHead className="w-24 text-center">Data</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
