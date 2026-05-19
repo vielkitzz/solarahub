@@ -99,6 +99,7 @@ export function SquadTable({
   isAdmin,
   temporadaAtual,
   toggleSale,
+  toggleBlockProposals,
   setRenewPlayer,
   setShirtPlayer,
   setMultaPlayer,
@@ -112,6 +113,7 @@ export function SquadTable({
   isAdmin: boolean;
   temporadaAtual: number;
   toggleSale: (id: string, v: boolean) => void;
+  toggleBlockProposals?: (id: string, v: boolean) => void;
   setRenewPlayer: (p: any) => void;
   setShirtPlayer: (p: any) => void;
   setMultaPlayer: (p: any) => void;
@@ -124,6 +126,11 @@ export function SquadTable({
   const [searchTerm, setSearchTerm] = useState("");
   const [positionFilter, setPositionFilter] = useState("todas");
   const [statusFilter, setStatusFilter] = useState("todos");
+  const [confirmDialog, setConfirmDialog] = useState<{
+    kind: "sale" | "block";
+    player: any;
+    nextValue: boolean;
+  } | null>(null);
 
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>({
     key: "posicao",
