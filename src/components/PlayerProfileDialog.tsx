@@ -77,7 +77,10 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
         .eq("id", playerId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro na query do jogador:", error);
+        throw error;
+      }
       setPlayer(p);
 
       // 2. Busca o histórico de transferências concluídas
