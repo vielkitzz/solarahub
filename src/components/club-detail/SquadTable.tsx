@@ -357,8 +357,13 @@ export function SquadTable({
               </TableHead>
 
               {canEdit && (
-                <TableHead className="text-center w-16 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                <TableHead className="text-center w-14 text-[10px] uppercase tracking-wider whitespace-nowrap">
                   Venda
+                </TableHead>
+              )}
+              {canEdit && (
+                <TableHead className="text-center w-16 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                  Bloquear
                 </TableHead>
               )}
               {canEdit && <TableHead className="w-10" />}
