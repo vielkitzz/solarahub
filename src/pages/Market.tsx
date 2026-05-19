@@ -874,7 +874,7 @@ const Market = () => {
             {seasonTransfers.length === 1 ? "operação" : "operações"}).
           </Card>
           <Card className="bg-gradient-card border-border/50 overflow-hidden">
-            <Table>
+            <Table className="table-fixed">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-36">Jogador</TableHead>
