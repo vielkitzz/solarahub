@@ -177,7 +177,12 @@ export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, onSaveSect
     <article className="wiki-surface px-5 md:px-8 py-6 md:py-8">
       {title && (
         <header className="mb-8">
-          <h1 className="font-serif text-3xl md:text-4xl font-semibold border-b border-border/60 pb-3 m-0">{title}</h1>
+          <h1
+            className="font-serif text-3xl md:text-4xl font-semibold pb-3 m-0 inline-block border-b border-border/60 w-full"
+            style={{ width: "calc(100% - 340px)" }}
+          >
+            {title}
+          </h1>
         </header>
       )}
 
