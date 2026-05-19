@@ -904,9 +904,9 @@ const Market = () => {
                   const externalClub = isExternalSale ? externalClubsMap[(tx.metadata as any)?.external_club_id] : null;
 
                   // ← tipoOp, isEstrangeiro e isLivre PRIMEIRO
-                  const tipoOp = isExternalSale ? "venda externa" : (tx.metadata as any)?.tipo_op || "compra";
-                  const isEstrangeiro = tipoOp === "estrangeiro";
-                  const isLivre = tipoOp === "livre";
+                  const tipoOp = isExternalSale ? "venda est." : (tx.metadata as any)?.tipo_op || "compra";
+                  const isEstrangeiro = tipoOp === "compra est.";
+                  const isLivre = tipoOp === "passes livres";
 
                   // ← compradorClub DEPOIS, já pode usar isEstrangeiro e isLivre
                   const compradorClub = isExternalSale
