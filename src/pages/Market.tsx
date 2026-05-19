@@ -187,6 +187,7 @@ const Market = () => {
     const ecMap: Record<string, any> = {};
     (ecs || []).forEach((c: any) => {
       ecMap[c.id] = c;
+      ecMap[`name:${String(c.name).trim().toLowerCase()}`] = c;
     });
     setExternalClubsMap(ecMap);
 
