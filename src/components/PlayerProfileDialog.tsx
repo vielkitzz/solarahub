@@ -63,16 +63,16 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
         .from("players")
         .select(
           `
-        id, name, position, age, nationality,
-        habilidade, habilidade_anterior,
-        potential_min, potential_max,
-        market_value, salario_atual, valor_base_calculado,
-        contrato_ate, a_venda, club_id,
-        bloquear_propostas, external_club_id,
-        clubs (
-          id, name, crest_url, rate, owner_id
-        )
-      `,
+          id, name, position, age, nationality,
+          habilidade, habilidade_anterior,
+          potential_min, potential_max,
+          market_value, salario_atual, valor_base_calculado,
+          contrato_ate, a_venda, club_id,
+          bloquear_propostas, external_club_id,
+          clubs!players_club_id_fkey (
+            id, name, crest_url, rate, owner_id
+          )
+        `,
         )
         .eq("id", playerId)
         .single();
