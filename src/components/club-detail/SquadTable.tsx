@@ -488,7 +488,18 @@ export function SquadTable({
                           checked={!!p.a_venda}
                           onCheckedChange={(v) => {
                             if (v === !!p.a_venda) return;
-                            toggleSale(p.id, v);
+                            setConfirmDialog({ kind: "sale", player: p, nextValue: v });
+                          }}
+                        />
+                      </TableCell>
+                    )}
+                    {canEdit && (
+                      <TableCell className="py-2 text-center">
+                        <Switch
+                          checked={!!p.bloquear_propostas}
+                          onCheckedChange={(v) => {
+                            if (v === !!p.bloquear_propostas) return;
+                            setConfirmDialog({ kind: "block", player: p, nextValue: v });
                           }}
                         />
                       </TableCell>
