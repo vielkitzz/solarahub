@@ -69,6 +69,7 @@ export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, onSaveSect
   const [sections, setSections] = useState<SectionMeta[]>(() => buildSectionsFromWiki(wiki));
   const [isAddingSection, setIsAddingSection] = useState(false);
   const [newSectionTitle, setNewSectionTitle] = useState("");
+  const [introOpen, setIntroOpen] = useState(false);
 
   // FIX: flag para ignorar o próximo ciclo do useEffect causado por uma mudança local.
   // Sem isso, após salvar, o pai atualiza `wiki`, o effect dispara e reconstrói
@@ -178,7 +179,17 @@ export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, onSaveSect
       {title && (
         <header className="mb-8">
           <div className="flex items-center gap-3 pb-3 border-b border-border/60">
-            <h1 className="font-serif text-2xl md:text-3xl font-semibold m-0">{title}</h1>
+            <h1 className="font-serif text-2xl md:text-3xl font-semibold m-0 flex-1">{title}</h1>
+            {canEdit && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-primary shrink-0"
+                onClick={() => setIntroOpen(true)}
+              >
+                <Pencil className="h-3 w-3 mr-1" /> editar
+              </Button>
+            )}
           </div>
         </header>
       )}
@@ -282,7 +293,7 @@ function Section({
           {meta.title && <h2 className="font-serif text-xl md:text-2xl font-semibold">{meta.title}</h2>}
           {meta.title && <div className="h-px flex-1 bg-gradient-to-r from-border/60 to-transparent" />}
         </div>
-        {canEdit && (
+        {canEdit && !meta.isSystem && (
           <div className="flex gap-1">
             {!meta.isSystem && (
               <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setIsSettingsOpen(true)}>
