@@ -548,6 +548,52 @@ export function SquadTable({
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog
+        open={!!confirmDialog}
+        onOpenChange={(o) => {
+          if (!o) setConfirmDialog(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmDialog?.kind === "sale"
+                ? confirmDialog?.nextValue
+                  ? "Colocar à venda?"
+                  : "Remover da vitrine?"
+                : confirmDialog?.nextValue
+                  ? "Bloquear propostas?"
+                  : "Liberar propostas?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmDialog?.kind === "sale"
+                ? confirmDialog?.nextValue
+                  ? `${confirmDialog?.player?.name} ficará disponível no mercado para receber propostas destacadas.`
+                  : `${confirmDialog?.player?.name} sairá da vitrine de vendas.`
+                : confirmDialog?.nextValue
+                  ? `Nenhum clube poderá enviar propostas por ${confirmDialog?.player?.name} enquanto o bloqueio estiver ativo.`
+                  : `Os clubes voltarão a poder enviar propostas por ${confirmDialog?.player?.name}.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!confirmDialog) return;
+                if (confirmDialog.kind === "sale") {
+                  toggleSale(confirmDialog.player.id, confirmDialog.nextValue);
+                } else {
+                  toggleBlockProposals?.(confirmDialog.player.id, confirmDialog.nextValue);
+                }
+                setConfirmDialog(null);
+              }}
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
