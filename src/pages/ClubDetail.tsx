@@ -709,7 +709,10 @@ const ClubDetail = () => {
         </TabsContent>
 
         <TabsContent value="wiki" className="mt-4">
-          <div className="flex flex-col md:flex-row-reverse gap-6 items-start">
+          <div className="flex flex-col md:flex-row gap-6 items-start">
+            <div className="flex-1 min-w-0">
+              <WikiSectionsView wiki={wikiData} title={club.name} canEdit={canEdit} onSaveWiki={saveWiki} />
+            </div>
             <div className="md:w-[320px] w-full shrink-0">
               <ClubInfobox
                 club={club}
@@ -717,9 +720,6 @@ const ClubDetail = () => {
                 canEdit={canEdit}
                 onSave={saveInfobox}
               />
-            </div>
-            <div className="flex-1 min-w-0">
-              <WikiSectionsView wiki={wikiData} title={club.name} canEdit={canEdit} onSaveWiki={saveWiki} />
             </div>
           </div>
         </TabsContent>
