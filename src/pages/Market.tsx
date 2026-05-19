@@ -39,7 +39,7 @@ import {
   Shield,
   ShieldUser,
 } from "lucide-react";
-import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
+import { formatCurrency, POSITIONS } from "@/lib/format";
 import { getFlagUrl } from "@/lib/countries";
 import { StarRating } from "@/components/StarRating";
 import { PlayerProfileDialog } from "@/components/PlayerProfileDialog";
