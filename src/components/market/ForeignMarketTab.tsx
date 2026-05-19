@@ -30,6 +30,7 @@ const SortIcon = ({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; s
 
 export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: ForeignMarketTabProps) => {
   const [rows, setRows] = useState<any[]>([]);
+  const [externalClubs, setExternalClubs] = useState<Record<string, { name: string; crest: string | null }>>({});
   const [pos, setPos] = useState<string>("all");
   const [temp, setTemp] = useState<string>("all");
   const [q, setQ] = useState<string>("");
@@ -41,6 +42,16 @@ export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: Foreign
       .from("foreign_market_players")
       .select("*")
       .then(({ data }) => setRows(data || []));
+    supabase
+      .from("external_clubs")
+      .select("id, name, crest")
+      .then(({ data }) => {
+        const map: Record<string, { name: string; crest: string | null }> = {};
+        (data || []).forEach((c: any) => {
+          map[String(c.name).trim().toLowerCase()] = { name: c.name, crest: c.crest };
+        });
+        setExternalClubs(map);
+      });
   }, []);
 
   const temporadas = useMemo(
@@ -139,7 +150,7 @@ export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: Foreign
               <TableHead className="w-16">Posição</TableHead>
               <TableHead>Jogador</TableHead>
               <TableHead className="hidden sm:table-cell w-20"></TableHead>
-              <TableHead>Clube / Liga</TableHead>
+              <TableHead>Clube de Origem</TableHead>
               <SortableHead col="overall" label="HAB" className="text-center w-16" />
               <SortableHead col="age" label="Idade" className="text-center hidden sm:table-cell w-16" />
               <SortableHead col="market_value" label="Valor" className="text-right" />
@@ -148,42 +159,51 @@ export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: Foreign
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((r) => (
-              <TableRow key={r.id}>
-                <TableCell>
-                  <Badge variant="outline" className="border-primary/40 text-primary">
-                    {r.position}
-                  </Badge>
-                </TableCell>
-                <TableCell className="font-medium">{r.name}</TableCell>
-                <TableCell className="hidden sm:table-cell py-2">
-                  {r.nationality && <FlagImg nationality={r.nationality} />}
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {r.club_origin}
-                  {r.league_origin ? ` / ${r.league_origin}` : ""}
-                </TableCell>
-                <TableCell className="text-center">
-                  <Badge className="bg-primary/10 text-primary border-primary/30 font-bold">{r.overall ?? "—"}</Badge>
-                </TableCell>
-                <TableCell className="text-center hidden sm:table-cell text-sm">{r.age ?? "—"}</TableCell>
-                <TableCell className="text-right font-display font-bold text-primary">
-                  {formatCurrency(r.market_value)}
-                </TableCell>
-                <TableCell className="text-right text-sm">{formatCurrency(r.salary_demand)}</TableCell>
-                {hasClub && (
+            {filtered.map((r) => {
+              const ext = r.club_origin
+                ? externalClubs[String(r.club_origin).trim().toLowerCase()]
+                : undefined;
+              return (
+                <TableRow key={r.id}>
                   <TableCell>
-                    <Button
-                      size="sm"
-                      onClick={() => onNegotiate(buildForeignPlayer(r))}
-                      className="bg-gradient-gold text-primary-foreground hover:opacity-90"
-                    >
-                      Negociar
-                    </Button>
+                    <Badge variant="outline" className="border-primary/40 text-primary">
+                      {r.position}
+                    </Badge>
                   </TableCell>
-                )}
-              </TableRow>
-            ))}
+                  <TableCell className="font-medium">{r.name}</TableCell>
+                  <TableCell className="hidden sm:table-cell py-2">
+                    {r.nationality && <FlagImg nationality={r.nationality} />}
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      {ext?.crest ? (
+                        <img src={ext.crest} alt={ext.name} className="h-5 w-5 object-contain" />
+                      ) : null}
+                      <span>{ext?.name || r.club_origin || "—"}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Badge className="bg-primary/10 text-primary border-primary/30 font-bold">{r.overall ?? "—"}</Badge>
+                  </TableCell>
+                  <TableCell className="text-center hidden sm:table-cell text-sm">{r.age ?? "—"}</TableCell>
+                  <TableCell className="text-right font-display font-bold text-primary">
+                    {formatCurrency(r.market_value)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm">{formatCurrency(r.salary_demand)}</TableCell>
+                  {hasClub && (
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        onClick={() => onNegotiate(buildForeignPlayer(r))}
+                        className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+                      >
+                        Negociar
+                      </Button>
+                    </TableCell>
+                  )}
+                </TableRow>
+              );
+            })}
             {filtered.length === 0 && (
               <TableRow>
                 <TableCell colSpan={hasClub ? 9 : 8} className="text-center text-muted-foreground py-10">

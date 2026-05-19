@@ -912,8 +912,8 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
       : {};
 
     return (
-      <Card className="p-4 bg-gradient-card border-border/50 flex-1 overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between mb-3 shrink-0">
+      <Card className="p-4 bg-gradient-card border-border/50">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-primary" />
             <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -930,7 +930,7 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
           )}
         </div>
         {showHistory ? (
-          <div className="space-y-1 overflow-y-auto flex-1">
+          <div className="space-y-1 max-h-48 overflow-y-auto">
             {subHistory.map((s, i) => (
               <div
                 key={i}
@@ -954,12 +954,11 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
           </div>
         ) : (
           <div
-            className="overflow-y-auto space-y-0.5 flex-1 pr-0.5"
-            style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--border)) transparent" }}
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2"
             {...dropProps}
           >
             {benchByPosition.length === 0 ? (
-              <p className="text-center text-muted-foreground text-xs py-6">Todos em campo.</p>
+              <p className="text-center text-muted-foreground text-xs py-6 col-span-full">Todos em campo.</p>
             ) : (
               benchByPosition.map((p) => {
                 const ps = getPosStyle(p.position);
@@ -976,28 +975,24 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
                       setIsDragging(false);
                       setDropTarget(null);
                     }}
-                    className={`flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-primary/5 border border-transparent hover:border-border/40 transition-colors group ${canEdit ? "cursor-grab active:cursor-grabbing" : ""}`}
+                    className={`flex items-center gap-2 px-2 py-1.5 rounded-lg bg-secondary/20 hover:bg-primary/5 border border-border/40 hover:border-border/60 transition-colors group ${canEdit ? "cursor-grab active:cursor-grabbing" : ""}`}
                   >
                     <ShirtIcon
                       clubId={club?.id}
                       number={p.shirt_number}
-                      size="w-8 h-8"
+                      size="w-7 h-7"
                       isGK={p.position === "GOL"}
-                      numberSize="clamp(12px, 60%, 28px)"
+                      numberSize="clamp(10px, 60%, 22px)"
                       numberPaddingBottom="13%"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs font-semibold text-foreground truncate leading-tight">{p.name}</div>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className={`text-[8px] font-bold px-1 py-0.5 rounded border ${ps.badge}`}>
+                      <div className="text-[11px] font-semibold text-foreground truncate leading-tight">{p.name}</div>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <span className={`text-[8px] font-bold px-1 py-0 rounded border ${ps.badge}`}>
                           {p.position}
                         </span>
-                        <span className="text-[9px] text-muted-foreground">{p.age ? `${p.age}a` : "—"}</span>
+                        <span className="text-[9px] text-muted-foreground tabular-nums">{p.habilidade ?? "—"}</span>
                       </div>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <div className="text-xs font-black text-primary tabular-nums">{p.habilidade ?? "—"}</div>
-                      <div className={`text-[8px] font-medium ${rl.color}`}>{rl.label}</div>
                     </div>
                   </div>
                 );
@@ -1085,18 +1080,19 @@ export function LineupManager({ players, club, canEdit = false, initialLineup, o
       </div>
 
       {/* ── Layout principal ── */}
-      <div className="flex flex-col lg:flex-row gap-4">
-        <div className={`w-full lg:w-[56%] ${mobileTab !== "pitch" ? "hidden md:block" : ""}`}>{renderPitch()}</div>
-        <div
-          className={`flex-1 flex flex-col gap-3 min-w-0 min-h-0 ${mobileTab === "pitch" ? "hidden md:flex" : "flex"}`}
-          style={pitchHeight ? { maxHeight: `${pitchHeight}px` } : undefined}
-        >
-          <div className={mobileTab === "bench" ? "hidden md:block" : ""}>{renderAnalysis()}</div>
-          <div className={mobileTab === "bench" ? "hidden md:block" : ""}>{renderTactics()}</div>
-          <div className={`flex-1 flex flex-col min-h-0 ${mobileTab === "stats" ? "hidden md:flex" : "flex"}`}>
-            {renderBench()}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col lg:flex-row gap-4">
+          <div className={`w-full lg:w-[60%] ${mobileTab !== "pitch" ? "hidden md:block" : ""}`}>
+            {renderPitch()}
+          </div>
+          <div
+            className={`flex-1 flex flex-col gap-3 min-w-0 ${mobileTab === "pitch" ? "hidden md:flex" : "flex"}`}
+          >
+            <div className={mobileTab === "bench" ? "hidden md:block" : ""}>{renderAnalysis()}</div>
+            <div className={mobileTab === "bench" ? "hidden md:block" : ""}>{renderTactics()}</div>
           </div>
         </div>
+        <div className={`w-full ${mobileTab === "stats" ? "hidden md:block" : ""}`}>{renderBench()}</div>
       </div>
 
       {/* ── Modal de substituição ── */}

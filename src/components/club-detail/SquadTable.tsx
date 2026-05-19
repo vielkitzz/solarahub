@@ -6,6 +6,16 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Tag,
   AlertTriangle,
   FileSignature,
@@ -15,6 +25,7 @@ import {
   ChevronDown,
   Gavel,
   Star,
+  Lock,
 } from "lucide-react";
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
 import { getFlagUrl } from "@/lib/countries";
@@ -88,6 +99,7 @@ export function SquadTable({
   isAdmin,
   temporadaAtual,
   toggleSale,
+  toggleBlockProposals,
   setRenewPlayer,
   setShirtPlayer,
   setMultaPlayer,
@@ -101,6 +113,7 @@ export function SquadTable({
   isAdmin: boolean;
   temporadaAtual: number;
   toggleSale: (id: string, v: boolean) => void;
+  toggleBlockProposals?: (id: string, v: boolean) => void;
   setRenewPlayer: (p: any) => void;
   setShirtPlayer: (p: any) => void;
   setMultaPlayer: (p: any) => void;
@@ -113,6 +126,11 @@ export function SquadTable({
   const [searchTerm, setSearchTerm] = useState("");
   const [positionFilter, setPositionFilter] = useState("todas");
   const [statusFilter, setStatusFilter] = useState("todos");
+  const [confirmDialog, setConfirmDialog] = useState<{
+    kind: "sale" | "block";
+    player: any;
+    nextValue: boolean;
+  } | null>(null);
 
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>({
     key: "posicao",
@@ -294,7 +312,7 @@ export function SquadTable({
               </TableHead>
 
               <TableHead
-                className="w-28 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                className="w-24 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("qualidade")}
               >
                 <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
@@ -303,7 +321,7 @@ export function SquadTable({
               </TableHead>
 
               <TableHead
-                className={`w-28 select-none transition-colors ${anyPotKnown ? "cursor-pointer hover:bg-secondary/40" : "cursor-default opacity-70"}`}
+                className={`w-24 select-none transition-colors ${anyPotKnown ? "cursor-pointer hover:bg-secondary/40" : "cursor-default opacity-70"}`}
                 onClick={() => anyPotKnown && handleSort("potencial")}
               >
                 <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
@@ -321,7 +339,7 @@ export function SquadTable({
               </TableHead>
 
               <TableHead
-                className="hidden md:table-cell cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                className="hidden lg:table-cell cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("salario")}
               >
                 <div className="flex items-center justify-end gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
@@ -339,8 +357,13 @@ export function SquadTable({
               </TableHead>
 
               {canEdit && (
-                <TableHead className="text-center w-16 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                <TableHead className="text-center w-14 text-[10px] uppercase tracking-wider whitespace-nowrap">
                   Venda
+                </TableHead>
+              )}
+              {canEdit && (
+                <TableHead className="text-center w-16 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                  Bloquear
                 </TableHead>
               )}
               {canEdit && <TableHead className="w-10" />}
@@ -349,7 +372,7 @@ export function SquadTable({
           <TableBody>
             {filteredAndSorted.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={canEdit ? 12 : 10} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={canEdit ? 13 : 10} className="text-center py-8 text-muted-foreground">
                   Nenhum jogador encontrado.
                 </TableCell>
               </TableRow>
@@ -453,7 +476,7 @@ export function SquadTable({
                     <TableCell className="py-2 text-right text-xs font-semibold text-primary tabular-nums">
                       {formatCurrency(Number(p.market_value))}
                     </TableCell>
-                    <TableCell className="py-2 text-right text-xs text-muted-foreground tabular-nums hidden md:table-cell">
+                    <TableCell className="py-2 text-right text-xs text-muted-foreground tabular-nums hidden lg:table-cell">
                       {formatCurrency(Number(p.salario_atual || 0))}
                     </TableCell>
                     <TableCell className="py-2 text-center">
@@ -465,7 +488,18 @@ export function SquadTable({
                           checked={!!p.a_venda}
                           onCheckedChange={(v) => {
                             if (v === !!p.a_venda) return;
-                            toggleSale(p.id, v);
+                            setConfirmDialog({ kind: "sale", player: p, nextValue: v });
+                          }}
+                        />
+                      </TableCell>
+                    )}
+                    {canEdit && (
+                      <TableCell className="py-2 text-center">
+                        <Switch
+                          checked={!!p.bloquear_propostas}
+                          onCheckedChange={(v) => {
+                            if (v === !!p.bloquear_propostas) return;
+                            setConfirmDialog({ kind: "block", player: p, nextValue: v });
                           }}
                         />
                       </TableCell>
@@ -514,6 +548,52 @@ export function SquadTable({
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog
+        open={!!confirmDialog}
+        onOpenChange={(o) => {
+          if (!o) setConfirmDialog(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmDialog?.kind === "sale"
+                ? confirmDialog?.nextValue
+                  ? "Colocar à venda?"
+                  : "Remover da vitrine?"
+                : confirmDialog?.nextValue
+                  ? "Bloquear propostas?"
+                  : "Liberar propostas?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmDialog?.kind === "sale"
+                ? confirmDialog?.nextValue
+                  ? `${confirmDialog?.player?.name} ficará disponível no mercado para receber propostas destacadas.`
+                  : `${confirmDialog?.player?.name} sairá da vitrine de vendas.`
+                : confirmDialog?.nextValue
+                  ? `Nenhum clube poderá enviar propostas por ${confirmDialog?.player?.name} enquanto o bloqueio estiver ativo.`
+                  : `Os clubes voltarão a poder enviar propostas por ${confirmDialog?.player?.name}.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!confirmDialog) return;
+                if (confirmDialog.kind === "sale") {
+                  toggleSale(confirmDialog.player.id, confirmDialog.nextValue);
+                } else {
+                  toggleBlockProposals?.(confirmDialog.player.id, confirmDialog.nextValue);
+                }
+                setConfirmDialog(null);
+              }}
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
