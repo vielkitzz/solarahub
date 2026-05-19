@@ -877,7 +877,7 @@ const Market = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-38">Jogador</TableHead>
+                  <TableHead className="w-36">Jogador</TableHead>
                   <TableHead className="w-44">De</TableHead>
                   <TableHead className="w-44">Para</TableHead>
                   <TableHead className="w-30 text-center">Tipo</TableHead>
