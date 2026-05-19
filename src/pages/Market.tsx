@@ -676,16 +676,15 @@ const Market = () => {
               setOnlyForSale={setOnlyForSale}
             />
             <Card className="bg-gradient-card border-border/50 overflow-hidden">
-              <Table>
+              <Table className="table-fixed w-full">
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-16">Posição</TableHead>
-                    <TableHead>Jogador</TableHead>
-                    <TableHead className="w-20 hidden sm:table-cell"></TableHead>
-                    <TableHead>Clube</TableHead>
-                    <TableHead className="text-center w-16 hidden sm:table-cell">Idade</TableHead>
-                    <TableHead className="text-right">Valor base</TableHead>
-                    <TableHead className="w-24"></TableHead>
+                    <TableHead className="w-[16%]">Jogador</TableHead>
+                    <TableHead className="w-[22%]">De</TableHead>
+                    <TableHead className="w-[22%]">Para</TableHead>
+                    <TableHead className="w-[16%] text-center">Tipo</TableHead>
+                    <TableHead className="w-[14%] text-right">Valor</TableHead>
+                    <TableHead className="w-[10%] text-right">Data</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
