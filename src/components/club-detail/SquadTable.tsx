@@ -441,7 +441,7 @@ export function SquadTable({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="py-2 hidden sm:table-cell text-center">
+                    <TableCell className="py-2 hidden text-center sm:table-cell">
                       <FlagImg nationality={p.nationality || ""} />
                     </TableCell>
                     <TableCell className="py-2 text-center text-xs text-muted-foreground tabular-nums">
