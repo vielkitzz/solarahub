@@ -68,7 +68,7 @@ export function ContractBadge({
   const expirando = anos <= 1;
   return (
     <span
-      className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border ${
+      className={`inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded border ${
         expirando ? "border-destructive/50 text-destructive bg-destructive/5" : "border-border/40 text-muted-foreground"
       }`}
     >
@@ -267,19 +267,19 @@ export function SquadTable({
           <TableHeader>
             <TableRow className="hover:bg-transparent border-border/50 bg-secondary/20">
               <TableHead
-                className="w-12 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                className="w-8 px-1 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("numero")}
               >
-                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider">
+                <div className="flex items-center justify-center gap-0.5 text-[10px] uppercase tracking-wider">
                   # <SortIcon columnKey="numero" />
                 </div>
               </TableHead>
 
               <TableHead
-                className="w-16 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                className="w-14 px-1 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("posicao")}
               >
-                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider">
+                <div className="flex items-center gap-0.5 text-[10px] uppercase tracking-wider">
                   Pos. <SortIcon columnKey="posicao" />
                 </div>
               </TableHead>
@@ -288,43 +288,43 @@ export function SquadTable({
                 className="cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("nome")}
               >
-                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider">
+                <div className="flex items-center gap-0.5 text-[10px] uppercase tracking-wider">
                   Nome <SortIcon columnKey="nome" />
                 </div>
               </TableHead>
 
               <TableHead
-                className="w-20 hidden sm:table-cell cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                className="w-16 px-1 hidden sm:table-cell cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("nacionalidade")}
               >
-                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider">
-                  Nac. <SortIcon columnKey="nacionalidade" />
+                <div className="flex items-center justify-center gap-0.5 text-[10px] uppercase tracking-wider">
+                  País <SortIcon columnKey="nacionalidade" />
                 </div>
               </TableHead>
 
               <TableHead
-                className="w-16 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                className="w-12 px-1 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("idade")}
               >
-                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider">
+                <div className="flex items-center justify-center gap-0.5 text-[10px] uppercase tracking-wider">
                   Idade <SortIcon columnKey="idade" />
                 </div>
               </TableHead>
 
               <TableHead
-                className="w-24 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                className="w-20 px-1 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("qualidade")}
               >
-                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider">
+                <div className="flex items-center gap-0.5 text-[10px] uppercase tracking-wider">
                   Qual. <SortIcon columnKey="qualidade" />
                 </div>
               </TableHead>
 
               <TableHead
-                className={`w-24 select-none transition-colors ${anyPotKnown ? "cursor-pointer hover:bg-secondary/40" : "cursor-default opacity-70"}`}
+                className={`w-20 px-1 select-none transition-colors ${anyPotKnown ? "cursor-pointer hover:bg-secondary/40" : "cursor-default opacity-70"}`}
                 onClick={() => anyPotKnown && handleSort("potencial")}
               >
-                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider">
+                <div className="flex items-center gap-0.5 text-[10px] uppercase tracking-wider">
                   Pot. {anyPotKnown && <SortIcon columnKey="potencial" />}
                 </div>
               </TableHead>
@@ -333,7 +333,7 @@ export function SquadTable({
                 className="cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("valor")}
               >
-                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider">
+                <div className="flex items-center gap-0.5 text-[10px] uppercase tracking-wider">
                   Valor <SortIcon columnKey="valor" />
                 </div>
               </TableHead>
@@ -342,16 +342,16 @@ export function SquadTable({
                 className="hidden lg:table-cell cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("salario")}
               >
-                <div className="flex items-center justify-end gap-1 text-[10px] uppercase tracking-wider">
+                <div className="flex items-center justify-end gap-0.5 text-[10px] uppercase tracking-wider">
                   Sal./ano <SortIcon columnKey="salario" />
                 </div>
               </TableHead>
 
               <TableHead
-                className="w-20 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                className="w-16 px-1 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("contrato")}
               >
-                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider">
+                <div className="flex items-center justify-center gap-0.5 text-[10px] uppercase tracking-wider">
                   Contrato <SortIcon columnKey="contrato" />
                 </div>
               </TableHead>
@@ -418,7 +418,7 @@ export function SquadTable({
                       </span>
                     </TableCell>
                     <TableCell className="py-2 font-medium">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-0.5.5">
                         <button
                           onClick={() => onOpenProfile?.(p.id)}
                           className="truncate max-w-[160px] text-left hover:text-primary transition-colors"
@@ -452,7 +452,7 @@ export function SquadTable({
                     </TableCell>
                     <TableCell className="py-2 text-center">
                       {potDisplay ? (
-                        <div className="flex items-center justify-center gap-1.5" title={potDisplay.tooltip}>
+                        <div className="flex items-center justify-center gap-0.5.5" title={potDisplay.tooltip}>
                           <SkillDisplay
                             value={potDisplay.value}
                             valueMin={potDisplay.min}
@@ -506,7 +506,7 @@ export function SquadTable({
                     )}
                     {canEdit && (
                       <TableCell className="py-2 text-center">
-                        <div className="flex items-center justify-center gap-1">
+                        <div className="flex items-center justify-center gap-0.5">
                           <Button
                             variant="ghost"
                             size="icon"
