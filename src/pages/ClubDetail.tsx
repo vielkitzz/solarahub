@@ -89,6 +89,7 @@ const ClubDetail = () => {
 
   const [direitosTv, setDireitosTv] = useState<number>(0);
   const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+  const [allTransactions, setAllTransactions] = useState<any[]>([]);
   const [transferStats, setTransferStats] = useState<{ c: number; v: number; e: number }>({ c: 0, v: 0, e: 0 });
   const [econParams, setEconParams] = useState<{
     manut_base: number;
