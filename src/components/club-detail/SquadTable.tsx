@@ -276,10 +276,10 @@ export function SquadTable({
               </TableHead>
 
               <TableHead
-                className="w-14 px-1 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                className="w-14 px-1 text-center cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("posicao")}
               >
-                <div className="flex items-center gap-0.5 text-[10px] uppercase tracking-wider">
+                <div className="flex items-center justify-center gap-0.5 text-[10px] uppercase tracking-wider">
                   Pos. <SortIcon columnKey="posicao" />
                 </div>
               </TableHead>
@@ -312,37 +312,37 @@ export function SquadTable({
               </TableHead>
 
               <TableHead
-                className="w-20 px-1 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                className="w-20 px-1 text-center cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("qualidade")}
               >
-                <div className="flex items-center gap-0.5 text-[10px] uppercase tracking-wider">
+                <div className="flex items-center justify-center gap-0.5 text-[10px] uppercase tracking-wider">
                   Qual. <SortIcon columnKey="qualidade" />
                 </div>
               </TableHead>
 
               <TableHead
-                className={`w-20 px-1 select-none transition-colors ${anyPotKnown ? "cursor-pointer hover:bg-secondary/40" : "cursor-default opacity-70"}`}
+                className={`w-20 px-1 text-center select-none transition-colors ${anyPotKnown ? "cursor-pointer hover:bg-secondary/40" : "cursor-default opacity-70"}`}
                 onClick={() => anyPotKnown && handleSort("potencial")}
               >
-                <div className="flex items-center gap-0.5 text-[10px] uppercase tracking-wider">
+                <div className="flex items-center justify-center gap-0.5 text-[10px] uppercase tracking-wider">
                   Pot. {anyPotKnown && <SortIcon columnKey="potencial" />}
                 </div>
               </TableHead>
 
               <TableHead
-                className="cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                className="text-center cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("valor")}
               >
-                <div className="flex items-center gap-0.5 text-[10px] uppercase tracking-wider">
+                <div className="flex items-center justify-center gap-0.5 text-[10px] uppercase tracking-wider">
                   Valor <SortIcon columnKey="valor" />
                 </div>
               </TableHead>
 
               <TableHead
-                className="hidden lg:table-cell cursor-pointer select-none hover:bg-secondary/40 transition-colors"
+                className="hidden lg:table-cell text-center cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("salario")}
               >
-                <div className="flex items-center justify-end gap-0.5 text-[10px] uppercase tracking-wider">
+                <div className="flex items-center justify-center gap-0.5 text-[10px] uppercase tracking-wider">
                   Sal./ano <SortIcon columnKey="salario" />
                 </div>
               </TableHead>
