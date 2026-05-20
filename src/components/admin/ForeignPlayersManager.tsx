@@ -260,19 +260,27 @@ export const ForeignPlayersManager = () => {
                   onChange={(e) => setEditing({ ...editing, nationality: e.target.value })}
                 />
               </div>
-              <div>
-                <Label>Clube origem</Label>
-                <Input
+              <div className="col-span-2">
+                <Label>Clube de origem</Label>
+                <Select
                   value={editing.club_origin ?? ""}
-                  onChange={(e) => setEditing({ ...editing, club_origin: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label>Liga origem</Label>
-                <Input
-                  value={editing.league_origin ?? ""}
-                  onChange={(e) => setEditing({ ...editing, league_origin: e.target.value })}
-                />
+                  onValueChange={(v) => setEditing({ ...editing, club_origin: v, league_origin: null })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um clube externo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {externalClubs.map((c) => (
+                      <SelectItem key={c.id} value={c.name}>
+                        <div className="flex items-center gap-2">
+                          {c.crest && <img src={c.crest} alt="" className="h-4 w-4 object-contain" />}
+                          <span>{c.name}</span>
+                          {c.country && <span className="text-xs text-muted-foreground">({c.country})</span>}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label>Valor de mercado</Label>
