@@ -39,6 +39,7 @@ const SHIRT_NUMBER_COLOR: Record<string, string> = {
   "96dbcb80-0c42-4b5d-a774-59b5dc187f09": "white", // Sangre Chaqueña
   "bf6fe8d0-850a-435c-9ba2-da79653cd3be": "#DBAE53", // Rio Paraná
   "d3c0d1d0-6866-4eb4-b410-f1966d889f20": "white", // Catamarca
+  "876d2cd7-bfa9-4b3a-88c3-8dae21978287": "#D1A22E", // Catamarca
   // adicione os outros clubes aqui
 };
 
