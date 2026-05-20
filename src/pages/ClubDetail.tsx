@@ -58,6 +58,19 @@ import { StatCard, Row, EvolutionTable } from "@/components/club-detail/Evolutio
 import { transfersService } from "@/services/transfers";
 import { LineupManager } from "@/components/club-detail/LineupManager";
 import { KitsGallery } from "@/components/KitsGallery";
+import {
+  ResponsiveContainer,
+  LineChart as RLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RTooltip,
+  Legend,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
 const ClubDetail = () => {
   const { id } = useParams<{ id: string }>();
