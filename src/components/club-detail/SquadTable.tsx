@@ -297,7 +297,7 @@ export function SquadTable({
                 className="w-20 hidden sm:table-cell cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("nacionalidade")}
               >
-                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
                   Nacionalidade <SortIcon columnKey="nacionalidade" />
                 </div>
               </TableHead>
@@ -447,10 +447,10 @@ export function SquadTable({
                     <TableCell className="py-2 text-center text-xs text-muted-foreground tabular-nums">
                       {p.age ?? "—"}
                     </TableCell>
-                    <TableCell className="py-2 text-center">
+                    <TableCell className="py-2 justify-center">
                       <SkillDisplay value={p.habilidade} rate={club.rate} kind="skill" />
                     </TableCell>
-                    <TableCell className="py-2 text-center">
+                    <TableCell className="py-2 justify-center">
                       {potDisplay ? (
                         <div className="flex items-center gap-1.5" title={potDisplay.tooltip}>
                           <SkillDisplay
@@ -473,10 +473,10 @@ export function SquadTable({
                         </div>
                       )}
                     </TableCell>
-                    <TableCell className="py-2 text-right text-xs font-semibold text-primary tabular-nums">
+                    <TableCell className="py-2 text-center text-xs font-semibold text-primary tabular-nums">
                       {formatCurrency(Number(p.market_value))}
                     </TableCell>
-                    <TableCell className="py-2 text-right text-xs text-muted-foreground tabular-nums hidden lg:table-cell">
+                    <TableCell className="py-2 text-center text-xs text-muted-foreground tabular-nums hidden lg:table-cell">
                       {formatCurrency(Number(p.salario_atual || 0))}
                     </TableCell>
                     <TableCell className="py-2 text-center">
