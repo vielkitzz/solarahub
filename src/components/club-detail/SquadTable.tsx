@@ -262,7 +262,7 @@ export function SquadTable({
         </Select>
       </div>
 
-      <div className="overflow-x-auto">
+      <div>
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent border-border/50 bg-secondary/20">
@@ -270,7 +270,7 @@ export function SquadTable({
                 className="w-12 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("numero")}
               >
-                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider">
                   # <SortIcon columnKey="numero" />
                 </div>
               </TableHead>
@@ -279,8 +279,8 @@ export function SquadTable({
                 className="w-16 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("posicao")}
               >
-                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
-                  Posição <SortIcon columnKey="posicao" />
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider">
+                  Pos. <SortIcon columnKey="posicao" />
                 </div>
               </TableHead>
 
@@ -288,7 +288,7 @@ export function SquadTable({
                 className="cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("nome")}
               >
-                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider">
                   Nome <SortIcon columnKey="nome" />
                 </div>
               </TableHead>
@@ -297,8 +297,8 @@ export function SquadTable({
                 className="w-20 hidden sm:table-cell cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("nacionalidade")}
               >
-                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
-                  Nacionalidade <SortIcon columnKey="nacionalidade" />
+                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider">
+                  Nac. <SortIcon columnKey="nacionalidade" />
                 </div>
               </TableHead>
 
@@ -306,7 +306,7 @@ export function SquadTable({
                 className="w-16 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("idade")}
               >
-                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider">
                   Idade <SortIcon columnKey="idade" />
                 </div>
               </TableHead>
@@ -315,8 +315,8 @@ export function SquadTable({
                 className="w-24 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("qualidade")}
               >
-                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
-                  Qualidade <SortIcon columnKey="qualidade" />
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider">
+                  Qual. <SortIcon columnKey="qualidade" />
                 </div>
               </TableHead>
 
@@ -324,8 +324,8 @@ export function SquadTable({
                 className={`w-24 select-none transition-colors ${anyPotKnown ? "cursor-pointer hover:bg-secondary/40" : "cursor-default opacity-70"}`}
                 onClick={() => anyPotKnown && handleSort("potencial")}
               >
-                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
-                  Potencial {anyPotKnown && <SortIcon columnKey="potencial" />}
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider">
+                  Pot. {anyPotKnown && <SortIcon columnKey="potencial" />}
                 </div>
               </TableHead>
 
@@ -333,7 +333,7 @@ export function SquadTable({
                 className="cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("valor")}
               >
-                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider">
                   Valor <SortIcon columnKey="valor" />
                 </div>
               </TableHead>
@@ -342,8 +342,8 @@ export function SquadTable({
                 className="hidden lg:table-cell cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("salario")}
               >
-                <div className="flex items-center justify-end gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
-                  Salário/ano <SortIcon columnKey="salario" />
+                <div className="flex items-center justify-end gap-1 text-[10px] uppercase tracking-wider">
+                  Sal./ano <SortIcon columnKey="salario" />
                 </div>
               </TableHead>
 
@@ -351,20 +351,16 @@ export function SquadTable({
                 className="w-20 cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("contrato")}
               >
-                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                <div className="flex items-center justify-center gap-1 text-[10px] uppercase tracking-wider">
                   Contrato <SortIcon columnKey="contrato" />
                 </div>
               </TableHead>
 
               {canEdit && (
-                <TableHead className="text-center w-14 text-[10px] uppercase tracking-wider whitespace-nowrap">
-                  Venda
-                </TableHead>
+                <TableHead className="text-center w-14 text-[10px] uppercase tracking-wider">Venda</TableHead>
               )}
               {canEdit && (
-                <TableHead className="text-center w-16 text-[10px] uppercase tracking-wider whitespace-nowrap">
-                  Bloquear
-                </TableHead>
+                <TableHead className="text-center w-16 text-[10px] uppercase tracking-wider">Bloquear</TableHead>
               )}
               {canEdit && <TableHead className="w-10" />}
             </TableRow>
