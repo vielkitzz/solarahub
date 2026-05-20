@@ -333,7 +333,7 @@ export function SquadTable({
                 className="cursor-pointer select-none hover:bg-secondary/40 transition-colors"
                 onClick={() => handleSort("valor")}
               >
-                <div className="flex items-center justify-end gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap">
                   Valor <SortIcon columnKey="valor" />
                 </div>
               </TableHead>
@@ -441,16 +441,16 @@ export function SquadTable({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="py-2 hidden sm:table-cell">
+                    <TableCell className="py-2 hidden sm:table-cell text-center">
                       <FlagImg nationality={p.nationality || ""} />
                     </TableCell>
                     <TableCell className="py-2 text-center text-xs text-muted-foreground tabular-nums">
                       {p.age ?? "—"}
                     </TableCell>
-                    <TableCell className="py-2">
+                    <TableCell className="py-2 text-center">
                       <SkillDisplay value={p.habilidade} rate={club.rate} kind="skill" />
                     </TableCell>
-                    <TableCell className="py-2">
+                    <TableCell className="py-2 text-center">
                       {potDisplay ? (
                         <div className="flex items-center gap-1.5" title={potDisplay.tooltip}>
                           <SkillDisplay
