@@ -320,6 +320,89 @@ const ClubDetail = () => {
     setPlayers((prev) => prev.map((p) => (p.id === playerId ? { ...p, bloquear_propostas: value } : p)));
     toast.success(value ? "Propostas bloqueadas para esse jogador" : "Propostas liberadas");
   };
+
+  // Agregados financeiros por temporada (para gráficos) — devem ficar ANTES de qualquer early return
+  const seasonAggregates = useMemo(() => {
+    const map = new Map<number, { receitas: number; despesas: number }>();
+    for (const t of allTransactions) {
+      const sea =
+        typeof t.temporada === "number" && t.temporada > 0
+          ? t.temporada
+          : new Date(t.created_at).getFullYear();
+      if (!map.has(sea)) map.set(sea, { receitas: 0, despesas: 0 });
+      const cur = map.get(sea)!;
+      const v = Math.abs(Number(t.valor || 0));
+      if (t.tipo === "entrada") cur.receitas += v;
+      else cur.despesas += v;
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([temporada, x]) => ({
+        temporada,
+        receitas: Math.round(x.receitas),
+        despesas: Math.round(x.despesas),
+        lucro: Math.round(x.receitas - x.despesas),
+      }));
+  }, [allTransactions]);
+
+  const despesasAtuaisPorCategoria = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const t of allTransactions) {
+      const sea =
+        typeof t.temporada === "number" && t.temporada > 0
+          ? t.temporada
+          : new Date(t.created_at).getFullYear();
+      if (sea !== temporadaAtual) continue;
+      if (t.tipo !== "saida") continue;
+      const cat = String(t.categoria || "outros");
+      map.set(cat, (map.get(cat) || 0) + Math.abs(Number(t.valor || 0)));
+    }
+    return Array.from(map.entries())
+      .map(([name, value]) => ({ name, value: Math.round(value) }))
+      .sort((a, b) => b.value - a.value);
+  }, [allTransactions, temporadaAtual]);
+
+  const transactionsBySeason = useMemo(() => {
+    const map = new Map<number, any[]>();
+    for (const t of recentTransactions) {
+      const sea =
+        typeof t.temporada === "number" && t.temporada > 0
+          ? t.temporada
+          : new Date(t.created_at).getFullYear();
+      if (!map.has(sea)) map.set(sea, []);
+      map.get(sea)!.push(t);
+    }
+    return Array.from(map.entries()).sort((a, b) => b[0] - a[0]);
+  }, [recentTransactions]);
+
+  const CHART_COLORS = [
+    "hsl(var(--primary))",
+    "hsl(var(--destructive))",
+    "hsl(var(--success))",
+    "hsl(var(--accent))",
+    "hsl(var(--muted-foreground))",
+    "#f59e0b",
+    "#8b5cf6",
+    "#06b6d4",
+    "#ec4899",
+    "#10b981",
+  ];
+  const catLabelMap: Record<string, string> = {
+    transferencia: "Compras",
+    transferencia_externa: "Compras (exterior)",
+    upgrade_estadio: "Upgrade estádio",
+    upgrade_academia: "Upgrade base",
+    salario: "Salários",
+    manutencao: "Manutenção",
+    manutencao_estadio: "Manut. estádio",
+    operacional: "Operacional",
+    direitos_imagem: "Direitos de imagem",
+    folha: "Folha salarial",
+    emprestimo: "Empréstimos",
+    outros: "Outros",
+  };
+  const formatCat = (k: string) => catLabelMap[k] ?? k;
+
   if (!club) return <div className="text-center py-20 text-muted-foreground">Clube não encontrado.</div>;
 
   const folhaSalarial = players.reduce((s, p) => s + Number(p.salario_atual || 0), 0);
