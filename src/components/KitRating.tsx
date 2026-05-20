@@ -33,9 +33,9 @@ export const KitRating = ({ kitId, size = 16 }: Props) => {
     load();
   }, [kitId]);
 
-  const myRating = user ? ratings.find((r) => r.user_id === user.id)?.rating ?? 0 : 0;
+  const myRating = user ? (ratings.find((r) => r.user_id === user.id)?.rating ?? 0) : 0;
   const avg = ratings.length ? ratings.reduce((s, r) => s + Number(r.rating), 0) / ratings.length : 0;
-  const display = hover ?? myRating ?? 0;
+  const display = hover ?? avg;
 
   const submit = async (value: number) => {
     if (!user) {
@@ -54,22 +54,14 @@ export const KitRating = ({ kitId, size = 16 }: Props) => {
 
   return (
     <div className="space-y-1">
-      <div
-        className="inline-flex items-center gap-0.5"
-        onMouseLeave={() => setHover(null)}
-        aria-label="Avaliar camisa"
-      >
+      <div className="inline-flex items-center gap-0.5" onMouseLeave={() => setHover(null)} aria-label="Avaliar camisa">
         {[1, 2, 3, 4, 5].map((i) => {
           const fullVal = i;
           const halfVal = i - 0.5;
           const filled = display >= fullVal;
           const half = !filled && display >= halfVal;
           return (
-            <span
-              key={i}
-              className="relative inline-block cursor-pointer"
-              style={{ width: size, height: size }}
-            >
+            <span key={i} className="relative inline-block cursor-pointer" style={{ width: size, height: size }}>
               {/* half (left) hit area */}
               <button
                 type="button"
@@ -91,6 +83,8 @@ export const KitRating = ({ kitId, size = 16 }: Props) => {
                 className={cn(
                   "absolute inset-0",
                   filled ? "text-primary fill-primary" : "text-primary/25",
+                  // anel sutil na estrela que o usuário votou
+                  myRating > 0 && i === Math.ceil(myRating) ? "drop-shadow-[0_0_3px_hsl(var(--primary))]" : "",
                 )}
                 style={{ width: size, height: size }}
               />
@@ -108,7 +102,10 @@ export const KitRating = ({ kitId, size = 16 }: Props) => {
         {ratings.length > 0 ? (
           <>
             <span className="text-foreground font-semibold">{avg.toFixed(1)}</span>
-            <span> · {ratings.length} {ratings.length === 1 ? "voto" : "votos"}</span>
+            <span>
+              {" "}
+              · {ratings.length} {ratings.length === 1 ? "voto" : "votos"}
+            </span>
           </>
         ) : (
           <span>Sem avaliações</span>
