@@ -46,13 +46,18 @@ const empty: Row = {
 
 export const ForeignPlayersManager = () => {
   const [rows, setRows] = useState<Row[]>([]);
+  const [externalClubs, setExternalClubs] = useState<ExternalClub[]>([]);
   const [editing, setEditing] = useState<Row | null>(null);
   const [importPreview, setImportPreview] = useState<Row[] | null>(null);
   const [importing, setImporting] = useState(false);
 
   const load = async () => {
-    const { data } = await supabase.from("foreign_market_players").select("*").order("overall", { ascending: false });
+    const [{ data }, { data: ec }] = await Promise.all([
+      supabase.from("foreign_market_players").select("*").order("overall", { ascending: false }),
+      supabase.from("external_clubs").select("id, name, crest, country").eq("active", true).order("name"),
+    ]);
     setRows((data as any) || []);
+    setExternalClubs((ec as any) || []);
   };
   useEffect(() => {
     load();
