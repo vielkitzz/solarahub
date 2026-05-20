@@ -176,8 +176,18 @@ const ClubDetail = () => {
       .eq("club_id", id)
       .in("categoria", ["transferencia", "transferencia_externa", "upgrade_estadio", "upgrade_academia"])
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(500);
     setRecentTransactions(tx || []);
+
+    // Carrega TODAS as transações para os gráficos
+    const { data: txAll } = await supabase
+      .from("transactions")
+      .select("tipo, categoria, valor, temporada, created_at")
+      .eq("club_id", id)
+      .order("created_at", { ascending: false })
+      .limit(1000);
+    setAllTransactions(txAll || []);
+
 
     // Contadores de transferências (todas as temporadas)
     try {
