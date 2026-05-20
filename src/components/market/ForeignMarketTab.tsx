@@ -160,9 +160,7 @@ export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: Foreign
           </TableHeader>
           <TableBody>
             {filtered.map((r) => {
-              const ext = r.club_origin
-                ? externalClubs[String(r.club_origin).trim().toLowerCase()]
-                : undefined;
+              const ext = r.club_origin ? externalClubs[String(r.club_origin).trim().toLowerCase()] : undefined;
               return (
                 <TableRow key={r.id}>
                   <TableCell>
@@ -176,9 +174,7 @@ export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: Foreign
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     <div className="flex items-center gap-2">
-                      {ext?.crest ? (
-                        <img src={ext.crest} alt={ext.name} className="h-5 w-5 object-contain" />
-                      ) : null}
+                      {ext?.crest ? <img src={ext.crest} alt={ext.name} className="h-6 w-6 object-contain" /> : null}
                       <span>{ext?.name || r.club_origin || "—"}</span>
                     </div>
                   </TableCell>
