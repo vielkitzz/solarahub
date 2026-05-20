@@ -161,7 +161,7 @@ export const ForeignPlayersManager = () => {
               <TableHead>OVR</TableHead>
               <TableHead>Idade</TableHead>
               <TableHead>Nac.</TableHead>
-              <TableHead>Clube/Liga</TableHead>
+              <TableHead>Clube origem</TableHead>
               <TableHead>Valor</TableHead>
               <TableHead>Salário</TableHead>
               <TableHead>Temp.</TableHead>
@@ -169,7 +169,9 @@ export const ForeignPlayersManager = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((r) => (
+            {rows.map((r) => {
+              const ec = externalClubs.find((c) => c.name === r.club_origin);
+              return (
               <TableRow key={r.id}>
                 <TableCell className="font-medium">{r.name}</TableCell>
                 <TableCell>{r.position}</TableCell>
