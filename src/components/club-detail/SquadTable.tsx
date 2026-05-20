@@ -442,7 +442,9 @@ export function SquadTable({
                       </div>
                     </TableCell>
                     <TableCell className="py-2 hidden text-center sm:table-cell">
-                      <FlagImg nationality={p.nationality || ""} />
+                      <div className="flex justify-center">
+                        <FlagImg nationality={p.nationality || ""} />
+                      </div>
                     </TableCell>
                     <TableCell className="py-2 text-center text-xs text-muted-foreground tabular-nums">
                       {p.age ?? "—"}
