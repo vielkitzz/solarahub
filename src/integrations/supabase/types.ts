@@ -633,6 +633,41 @@ export type Database = {
         }
         Relationships: []
       }
+      kit_ratings: {
+        Row: {
+          created_at: string
+          id: string
+          kit_id: string
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kit_id: string
+          rating: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kit_id?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kit_ratings_kit_id_fkey"
+            columns: ["kit_id"]
+            isOneToOne: false
+            referencedRelation: "club_kits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       loans: {
         Row: {
           club_id: string
