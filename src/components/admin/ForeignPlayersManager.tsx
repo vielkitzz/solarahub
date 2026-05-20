@@ -179,8 +179,10 @@ export const ForeignPlayersManager = () => {
                 <TableCell>{r.age ?? "-"}</TableCell>
                 <TableCell>{r.nationality}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">
-                  {r.club_origin}
-                  {r.league_origin ? ` / ${r.league_origin}` : ""}
+                  <div className="flex items-center gap-2">
+                    {ec?.crest && <img src={ec.crest} alt="" className="h-4 w-4 object-contain" />}
+                    <span>{r.club_origin || "-"}</span>
+                  </div>
                 </TableCell>
                 <TableCell>{formatCurrency(r.market_value)}</TableCell>
                 <TableCell>{formatCurrency(r.salary_demand)}</TableCell>
@@ -194,7 +196,8 @@ export const ForeignPlayersManager = () => {
                   </Button>
                 </TableCell>
               </TableRow>
-            ))}
+              );
+            })}
           </TableBody>
         </Table>
       </Card>
