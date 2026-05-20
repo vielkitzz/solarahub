@@ -18,8 +18,8 @@ type Row = {
   age: number | null;
   nationality: string | null;
   overall: number;
-  potential_min: number; // Adicione esta linha
-  potential_max: number; // Adicione esta linha
+  potential_min: number;
+  potential_max: number;
   market_value: number;
   salary_demand: number;
   club_origin: string | null;
@@ -27,18 +27,20 @@ type Row = {
   temporada: number | null;
 };
 
+type ExternalClub = { id: string; name: string; crest: string | null; country: string | null };
+
 const empty: Row = {
   name: "",
   position: "ATA",
   age: 25,
   nationality: "",
   overall: 75,
-  potential_min: 75, // Adicione esta linha
-  potential_max: 85, // Adicione esta linha
+  potential_min: 75,
+  potential_max: 85,
   market_value: 0,
   salary_demand: 0,
   club_origin: "",
-  league_origin: "",
+  league_origin: null,
   temporada: new Date().getFullYear(),
 };
 
