@@ -175,6 +175,7 @@ export const KitsGallery = ({ clubId, canEdit }: Props) => {
                       )}
                     </div>
                     {k.descricao && <p className="text-xs text-muted-foreground line-clamp-2">{k.descricao}</p>}
+                    <KitRating kitId={k.id} />
                     {canEdit && (
                       <div className="flex gap-1 pt-1">
                         <Button size="sm" variant="ghost" className="h-7 px-2 flex-1" onClick={() => setEditing(k)}>
