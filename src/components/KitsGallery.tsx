@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { ImageUpload } from "@/components/ImageUpload";
 import { Plus, Pencil, Trash2, Shirt } from "lucide-react";
 import { toast } from "sonner";
+import { KitRating } from "@/components/KitRating";
 
 export type KitTipo = "titular" | "alternativo" | "terceiro" | "goleiro" | "especial";
 
