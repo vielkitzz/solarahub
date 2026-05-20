@@ -447,12 +447,14 @@ export function SquadTable({
                     <TableCell className="py-2 text-center text-xs text-muted-foreground tabular-nums">
                       {p.age ?? "—"}
                     </TableCell>
-                    <TableCell className="py-2 justify-center">
-                      <SkillDisplay value={p.habilidade} rate={club.rate} kind="skill" />
+                    <TableCell className="py-2 text-center">
+                      <div className="flex justify-center">
+                        <SkillDisplay value={p.habilidade} rate={club.rate} kind="skill" />
+                      </div>
                     </TableCell>
-                    <TableCell className="py-2 justify-center">
+                    <TableCell className="py-2 text-center">
                       {potDisplay ? (
-                        <div className="flex items-center gap-1.5" title={potDisplay.tooltip}>
+                        <div className="flex items-center justify-center gap-1.5" title={potDisplay.tooltip}>
                           <SkillDisplay
                             value={potDisplay.value}
                             valueMin={potDisplay.min}
@@ -463,7 +465,7 @@ export function SquadTable({
                         </div>
                       ) : (
                         <div
-                          className="flex items-center gap-0.5 text-muted-foreground/30"
+                          className="flex items-center justify-center gap-0.5 text-muted-foreground/30"
                           title="Use a aba Olheiros para descobrir"
                         >
                           {Array.from({ length: 5 }).map((_, i) => (
