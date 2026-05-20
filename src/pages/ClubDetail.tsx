@@ -58,6 +58,19 @@ import { StatCard, Row, EvolutionTable } from "@/components/club-detail/Evolutio
 import { transfersService } from "@/services/transfers";
 import { LineupManager } from "@/components/club-detail/LineupManager";
 import { KitsGallery } from "@/components/KitsGallery";
+import {
+  ResponsiveContainer,
+  LineChart as RLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RTooltip,
+  Legend,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
 const ClubDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -89,6 +102,7 @@ const ClubDetail = () => {
 
   const [direitosTv, setDireitosTv] = useState<number>(0);
   const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+  const [allTransactions, setAllTransactions] = useState<any[]>([]);
   const [transferStats, setTransferStats] = useState<{ c: number; v: number; e: number }>({ c: 0, v: 0, e: 0 });
   const [econParams, setEconParams] = useState<{
     manut_base: number;
@@ -175,8 +189,18 @@ const ClubDetail = () => {
       .eq("club_id", id)
       .in("categoria", ["transferencia", "transferencia_externa", "upgrade_estadio", "upgrade_academia"])
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(500);
     setRecentTransactions(tx || []);
+
+    // Carrega TODAS as transações para os gráficos
+    const { data: txAll } = await supabase
+      .from("transactions")
+      .select("tipo, categoria, valor, temporada, created_at")
+      .eq("club_id", id)
+      .order("created_at", { ascending: false })
+      .limit(1000);
+    setAllTransactions(txAll || []);
+
 
     // Contadores de transferências (todas as temporadas)
     try {
@@ -335,6 +359,92 @@ const ClubDetail = () => {
   const entradasMensais = entradasAnuais / 12;
   const saidasMensais = saidasAnuais / 12;
   const exigClube = club.rate; // usado na fórmula calcStars
+
+  // Agregados financeiros por temporada (para gráficos)
+  const seasonAggregates = useMemo(() => {
+    const map = new Map<number, { receitas: number; despesas: number }>();
+    for (const t of allTransactions) {
+      const sea =
+        typeof t.temporada === "number" && t.temporada > 0
+          ? t.temporada
+          : new Date(t.created_at).getFullYear();
+      if (!map.has(sea)) map.set(sea, { receitas: 0, despesas: 0 });
+      const cur = map.get(sea)!;
+      const v = Math.abs(Number(t.valor || 0));
+      if (t.tipo === "entrada") cur.receitas += v;
+      else cur.despesas += v;
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([temporada, x]) => ({
+        temporada,
+        receitas: Math.round(x.receitas),
+        despesas: Math.round(x.despesas),
+        lucro: Math.round(x.receitas - x.despesas),
+      }));
+  }, [allTransactions]);
+
+  // Breakdown de despesas da temporada atual (rosca)
+  const despesasAtuaisPorCategoria = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const t of allTransactions) {
+      const sea =
+        typeof t.temporada === "number" && t.temporada > 0
+          ? t.temporada
+          : new Date(t.created_at).getFullYear();
+      if (sea !== temporadaAtual) continue;
+      if (t.tipo !== "saida") continue;
+      const cat = String(t.categoria || "outros");
+      map.set(cat, (map.get(cat) || 0) + Math.abs(Number(t.valor || 0)));
+    }
+    return Array.from(map.entries())
+      .map(([name, value]) => ({ name, value: Math.round(value) }))
+      .sort((a, b) => b.value - a.value);
+  }, [allTransactions, temporadaAtual]);
+
+  const CHART_COLORS = [
+    "hsl(var(--primary))",
+    "hsl(var(--destructive))",
+    "hsl(var(--success))",
+    "hsl(var(--accent))",
+    "hsl(var(--muted-foreground))",
+    "#f59e0b",
+    "#8b5cf6",
+    "#06b6d4",
+    "#ec4899",
+    "#10b981",
+  ];
+
+  const catLabelMap: Record<string, string> = {
+    transferencia: "Compras",
+    transferencia_externa: "Compras (exterior)",
+    upgrade_estadio: "Upgrade estádio",
+    upgrade_academia: "Upgrade base",
+    salario: "Salários",
+    manutencao: "Manutenção",
+    manutencao_estadio: "Manut. estádio",
+    operacional: "Operacional",
+    direitos_imagem: "Direitos de imagem",
+    folha: "Folha salarial",
+    emprestimo: "Empréstimos",
+    outros: "Outros",
+  };
+  const formatCat = (k: string) => catLabelMap[k] ?? k;
+
+  // Agrupamento de transferências/upgrades por temporada para a tabela
+  const transactionsBySeason = useMemo(() => {
+    const map = new Map<number, any[]>();
+    for (const t of recentTransactions) {
+      const sea =
+        typeof t.temporada === "number" && t.temporada > 0
+          ? t.temporada
+          : new Date(t.created_at).getFullYear();
+      if (!map.has(sea)) map.set(sea, []);
+      map.get(sea)!.push(t);
+    }
+    return Array.from(map.entries()).sort((a, b) => b[0] - a[0]);
+  }, [recentTransactions]);
+
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -617,6 +727,85 @@ const ClubDetail = () => {
           {/* Empréstimos bancários */}
           <LoanManager club={club} canEdit={canEdit} onChange={load} />
 
+          {/* Gráficos financeiros */}
+          <div className="grid lg:grid-cols-2 gap-3">
+            <Card className="p-4 bg-gradient-card border-border/50">
+              <h4 className="font-display font-bold text-sm flex items-center gap-2 mb-3">
+                <LineChart className="h-4 w-4 text-primary" /> Receitas, despesas e lucro por temporada
+              </h4>
+              {seasonAggregates.length === 0 ? (
+                <div className="text-xs text-muted-foreground py-8 text-center">Sem dados ainda.</div>
+              ) : (
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RLineChart data={seasonAggregates} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                      <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" />
+                      <XAxis dataKey="temporada" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                      <YAxis
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={11}
+                        tickFormatter={(v) => `${(Number(v) / 1_000_000).toFixed(1)}M`}
+                      />
+                      <RTooltip
+                        contentStyle={{
+                          background: "hsl(var(--popover))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: 8,
+                          fontSize: 12,
+                        }}
+                        formatter={(v: any, n: any) => [formatCurrency(Number(v)), n]}
+                      />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                      <Line type="monotone" dataKey="receitas" name="Receitas" stroke="hsl(var(--success))" strokeWidth={2} dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="despesas" name="Despesas" stroke="hsl(var(--destructive))" strokeWidth={2} dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="lucro" name="Lucro" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+                    </RLineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </Card>
+
+            <Card className="p-4 bg-gradient-card border-border/50">
+              <h4 className="font-display font-bold text-sm flex items-center gap-2 mb-3">
+                <TrendingDown className="h-4 w-4 text-destructive" /> Despesas da temporada {temporadaAtual} por categoria
+              </h4>
+              {despesasAtuaisPorCategoria.length === 0 ? (
+                <div className="text-xs text-muted-foreground py-8 text-center">Sem despesas registradas nesta temporada.</div>
+              ) : (
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={despesasAtuaisPorCategoria}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={85}
+                        paddingAngle={2}
+                      >
+                        {despesasAtuaisPorCategoria.map((_, i) => (
+                          <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <RTooltip
+                        contentStyle={{
+                          background: "hsl(var(--popover))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: 8,
+                          fontSize: 12,
+                        }}
+                        formatter={(v: any, n: any) => [formatCurrency(Number(v)), formatCat(String(n))]}
+                      />
+                      <Legend wrapperStyle={{ fontSize: 11 }} formatter={(n) => formatCat(String(n))} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </Card>
+          </div>
+
           {/* Transferências e investimentos em infraestrutura */}
           <Card className="p-4 bg-gradient-card border-border/50">
             <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
@@ -640,55 +829,81 @@ const ClubDetail = () => {
                 Nenhuma transferência ou upgrade registrado.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-[10px]">Data</TableHead>
-                      <TableHead className="text-[10px]">Categoria</TableHead>
-                      <TableHead className="text-[10px]">Descrição</TableHead>
-                      <TableHead className="text-[10px] text-right">Valor</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentTransactions.map((t) => {
-                      const isIn = t.tipo === "entrada";
-                      const catLabel =
-                        t.categoria === "transferencia"
-                          ? isIn
-                            ? "Venda"
-                            : "Compra"
-                          : t.categoria === "transferencia_externa"
-                            ? "Venda (exterior)"
-                            : t.categoria === "upgrade_estadio"
-                              ? "Upgrade estádio"
-                              : t.categoria === "upgrade_academia"
-                                ? "Upgrade base"
-                                : t.categoria;
-                      return (
-                        <TableRow key={t.id} className="text-xs">
-                          <TableCell className="text-muted-foreground">
-                            {new Date(t.created_at).toLocaleDateString("pt-BR")}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="text-[10px]">
-                              {catLabel}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="max-w-[280px] truncate" title={t.descricao}>
-                            {t.descricao}
-                          </TableCell>
-                          <TableCell
-                            className={`text-right tabular-nums font-semibold ${isIn ? "text-success" : "text-destructive"}`}
-                          >
-                            {isIn ? "+" : "-"}
-                            {formatCurrency(Number(t.valor))}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+              <div className="space-y-5">
+                {transactionsBySeason.map(([season, items]) => {
+                  const totalIn = items
+                    .filter((t) => t.tipo === "entrada")
+                    .reduce((s, t) => s + Number(t.valor || 0), 0);
+                  const totalOut = items
+                    .filter((t) => t.tipo === "saida")
+                    .reduce((s, t) => s + Number(t.valor || 0), 0);
+                  return (
+                    <div key={season} className="space-y-2">
+                      <div className="flex items-center justify-between border-b border-border/40 pb-1">
+                        <div className="font-display font-bold text-xs uppercase tracking-wider text-primary">
+                          Temporada {season}
+                        </div>
+                        <div className="flex gap-2 text-[10px]">
+                          <span className="text-success">+{formatCurrency(totalIn)}</span>
+                          <span className="text-destructive">-{formatCurrency(totalOut)}</span>
+                          <span className={totalIn - totalOut >= 0 ? "text-success" : "text-destructive"}>
+                            ({formatCurrency(totalIn - totalOut)})
+                          </span>
+                        </div>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="text-[10px]">Data</TableHead>
+                              <TableHead className="text-[10px]">Categoria</TableHead>
+                              <TableHead className="text-[10px]">Descrição</TableHead>
+                              <TableHead className="text-[10px] text-right">Valor</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {items.map((t) => {
+                              const isIn = t.tipo === "entrada";
+                              const catLabel =
+                                t.categoria === "transferencia"
+                                  ? isIn
+                                    ? "Venda"
+                                    : "Compra"
+                                  : t.categoria === "transferencia_externa"
+                                    ? "Venda (exterior)"
+                                    : t.categoria === "upgrade_estadio"
+                                      ? "Upgrade estádio"
+                                      : t.categoria === "upgrade_academia"
+                                        ? "Upgrade base"
+                                        : t.categoria;
+                              return (
+                                <TableRow key={t.id} className="text-xs">
+                                  <TableCell className="text-muted-foreground">
+                                    {new Date(t.created_at).toLocaleDateString("pt-BR")}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant="outline" className="text-[10px]">
+                                      {catLabel}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="max-w-[280px] truncate" title={t.descricao}>
+                                    {t.descricao}
+                                  </TableCell>
+                                  <TableCell
+                                    className={`text-right tabular-nums font-semibold ${isIn ? "text-success" : "text-destructive"}`}
+                                  >
+                                    {isIn ? "+" : "-"}
+                                    {formatCurrency(Number(t.valor))}
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </Card>

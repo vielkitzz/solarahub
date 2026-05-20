@@ -18,8 +18,8 @@ type Row = {
   age: number | null;
   nationality: string | null;
   overall: number;
-  potential_min: number; // Adicione esta linha
-  potential_max: number; // Adicione esta linha
+  potential_min: number;
+  potential_max: number;
   market_value: number;
   salary_demand: number;
   club_origin: string | null;
@@ -27,30 +27,37 @@ type Row = {
   temporada: number | null;
 };
 
+type ExternalClub = { id: string; name: string; crest: string | null; country: string | null };
+
 const empty: Row = {
   name: "",
   position: "ATA",
   age: 25,
   nationality: "",
   overall: 75,
-  potential_min: 75, // Adicione esta linha
-  potential_max: 85, // Adicione esta linha
+  potential_min: 75,
+  potential_max: 85,
   market_value: 0,
   salary_demand: 0,
   club_origin: "",
-  league_origin: "",
+  league_origin: null,
   temporada: new Date().getFullYear(),
 };
 
 export const ForeignPlayersManager = () => {
   const [rows, setRows] = useState<Row[]>([]);
+  const [externalClubs, setExternalClubs] = useState<ExternalClub[]>([]);
   const [editing, setEditing] = useState<Row | null>(null);
   const [importPreview, setImportPreview] = useState<Row[] | null>(null);
   const [importing, setImporting] = useState(false);
 
   const load = async () => {
-    const { data } = await supabase.from("foreign_market_players").select("*").order("overall", { ascending: false });
+    const [{ data }, { data: ec }] = await Promise.all([
+      supabase.from("foreign_market_players").select("*").order("overall", { ascending: false }),
+      supabase.from("external_clubs").select("id, name, crest, country").eq("active", true).order("name"),
+    ]);
     setRows((data as any) || []);
+    setExternalClubs((ec as any) || []);
   };
   useEffect(() => {
     load();
@@ -154,7 +161,7 @@ export const ForeignPlayersManager = () => {
               <TableHead>OVR</TableHead>
               <TableHead>Idade</TableHead>
               <TableHead>Nac.</TableHead>
-              <TableHead>Clube/Liga</TableHead>
+              <TableHead>Clube origem</TableHead>
               <TableHead>Valor</TableHead>
               <TableHead>Salário</TableHead>
               <TableHead>Temp.</TableHead>
@@ -162,7 +169,9 @@ export const ForeignPlayersManager = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((r) => (
+            {rows.map((r) => {
+              const ec = externalClubs.find((c) => c.name === r.club_origin);
+              return (
               <TableRow key={r.id}>
                 <TableCell className="font-medium">{r.name}</TableCell>
                 <TableCell>{r.position}</TableCell>
@@ -170,8 +179,10 @@ export const ForeignPlayersManager = () => {
                 <TableCell>{r.age ?? "-"}</TableCell>
                 <TableCell>{r.nationality}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">
-                  {r.club_origin}
-                  {r.league_origin ? ` / ${r.league_origin}` : ""}
+                  <div className="flex items-center gap-2">
+                    {ec?.crest && <img src={ec.crest} alt="" className="h-4 w-4 object-contain" />}
+                    <span>{r.club_origin || "-"}</span>
+                  </div>
                 </TableCell>
                 <TableCell>{formatCurrency(r.market_value)}</TableCell>
                 <TableCell>{formatCurrency(r.salary_demand)}</TableCell>
@@ -185,7 +196,8 @@ export const ForeignPlayersManager = () => {
                   </Button>
                 </TableCell>
               </TableRow>
-            ))}
+              );
+            })}
           </TableBody>
         </Table>
       </Card>
@@ -248,19 +260,27 @@ export const ForeignPlayersManager = () => {
                   onChange={(e) => setEditing({ ...editing, nationality: e.target.value })}
                 />
               </div>
-              <div>
-                <Label>Clube origem</Label>
-                <Input
+              <div className="col-span-2">
+                <Label>Clube de origem</Label>
+                <Select
                   value={editing.club_origin ?? ""}
-                  onChange={(e) => setEditing({ ...editing, club_origin: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label>Liga origem</Label>
-                <Input
-                  value={editing.league_origin ?? ""}
-                  onChange={(e) => setEditing({ ...editing, league_origin: e.target.value })}
-                />
+                  onValueChange={(v) => setEditing({ ...editing, club_origin: v, league_origin: null })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um clube externo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {externalClubs.map((c) => (
+                      <SelectItem key={c.id} value={c.name}>
+                        <div className="flex items-center gap-2">
+                          {c.crest && <img src={c.crest} alt="" className="h-4 w-4 object-contain" />}
+                          <span>{c.name}</span>
+                          {c.country && <span className="text-xs text-muted-foreground">({c.country})</span>}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label>Valor de mercado</Label>
