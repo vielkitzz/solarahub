@@ -414,7 +414,7 @@ export function SquadTable({
                         (shirt ?? "—")
                       )}
                     </TableCell>
-                    <TableCell className="py-2">
+                    <TableCell className="py-2 text-center">
                       <span
                         className={`inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded border ${ps.bg} ${ps.color}`}
                       >
