@@ -70,6 +70,7 @@ export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, onSaveSect
   const [isAddingSection, setIsAddingSection] = useState(false);
   const [newSectionTitle, setNewSectionTitle] = useState("");
   const [introOpen, setIntroOpen] = useState(false);
+  const [introDraft, setIntroDraft] = useState("");
 
   // FIX: flag para ignorar o próximo ciclo do useEffect causado por uma mudança local.
   // Sem isso, após salvar, o pai atualiza `wiki`, o effect dispara e reconstrói
@@ -185,7 +186,10 @@ export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, onSaveSect
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs text-primary shrink-0"
-                onClick={() => setIntroOpen(true)}
+                onClick={() => {
+                  setIntroDraft(getSection(wiki, "introducao"));
+                  setIntroOpen(true);
+                }}
               >
                 <Pencil className="h-3 w-3 mr-1" /> editar
               </Button>
@@ -247,6 +251,31 @@ export function WikiSectionsView({ wiki, canEdit = false, onSaveWiki, onSaveSect
             </Button>
             <Button onClick={addNewSection} className="bg-gradient-gold">
               Criar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={introOpen} onOpenChange={setIntroOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Editar — Introdução</DialogTitle>
+          </DialogHeader>
+          <RichEditor
+            content={introDraft}
+            onChange={setIntroDraft}
+            placeholder="Introdução e visão geral do artigo..."
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIntroOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={async () => {
+                await handleInternalSave("introducao", introDraft);
+                setIntroOpen(false);
+              }}
+            >
+              Salvar
             </Button>
           </DialogFooter>
         </DialogContent>
