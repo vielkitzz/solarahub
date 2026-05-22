@@ -7,6 +7,7 @@ export interface LineupPlayer {
   id: string;
   name: string;
   position: string;
+  secondary_position?: string | null;
   habilidade?: number;
   age?: number;
   nationality?: string;
