@@ -579,6 +579,7 @@ const ClubDetail = () => {
             <TabsTrigger value="financas">Finanças</TabsTrigger>
             <TabsTrigger value="estadio">Estádio</TabsTrigger>
             <TabsTrigger value="base">Base</TabsTrigger>
+            {canEdit && <TabsTrigger value="treinos">Treinos</TabsTrigger>}
             {canEdit && <TabsTrigger value="olheiros">Olheiros</TabsTrigger>}
             <TabsTrigger value="wiki">Wiki</TabsTrigger>
             <TabsTrigger value="camisas">Camisas</TabsTrigger>
