@@ -925,6 +925,18 @@ const ClubDetail = () => {
           <AcademyManager club={club} canEdit={canEdit} onChange={load} myClub={myClub} />
         </TabsContent>
 
+        {canEdit && (
+          <TabsContent value="treinos" className="mt-4">
+            <TrainingsManager
+              club={club}
+              players={players}
+              canEdit={canEdit}
+              temporadaAtual={temporadaAtual}
+              onChange={load}
+            />
+          </TabsContent>
+        )}
+
         <TabsContent value="wiki" className="mt-4">
           <div>
             <div className="float-right ml-6 mb-4 w-full md:w-[320px]">
