@@ -144,8 +144,8 @@ function AcademyTable({
   const [statusFilter, setStatusFilter] = useState("todos");
 
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>({
-    key: "desenvolvimento",
-    direction: "desc",
+    key: "posicao",
+    direction: "asc",
   });
 
   const handleSort = (key: string) => {
@@ -186,7 +186,8 @@ function AcademyTable({
             const av = ai === -1 ? 999 : ai;
             const bv = bi === -1 ? 999 : bi;
             if (av !== bv) return (av - bv) * modifier;
-            return (Number(b.development_progress || 0) - Number(a.development_progress || 0)) * modifier;
+            // Desempate sempre por desenvolvimento decrescente (independente do modifier)
+            return Number(b.development_progress || 0) - Number(a.development_progress || 0);
           case "nome":
             return a.name.localeCompare(b.name) * modifier;
           case "nacionalidade":
@@ -486,7 +487,9 @@ export const AcademyManager = ({ club, canEdit, onChange, myClub }: Props) => {
       .eq("club_id", club.id);
 
     if (playersError) toast.error(playersError.message);
-    const POS_ORDER: Record<string, number> = { GOL: 1, ZAG: 2, LAT: 3, VOL: 4, MEI: 5, ATA: 6 };
+    const POS_ORDER: Record<string, number> = {
+      GOL: 1, ZAG: 2, LD: 3, LE: 4, VOL: 5, MC: 6, MEI: 7, PD: 8, PE: 9, SA: 10, ATA: 11,
+    };
     const sorted = ((playersData as AcademyPlayer[]) || []).slice().sort((a, b) => {
       const oa = POS_ORDER[a.position] ?? 99;
       const ob = POS_ORDER[b.position] ?? 99;
