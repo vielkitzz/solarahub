@@ -767,6 +767,51 @@ export type Database = {
         }
         Relationships: []
       }
+      player_trainings: {
+        Row: {
+          active: boolean
+          club_id: string
+          cost: number
+          created_at: string
+          id: string
+          penalty_initial: number
+          player_id: string
+          seasons_completed: number
+          seasons_total: number
+          starting_season: number
+          target_position: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          club_id: string
+          cost?: number
+          created_at?: string
+          id?: string
+          penalty_initial?: number
+          player_id: string
+          seasons_completed?: number
+          seasons_total: number
+          starting_season: number
+          target_position: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          club_id?: string
+          cost?: number
+          created_at?: string
+          id?: string
+          penalty_initial?: number
+          player_id?: string
+          seasons_completed?: number
+          seasons_total?: number
+          starting_season?: number
+          target_position?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       players: {
         Row: {
           a_venda: boolean
@@ -791,6 +836,7 @@ export type Database = {
           potential_max: number | null
           potential_min: number | null
           salario_atual: number
+          secondary_position: string | null
           shirt_number: number | null
           updated_at: string
           valor_base_calculado: number
@@ -818,6 +864,7 @@ export type Database = {
           potential_max?: number | null
           potential_min?: number | null
           salario_atual?: number
+          secondary_position?: string | null
           shirt_number?: number | null
           updated_at?: string
           valor_base_calculado?: number
@@ -845,6 +892,7 @@ export type Database = {
           potential_max?: number | null
           potential_min?: number | null
           salario_atual?: number
+          secondary_position?: string | null
           shirt_number?: number | null
           updated_at?: string
           valor_base_calculado?: number

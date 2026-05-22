@@ -7,6 +7,7 @@ export interface LineupPlayer {
   id: string;
   name: string;
   position: string;
+  secondary_position?: string | null;
   habilidade?: number;
   age?: number;
   nationality?: string;
@@ -217,12 +218,13 @@ export function getAdaptation(player: LineupPlayer | undefined, cellKey: string,
     };
 
   const playerPos = (player.position || "").toUpperCase();
+  const secondaryPos = (player.secondary_position || "").toUpperCase();
   const rawLabel = GRID_LABELS[cellKey] || formationRole || "";
   const targetRoles = Array.from(
     new Set([...rawLabel.split("/").map((r) => r.trim()), formationRole].filter(Boolean) as string[]),
   );
 
-  if (targetRoles.includes(playerPos) || targetRoles.length === 0) {
+  if (targetRoles.includes(playerPos) || targetRoles.includes(secondaryPos) || targetRoles.length === 0) {
     return {
       loss: 0,
       color: "text-emerald-400",
@@ -231,9 +233,11 @@ export function getAdaptation(player: LineupPlayer | undefined, cellKey: string,
     };
   }
 
-  const playerCompat = POS_COMPAT[playerPos] || [playerPos];
+  const playerCompat = Array.from(
+    new Set([...(POS_COMPAT[playerPos] || [playerPos]), ...(secondaryPos ? POS_COMPAT[secondaryPos] || [secondaryPos] : [])]),
+  );
   const isCompatible = targetRoles.some(
-    (role) => playerCompat.includes(role) || (POS_COMPAT[role] || []).includes(playerPos),
+    (role) => playerCompat.includes(role) || (POS_COMPAT[role] || []).includes(playerPos) || (secondaryPos && (POS_COMPAT[role] || []).includes(secondaryPos)),
   );
 
   if (isCompatible) {

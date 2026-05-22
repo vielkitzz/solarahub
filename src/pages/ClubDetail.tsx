@@ -44,6 +44,7 @@ import { ClubInfobox, InfoboxData } from "@/components/ClubInfobox";
 import { ContractsManager } from "@/components/ContractsManager";
 import { StadiumManager } from "@/components/StadiumManager";
 import { AcademyManager } from "@/components/AcademyManager";
+import { TrainingsManager } from "@/components/TrainingsManager";
 import { LoanManager } from "@/components/LoanManager";
 import { ChevronsUp, ChevronsDown, Equal, LineChart } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
@@ -578,6 +579,7 @@ const ClubDetail = () => {
             <TabsTrigger value="financas">Finanças</TabsTrigger>
             <TabsTrigger value="estadio">Estádio</TabsTrigger>
             <TabsTrigger value="base">Base</TabsTrigger>
+            {canEdit && <TabsTrigger value="treinos">Treinos</TabsTrigger>}
             {canEdit && <TabsTrigger value="olheiros">Olheiros</TabsTrigger>}
             <TabsTrigger value="wiki">Wiki</TabsTrigger>
             <TabsTrigger value="camisas">Camisas</TabsTrigger>
@@ -922,6 +924,18 @@ const ClubDetail = () => {
         <TabsContent value="base" className="mt-4">
           <AcademyManager club={club} canEdit={canEdit} onChange={load} myClub={myClub} />
         </TabsContent>
+
+        {canEdit && (
+          <TabsContent value="treinos" className="mt-4">
+            <TrainingsManager
+              club={club}
+              players={players}
+              canEdit={canEdit}
+              temporadaAtual={temporadaAtual}
+              onChange={load}
+            />
+          </TabsContent>
+        )}
 
         <TabsContent value="wiki" className="mt-4">
           <div>
