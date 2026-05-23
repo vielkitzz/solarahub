@@ -202,7 +202,6 @@ const ClubDetail = () => {
       .limit(1000);
     setAllTransactions(txAll || []);
 
-
     // Contadores de transferências (todas as temporadas)
     try {
       const s = await transfersService.getStats(id);
@@ -327,9 +326,7 @@ const ClubDetail = () => {
     const map = new Map<number, { receitas: number; despesas: number }>();
     for (const t of allTransactions) {
       const sea =
-        typeof t.temporada === "number" && t.temporada > 0
-          ? t.temporada
-          : new Date(t.created_at).getFullYear();
+        typeof t.temporada === "number" && t.temporada > 0 ? t.temporada : new Date(t.created_at).getFullYear();
       if (!map.has(sea)) map.set(sea, { receitas: 0, despesas: 0 });
       const cur = map.get(sea)!;
       const v = Math.abs(Number(t.valor || 0));
@@ -350,9 +347,7 @@ const ClubDetail = () => {
     const map = new Map<string, number>();
     for (const t of allTransactions) {
       const sea =
-        typeof t.temporada === "number" && t.temporada > 0
-          ? t.temporada
-          : new Date(t.created_at).getFullYear();
+        typeof t.temporada === "number" && t.temporada > 0 ? t.temporada : new Date(t.created_at).getFullYear();
       if (sea !== temporadaAtual) continue;
       if (t.tipo !== "saida") continue;
       const cat = String(t.categoria || "outros");
@@ -367,9 +362,7 @@ const ClubDetail = () => {
     const map = new Map<number, any[]>();
     for (const t of recentTransactions) {
       const sea =
-        typeof t.temporada === "number" && t.temporada > 0
-          ? t.temporada
-          : new Date(t.created_at).getFullYear();
+        typeof t.temporada === "number" && t.temporada > 0 ? t.temporada : new Date(t.created_at).getFullYear();
       if (!map.has(sea)) map.set(sea, []);
       map.get(sea)!.push(t);
     }
@@ -443,9 +436,6 @@ const ClubDetail = () => {
   const entradasMensais = entradasAnuais / 12;
   const saidasMensais = saidasAnuais / 12;
   const exigClube = club.rate; // usado na fórmula calcStars
-
-
-
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -576,13 +566,13 @@ const ClubDetail = () => {
             <TabsTrigger value="elenco">Elenco</TabsTrigger>
             <TabsTrigger value="escalacao">Escalação</TabsTrigger>
             {canEdit && <TabsTrigger value="evolucao">Evolução</TabsTrigger>}
-            <TabsTrigger value="financas">Finanças</TabsTrigger>
-            <TabsTrigger value="estadio">Estádio</TabsTrigger>
-            <TabsTrigger value="base">Base</TabsTrigger>
             {canEdit && <TabsTrigger value="treinos">Treinos</TabsTrigger>}
+            <TabsTrigger value="financas">Finanças</TabsTrigger>
+            <TabsTrigger value="base">Base</TabsTrigger>
             {canEdit && <TabsTrigger value="olheiros">Olheiros</TabsTrigger>}
-            <TabsTrigger value="wiki">Wiki</TabsTrigger>
+            <TabsTrigger value="estadio">Estádio</TabsTrigger>
             <TabsTrigger value="camisas">Camisas</TabsTrigger>
+            <TabsTrigger value="wiki">Wiki</TabsTrigger>
             {canEdit && <TabsTrigger value="config">Configurações</TabsTrigger>}
           </TabsList>
         </div>
@@ -758,9 +748,30 @@ const ClubDetail = () => {
                         formatter={(v: any, n: any) => [formatCurrency(Number(v)), n]}
                       />
                       <Legend wrapperStyle={{ fontSize: 11 }} />
-                      <Line type="monotone" dataKey="receitas" name="Receitas" stroke="hsl(var(--success))" strokeWidth={2} dot={{ r: 3 }} />
-                      <Line type="monotone" dataKey="despesas" name="Despesas" stroke="hsl(var(--destructive))" strokeWidth={2} dot={{ r: 3 }} />
-                      <Line type="monotone" dataKey="lucro" name="Lucro" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+                      <Line
+                        type="monotone"
+                        dataKey="receitas"
+                        name="Receitas"
+                        stroke="hsl(var(--success))"
+                        strokeWidth={2}
+                        dot={{ r: 3 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="despesas"
+                        name="Despesas"
+                        stroke="hsl(var(--destructive))"
+                        strokeWidth={2}
+                        dot={{ r: 3 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="lucro"
+                        name="Lucro"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        dot={{ r: 3 }}
+                      />
                     </RLineChart>
                   </ResponsiveContainer>
                 </div>
@@ -769,10 +780,13 @@ const ClubDetail = () => {
 
             <Card className="p-4 bg-gradient-card border-border/50">
               <h4 className="font-display font-bold text-sm flex items-center gap-2 mb-3">
-                <TrendingDown className="h-4 w-4 text-destructive" /> Despesas da temporada {temporadaAtual} por categoria
+                <TrendingDown className="h-4 w-4 text-destructive" /> Despesas da temporada {temporadaAtual} por
+                categoria
               </h4>
               {despesasAtuaisPorCategoria.length === 0 ? (
-                <div className="text-xs text-muted-foreground py-8 text-center">Sem despesas registradas nesta temporada.</div>
+                <div className="text-xs text-muted-foreground py-8 text-center">
+                  Sem despesas registradas nesta temporada.
+                </div>
               ) : (
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
