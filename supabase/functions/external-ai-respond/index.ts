@@ -102,11 +102,28 @@ Responda APENAS JSON: {"action":"accept|reject|counter","valor":number?,"salario
     } else if (parsed.action === "reject") {
       await supabase.from("external_proposals").update({ status: "recusada", mensagem: parsed.mensagem }).eq("id", proposal_id);
     } else if (parsed.action === "counter") {
+      let novoValor = Number(parsed.valor || prop.valor_ofertado);
+      const pedido = Number(prop.valor_ofertado);
+      // Sanitiza: counter deve estar entre (oferta_anterior, pedido_do_vendedor]
+      if (oferta_anterior !== null) {
+        if (novoValor <= oferta_anterior) novoValor = Math.min(pedido, Math.round(oferta_anterior * 1.1));
+        if (novoValor > pedido) novoValor = pedido;
+        // Se não há espaço razoável (oferta anterior já perto do pedido), converte para reject
+        if (oferta_anterior >= pedido) {
+          await supabase.from("external_proposals").update({
+            status: "recusada",
+            mensagem: parsed.mensagem || "Pedido fora do alcance do clube.",
+          }).eq("id", proposal_id);
+          return new Response(JSON.stringify({ ok: true, decision: { ...parsed, action: "reject" } }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
       await supabase.from("external_proposals").update({ status: "contraproposta" }).eq("id", proposal_id);
       await supabase.from("external_proposals").insert({
         external_club_id: prop.external_club_id,
         player_id: prop.player_id,
-        valor_ofertado: Number(parsed.valor || prop.valor_ofertado),
+        valor_ofertado: novoValor,
         salario_ofertado: Number(parsed.salario || prop.salario_ofertado),
         luvas: prop.luvas,
         status: "pendente",
