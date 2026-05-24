@@ -26,6 +26,8 @@ import {
   Gavel,
   Star,
   Lock,
+  Plane,
+  Clock,
 } from "lucide-react";
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
 import { getFlagUrl } from "@/lib/countries";
