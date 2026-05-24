@@ -119,8 +119,10 @@ export function SquadTable({
   setMultaPlayer: (p: any) => void;
   myClub: any | null;
   scoutReports: Record<string, ScoutReport>;
+  loanedInIds?: Set<string>;
   onOpenProfile?: (id: string) => void;
 }) {
+  const _loanedInIds = loanedInIds ?? new Set<string>();
   const isOwnClub = !!myClub && myClub.id === club.id;
   const anyPotKnown = isOwnClub || players.some((p) => scoutReports[p.id]);
   const [searchTerm, setSearchTerm] = useState("");
