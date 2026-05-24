@@ -120,7 +120,7 @@ export const MultaRescisoriaDialog = ({
         </DialogHeader>
 
         <Card className="p-3 bg-secondary/30 border-border/50">
-          <div className="text-[10px] uppercase text-muted-foreground">Multa (5× valor base)</div>
+          <div className="text-[10px] uppercase text-muted-foreground">Multa (7× valor base)</div>
           <div className="font-display font-bold text-2xl text-primary">{formatCurrency(multa)}</div>
           <div className="text-[10px] text-muted-foreground mt-1">Valor base: {formatCurrency(valorBase)}</div>
         </Card>
