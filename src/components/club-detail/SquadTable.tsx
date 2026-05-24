@@ -442,6 +442,16 @@ export function SquadTable({
                             <AlertTriangle className="h-3 w-3 text-amber-400 shrink-0" />
                           </span>
                         )}
+                        {retiringSoon && (
+                          <span title="Próximo da aposentadoria">
+                            <Clock className="h-3 w-3 text-orange-400 shrink-0" />
+                          </span>
+                        )}
+                        {isLoanedIn && (
+                          <span title="Jogador emprestado por outro clube">
+                            <Plane className="h-3 w-3 text-sky-400 shrink-0" />
+                          </span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="py-2 hidden text-center sm:table-cell">
