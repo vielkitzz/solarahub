@@ -26,6 +26,8 @@ import {
   Gavel,
   Star,
   Lock,
+  Plane,
+  Clock,
 } from "lucide-react";
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
 import { getFlagUrl } from "@/lib/countries";
@@ -105,6 +107,7 @@ export function SquadTable({
   setMultaPlayer,
   myClub,
   scoutReports,
+  loanedInIds,
   onOpenProfile,
 }: {
   players: any[];
@@ -119,8 +122,10 @@ export function SquadTable({
   setMultaPlayer: (p: any) => void;
   myClub: any | null;
   scoutReports: Record<string, ScoutReport>;
+  loanedInIds?: Set<string>;
   onOpenProfile?: (id: string) => void;
 }) {
+  const _loanedInIds = loanedInIds ?? new Set<string>();
   const isOwnClub = !!myClub && myClub.id === club.id;
   const anyPotKnown = isOwnClub || players.some((p) => scoutReports[p.id]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -390,6 +395,8 @@ export function SquadTable({
                 }
                 const expirando =
                   p.contrato_ate !== null && p.contrato_ate !== undefined && p.contrato_ate - temporadaAtual <= 1;
+                const isLoanedIn = _loanedInIds.has(p.id);
+                const retiringSoon = typeof p.age === "number" && p.age >= 33;
                 const ps = getPositionStyle(p.position);
 
                 return (
@@ -433,6 +440,16 @@ export function SquadTable({
                         {expirando && (
                           <span title="Contrato expirando">
                             <AlertTriangle className="h-3 w-3 text-amber-400 shrink-0" />
+                          </span>
+                        )}
+                        {retiringSoon && (
+                          <span title="Próximo da aposentadoria">
+                            <Clock className="h-3 w-3 text-orange-400 shrink-0" />
+                          </span>
+                        )}
+                        {isLoanedIn && (
+                          <span title="Jogador emprestado por outro clube">
+                            <Plane className="h-3 w-3 text-sky-400 shrink-0" />
                           </span>
                         )}
                       </div>
@@ -486,8 +503,10 @@ export function SquadTable({
                       <TableCell className="py-2 text-center">
                         <Switch
                           checked={!!p.a_venda}
+                          disabled={isLoanedIn || retiringSoon}
                           onCheckedChange={(v) => {
                             if (v === !!p.a_venda) return;
+                            if (isLoanedIn || retiringSoon) return;
                             setConfirmDialog({ kind: "sale", player: p, nextValue: v });
                           }}
                         />
@@ -497,8 +516,10 @@ export function SquadTable({
                       <TableCell className="py-2 text-center">
                         <Switch
                           checked={!!p.bloquear_propostas}
+                          disabled={isLoanedIn}
                           onCheckedChange={(v) => {
                             if (v === !!p.bloquear_propostas) return;
+                            if (isLoanedIn) return;
                             setConfirmDialog({ kind: "block", player: p, nextValue: v });
                           }}
                         />
@@ -510,8 +531,13 @@ export function SquadTable({
                           <Button
                             variant="ghost"
                             size="icon"
-                            title="Renovar contrato"
-                            onClick={() => setRenewPlayer(p)}
+                            title={
+                              isLoanedIn
+                                ? "Jogador emprestado — clube de origem detém o contrato"
+                                : "Renovar contrato"
+                            }
+                            disabled={isLoanedIn}
+                            onClick={() => !isLoanedIn && setRenewPlayer(p)}
                             className="h-7 w-7"
                           >
                             <FileSignature className="h-3.5 w-3.5 text-primary" />
@@ -519,8 +545,13 @@ export function SquadTable({
                           <Button
                             variant="ghost"
                             size="icon"
-                            title="Pagar multa rescisória (liberar)"
-                            onClick={() => setMultaPlayer(p)}
+                            title={
+                              isLoanedIn
+                                ? "Jogador emprestado — clube de origem detém o contrato"
+                                : "Pagar multa rescisória (liberar)"
+                            }
+                            disabled={isLoanedIn}
+                            onClick={() => !isLoanedIn && setMultaPlayer(p)}
                             className="h-7 w-7"
                           >
                             <Gavel className="h-3.5 w-3.5 text-amber-400" />

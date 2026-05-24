@@ -80,6 +80,7 @@ const ClubDetail = () => {
   const { user, isAdmin } = useAuth();
   const [club, setClub] = useState<any>(null);
   const [players, setPlayers] = useState<any[]>([]);
+  const [loanedInIds, setLoanedInIds] = useState<Set<string>>(new Set());
   const [contratosTotal, setContratosTotal] = useState(0);
   const [temporadaAtual, setTemporadaAtual] = useState<number>(2020);
   const [renewPlayer, setRenewPlayer] = useState<any>(null);
@@ -161,6 +162,15 @@ const ClubDetail = () => {
     setKitSupplier((kitContract as any)?.empresa?.nome ?? null);
     setPlayers(p || []);
     setContratosTotal((ct || []).reduce((s, r: any) => s + Number(r.valor_anual || 0), 0));
+
+    // Detecta jogadores emprestados PARA este clube (loan-in) — bloqueia renovação/venda
+    const { data: loansIn } = await supabase
+      .from("transferencias")
+      .select("jogador_id")
+      .eq("clube_comprador_id", id)
+      .eq("tipo", "emprestimo")
+      .eq("status", "aceita");
+    setLoanedInIds(new Set((loansIn || []).map((l: any) => l.jogador_id)));
 
     (settings || []).forEach((s: any) => {
       if (s.key === "temporada_atual" && typeof s.value?.ano === "number") setTemporadaAtual(s.value.ano);
@@ -596,6 +606,7 @@ const ClubDetail = () => {
               setMultaPlayer={setMultaPlayer}
               myClub={myClub}
               scoutReports={scoutReports}
+              loanedInIds={loanedInIds}
               onOpenProfile={(id) => setProfilePlayerId(id)}
             />
           )}

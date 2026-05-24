@@ -300,6 +300,9 @@ const Market = () => {
 
   const submit = async () => {
     if (!target || !activeClubId || !user) return;
+    if (typeof target.age === "number" && target.age >= 33 && !target._isFreeAgent) {
+      return toast.error("Jogador próximo da aposentadoria — não aceita propostas");
+    }
     if (fpError) return toast.error(fpError);
     if (caixaError) return toast.error(caixaError);
     if (trocaError) return toast.error(trocaError);
