@@ -42,10 +42,29 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "LOVABLE_API_KEY missing" }), { status: 500, headers: corsHeaders });
     }
 
+    // Recupera oferta anterior (da própria IA / clube comprador) na cadeia para dar contexto
+    let oferta_anterior: number | null = null;
+    if (prop.parent_id) {
+      const { data: parent } = await supabase
+        .from("external_proposals")
+        .select("valor_ofertado")
+        .eq("id", prop.parent_id)
+        .maybeSingle();
+      oferta_anterior = parent ? Number(parent.valor_ofertado) : null;
+    }
+
     const prompt = `Você é o diretor esportivo do clube ${club?.name} (${club?.country}, prestígio ${club?.prestige}/10, tier ${club?.budget_tier}).
-O clube vendedor fez uma contraproposta pelo jogador ${player?.name} (overall ${player?.habilidade}, valor base ${player?.valor_base_calculado}).
-Contraproposta recebida: valor ${prop.valor_ofertado}, salário ${prop.salario_ofertado}.
-Decida: aceitar, recusar ou contra-propor (com novos valores próximos do razoável). Responda APENAS JSON: {"action":"accept|reject|counter","valor":number?,"salario":number?,"mensagem":"breve"}.`;
+Você quer comprar o jogador ${player?.name} (overall ${player?.habilidade}, valor base de mercado ${player?.valor_base_calculado}).
+${oferta_anterior !== null ? `Sua oferta anterior foi de ${oferta_anterior}.` : ""}
+O clube vendedor agora pede: valor ${prop.valor_ofertado}, salário ${prop.salario_ofertado}.
+
+Regras importantes para sua resposta:
+1. Se o pedido do vendedor é razoável (até ~120% do valor base) e cabe no seu orçamento, ACEITE.
+2. Se o pedido é absurdamente alto (acima de ~160% do valor base) ou inviável, RECUSE com uma mensagem clara dizendo que o valor é alto demais. NÃO faça contraproposta nesse caso.
+3. Só faça CONTRAPROPOSTA se quiser ELEVAR sua oferta anterior em direção ao pedido do vendedor (sem alcançá-lo totalmente). Nesse caso sua mensagem deve ser positiva ("podemos chegar perto", "subimos para X"), nunca dizer que o pedido é alto demais — se acha alto demais, recuse.
+4. Em contraproposta, o novo "valor" DEVE ser estritamente maior que sua oferta anterior${oferta_anterior !== null ? ` (${oferta_anterior})` : ""} e menor ou igual ao pedido do vendedor (${prop.valor_ofertado}).
+
+Responda APENAS JSON: {"action":"accept|reject|counter","valor":number?,"salario":number?,"mensagem":"breve e coerente com a ação"}.`;
 
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
