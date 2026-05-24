@@ -163,6 +163,15 @@ const ClubDetail = () => {
     setPlayers(p || []);
     setContratosTotal((ct || []).reduce((s, r: any) => s + Number(r.valor_anual || 0), 0));
 
+    // Detecta jogadores emprestados PARA este clube (loan-in) — bloqueia renovação/venda
+    const { data: loansIn } = await supabase
+      .from("transferencias")
+      .select("jogador_id")
+      .eq("clube_comprador_id", id)
+      .eq("tipo", "emprestimo")
+      .eq("status", "aceita");
+    setLoanedInIds(new Set((loansIn || []).map((l: any) => l.jogador_id)));
+
     (settings || []).forEach((s: any) => {
       if (s.key === "temporada_atual" && typeof s.value?.ano === "number") setTemporadaAtual(s.value.ano);
       if (s.key === "direitos_imagem")
