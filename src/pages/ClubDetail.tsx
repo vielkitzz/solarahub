@@ -80,6 +80,7 @@ const ClubDetail = () => {
   const { user, isAdmin } = useAuth();
   const [club, setClub] = useState<any>(null);
   const [players, setPlayers] = useState<any[]>([]);
+  const [loanedInIds, setLoanedInIds] = useState<Set<string>>(new Set());
   const [contratosTotal, setContratosTotal] = useState(0);
   const [temporadaAtual, setTemporadaAtual] = useState<number>(2020);
   const [renewPlayer, setRenewPlayer] = useState<any>(null);
