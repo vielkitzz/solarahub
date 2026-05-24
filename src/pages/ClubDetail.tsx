@@ -606,6 +606,7 @@ const ClubDetail = () => {
               setMultaPlayer={setMultaPlayer}
               myClub={myClub}
               scoutReports={scoutReports}
+              loanedInIds={loanedInIds}
               onOpenProfile={(id) => setProfilePlayerId(id)}
             />
           )}
