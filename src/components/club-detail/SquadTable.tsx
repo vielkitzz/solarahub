@@ -105,6 +105,7 @@ export function SquadTable({
   setMultaPlayer,
   myClub,
   scoutReports,
+  loanedInIds,
   onOpenProfile,
 }: {
   players: any[];
