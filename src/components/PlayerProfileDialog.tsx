@@ -396,53 +396,73 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                 </Button>
 
                 <div className="flex gap-2">
-                  {isOwn ? (
-                    <>
-                      <Button size="sm" variant="outline" onClick={() => setRenewOpen(true)}>
-                        <FileSignature className="h-3.5 w-3.5 mr-2 text-primary" /> Renovar
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => setMultaOpen(true)}>
-                        <Gavel className="h-3.5 w-3.5 mr-2 text-amber-400" /> Multa
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      {(() => {
-                        const isOnLoan = history.some(
-                          (t: any) => t.tipo === "emprestimo" && t.clube_comprador_id === player.club_id,
-                        );
-                        const isSoldAbroad = !!player.external_club_id;
-                        const isBlocked = !!player.bloquear_propostas;
-                        const disabled = isOnLoan || isSoldAbroad || isBlocked;
-                        const reason = isSoldAbroad
-                          ? "Jogador vendido para o exterior"
-                          : isOnLoan
-                            ? "Jogador está emprestado"
-                            : isBlocked
-                              ? "Propostas bloqueadas pelo clube"
-                              : "";
-                        return (
+                  {(() => {
+                    const isOnLoan = history.some(
+                      (t: any) => t.tipo === "emprestimo" && t.clube_comprador_id === player.club_id,
+                    );
+                    const retiringSoon = typeof player.age === "number" && player.age >= 33;
+                    if (isOwn) {
+                      const ownerDisabled = isOnLoan;
+                      const ownerReason = isOnLoan
+                        ? "Jogador emprestado — clube de origem detém o contrato"
+                        : "";
+                      return (
+                        <>
                           <Button
                             size="sm"
-                            className="bg-primary text-primary-foreground"
-                            disabled={disabled}
-                            title={reason}
-                            onClick={() => (onNegotiate ? onNegotiate(player) : navigate("/mercado"))}
+                            variant="outline"
+                            disabled={ownerDisabled}
+                            title={ownerReason}
+                            onClick={() => !ownerDisabled && setRenewOpen(true)}
                           >
-                            <ArrowRightLeft className="h-3.5 w-3.5 mr-2" /> Fazer proposta
+                            <FileSignature className="h-3.5 w-3.5 mr-2 text-primary" /> Renovar
                           </Button>
-                        );
-                      })()}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
-                        onClick={() => setMultaOpen(true)}
-                      >
-                        <Gavel className="h-3.5 w-3.5 mr-2" /> Pagar Multa
-                      </Button>
-                    </>
-                  )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={ownerDisabled}
+                            title={ownerReason}
+                            onClick={() => !ownerDisabled && setMultaOpen(true)}
+                          >
+                            <Gavel className="h-3.5 w-3.5 mr-2 text-amber-400" /> Multa
+                          </Button>
+                        </>
+                      );
+                    }
+                    const isSoldAbroad = !!player.external_club_id;
+                    const isBlocked = !!player.bloquear_propostas;
+                    const disabled = isOnLoan || isSoldAbroad || isBlocked || retiringSoon;
+                    const reason = isSoldAbroad
+                      ? "Jogador vendido para o exterior"
+                      : isOnLoan
+                        ? "Jogador está emprestado"
+                        : retiringSoon
+                          ? "Jogador próximo da aposentadoria"
+                          : isBlocked
+                            ? "Propostas bloqueadas pelo clube"
+                            : "";
+                    return (
+                      <>
+                        <Button
+                          size="sm"
+                          className="bg-primary text-primary-foreground"
+                          disabled={disabled}
+                          title={reason}
+                          onClick={() => (onNegotiate ? onNegotiate(player) : navigate("/mercado"))}
+                        >
+                          <ArrowRightLeft className="h-3.5 w-3.5 mr-2" /> Fazer proposta
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+                          onClick={() => setMultaOpen(true)}
+                        >
+                          <Gavel className="h-3.5 w-3.5 mr-2" /> Pagar Multa
+                        </Button>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </>
