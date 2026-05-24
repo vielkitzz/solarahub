@@ -395,6 +395,8 @@ export function SquadTable({
                 }
                 const expirando =
                   p.contrato_ate !== null && p.contrato_ate !== undefined && p.contrato_ate - temporadaAtual <= 1;
+                const isLoanedIn = _loanedInIds.has(p.id);
+                const retiringSoon = typeof p.age === "number" && p.age >= 33;
                 const ps = getPositionStyle(p.position);
 
                 return (
