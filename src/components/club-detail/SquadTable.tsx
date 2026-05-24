@@ -503,8 +503,10 @@ export function SquadTable({
                       <TableCell className="py-2 text-center">
                         <Switch
                           checked={!!p.a_venda}
+                          disabled={isLoanedIn || retiringSoon}
                           onCheckedChange={(v) => {
                             if (v === !!p.a_venda) return;
+                            if (isLoanedIn || retiringSoon) return;
                             setConfirmDialog({ kind: "sale", player: p, nextValue: v });
                           }}
                         />
@@ -514,8 +516,10 @@ export function SquadTable({
                       <TableCell className="py-2 text-center">
                         <Switch
                           checked={!!p.bloquear_propostas}
+                          disabled={isLoanedIn}
                           onCheckedChange={(v) => {
                             if (v === !!p.bloquear_propostas) return;
+                            if (isLoanedIn) return;
                             setConfirmDialog({ kind: "block", player: p, nextValue: v });
                           }}
                         />
@@ -527,8 +531,13 @@ export function SquadTable({
                           <Button
                             variant="ghost"
                             size="icon"
-                            title="Renovar contrato"
-                            onClick={() => setRenewPlayer(p)}
+                            title={
+                              isLoanedIn
+                                ? "Jogador emprestado — clube de origem detém o contrato"
+                                : "Renovar contrato"
+                            }
+                            disabled={isLoanedIn}
+                            onClick={() => !isLoanedIn && setRenewPlayer(p)}
                             className="h-7 w-7"
                           >
                             <FileSignature className="h-3.5 w-3.5 text-primary" />
@@ -536,8 +545,13 @@ export function SquadTable({
                           <Button
                             variant="ghost"
                             size="icon"
-                            title="Pagar multa rescisória (liberar)"
-                            onClick={() => setMultaPlayer(p)}
+                            title={
+                              isLoanedIn
+                                ? "Jogador emprestado — clube de origem detém o contrato"
+                                : "Pagar multa rescisória (liberar)"
+                            }
+                            disabled={isLoanedIn}
+                            onClick={() => !isLoanedIn && setMultaPlayer(p)}
                             className="h-7 w-7"
                           >
                             <Gavel className="h-3.5 w-3.5 text-amber-400" />
