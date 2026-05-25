@@ -241,8 +241,8 @@ const Market = () => {
   };
 
   const openProposal = async (player: any) => {
-    // Bloqueio por janelas específicas (não-admin)
-    const isAdminUser = (myClubs?.length ?? 0) === 0 ? false : false; // admin handling not granular here
+    // Bloqueio por janelas específicas
+
     if (player._isForeign) {
       const { data } = await supabase.from("settings").select("value").eq("key", "foreign_market_window").maybeSingle();
       const open = (data?.value as any)?.open !== false;
