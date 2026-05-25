@@ -452,7 +452,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                           className="bg-primary text-primary-foreground"
                           disabled={disabled}
                           title={reason}
-                          onClick={() => (onNegotiate ? onNegotiate(player) : navigate("/mercado"))}
+                          onClick={() => (onNegotiate ? onNegotiate(player) : setNegotiateOpen(true))}
                         >
                           <ArrowRightLeft className="h-3.5 w-3.5 mr-2" /> Fazer proposta
                         </Button>
