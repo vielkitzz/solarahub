@@ -171,24 +171,23 @@ export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: Foreign
                   <TableCell className="font-medium">{r.name}</TableCell>
                   <TableCell className="hidden sm:table-cell py-2">
                     {r.nationality && <FlagImg nationality={r.nationality} />}
+                  </TableCell>
                   <TableCell>
-                    {(ext?.name || r.club_origin) ? (
+                    {ext?.name || r.club_origin ? (
                       <div className="flex items-center gap-2">
                         {/* Container do escudo com o mesmo tamanho (h-7 w-7) */}
                         <div className="h-7 w-7 shrink-0 flex items-center justify-center">
                           {ext?.crest && (
-                            <img 
-                              src={ext.crest} 
-                              alt={ext.name || r.club_origin} 
-                              className="w-full h-full object-contain" 
+                            <img
+                              src={ext.crest}
+                              alt={ext.name || r.club_origin}
+                              className="w-full h-full object-contain"
                             />
                           )}
                         </div>
-                        
+
                         {/* Texto com o mesmo tamanho (text-sm) e comportamento responsivo */}
-                        <span className="text-sm hidden md:inline">
-                          {ext?.name || r.club_origin}
-                        </span>
+                        <span className="text-sm hidden md:inline">{ext?.name || r.club_origin}</span>
                       </div>
                     ) : (
                       /* Estado vazio idêntico ao do clube local */
