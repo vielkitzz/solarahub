@@ -36,7 +36,7 @@ interface Props {
 
 export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate }: Props) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  
   const [loading, setLoading] = useState(false);
   const [player, setPlayer] = useState<any>(null);
   const [myClub, setMyClub] = useState<any>(null);
