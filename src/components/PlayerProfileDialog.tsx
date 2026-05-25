@@ -44,6 +44,8 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
   const [history, setHistory] = useState<any[]>([]);
   const [renewOpen, setRenewOpen] = useState(false);
   const [multaOpen, setMultaOpen] = useState(false);
+  const [negotiateOpen, setNegotiateOpen] = useState(false);
+
 
   const { has, toggle } = useInterestList();
 
