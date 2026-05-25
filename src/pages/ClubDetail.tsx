@@ -394,6 +394,7 @@ const ClubDetail = () => {
   const catLabelMap: Record<string, string> = {
     transferencia: "Compras",
     transferencia_externa: "Compras (exterior)",
+    multa_rescisoria: "Multa rescisória",
     upgrade_estadio: "Upgrade estádio",
     upgrade_academia: "Upgrade base",
     salario: "Salários",
@@ -405,6 +406,7 @@ const ClubDetail = () => {
     emprestimo: "Empréstimos",
     outros: "Outros",
   };
+
   const formatCat = (k: string) => catLabelMap[k] ?? k;
 
   if (!club) return <div className="text-center py-20 text-muted-foreground">Clube não encontrado.</div>;
