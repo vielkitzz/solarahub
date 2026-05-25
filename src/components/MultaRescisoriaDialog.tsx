@@ -54,7 +54,7 @@ export const MultaRescisoriaDialog = ({
   const valorBase = player ? Number(player.valor_base_calculado || player.market_value || 0) : 0;
 
   // Multa = 5× valor base (label corrigida para "5×")
-  const multa = valorBase * 5;
+  const multa = valorBase * 7;
 
   useEffect(() => {
     if (!open || !player) return;
