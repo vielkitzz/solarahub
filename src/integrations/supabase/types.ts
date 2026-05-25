@@ -1498,6 +1498,10 @@ export type Database = {
         Args: { _jogador_id: string }
         Returns: Json
       }
+      migrar_jogadores_sem_clube_para_free_agents: {
+        Args: never
+        Returns: number
+      }
       pagar_multa_rescisoria: {
         Args: {
           _anos_contrato: number
@@ -1540,6 +1544,7 @@ export type Database = {
         }[]
       }
       processar_aposentadorias: { Args: never; Returns: undefined }
+      processar_treinamentos: { Args: never; Returns: undefined }
       promover_academia: {
         Args: { _academy_player_id: string }
         Returns: string
