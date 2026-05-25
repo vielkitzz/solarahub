@@ -198,7 +198,7 @@ const ClubDetail = () => {
       .from("transactions")
       .select("*")
       .eq("club_id", id)
-      .in("categoria", ["transferencia", "transferencia_externa", "upgrade_estadio", "upgrade_academia"])
+      .in("categoria", ["transferencia", "transferencia_externa", "multa_rescisoria", "upgrade_estadio", "upgrade_academia"])
       .order("created_at", { ascending: false })
       .limit(500);
     setRecentTransactions(tx || []);
@@ -394,6 +394,7 @@ const ClubDetail = () => {
   const catLabelMap: Record<string, string> = {
     transferencia: "Compras",
     transferencia_externa: "Compras (exterior)",
+    multa_rescisoria: "Multa rescisória",
     upgrade_estadio: "Upgrade estádio",
     upgrade_academia: "Upgrade base",
     salario: "Salários",
@@ -405,6 +406,7 @@ const ClubDetail = () => {
     emprestimo: "Empréstimos",
     outros: "Outros",
   };
+
   const formatCat = (k: string) => catLabelMap[k] ?? k;
 
   if (!club) return <div className="text-center py-20 text-muted-foreground">Clube não encontrado.</div>;
@@ -898,11 +900,16 @@ const ClubDetail = () => {
                                     : "Compra"
                                   : t.categoria === "transferencia_externa"
                                     ? "Venda (exterior)"
-                                    : t.categoria === "upgrade_estadio"
-                                      ? "Upgrade estádio"
-                                      : t.categoria === "upgrade_academia"
-                                        ? "Upgrade base"
-                                        : t.categoria;
+                                    : t.categoria === "multa_rescisoria"
+                                      ? isIn
+                                        ? "Multa recebida"
+                                        : "Multa rescisória"
+                                      : t.categoria === "upgrade_estadio"
+                                        ? "Upgrade estádio"
+                                        : t.categoria === "upgrade_academia"
+                                          ? "Upgrade base"
+                                          : t.categoria;
+
                               return (
                                 <TableRow key={t.id} className="text-xs">
                                   <TableCell className="text-muted-foreground">

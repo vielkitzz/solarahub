@@ -241,6 +241,25 @@ const Market = () => {
   };
 
   const openProposal = async (player: any) => {
+    // Bloqueio por janelas específicas
+
+    if (player._isForeign) {
+      const { data } = await supabase.from("settings").select("value").eq("key", "foreign_market_window").maybeSingle();
+      const open = (data?.value as any)?.open !== false;
+      if (!open) {
+        toast.error("Janela do mercado estrangeiro está fechada");
+        return;
+      }
+    }
+    if (player._isFreeAgent) {
+      const { data } = await supabase.from("settings").select("value").eq("key", "free_agents_window").maybeSingle();
+      const open = (data?.value as any)?.open !== false;
+      if (!open) {
+        toast.error("Janela de passes livres está fechada");
+        return;
+      }
+    }
+
     const base = Number(player.valor_base_calculado) || Number(player.market_value) || 0;
     const enriched = { ...player, valor_base_calculado: base };
     setTarget(enriched);
@@ -271,6 +290,7 @@ const Market = () => {
     setSalario(String(Math.max(50000, sugerido)));
     resetProposalFields();
   };
+
 
   const fairPlayCheck = (v: number, base: number) => {
     if (!base) return "Jogador sem valor base";

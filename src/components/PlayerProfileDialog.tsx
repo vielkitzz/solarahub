@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -23,7 +23,9 @@ import {
 import { useInterestList } from "@/hooks/useInterestList";
 import { ContractRenewalDialog } from "@/components/ContractRenewalDialog";
 import { MultaRescisoriaDialog } from "@/components/MultaRescisoriaDialog";
+import { NegotiationDialog } from "@/components/NegotiationDialog";
 import { estimarPotencialOwn } from "@/lib/scout";
+
 
 interface Props {
   playerId: string | null;
@@ -34,7 +36,7 @@ interface Props {
 
 export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate }: Props) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  
   const [loading, setLoading] = useState(false);
   const [player, setPlayer] = useState<any>(null);
   const [myClub, setMyClub] = useState<any>(null);
@@ -42,6 +44,8 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
   const [history, setHistory] = useState<any[]>([]);
   const [renewOpen, setRenewOpen] = useState(false);
   const [multaOpen, setMultaOpen] = useState(false);
+  const [negotiateOpen, setNegotiateOpen] = useState(false);
+
 
   const { has, toggle } = useInterestList();
 
@@ -448,7 +452,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                           className="bg-primary text-primary-foreground"
                           disabled={disabled}
                           title={reason}
-                          onClick={() => (onNegotiate ? onNegotiate(player) : navigate("/mercado"))}
+                          onClick={() => (onNegotiate ? onNegotiate(player) : setNegotiateOpen(true))}
                         >
                           <ArrowRightLeft className="h-3.5 w-3.5 mr-2" /> Fazer proposta
                         </Button>
@@ -486,8 +490,16 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
             isAdmin={false}
             onDone={() => fetchData()}
           />
+          <NegotiationDialog
+            player={player}
+            myClub={myClub ? { id: myClub.id, budget: Number(myClub.budget || 0) } : null}
+            open={negotiateOpen}
+            onOpenChange={setNegotiateOpen}
+            onSent={() => fetchData()}
+          />
         </>
       )}
+
     </>
   );
 };
