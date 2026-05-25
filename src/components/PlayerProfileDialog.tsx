@@ -490,8 +490,16 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
             isAdmin={false}
             onDone={() => fetchData()}
           />
+          <NegotiationDialog
+            player={player}
+            myClub={myClub ? { id: myClub.id, budget: Number(myClub.budget || 0) } : null}
+            open={negotiateOpen}
+            onOpenChange={setNegotiateOpen}
+            onSent={() => fetchData()}
+          />
         </>
       )}
+
     </>
   );
 };
