@@ -23,7 +23,9 @@ import {
 import { useInterestList } from "@/hooks/useInterestList";
 import { ContractRenewalDialog } from "@/components/ContractRenewalDialog";
 import { MultaRescisoriaDialog } from "@/components/MultaRescisoriaDialog";
+import { NegotiationDialog } from "@/components/NegotiationDialog";
 import { estimarPotencialOwn } from "@/lib/scout";
+
 
 interface Props {
   playerId: string | null;
