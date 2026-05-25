@@ -198,7 +198,7 @@ const ClubDetail = () => {
       .from("transactions")
       .select("*")
       .eq("club_id", id)
-      .in("categoria", ["transferencia", "transferencia_externa", "upgrade_estadio", "upgrade_academia"])
+      .in("categoria", ["transferencia", "transferencia_externa", "multa_rescisoria", "upgrade_estadio", "upgrade_academia"])
       .order("created_at", { ascending: false })
       .limit(500);
     setRecentTransactions(tx || []);
