@@ -900,11 +900,16 @@ const ClubDetail = () => {
                                     : "Compra"
                                   : t.categoria === "transferencia_externa"
                                     ? "Venda (exterior)"
-                                    : t.categoria === "upgrade_estadio"
-                                      ? "Upgrade estádio"
-                                      : t.categoria === "upgrade_academia"
-                                        ? "Upgrade base"
-                                        : t.categoria;
+                                    : t.categoria === "multa_rescisoria"
+                                      ? isIn
+                                        ? "Multa recebida"
+                                        : "Multa rescisória"
+                                      : t.categoria === "upgrade_estadio"
+                                        ? "Upgrade estádio"
+                                        : t.categoria === "upgrade_academia"
+                                          ? "Upgrade base"
+                                          : t.categoria;
+
                               return (
                                 <TableRow key={t.id} className="text-xs">
                                   <TableCell className="text-muted-foreground">
