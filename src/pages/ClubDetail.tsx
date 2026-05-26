@@ -980,7 +980,7 @@ const ClubDetail = () => {
 
         <TabsContent value="wiki" className="mt-4">
           <div>
-            <div className="float-right ml-6 mb-4 w-full md:w-[320px]">
+            <div className="float-right ml-6 mb-4 w-full md:w-[320px] relative z-10">
               <ClubInfobox
                 club={club}
                 infobox={(wikiData.infobox as InfoboxData) || {}}
