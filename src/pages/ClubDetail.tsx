@@ -198,7 +198,13 @@ const ClubDetail = () => {
       .from("transactions")
       .select("*")
       .eq("club_id", id)
-      .in("categoria", ["transferencia", "transferencia_externa", "multa_rescisoria", "upgrade_estadio", "upgrade_academia"])
+      .in("categoria", [
+        "transferencia",
+        "transferencia_externa",
+        "multa_rescisoria",
+        "upgrade_estadio",
+        "upgrade_academia",
+      ])
       .order("created_at", { ascending: false })
       .limit(500);
     setRecentTransactions(tx || []);
@@ -311,6 +317,9 @@ const ClubDetail = () => {
       load();
     }
   };
+
+  const [infoboxOpen, setInfoboxOpen] = useState(false);
+  const [infoboxDraft, setInfoboxDraft] = useState<InfoboxData>({});
 
   const toggleSale = async (playerId: string, value: boolean) => {
     const { error } = await supabase.from("players").update({ a_venda: value }).eq("id", playerId);
@@ -977,6 +986,10 @@ const ClubDetail = () => {
                 infobox={(wikiData.infobox as InfoboxData) || {}}
                 canEdit={canEdit}
                 onSave={saveInfobox}
+                onEditClick={() => {
+                  setInfoboxDraft((wikiData.infobox as InfoboxData) || {});
+                  setInfoboxOpen(true);
+                }}
               />
             </div>
             <WikiSectionsView wiki={wikiData} title={club.name} canEdit={canEdit} onSaveWiki={saveWiki} />
@@ -1077,6 +1090,63 @@ const ClubDetail = () => {
         open={!!profilePlayerId}
         onOpenChange={(v) => !v && setProfilePlayerId(null)}
       />
+      <Dialog open={infoboxOpen} onOpenChange={setInfoboxOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-serif">Editar infobox</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3 py-2">
+            {(
+              [
+                ["alcunhas", "Alcunhas (apelidos do clube)", true],
+                ["torcedor", "Torcedor(a) / Adepto(a)", true],
+                ["rival", "Rival principal", true],
+                ["presidente", "Presidente", false],
+                ["competicao", "Competição", true],
+              ] as const
+            ).map(([key, label, multiline]) => (
+              <div key={key} className="space-y-1">
+                <Label className="text-xs">
+                  {label}
+                  {multiline && <span className="ml-1 text-muted-foreground font-normal">(uma por linha)</span>}
+                </Label>
+                {multiline ? (
+                  <Textarea
+                    value={infoboxDraft[key] ?? ""}
+                    onChange={(e) => setInfoboxDraft({ ...infoboxDraft, [key]: e.target.value })}
+                    rows={3}
+                    className="resize-none text-sm"
+                    placeholder={"Exemplo 1\nExemplo 2\nExemplo 3"}
+                  />
+                ) : (
+                  <Input
+                    value={infoboxDraft[key] ?? ""}
+                    onChange={(e) => setInfoboxDraft({ ...infoboxDraft, [key]: e.target.value })}
+                  />
+                )}
+              </div>
+            ))}
+            <p className="text-xs text-muted-foreground">
+              Nome, escudo, fundação, estádio, capacidade e cidade são puxados do cadastro do clube. Patrocinador
+              (master) e material (fornecedora) são sincronizados automaticamente com os contratos ativos.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInfoboxOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={async () => {
+                await saveInfobox(infoboxDraft);
+                setInfoboxOpen(false);
+              }}
+              className="bg-gradient-gold text-primary-foreground"
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
