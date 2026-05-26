@@ -762,6 +762,12 @@ export const AcademyManager = ({ club, canEdit, onChange, myClub }: Props) => {
             </Button>
           </div>
         )}
+        {canEdit && !proximoNivel && bloqueadoPorRep && (
+          <div className="mt-4 p-3 rounded bg-amber-500/10 border border-amber-500/30 text-xs">
+            Limite da reputação <strong className="uppercase">{reputacao}</strong> atingido (base nível {nivelBaseMaxRep}).
+            {proximaRepBase && <> Suba para reputação <strong className="uppercase">{proximaRepBase}</strong> para continuar evoluindo.</>}
+          </div>
+        )}
       </Card>
 
       {/* Peneira */}
