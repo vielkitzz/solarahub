@@ -1098,21 +1098,26 @@ const ClubDetail = () => {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Alcunhas</Label>
-              <Input
+              <Textarea
+                rows={3}
+                placeholder="Uma alcunha por linha..."
                 value={infoboxForm.alcunhas || ""}
                 onChange={(e) => setInfoboxForm({ ...infoboxForm, alcunhas: e.target.value })}
               />
             </div>
             <div className="space-y-2">
               <Label>Torcedor(a)</Label>
-              <Input
+              <Textarea
+                rows={2}
                 value={infoboxForm.torcedor || ""}
                 onChange={(e) => setInfoboxForm({ ...infoboxForm, torcedor: e.target.value })}
               />
             </div>
             <div className="space-y-2">
               <Label>Rival</Label>
-              <Input
+              <Textarea
+                rows={3}
+                placeholder="Um rival por linha..."
                 value={infoboxForm.rival || ""}
                 onChange={(e) => setInfoboxForm({ ...infoboxForm, rival: e.target.value })}
               />
@@ -1126,7 +1131,8 @@ const ClubDetail = () => {
             </div>
             <div className="space-y-2">
               <Label>Competição</Label>
-              <Input
+              <Textarea
+                rows={2}
                 value={infoboxForm.competicao || ""}
                 onChange={(e) => setInfoboxForm({ ...infoboxForm, competicao: e.target.value })}
               />
