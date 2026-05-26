@@ -31,7 +31,7 @@ import {
 import { ContractRenewalDialog } from "@/components/ContractRenewalDialog";
 import { ShirtNumberDialog } from "@/components/ShirtNumberDialog";
 import { MultaRescisoriaDialog } from "@/components/MultaRescisoriaDialog";
-import { Gavel, Telescope, Star } from "lucide-react";
+import { FileXCorner, Telescope, Star } from "lucide-react";
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
 import { StarRating } from "@/components/StarRating";
 import ScoutsManager from "@/components/ScoutsManager";

@@ -23,7 +23,7 @@ import {
   ArrowUpDown,
   ChevronUp,
   ChevronDown,
-  Gavel,
+  FileXCorner,
   Star,
   Lock,
   RefreshCcw,
@@ -552,7 +552,7 @@ export function SquadTable({
                             onClick={() => !isLoanedIn && setMultaPlayer(p)}
                             className="h-7 w-7"
                           >
-                            <Gavel className="h-3.5 w-3.5 text-amber-400" />
+                            <FileXCorner className="h-3.5 w-3.5 text-amber-400" />
                           </Button>
                         </div>
                       </TableCell>
@@ -566,7 +566,7 @@ export function SquadTable({
                           onClick={() => setMultaPlayer(p)}
                           className="h-7 w-7"
                         >
-                          <Gavel className="h-3.5 w-3.5 text-amber-400" />
+                          <FileXCorner className="h-3.5 w-3.5 text-amber-400" />
                         </Button>
                       </TableCell>
                     )}

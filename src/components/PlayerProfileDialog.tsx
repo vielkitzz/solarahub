@@ -13,7 +13,7 @@ import {
   Heart,
   ArrowRightLeft,
   FileSignature,
-  Gavel,
+  FileXCorner,
   Shield,
   ExternalLink,
   Star,
@@ -33,7 +33,6 @@ import { MultaRescisoriaDialog } from "@/components/MultaRescisoriaDialog";
 import { NegotiationDialog } from "@/components/NegotiationDialog";
 import { estimarPotencialOwn } from "@/lib/scout";
 
-
 interface Props {
   playerId: string | null;
   open: boolean;
@@ -43,7 +42,7 @@ interface Props {
 
 export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate }: Props) => {
   const { user } = useAuth();
-  
+
   const [loading, setLoading] = useState(false);
   const [player, setPlayer] = useState<any>(null);
   const [myClub, setMyClub] = useState<any>(null);
@@ -132,9 +131,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
         setHistory(historyFormatted);
 
         // Detecta empréstimo ativo (mais recente, status=aceita, tipo=emprestimo, jogador ainda no comprador)
-        const loan = historyFormatted.find(
-          (t: any) => t.tipo === "emprestimo" && t.clube_comprador_id === p.club_id,
-        );
+        const loan = historyFormatted.find((t: any) => t.tipo === "emprestimo" && t.clube_comprador_id === p.club_id);
         setActiveLoan(loan || null);
         if (loan?.opcao_compra) setOpcaoInput(String(loan.opcao_compra));
       } else {
@@ -227,7 +224,8 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
     const v = parseFloat(opcaoInput) || 0;
     setLoanActing(true);
     const { error } = await supabase.rpc("definir_opcao_compra_emprestimo" as any, {
-      _jogador_id: player.id, _valor: v,
+      _jogador_id: player.id,
+      _valor: v,
     });
     setLoanActing(false);
     if (error) return toast.error(error.message);
@@ -244,7 +242,6 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
     toast.success("Opção de compra exercida! Jogador agora é seu.");
     fetchData();
   };
-
 
   return (
     <>
@@ -385,8 +382,16 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                     <div className="flex items-center gap-2 text-sm font-bold">
                       <Plane className="h-4 w-4 text-amber-400" />
                       Jogador emprestado
-                      {isOriginalOwner && <Badge variant="outline" className="ml-1 text-[10px]">Clube de origem</Badge>}
-                      {isCurrentBorrower && <Badge variant="outline" className="ml-1 text-[10px]">Clube atual</Badge>}
+                      {isOriginalOwner && (
+                        <Badge variant="outline" className="ml-1 text-[10px]">
+                          Clube de origem
+                        </Badge>
+                      )}
+                      {isCurrentBorrower && (
+                        <Badge variant="outline" className="ml-1 text-[10px]">
+                          Clube atual
+                        </Badge>
+                      )}
                     </div>
                     <div className="grid grid-cols-2 gap-3 text-xs">
                       <div className="flex items-center gap-2">
@@ -449,7 +454,6 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                     )}
                   </div>
                 )}
-
 
                 {/* Histórico de Transferências estilo Tabela */}
                 <div className="mt-8 space-y-4">
@@ -540,9 +544,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                     const retiringSoon = typeof player.age === "number" && player.age >= 33;
                     if (isOwn) {
                       const ownerDisabled = isOnLoan;
-                      const ownerReason = isOnLoan
-                        ? "Jogador emprestado — clube de origem detém o contrato"
-                        : "";
+                      const ownerReason = isOnLoan ? "Jogador emprestado — clube de origem detém o contrato" : "";
                       return (
                         <>
                           <Button
@@ -561,7 +563,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                             title={ownerReason}
                             onClick={() => !ownerDisabled && setMultaOpen(true)}
                           >
-                            <Gavel className="h-3.5 w-3.5 mr-2 text-amber-400" /> Multa
+                            <FileXCorner className="h-3.5 w-3.5 mr-2 text-amber-400" /> Multa
                           </Button>
                         </>
                       );
@@ -595,7 +597,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                           className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
                           onClick={() => setMultaOpen(true)}
                         >
-                          <Gavel className="h-3.5 w-3.5 mr-2" /> Pagar Multa
+                          <FileXCorner className="h-3.5 w-3.5 mr-2" /> Pagar Multa
                         </Button>
                       </>
                     );
@@ -632,7 +634,6 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
           />
         </>
       )}
-
     </>
   );
 };

@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Gavel, Loader2, AlertTriangle } from "lucide-react";
+import { FileXCorner, Loader2, AlertTriangle } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 
 type Player = {
@@ -114,7 +114,7 @@ export const MultaRescisoriaDialog = ({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Gavel className="h-5 w-5 text-primary" /> Multa Rescisória
+            <FileXCorner className="h-5 w-5 text-primary" /> Multa Rescisória
           </DialogTitle>
           <DialogDescription>{player?.name}</DialogDescription>
         </DialogHeader>
