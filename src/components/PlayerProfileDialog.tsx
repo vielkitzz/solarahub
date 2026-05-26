@@ -68,12 +68,6 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
       setActiveLoan(null);
     }
   }, [open, playerId]);
-    } else {
-      setPlayer(null);
-      setReport(null);
-      setHistory([]);
-    }
-  }, [open, playerId]);
 
   const fetchData = async () => {
     setLoading(true);
