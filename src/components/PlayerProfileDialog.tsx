@@ -19,7 +19,14 @@ import {
   Star,
   Loader2,
   History,
+  Plane,
+  Clock,
+  ShoppingCart,
+  CornerUpLeft,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import { useInterestList } from "@/hooks/useInterestList";
 import { ContractRenewalDialog } from "@/components/ContractRenewalDialog";
 import { MultaRescisoriaDialog } from "@/components/MultaRescisoriaDialog";
@@ -45,7 +52,10 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
   const [renewOpen, setRenewOpen] = useState(false);
   const [multaOpen, setMultaOpen] = useState(false);
   const [negotiateOpen, setNegotiateOpen] = useState(false);
-
+  const [activeLoan, setActiveLoan] = useState<any>(null);
+  const [currentSeason, setCurrentSeason] = useState<number | null>(null);
+  const [opcaoInput, setOpcaoInput] = useState<string>("0");
+  const [loanActing, setLoanActing] = useState(false);
 
   const { has, toggle } = useInterestList();
 
@@ -56,6 +66,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
       setPlayer(null);
       setReport(null);
       setHistory([]);
+      setActiveLoan(null);
     }
   }, [open, playerId]);
 
@@ -119,9 +130,21 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
         }));
 
         setHistory(historyFormatted);
+
+        // Detecta empréstimo ativo (mais recente, status=aceita, tipo=emprestimo, jogador ainda no comprador)
+        const loan = historyFormatted.find(
+          (t: any) => t.tipo === "emprestimo" && t.clube_comprador_id === p.club_id,
+        );
+        setActiveLoan(loan || null);
+        if (loan?.opcao_compra) setOpcaoInput(String(loan.opcao_compra));
       } else {
         setHistory([]);
+        setActiveLoan(null);
       }
+
+      // Temporada atual
+      const { data: s } = await supabase.from("settings").select("value").eq("key", "temporada_atual").maybeSingle();
+      setCurrentSeason(Number((s?.value as any)?.ano) || null);
 
       // 3. Busca dados do usuário logado e relatórios
       if (user) {
@@ -183,6 +206,45 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
   }, [player]);
 
   const contratoUrgente = false;
+
+  // === Empréstimo ativo ===
+  const isOriginalOwner = !!(activeLoan && myClub?.id && activeLoan.clube_vendedor_id === myClub.id);
+  const isCurrentBorrower = !!(activeLoan && myClub?.id && activeLoan.clube_comprador_id === myClub.id);
+  const loanEndsSeason = player?.contrato_ate ?? null;
+  const seasonsLeft = loanEndsSeason && currentSeason ? Math.max(0, loanEndsSeason - currentSeason) : null;
+  const multaRecall = Math.round(Number(player?.salario_atual || 0) * 2);
+
+  const handleRecall = async () => {
+    if (!confirm(`Encerrar empréstimo pagando multa de ${formatCurrency(multaRecall)}?`)) return;
+    setLoanActing(true);
+    const { error } = await supabase.rpc("encerrar_emprestimo" as any, { _jogador_id: player.id });
+    setLoanActing(false);
+    if (error) return toast.error(error.message);
+    toast.success("Empréstimo encerrado. Jogador voltou ao clube de origem.");
+    fetchData();
+  };
+  const handleSetOpcao = async () => {
+    const v = parseFloat(opcaoInput) || 0;
+    setLoanActing(true);
+    const { error } = await supabase.rpc("definir_opcao_compra_emprestimo" as any, {
+      _jogador_id: player.id, _valor: v,
+    });
+    setLoanActing(false);
+    if (error) return toast.error(error.message);
+    toast.success(v > 0 ? "Opção de compra definida" : "Opção de compra removida");
+    fetchData();
+  };
+  const handleExecOpcao = async () => {
+    if (!activeLoan?.opcao_compra) return;
+    if (!confirm(`Exercer opção de compra por ${formatCurrency(Number(activeLoan.opcao_compra))}?`)) return;
+    setLoanActing(true);
+    const { error } = await supabase.rpc("executar_opcao_compra_emprestimo" as any, { _jogador_id: player.id });
+    setLoanActing(false);
+    if (error) return toast.error(error.message);
+    toast.success("Opção de compra exercida! Jogador agora é seu.");
+    fetchData();
+  };
+
 
   return (
     <>
@@ -317,6 +379,77 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                     </div>
                   </div>
                 </div>
+
+                {activeLoan && (isOriginalOwner || isCurrentBorrower) && (
+                  <div className="mt-6 p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 space-y-3">
+                    <div className="flex items-center gap-2 text-sm font-bold">
+                      <Plane className="h-4 w-4 text-amber-400" />
+                      Jogador emprestado
+                      {isOriginalOwner && <Badge variant="outline" className="ml-1 text-[10px]">Clube de origem</Badge>}
+                      {isCurrentBorrower && <Badge variant="outline" className="ml-1 text-[10px]">Clube atual</Badge>}
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Tempo restante:</span>
+                        <span className="font-semibold">
+                          {seasonsLeft != null ? `${seasonsLeft} temporada(s)` : "—"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <ShoppingCart className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Opção de compra:</span>
+                        <span className="font-semibold">
+                          {activeLoan.opcao_compra ? formatCurrency(Number(activeLoan.opcao_compra)) : "—"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {isOriginalOwner && (
+                      <div className="space-y-2 pt-2 border-t border-amber-500/20">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={loanActing}
+                          onClick={handleRecall}
+                          className="w-full border-destructive/40 text-destructive hover:bg-destructive/10"
+                        >
+                          <CornerUpLeft className="h-3.5 w-3.5 mr-2" />
+                          Chamar de volta (multa {formatCurrency(multaRecall)})
+                        </Button>
+                        <div className="flex gap-2 items-end">
+                          <div className="flex-1">
+                            <Label className="text-[10px]">Opção de compra (€)</Label>
+                            <Input
+                              type="number"
+                              value={opcaoInput}
+                              onChange={(e) => setOpcaoInput(e.target.value)}
+                              min={0}
+                            />
+                          </div>
+                          <Button size="sm" disabled={loanActing} onClick={handleSetOpcao}>
+                            Salvar
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {isCurrentBorrower && activeLoan.opcao_compra > 0 && (
+                      <div className="pt-2 border-t border-amber-500/20">
+                        <Button
+                          size="sm"
+                          disabled={loanActing}
+                          onClick={handleExecOpcao}
+                          className="w-full bg-gradient-gold text-primary-foreground hover:opacity-90"
+                        >
+                          <ShoppingCart className="h-3.5 w-3.5 mr-2" />
+                          Exercer opção por {formatCurrency(Number(activeLoan.opcao_compra))}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
 
                 {/* Histórico de Transferências estilo Tabela */}
                 <div className="mt-8 space-y-4">
