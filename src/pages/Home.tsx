@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trophy, Shield, Users, BookOpen, ArrowRightLeft, MapPin, Sparkles, ArrowRight } from "lucide-react";
+import { Trophy, Shield, Users, BookOpen, ArrowRightLeft, MapPin, CalendarDays, ArrowRight } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSeason } from "@/contexts/SeasonContext";
@@ -56,7 +56,7 @@ const Home = () => {
         />
         <div className="relative space-y-5 max-w-3xl">
           <Badge variant="outline" className="border-primary/40 text-primary">
-            <Sparkles className="h-3 w-3 mr-1" /> {currentSeason}
+            <CalendarDays className="h-3 w-3 mr-1" /> {currentSeason}
           </Badge>
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold leading-tight">
             Bem-vindo ao <span className="gold-text">Solara Hub</span>
