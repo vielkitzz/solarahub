@@ -51,13 +51,23 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
   const [renewOpen, setRenewOpen] = useState(false);
   const [multaOpen, setMultaOpen] = useState(false);
   const [negotiateOpen, setNegotiateOpen] = useState(false);
-
+  const [activeLoan, setActiveLoan] = useState<any>(null);
+  const [currentSeason, setCurrentSeason] = useState<number | null>(null);
+  const [opcaoInput, setOpcaoInput] = useState<string>("0");
+  const [loanActing, setLoanActing] = useState(false);
 
   const { has, toggle } = useInterestList();
 
   useEffect(() => {
     if (open && playerId) {
       fetchData();
+    } else {
+      setPlayer(null);
+      setReport(null);
+      setHistory([]);
+      setActiveLoan(null);
+    }
+  }, [open, playerId]);
     } else {
       setPlayer(null);
       setReport(null);
