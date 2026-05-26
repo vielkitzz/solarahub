@@ -19,7 +19,13 @@ import {
   Star,
   Loader2,
   History,
+  Plane,
+  Clock,
+  ShoppingCart,
+  CornerUpLeft,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import { useInterestList } from "@/hooks/useInterestList";
 import { ContractRenewalDialog } from "@/components/ContractRenewalDialog";
 import { MultaRescisoriaDialog } from "@/components/MultaRescisoriaDialog";
