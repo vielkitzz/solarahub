@@ -545,7 +545,18 @@ export const AcademyManager = ({ club, canEdit, onChange, myClub }: Props) => {
     load();
   }, [club.id]);
 
-  const proximoNivel = (club.nivel_base || 1) < 5 ? (club.nivel_base || 1) + 1 : null;
+  const REPUTACAO_NIVEL_BASE_MAX: Record<string, number> = {
+    estadual: 3, nacional: 4, continental: 5, mundial: 5,
+  };
+  const REPUTACAO_PROXIMA: Record<string, string | undefined> = {
+    estadual: "nacional", nacional: "continental", continental: "mundial",
+  };
+  const reputacao = (club.reputacao || "estadual") as string;
+  const nivelBaseMaxRep = REPUTACAO_NIVEL_BASE_MAX[reputacao] ?? 3;
+  const proximaRepBase = REPUTACAO_PROXIMA[reputacao];
+  const nivelAtualBase = club.nivel_base || 1;
+  const bloqueadoPorRep = nivelAtualBase >= nivelBaseMaxRep;
+  const proximoNivel = nivelAtualBase < 5 && !bloqueadoPorRep ? nivelAtualBase + 1 : null;
   const custoUpgrade = proximoNivel ? BASE_UPGRADE_CUSTOS[`${club.nivel_base}_${proximoNivel}`] || 0 : 0;
 
   const upgradeBase = async () => {
