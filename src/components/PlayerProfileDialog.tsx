@@ -379,6 +379,77 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                   </div>
                 </div>
 
+                {activeLoan && (isOriginalOwner || isCurrentBorrower) && (
+                  <div className="mt-6 p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 space-y-3">
+                    <div className="flex items-center gap-2 text-sm font-bold">
+                      <Plane className="h-4 w-4 text-amber-400" />
+                      Jogador emprestado
+                      {isOriginalOwner && <Badge variant="outline" className="ml-1 text-[10px]">Clube de origem</Badge>}
+                      {isCurrentBorrower && <Badge variant="outline" className="ml-1 text-[10px]">Clube atual</Badge>}
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Tempo restante:</span>
+                        <span className="font-semibold">
+                          {seasonsLeft != null ? `${seasonsLeft} temporada(s)` : "—"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <ShoppingCart className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Opção de compra:</span>
+                        <span className="font-semibold">
+                          {activeLoan.opcao_compra ? formatCurrency(Number(activeLoan.opcao_compra)) : "—"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {isOriginalOwner && (
+                      <div className="space-y-2 pt-2 border-t border-amber-500/20">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={loanActing}
+                          onClick={handleRecall}
+                          className="w-full border-destructive/40 text-destructive hover:bg-destructive/10"
+                        >
+                          <CornerUpLeft className="h-3.5 w-3.5 mr-2" />
+                          Chamar de volta (multa {formatCurrency(multaRecall)})
+                        </Button>
+                        <div className="flex gap-2 items-end">
+                          <div className="flex-1">
+                            <Label className="text-[10px]">Opção de compra (€)</Label>
+                            <Input
+                              type="number"
+                              value={opcaoInput}
+                              onChange={(e) => setOpcaoInput(e.target.value)}
+                              min={0}
+                            />
+                          </div>
+                          <Button size="sm" disabled={loanActing} onClick={handleSetOpcao}>
+                            Salvar
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {isCurrentBorrower && activeLoan.opcao_compra > 0 && (
+                      <div className="pt-2 border-t border-amber-500/20">
+                        <Button
+                          size="sm"
+                          disabled={loanActing}
+                          onClick={handleExecOpcao}
+                          className="w-full bg-gradient-gold text-primary-foreground hover:opacity-90"
+                        >
+                          <ShoppingCart className="h-3.5 w-3.5 mr-2" />
+                          Exercer opção por {formatCurrency(Number(activeLoan.opcao_compra))}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+
                 {/* Histórico de Transferências estilo Tabela */}
                 <div className="mt-8 space-y-4">
                   <h4 className="text-xs font-bold uppercase tracking-tighter text-muted-foreground flex items-center gap-2 pb-2 border-b border-border/50">
