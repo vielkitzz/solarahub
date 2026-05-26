@@ -425,7 +425,7 @@ export function SquadTable({
                       </span>
                     </TableCell>
                     <TableCell className="py-2 font-medium">
-                      <div className="flex items-center gap-0.5.5">
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => onOpenProfile?.(p.id)}
                           className="truncate max-w-[160px] text-left hover:text-primary transition-colors"
@@ -532,9 +532,7 @@ export function SquadTable({
                             variant="ghost"
                             size="icon"
                             title={
-                              isLoanedIn
-                                ? "Jogador emprestado — clube de origem detém o contrato"
-                                : "Renovar contrato"
+                              isLoanedIn ? "Jogador emprestado — clube de origem detém o contrato" : "Renovar contrato"
                             }
                             disabled={isLoanedIn}
                             onClick={() => !isLoanedIn && setRenewPlayer(p)}
