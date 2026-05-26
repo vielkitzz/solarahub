@@ -129,9 +129,21 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
         }));
 
         setHistory(historyFormatted);
+
+        // Detecta empréstimo ativo (mais recente, status=aceita, tipo=emprestimo, jogador ainda no comprador)
+        const loan = historyFormatted.find(
+          (t: any) => t.tipo === "emprestimo" && t.clube_comprador_id === p.club_id,
+        );
+        setActiveLoan(loan || null);
+        if (loan?.opcao_compra) setOpcaoInput(String(loan.opcao_compra));
       } else {
         setHistory([]);
+        setActiveLoan(null);
       }
+
+      // Temporada atual
+      const { data: s } = await supabase.from("settings").select("value").eq("key", "temporada_atual").maybeSingle();
+      setCurrentSeason(Number((s?.value as any)?.ano) || null);
 
       // 3. Busca dados do usuário logado e relatórios
       if (user) {
