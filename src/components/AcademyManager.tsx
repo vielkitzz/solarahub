@@ -15,7 +15,7 @@ import {
   ArrowUp,
   X,
   AlertTriangle,
-  Sparkles,
+  ArrowBigUpDash,
   Star,
   ArrowUpCircle,
   ArrowUpDown,
@@ -359,7 +359,7 @@ function AcademyTable({
                         <span className="truncate max-w-[160px]">{p.name}</span>
                         {finalizado && (
                           <span title="Pronto para promover">
-                            <Sparkles className="h-3 w-3 text-primary shrink-0" />
+                            <ArrowBigUpDash className="h-3 w-3 text-primary shrink-0" />
                           </span>
                         )}
                       </div>
@@ -488,7 +488,17 @@ export const AcademyManager = ({ club, canEdit, onChange, myClub }: Props) => {
 
     if (playersError) toast.error(playersError.message);
     const POS_ORDER: Record<string, number> = {
-      GOL: 1, ZAG: 2, LD: 3, LE: 4, VOL: 5, MC: 6, MEI: 7, PD: 8, PE: 9, SA: 10, ATA: 11,
+      GOL: 1,
+      ZAG: 2,
+      LD: 3,
+      LE: 4,
+      VOL: 5,
+      MC: 6,
+      MEI: 7,
+      PD: 8,
+      PE: 9,
+      SA: 10,
+      ATA: 11,
     };
     const sorted = ((playersData as AcademyPlayer[]) || []).slice().sort((a, b) => {
       const oa = POS_ORDER[a.position] ?? 99;
@@ -546,10 +556,15 @@ export const AcademyManager = ({ club, canEdit, onChange, myClub }: Props) => {
   }, [club.id]);
 
   const REPUTACAO_NIVEL_BASE_MAX: Record<string, number> = {
-    estadual: 3, nacional: 4, continental: 5, mundial: 5,
+    estadual: 3,
+    nacional: 4,
+    continental: 5,
+    mundial: 5,
   };
   const REPUTACAO_PROXIMA: Record<string, string | undefined> = {
-    estadual: "nacional", nacional: "continental", continental: "mundial",
+    estadual: "nacional",
+    nacional: "continental",
+    continental: "mundial",
   };
   const reputacao = (club.reputacao || "estadual") as string;
   const nivelBaseMaxRep = REPUTACAO_NIVEL_BASE_MAX[reputacao] ?? 3;
@@ -764,8 +779,14 @@ export const AcademyManager = ({ club, canEdit, onChange, myClub }: Props) => {
         )}
         {canEdit && !proximoNivel && bloqueadoPorRep && (
           <div className="mt-4 p-3 rounded bg-amber-500/10 border border-amber-500/30 text-xs">
-            Limite da reputação <strong className="uppercase">{reputacao}</strong> atingido (base nível {nivelBaseMaxRep}).
-            {proximaRepBase && <> Suba para reputação <strong className="uppercase">{proximaRepBase}</strong> para continuar evoluindo.</>}
+            Limite da reputação <strong className="uppercase">{reputacao}</strong> atingido (base nível{" "}
+            {nivelBaseMaxRep}).
+            {proximaRepBase && (
+              <>
+                {" "}
+                Suba para reputação <strong className="uppercase">{proximaRepBase}</strong> para continuar evoluindo.
+              </>
+            )}
           </div>
         )}
       </Card>
