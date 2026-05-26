@@ -206,6 +206,45 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
 
   const contratoUrgente = false;
 
+  // === Empréstimo ativo ===
+  const isOriginalOwner = !!(activeLoan && myClub?.id && activeLoan.clube_vendedor_id === myClub.id);
+  const isCurrentBorrower = !!(activeLoan && myClub?.id && activeLoan.clube_comprador_id === myClub.id);
+  const loanEndsSeason = player?.contrato_ate ?? null;
+  const seasonsLeft = loanEndsSeason && currentSeason ? Math.max(0, loanEndsSeason - currentSeason) : null;
+  const multaRecall = Math.round(Number(player?.salario_atual || 0) * 2);
+
+  const handleRecall = async () => {
+    if (!confirm(`Encerrar empréstimo pagando multa de ${formatCurrency(multaRecall)}?`)) return;
+    setLoanActing(true);
+    const { error } = await supabase.rpc("encerrar_emprestimo" as any, { _jogador_id: player.id });
+    setLoanActing(false);
+    if (error) return toast.error(error.message);
+    toast.success("Empréstimo encerrado. Jogador voltou ao clube de origem.");
+    fetchData();
+  };
+  const handleSetOpcao = async () => {
+    const v = parseFloat(opcaoInput) || 0;
+    setLoanActing(true);
+    const { error } = await supabase.rpc("definir_opcao_compra_emprestimo" as any, {
+      _jogador_id: player.id, _valor: v,
+    });
+    setLoanActing(false);
+    if (error) return toast.error(error.message);
+    toast.success(v > 0 ? "Opção de compra definida" : "Opção de compra removida");
+    fetchData();
+  };
+  const handleExecOpcao = async () => {
+    if (!activeLoan?.opcao_compra) return;
+    if (!confirm(`Exercer opção de compra por ${formatCurrency(Number(activeLoan.opcao_compra))}?`)) return;
+    setLoanActing(true);
+    const { error } = await supabase.rpc("executar_opcao_compra_emprestimo" as any, { _jogador_id: player.id });
+    setLoanActing(false);
+    if (error) return toast.error(error.message);
+    toast.success("Opção de compra exercida! Jogador agora é seu.");
+    fetchData();
+  };
+
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
