@@ -17,6 +17,7 @@ export type Database = {
       academy_players: {
         Row: {
           age: number
+          attributes: Json
           club_id: string
           created_at: string
           development_progress: number
@@ -32,6 +33,7 @@ export type Database = {
         }
         Insert: {
           age: number
+          attributes?: Json
           club_id: string
           created_at?: string
           development_progress?: number
@@ -47,6 +49,7 @@ export type Database = {
         }
         Update: {
           age?: number
+          attributes?: Json
           club_id?: string
           created_at?: string
           development_progress?: number
@@ -933,6 +936,13 @@ export type Database = {
             referencedRelation: "players"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "players_master_player_id_fkey"
+            columns: ["master_player_id"]
+            isOneToOne: false
+            referencedRelation: "players_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       premiacoes_torneio: {
@@ -1237,6 +1247,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "transferencias_jogador_id_fkey"
+            columns: ["jogador_id"]
+            isOneToOne: false
+            referencedRelation: "players_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "transferencias_proposta_pai_id_fkey"
             columns: ["proposta_pai_id"]
             isOneToOne: false
@@ -1408,6 +1425,96 @@ export type Database = {
           wiki?: Json | null
         }
         Relationships: []
+      }
+      players_public: {
+        Row: {
+          a_venda: boolean | null
+          age: number | null
+          bloquear_propostas: boolean | null
+          club_id: string | null
+          contrato_ate: number | null
+          created_at: string | null
+          external_club_id: string | null
+          habilidade: number | null
+          habilidade_anterior: number | null
+          id: string | null
+          interesse_renovacao: boolean | null
+          market_value: number | null
+          name: string | null
+          nationality: string | null
+          position: string | null
+          potential_max: number | null
+          potential_min: number | null
+          salario_atual: number | null
+          secondary_position: string | null
+          shirt_number: number | null
+          updated_at: string | null
+          valor_base_calculado: number | null
+        }
+        Insert: {
+          a_venda?: boolean | null
+          age?: number | null
+          bloquear_propostas?: boolean | null
+          club_id?: string | null
+          contrato_ate?: number | null
+          created_at?: string | null
+          external_club_id?: string | null
+          habilidade?: number | null
+          habilidade_anterior?: number | null
+          id?: string | null
+          interesse_renovacao?: boolean | null
+          market_value?: number | null
+          name?: string | null
+          nationality?: string | null
+          position?: string | null
+          potential_max?: number | null
+          potential_min?: number | null
+          salario_atual?: number | null
+          secondary_position?: string | null
+          shirt_number?: number | null
+          updated_at?: string | null
+          valor_base_calculado?: number | null
+        }
+        Update: {
+          a_venda?: boolean | null
+          age?: number | null
+          bloquear_propostas?: boolean | null
+          club_id?: string | null
+          contrato_ate?: number | null
+          created_at?: string | null
+          external_club_id?: string | null
+          habilidade?: number | null
+          habilidade_anterior?: number | null
+          id?: string | null
+          interesse_renovacao?: boolean | null
+          market_value?: number | null
+          name?: string | null
+          nationality?: string | null
+          position?: string | null
+          potential_max?: number | null
+          potential_min?: number | null
+          salario_atual?: number | null
+          secondary_position?: string | null
+          shirt_number?: number | null
+          updated_at?: string | null
+          valor_base_calculado?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "players_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
