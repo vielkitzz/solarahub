@@ -168,34 +168,57 @@ export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
             <h3 className="font-display font-bold">Gerenciar Obras e Melhorias</h3>
           </div>
 
+          {noTopo && (
+            <Card className="p-3 bg-amber-500/10 border-amber-500/30">
+              <div className="text-xs">
+                Limite máximo da reputação <strong className="uppercase">{reputacao}</strong> atingido
+                (nível {nivelMaxRep} · {capMax.toLocaleString()} lugares).
+                {proximaRep && <> Suba para reputação <strong className="uppercase">{proximaRep}</strong> para continuar evoluindo.</>}
+              </div>
+            </Card>
+          )}
+
           <div className="space-y-4">
-            <Label className="text-sm font-semibold">Nível de Infraestrutura</Label>
+            <Label className="text-sm font-semibold">
+              Nível de Infraestrutura
+              <span className="ml-2 text-[10px] text-muted-foreground font-normal">
+                (máx {nivelMaxRep} · reputação {reputacao})
+              </span>
+            </Label>
             <div className="grid grid-cols-5 gap-2">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  disabled={n < (club.nivel_estadio || 1)}
-                  onClick={() => setNovoNivel(n)}
-                  className={cn(
-                    "flex flex-col items-center justify-center p-3 rounded-lg border transition-all",
-                    novoNivel === n ? "border-primary bg-primary/10" : "border-border/50 bg-secondary/20",
-                    n < (club.nivel_estadio || 1) && "opacity-40 cursor-not-allowed grayscale",
-                  )}
-                >
-                  <span className="text-xs font-bold">Nível {n}</span>
-                  <Star
+              {[1, 2, 3, 4, 5].map((n) => {
+                const acimaRep = n > nivelMaxRep;
+                const abaixoAtual = n < (club.nivel_estadio || 1);
+                const bloqueado = acimaRep || abaixoAtual;
+                return (
+                  <button
+                    key={n}
+                    disabled={bloqueado}
+                    onClick={() => setNovoNivel(n)}
+                    title={acimaRep ? `Requer reputação ${proximaRep || "superior"}` : ""}
                     className={cn(
-                      "h-4 w-4 mt-1",
-                      novoNivel >= n ? "fill-primary text-primary" : "text-muted-foreground",
+                      "flex flex-col items-center justify-center p-3 rounded-lg border transition-all",
+                      novoNivel === n ? "border-primary bg-primary/10" : "border-border/50 bg-secondary/20",
+                      bloqueado && "opacity-40 cursor-not-allowed grayscale",
                     )}
-                  />
-                  {n > (club.nivel_estadio || 1) && (
-                    <span className="text-[9px] mt-1 text-success">+{formatCurrency(TABELA_CUSTOS_NIVEL[n])}</span>
-                  )}
-                </button>
-              ))}
+                  >
+                    <span className="text-xs font-bold">Nível {n}</span>
+                    <Star
+                      className={cn(
+                        "h-4 w-4 mt-1",
+                        novoNivel >= n ? "fill-primary text-primary" : "text-muted-foreground",
+                      )}
+                    />
+                    {n > (club.nivel_estadio || 1) && !acimaRep && (
+                      <span className="text-[9px] mt-1 text-success">+{formatCurrency(TABELA_CUSTOS_NIVEL[n])}</span>
+                    )}
+                    {acimaRep && <span className="text-[9px] mt-1 text-muted-foreground">🔒</span>}
+                  </button>
+                );
+              })}
             </div>
           </div>
+
 
           <div className="space-y-2">
             <Label className="text-sm font-semibold">Novos assentos a construir</Label>
