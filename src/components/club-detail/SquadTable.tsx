@@ -26,7 +26,7 @@ import {
   Gavel,
   Star,
   Lock,
-  Plane,
+  RefreshCcw,
   Clock,
 } from "lucide-react";
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
@@ -449,7 +449,7 @@ export function SquadTable({
                         )}
                         {isLoanedIn && (
                           <span title="Jogador emprestado por outro clube">
-                            <Plane className="h-3 w-3 text-sky-400 shrink-0" />
+                            <RefreshCcw className="h-3 w-3 text-sky-400 shrink-0" />
                           </span>
                         )}
                       </div>
