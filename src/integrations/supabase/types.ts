@@ -1569,8 +1569,17 @@ export type Database = {
         Returns: string
       }
       current_discord_id: { Args: never; Returns: string }
+      definir_opcao_compra_emprestimo: {
+        Args: { _jogador_id: string; _valor: number }
+        Returns: Json
+      }
       encerrar_contratos_vencidos: { Args: never; Returns: number }
+      encerrar_emprestimo: { Args: { _jogador_id: string }; Returns: Json }
       envelhecer_todos_jogadores: { Args: never; Returns: number }
+      executar_opcao_compra_emprestimo: {
+        Args: { _jogador_id: string }
+        Returns: Json
+      }
       expirar_propostas_externas: { Args: never; Returns: number }
       gerar_elenco_para_clube: {
         Args: { _club_id: string; _quantidade: number }
