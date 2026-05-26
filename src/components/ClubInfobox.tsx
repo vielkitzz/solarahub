@@ -1,9 +1,5 @@
 import { Shield, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -33,15 +29,14 @@ interface Props {
   infobox: InfoboxData;
   canEdit: boolean;
   onSave: (next: InfoboxData) => Promise<void> | void;
+  onEditClick?: () => void;
 }
 
 const Row = ({ label, value, readOnly }: { label: string; value?: string | number | null; readOnly?: boolean }) => {
   if (value === null || value === undefined || value === "") return null;
-
   const lines = String(value)
     .split("\n")
     .filter((l) => l.trim() !== "");
-
   return (
     <tr className="border-b border-border/40 last:border-0">
       <th
@@ -65,18 +60,12 @@ const Row = ({ label, value, readOnly }: { label: string; value?: string | numbe
   );
 };
 
-export function ClubInfobox({ club, infobox, canEdit, onSave }: Props) {
-  const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState<InfoboxData>(infobox);
-  const [saving, setSaving] = useState(false);
-
-  // Derived from active contracts
+export function ClubInfobox({ club, infobox, canEdit, onEditClick }: Props) {
   const [patrocinadorAtivo, setPatrocinadorAtivo] = useState<string | null>(null);
   const [materialAtivo, setMaterialAtivo] = useState<string | null>(null);
 
   useEffect(() => {
     if (!club.id) return;
-
     supabase
       .from("contratos_clube")
       .select("categoria, empresa:empresas(nome)")
@@ -84,27 +73,15 @@ export function ClubInfobox({ club, infobox, canEdit, onSave }: Props) {
       .eq("ativo", true)
       .then(({ data, error }) => {
         if (error || !data) return;
-
-        // "fornecedora" → material esportivo
         const fornecedora = data.find((c) => c.categoria === "fornecedora");
-        // "master" → patrocinador principal
         const master = data.find((c) => c.categoria === "master");
-
         setMaterialAtivo((fornecedora?.empresa as any)?.nome ?? null);
         setPatrocinadorAtivo((master?.empresa as any)?.nome ?? null);
       });
   }, [club.id]);
 
-  const handleSave = async () => {
-    setSaving(true);
-    await onSave(draft);
-    setSaving(false);
-    setOpen(false);
-  };
-
   return (
     <aside className="wiki-surface w-full md:w-[300px] lg:w-[340px] shrink-0 overflow-hidden">
-      {/* header */}
       <div
         className="px-4 py-3 border-b border-border/60 text-center"
         style={
@@ -116,7 +93,6 @@ export function ClubInfobox({ club, infobox, canEdit, onSave }: Props) {
         <h2 className="font-serif text-lg font-semibold leading-tight">{club.name}</h2>
       </div>
 
-      {/* crest */}
       <div className="flex items-center justify-center py-5 bg-card/30 border-b border-border/40">
         <div className="h-32 w-32 flex items-center justify-center">
           {club.crest_url ? (
@@ -127,7 +103,6 @@ export function ClubInfobox({ club, infobox, canEdit, onSave }: Props) {
         </div>
       </div>
 
-      {/* data */}
       <div className="px-4 py-3">
         <table className="w-full">
           <tbody>
@@ -142,7 +117,6 @@ export function ClubInfobox({ club, infobox, canEdit, onSave }: Props) {
             />
             <Row label="Cidade" value={club.city ?? undefined} />
             <Row label="Presidente" value={infobox.presidente} />
-            {/* Patrocinador e Material derivados dos contratos ativos */}
             <Row label="Patrocinador" value={patrocinadorAtivo} readOnly />
             <Row label="Material" value={materialAtivo} readOnly />
             <Row label="Competição" value={infobox.competicao} />
@@ -150,65 +124,9 @@ export function ClubInfobox({ club, infobox, canEdit, onSave }: Props) {
         </table>
 
         {canEdit && (
-          <Dialog
-            open={open}
-            onOpenChange={(v) => {
-              setOpen(v);
-              if (v) setDraft(infobox);
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="w-full mt-3 gap-2">
-                <Pencil className="h-3.5 w-3.5" /> Editar infobox
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle className="font-serif">Editar infobox</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-3 py-2">
-                {(
-                  [
-                    ["alcunhas", "Alcunhas (apelidos do clube)", true],
-                    ["torcedor", "Torcedor(a) / Adepto(a)", true],
-                    ["rival", "Rival principal", true],
-                    ["presidente", "Presidente", false],
-                    ["competicao", "Competição", true],
-                  ] as const
-                ).map(([key, label, multiline]) => (
-                  <div key={key} className="space-y-1">
-                    <Label className="text-xs">
-                      {label}
-                      {multiline && <span className="ml-1 text-muted-foreground font-normal">(uma por linha)</span>}
-                    </Label>
-                    {multiline ? (
-                      <Textarea
-                        value={draft[key] ?? ""}
-                        onChange={(e) => setDraft({ ...draft, [key]: e.target.value })}
-                        rows={3}
-                        className="resize-none text-sm"
-                        placeholder={"Exemplo 1\nExemplo 2\nExemplo 3"}
-                      />
-                    ) : (
-                      <Input value={draft[key] ?? ""} onChange={(e) => setDraft({ ...draft, [key]: e.target.value })} />
-                    )}
-                  </div>
-                ))}
-                <p className="text-xs text-muted-foreground">
-                  Nome, escudo, fundação, estádio, capacidade e cidade são puxados do cadastro do clube. Patrocinador
-                  (master) e material (fornecedora) são sincronizados automaticamente com os contratos ativos.
-                </p>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleSave} disabled={saving} className="bg-gradient-gold text-primary-foreground">
-                  {saving ? "Salvando..." : "Salvar"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button variant="outline" size="sm" className="w-full mt-3 gap-2" onClick={onEditClick}>
+            <Pencil className="h-3.5 w-3.5" /> Editar infobox
+          </Button>
         )}
       </div>
     </aside>
