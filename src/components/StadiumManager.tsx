@@ -25,8 +25,20 @@ const TABELA_CUSTOS_NIVEL: Record<number, number> = {
   5: 70000000, // 4 -> 5: €70M
 };
 
+const REPUTACAO_LIMITES: Record<string, { nivelMax: number; capMax: number; proximaRep?: string }> = {
+  estadual: { nivelMax: 2, capMax: 32000, proximaRep: "nacional" },
+  nacional: { nivelMax: 4, capMax: 60000, proximaRep: "continental" },
+  continental: { nivelMax: 5, capMax: 72000, proximaRep: "mundial" },
+  mundial: { nivelMax: 5, capMax: 85000 },
+};
+
 export const StadiumManager = ({ club, canEdit, onChange }: Props) => {
-  const capMax = 85000;
+  const reputacao = (club.reputacao || "estadual") as string;
+  const repLim = REPUTACAO_LIMITES[reputacao] || REPUTACAO_LIMITES.estadual;
+  const nivelMaxRep = repLim.nivelMax;
+  const capMax = repLim.capMax;
+  const proximaRep = repLim.proximaRep;
+  const noTopo = (club.nivel_estadio || 1) >= nivelMaxRep && (club.stadium_capacity || 0) >= capMax;
   const maxAssentosAdicionais = Math.max(0, capMax - (club.stadium_capacity || 0));
 
   // RESTAURE ESTA LINHA:
