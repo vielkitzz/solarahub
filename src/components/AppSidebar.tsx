@@ -10,6 +10,7 @@ import {
   LogIn,
   MapPin,
   Shirt,
+  UserRoundCog,
 } from "lucide-react";
 import {
   Sidebar,
@@ -134,7 +135,7 @@ export function AppSidebar() {
                       {!collapsed && <span>Meu Clube</span>}
                     </NavLink>
                   </SidebarMenuButton>
-              </SidebarMenuItem>
+                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/configuracoes")}>
                     <NavLink to="/configuracoes">
@@ -147,7 +148,7 @@ export function AppSidebar() {
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive("/admin")}>
                       <NavLink to="/admin">
-                        <Settings className="h-4 w-4" />
+                        <UserRoundCog className="h-4 w-4" />
                         {!collapsed && <span>Admin</span>}
                       </NavLink>
                     </SidebarMenuButton>
