@@ -59,6 +59,7 @@ import { StatCard, Row, EvolutionTable } from "@/components/club-detail/Evolutio
 import { transfersService } from "@/services/transfers";
 import { LineupManager } from "@/components/club-detail/LineupManager";
 import { KitsGallery } from "@/components/KitsGallery";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   ResponsiveContainer,
   LineChart as RLineChart,
@@ -92,6 +93,8 @@ const ClubDetail = () => {
   const [editingClub, setEditingClub] = useState<any>(null);
   const [masterSponsor, setMasterSponsor] = useState<string | null>(null);
   const [kitSupplier, setKitSupplier] = useState<string | null>(null);
+  const [isInfoboxOpen, setIsInfoboxOpen] = useState(false);
+  const [infoboxForm, setInfoboxForm] = useState<InfoboxData>({});
 
   // Apenas o dono do clube pode editar pela página do clube. Admins editam pelo painel /admin.
   const canEdit = !!user && !!club && club.owner_id === user.id;
@@ -198,7 +201,13 @@ const ClubDetail = () => {
       .from("transactions")
       .select("*")
       .eq("club_id", id)
-      .in("categoria", ["transferencia", "transferencia_externa", "multa_rescisoria", "upgrade_estadio", "upgrade_academia"])
+      .in("categoria", [
+        "transferencia",
+        "transferencia_externa",
+        "multa_rescisoria",
+        "upgrade_estadio",
+        "upgrade_academia",
+      ])
       .order("created_at", { ascending: false })
       .limit(500);
     setRecentTransactions(tx || []);
@@ -977,6 +986,10 @@ const ClubDetail = () => {
                 infobox={(wikiData.infobox as InfoboxData) || {}}
                 canEdit={canEdit}
                 onSave={saveInfobox}
+                onEditClick={() => {
+                  setInfoboxForm((wikiData.infobox as InfoboxData) || {});
+                  setIsInfoboxOpen(true);
+                }}
               />
             </div>
             <WikiSectionsView wiki={wikiData} title={club.name} canEdit={canEdit} onSaveWiki={saveWiki} />
