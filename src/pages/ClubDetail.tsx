@@ -1090,6 +1090,63 @@ const ClubDetail = () => {
         open={!!profilePlayerId}
         onOpenChange={(v) => !v && setProfilePlayerId(null)}
       />
+      <Dialog open={isInfoboxOpen} onOpenChange={setIsInfoboxOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Infobox do Clube</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Alcunhas</Label>
+              <Input
+                value={infoboxForm.alcunhas || ""}
+                onChange={(e) => setInfoboxForm({ ...infoboxForm, alcunhas: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Torcedor(a)</Label>
+              <Input
+                value={infoboxForm.torcedor || ""}
+                onChange={(e) => setInfoboxForm({ ...infoboxForm, torcedor: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Rival</Label>
+              <Input
+                value={infoboxForm.rival || ""}
+                onChange={(e) => setInfoboxForm({ ...infoboxForm, rival: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Presidente</Label>
+              <Input
+                value={infoboxForm.presidente || ""}
+                onChange={(e) => setInfoboxForm({ ...infoboxForm, presidente: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Competição</Label>
+              <Input
+                value={infoboxForm.competicao || ""}
+                onChange={(e) => setInfoboxForm({ ...infoboxForm, competicao: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsInfoboxOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={async () => {
+                await saveInfobox(infoboxForm);
+                setIsInfoboxOpen(false);
+              }}
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
