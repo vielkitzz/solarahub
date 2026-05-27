@@ -27,8 +27,7 @@ export const NotificationsBell = () => {
       .from("notifications")
       .select("id, tipo, titulo, mensagem, lida, created_at")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(30);
+      .order("created_at", { ascending: false });
     setItems((data as any) || []);
   };
 
@@ -37,12 +36,18 @@ export const NotificationsBell = () => {
     load();
     const ch = supabase
       .channel("notif-" + user.id)
-      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, () => load())
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        () => load(),
+      )
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => {
+      supabase.removeChannel(ch);
+    };
   }, [user?.id]);
 
-  const naoLidas = items.filter(n => !n.lida).length;
+  const naoLidas = items.filter((n) => !n.lida).length;
 
   const marcarTodas = async () => {
     if (!user) return;
@@ -78,7 +83,7 @@ export const NotificationsBell = () => {
             </Button>
           )}
         </div>
-        <ScrollArea className="max-h-[400px]">
+        <ScrollArea className="h-[60vh] max-h-[520px]">
           {items.length === 0 ? (
             <div className="p-6 text-center text-xs text-muted-foreground">Sem notificações.</div>
           ) : (
