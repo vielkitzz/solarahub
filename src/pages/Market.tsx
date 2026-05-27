@@ -33,7 +33,7 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  Heart,
+  Bookmark,
   Globe2,
   UserMinus,
   Shield,
@@ -290,7 +290,6 @@ const Market = () => {
     setSalario(String(Math.max(50000, sugerido)));
     resetProposalFields();
   };
-
 
   const fairPlayCheck = (v: number, base: number) => {
     if (!base) return "Jogador sem valor base";
@@ -678,7 +677,7 @@ const Market = () => {
             )}
             {user && (
               <TabsTrigger value="interesses">
-                <Heart className="h-3.5 w-3.5 mr-1" /> Interesses
+                <Bookmark className="h-3.5 w-3.5 mr-1" /> Interesses
                 {interestItems.length > 0 && (
                   <Badge className="ml-2 bg-primary text-primary-foreground">{interestItems.length}</Badge>
                 )}
@@ -1273,7 +1272,7 @@ const Market = () => {
         {user && (
           <TabsContent value="interesses" className="space-y-2 mt-4">
             <Card className="p-3 bg-gradient-card border-border/50 text-xs text-muted-foreground flex items-center gap-2">
-              <Heart className="h-4 w-4 text-primary" />
+              <Bookmark className="h-4 w-4 text-primary" />
               Sua lista pessoal de jogadores observados.
             </Card>
             {interestItems.length === 0 && (
@@ -1328,7 +1327,7 @@ const Market = () => {
                         </Button>
                       )}
                       <Button size="sm" variant="outline" onClick={() => toggleInterest(p.id)}>
-                        <Heart className="h-3.5 w-3.5 fill-current text-primary" />
+                        <Bookmark className="h-3.5 w-3.5 fill-current text-primary" />
                       </Button>
                     </div>
                   </div>

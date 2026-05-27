@@ -10,7 +10,7 @@ import { formatCurrency } from "@/lib/format";
 import { SkillDisplay } from "@/components/SkillDisplay";
 import { getFlagUrl } from "@/lib/countries";
 import {
-  Heart,
+  Bookmark,
   ArrowRightLeft,
   FileSignature,
   FileXCorner,
@@ -532,7 +532,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                   className={has(player.id) ? "text-primary" : "text-muted-foreground"}
                   onClick={() => toggle(player.id)}
                 >
-                  <Heart className={`h-4 w-4 mr-2 ${has(player.id) ? "fill-primary" : ""}`} />
+                  <Bookmark className={`h-4 w-4 mr-2 ${has(player.id) ? "fill-primary" : ""}`} />
                   {has(player.id) ? "Na lista" : "Interesse"}
                 </Button>
 
