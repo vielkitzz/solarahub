@@ -74,7 +74,7 @@ export const NotificationsBell = () => {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0">
+      <PopoverContent align="end" className="w-96 p-0">
         <div className="flex items-center justify-between p-3 border-b border-border/50">
           <div className="font-display font-bold text-sm">Notificações</div>
           {naoLidas > 0 && (
@@ -92,8 +92,8 @@ export const NotificationsBell = () => {
                 <li key={n.id} className={`p-3 ${!n.lida ? "bg-primary/5" : ""}`}>
                   <div className="flex items-start gap-2">
                     <div className="flex-1 min-w-0">
-                      <div className="font-display font-bold text-sm truncate">{n.titulo}</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">{n.mensagem}</div>
+                      <div className="font-display font-bold text-sm">{n.titulo}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5 break-words">{n.mensagem}</div>
                       <div className="text-[10px] text-muted-foreground mt-1">
                         {new Date(n.created_at).toLocaleString("pt-BR")}
                       </div>
