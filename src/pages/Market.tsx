@@ -1611,6 +1611,9 @@ const Market = () => {
                       ? "Proposta Recusada"
                       : "Contraproposta"}
                 </DialogTitle>
+                <DialogDescription>
+                  Resposta do clube estrangeiro para a proposta enviada.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground leading-relaxed">{foreignResponse?.mensagem}</p>
