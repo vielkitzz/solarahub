@@ -510,7 +510,6 @@ export type Database = {
           club_origin: string | null
           created_at: string
           id: string
-          league_origin: string | null
           market_value: number
           name: string
           nationality: string | null
@@ -527,7 +526,6 @@ export type Database = {
           club_origin?: string | null
           created_at?: string
           id?: string
-          league_origin?: string | null
           market_value?: number
           name: string
           nationality?: string | null
@@ -544,7 +542,6 @@ export type Database = {
           club_origin?: string | null
           created_at?: string
           id?: string
-          league_origin?: string | null
           market_value?: number
           name?: string
           nationality?: string | null
