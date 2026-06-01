@@ -1,0 +1,1 @@
+ALTER FUNCTION public.process_season_turnover() SET search_path = public;
