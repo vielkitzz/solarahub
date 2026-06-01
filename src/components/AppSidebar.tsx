@@ -46,11 +46,14 @@ const conhecimentoItems = [
 ];
 
 export function AppSidebar() {
-  const { state } = useSidebar();
-  const collapsed = state === "collapsed";
+  const { state, isMobile, setOpenMobile } = useSidebar();
+  const collapsed = state === "collapsed" && !isMobile;
   const location = useLocation();
   const { user, isAdmin, signInWithDiscord, signOut } = useAuth();
   const isActive = (path: string) => location.pathname === path;
+  const handleNav = () => {
+    if (isMobile) setOpenMobile(false);
+  };
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
