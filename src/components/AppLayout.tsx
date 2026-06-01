@@ -121,7 +121,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center gap-3 border-b border-border/50 bg-background/80 backdrop-blur-md px-4 sticky top-0 z-30">
+          <header
+            className="h-14 flex items-center gap-1 sm:gap-3 border-b border-border/50 bg-background/80 backdrop-blur-md px-2 sm:px-4 sticky top-0 z-30"
+            style={{ paddingTop: "env(safe-area-inset-top)" }}
+          >
             <SidebarTrigger />
             <div className="flex-1" />
             <Tooltip>
@@ -131,7 +134,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   size="icon"
                   aria-label="Caixa de entrada do mercado"
                   onClick={() => navigate("/mercado?tab=inbox")}
-                  className="relative"
+                  className="relative h-10 w-10"
                 >
                   <Inbox className="h-5 w-5" />
                   {inboxCount > 0 && (
@@ -148,7 +151,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </Tooltip>
             <NotificationsBell />
           </header>
-          <main className="flex-1 p-3 sm:p-4 md:p-8 animate-fade-in min-w-0">{children}</main>
+          <main className="flex-1 p-3 sm:p-4 md:p-8 animate-fade-in min-w-0 pb-[env(safe-area-inset-bottom)]">
+            {children}
+          </main>
         </div>
       </div>
     </SidebarProvider>
