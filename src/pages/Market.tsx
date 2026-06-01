@@ -59,6 +59,9 @@ import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 
 const Market = () => {
   const { user, loading, signInWithDiscord } = useAuth();
+  const { prefs } = useUserPreferences();
+  const hideForeign = prefs.hide_foreign_market;
+  const hideFree = prefs.hide_free_agents;
   const [players, setPlayers] = useState<any[]>([]);
   const [clubs, setClubs] = useState<Record<string, any>>({});
   const [myClubs, setMyClubs] = useState<any[]>([]);
