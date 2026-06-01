@@ -69,7 +69,7 @@ export const FreeAgentsTab = ({ activeClubId, hasClub, onProfileOpen, onNegotiat
     salary_demand: Number(r.salary_demand) || 0,
     club_id: null,
     a_venda: true,
-    _isFreeAgent: r._src !== "players",
+    _isFreeAgent: true,
   });
 
   return (
