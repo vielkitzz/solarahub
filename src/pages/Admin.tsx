@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import {
   Settings,
   Plus,
@@ -820,6 +820,9 @@ const Admin = () => {
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-destructive" /> Atenção Restrita
             </DialogTitle>
+            <DialogDescription>
+              Confirme a execução da virada de temporada para todos os clubes ativos.
+            </DialogDescription>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             A virada de temporada altera as finanças de todos os clubes de uma vez. Confirme se todas as premiações e
@@ -841,6 +844,9 @@ const Admin = () => {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isCreatingClub ? "Criar Novo Clube" : "Editar Clube"}</DialogTitle>
+            <DialogDescription>
+              Atualize as informações administrativas, financeiras e estruturais do clube.
+            </DialogDescription>
           </DialogHeader>
           {editClub && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -999,6 +1005,9 @@ const Admin = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Informações do Jogador</DialogTitle>
+            <DialogDescription>
+              Ajuste os dados básicos do jogador selecionado.
+            </DialogDescription>
           </DialogHeader>
           {editPlayer && (
             <div className="grid grid-cols-2 gap-3 mt-2">
