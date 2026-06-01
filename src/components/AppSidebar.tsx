@@ -79,7 +79,7 @@ export function AppSidebar() {
               {navegarItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url} end>
+                    <NavLink to={item.url} end onClick={handleNav}>
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
@@ -97,7 +97,7 @@ export function AppSidebar() {
               {competicaoItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url} end>
+                    <NavLink to={item.url} end onClick={handleNav}>
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
@@ -115,7 +115,7 @@ export function AppSidebar() {
               {conhecimentoItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url} end>
+                    <NavLink to={item.url} end onClick={handleNav}>
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
@@ -133,7 +133,7 @@ export function AppSidebar() {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/meu-clube")}>
-                    <NavLink to="/meu-clube">
+                    <NavLink to="/meu-clube" onClick={handleNav}>
                       <Shield className="h-4 w-4" />
                       {!collapsed && <span>Meu Clube</span>}
                     </NavLink>
@@ -141,7 +141,7 @@ export function AppSidebar() {
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/configuracoes")}>
-                    <NavLink to="/configuracoes">
+                    <NavLink to="/configuracoes" onClick={handleNav}>
                       <Settings className="h-4 w-4" />
                       {!collapsed && <span>Configurações</span>}
                     </NavLink>
@@ -150,7 +150,7 @@ export function AppSidebar() {
                 {isAdmin && (
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive("/admin")}>
-                      <NavLink to="/admin">
+                      <NavLink to="/admin" onClick={handleNav}>
                         <UserRoundCog className="h-4 w-4" />
                         {!collapsed && <span>Admin</span>}
                       </NavLink>
