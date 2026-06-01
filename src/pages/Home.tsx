@@ -47,11 +47,11 @@ const Home = () => {
   ];
 
   return (
-    <div className="space-y-10 max-w-7xl mx-auto">
+    <div className="space-y-6 sm:space-y-10 max-w-7xl mx-auto min-w-0 overflow-x-hidden">
       {/* HERO */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-card border border-border/50 p-6 sm:p-8 md:p-12">
+      <section className="relative overflow-hidden rounded-lg sm:rounded-2xl bg-card md:bg-gradient-card border border-border/50 p-4 sm:p-8 md:p-12">
         <div
-          className="absolute inset-0 opacity-30 pointer-events-none"
+          className="absolute inset-0 hidden md:block opacity-30 pointer-events-none"
           style={{ background: "radial-gradient(circle at 80% 20%, hsl(var(--primary) / 0.4), transparent 50%)" }}
         />
         <div className="relative space-y-5 max-w-3xl">
@@ -104,13 +104,13 @@ const Home = () => {
         <h2 className="text-2xl font-bold mb-4">Por onde começar</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {sections.map((s) => (
-            <Link key={s.to} to={s.to}>
-              <Card className="p-5 bg-gradient-card border-border/50 hover:border-primary/50 hover:shadow-gold transition-all h-full group">
+            <Link key={s.to} to={s.to} className="min-w-0">
+              <Card className="p-4 sm:p-5 bg-card md:bg-gradient-card border-border/50 hover:border-primary/50 md:hover:shadow-gold transition-colors h-full group overflow-hidden">
                 <div className="flex items-start gap-3">
                   <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
                     <s.icon className="h-5 w-5 text-primary" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <div className="font-display font-bold group-hover:text-primary transition-colors">{s.title}</div>
                     <p className="text-sm text-muted-foreground">{s.desc}</p>
                   </div>
@@ -137,7 +137,7 @@ const Home = () => {
           <div className="grid gap-2">
             {topClubs.map((c, idx) => (
               <Link key={c.id} to={`/clubes/${c.id}`}>
-                <Card className="p-3 bg-gradient-card border-border/50 hover:border-primary/40 transition-all flex items-center gap-3">
+                <Card className="p-3 bg-card md:bg-gradient-card border-border/50 hover:border-primary/40 transition-colors flex items-center gap-3 overflow-hidden">
                   <div
                     className={`text-xl font-display font-bold w-8 text-center ${idx < 3 ? "gold-text" : "text-muted-foreground"}`}
                   >
@@ -154,7 +154,7 @@ const Home = () => {
                     <div className="font-bold truncate">{c.name}</div>
                     <div className="text-xs text-muted-foreground truncate">{c.city || "—"}</div>
                   </div>
-                  <div className="font-display font-bold text-primary">{formatCurrency(Number(c.budget))}</div>
+                   <div className="hidden sm:block font-display font-bold text-primary shrink-0">{formatCurrency(Number(c.budget))}</div>
                 </Card>
               </Link>
             ))}
@@ -166,14 +166,14 @@ const Home = () => {
 };
 
 const StatCard = ({ icon: Icon, label, value }: { icon: any; label: string; value: string }) => (
-  <Card className="p-5 bg-gradient-card border-border/50">
+  <Card className="p-4 sm:p-5 bg-card md:bg-gradient-card border-border/50 overflow-hidden">
     <div className="flex items-center gap-3">
       <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
         <Icon className="h-5 w-5 text-primary" />
       </div>
-      <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
         <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
-        <div className="font-display font-bold text-lg truncate">{value}</div>
+        <div className="font-display font-bold text-lg break-words leading-tight">{value}</div>
       </div>
     </div>
   </Card>

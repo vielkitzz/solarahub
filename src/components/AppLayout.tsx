@@ -122,7 +122,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <header
-            className="h-14 flex items-center gap-1 sm:gap-3 border-b border-border/50 bg-background/80 backdrop-blur-md px-2 sm:px-4 sticky top-0 z-30"
+            className="h-14 flex shrink-0 items-center gap-1 sm:gap-3 border-b border-border/50 bg-background/95 md:bg-background/80 md:backdrop-blur-md px-2 sm:px-4 sticky top-0 z-30"
             style={{ paddingTop: "env(safe-area-inset-top)" }}
           >
             <SidebarTrigger />
@@ -151,7 +151,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </Tooltip>
             <NotificationsBell />
           </header>
-          <main className="flex-1 p-3 sm:p-4 md:p-8 animate-fade-in min-w-0 pb-[env(safe-area-inset-bottom)]">
+          <main className="flex-1 p-3 sm:p-4 md:p-8 md:animate-fade-in min-w-0 overflow-x-hidden pb-[max(env(safe-area-inset-bottom),0.75rem)] sm:pb-4 md:pb-8">
             {children}
           </main>
         </div>
