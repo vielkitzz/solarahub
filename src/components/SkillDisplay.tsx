@@ -95,3 +95,29 @@ export const SkillDisplay = ({ value, rate, mode, kind = "skill", numericLabel, 
 
   return <StarRating value={calcStars(value ?? 0, rate)} />;
 };
+
+/** Placeholder shown when a potential is hidden (e.g. not scouted yet). Respects user preference. */
+export const HiddenPotential = ({ size = 14 }: { size?: number }) => {
+  const { prefs } = useUserPreferences();
+  if (prefs.show_numeric_potential) {
+    return (
+      <span
+        className="font-display font-bold tabular-nums text-sm text-muted-foreground/50"
+        title="Use a aba Olheiros para descobrir"
+      >
+        ? – ?
+      </span>
+    );
+  }
+  return (
+    <div
+      className="flex items-center gap-0.5 text-muted-foreground/30"
+      title="Use a aba Olheiros para descobrir"
+    >
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Star key={i} style={{ width: size, height: size }} />
+      ))}
+    </div>
+  );
+};
+
