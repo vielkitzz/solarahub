@@ -129,7 +129,7 @@
     color: transparent;
   }
   .stat-grid {
-    @apply grid gap-4 md:grid-cols-2 lg:grid-cols-4;
+    @apply grid gap-3 sm:grid-cols-2 xl:grid-cols-4;
   }
   .tiptap-editor .ProseMirror {
     @apply min-h-[280px] outline-none prose prose-invert max-w-none;
