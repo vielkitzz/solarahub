@@ -886,19 +886,23 @@ const Market = () => {
         </TabsContent>
 
         {/* ─── MERCADO ESTRANGEIRO ──────────────────────────────────────── */}
-        <TabsContent value="estrangeiro" className="mt-4">
-          <ForeignMarketTab activeClubId={activeClubId} hasClub={hasClub} onNegotiate={openProposal} />
-        </TabsContent>
+        {!hideForeign && (
+          <TabsContent value="estrangeiro" className="mt-4">
+            <ForeignMarketTab activeClubId={activeClubId} hasClub={hasClub} onNegotiate={openProposal} />
+          </TabsContent>
+        )}
 
         {/* ─── PASSES LIVRES ────────────────────────────────────────────── */}
-        <TabsContent value="livres" className="mt-4">
-          <FreeAgentsTab
-            activeClubId={activeClubId}
-            hasClub={hasClub}
-            onProfileOpen={setProfilePlayerId}
-            onNegotiate={openProposal}
-          />
-        </TabsContent>
+        {!hideFree && (
+          <TabsContent value="livres" className="mt-4">
+            <FreeAgentsTab
+              activeClubId={activeClubId}
+              hasClub={hasClub}
+              onProfileOpen={setProfilePlayerId}
+              onNegotiate={openProposal}
+            />
+          </TabsContent>
+        )}
 
         {/* ─── TRANSFERÊNCIAS DA TEMPORADA ─────────────────────────────── */}
         <TabsContent value="temporada" className="space-y-3 mt-4">
