@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Settings, Star, Hash } from "lucide-react";
+import { Settings, Star, Hash, Eye, ShieldUser, Globe2 } from "lucide-react";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
