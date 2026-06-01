@@ -1262,6 +1262,8 @@ export type Database = {
       user_preferences: {
         Row: {
           created_at: string
+          hide_foreign_market: boolean
+          hide_free_agents: boolean
           id: string
           preferences: Json
           show_numeric_potential: boolean
@@ -1271,6 +1273,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          hide_foreign_market?: boolean
+          hide_free_agents?: boolean
           id?: string
           preferences?: Json
           show_numeric_potential?: boolean
@@ -1280,6 +1284,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          hide_foreign_market?: boolean
+          hide_free_agents?: boolean
           id?: string
           preferences?: Json
           show_numeric_potential?: boolean

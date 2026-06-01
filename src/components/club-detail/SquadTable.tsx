@@ -32,7 +32,7 @@ import {
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
 import { getFlagUrl } from "@/lib/countries";
 import { estimarPotencialOwn, type ScoutReport } from "@/lib/scout";
-import { SkillDisplay } from "@/components/SkillDisplay";
+import { SkillDisplay, HiddenPotential } from "@/components/SkillDisplay";
 
 // Cor individual por posição
 export const POSITION_COLORS: Record<string, { color: string; bg: string }> = {
@@ -479,14 +479,8 @@ export function SquadTable({
                           />
                         </div>
                       ) : (
-                        <div
-                          className="flex items-center justify-center gap-0.5 text-muted-foreground/30"
-                          title="Use a aba Olheiros para descobrir"
-                        >
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star key={i} style={{ width: 14, height: 14 }} />
-                          ))}
-                          <span className="text-[10px] ml-1.5"></span>
+                        <div className="flex items-center justify-center">
+                          <HiddenPotential size={14} />
                         </div>
                       )}
                     </TableCell>

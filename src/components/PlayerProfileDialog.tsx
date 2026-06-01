@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { formatCurrency } from "@/lib/format";
-import { SkillDisplay } from "@/components/SkillDisplay";
+import { SkillDisplay, HiddenPotential } from "@/components/SkillDisplay";
 import { getFlagUrl } from "@/lib/countries";
 import {
   Bookmark,
@@ -311,14 +311,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
                             />
                           </div>
                         ) : (
-                          <div
-                            className="flex items-center gap-0.5 text-muted-foreground/20"
-                            title="Use a aba Olheiros para descobrir"
-                          >
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <Star key={i} style={{ width: 16, height: 16 }} />
-                            ))}
-                          </div>
+                          <HiddenPotential size={16} />
                         )}
                       </div>
                     </div>

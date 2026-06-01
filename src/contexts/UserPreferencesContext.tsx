@@ -5,11 +5,15 @@ import { useAuth } from "@/contexts/AuthContext";
 export interface UserPreferences {
   show_numeric_skill: boolean;
   show_numeric_potential: boolean;
+  hide_free_agents: boolean;
+  hide_foreign_market: boolean;
 }
 
 const DEFAULT: UserPreferences = {
   show_numeric_skill: false,
   show_numeric_potential: false,
+  hide_free_agents: false,
+  hide_foreign_market: false,
 };
 
 interface ContextValue {
@@ -34,12 +38,14 @@ export const UserPreferencesProvider = ({ children }: { children: ReactNode }) =
     }
     const { data } = await supabase
       .from("user_preferences")
-      .select("show_numeric_skill, show_numeric_potential")
+      .select("show_numeric_skill, show_numeric_potential, hide_free_agents, hide_foreign_market")
       .eq("user_id", user.id)
       .maybeSingle();
     if (data) setPrefs({
       show_numeric_skill: !!data.show_numeric_skill,
       show_numeric_potential: !!data.show_numeric_potential,
+      hide_free_agents: !!(data as any).hide_free_agents,
+      hide_foreign_market: !!(data as any).hide_foreign_market,
     });
     setLoading(false);
   }, [user?.id]);
@@ -49,7 +55,7 @@ export const UserPreferencesProvider = ({ children }: { children: ReactNode }) =
   const update = async (next: Partial<UserPreferences>) => {
     if (!user) return;
     const merged = { ...prefs, ...next };
-    setPrefs(merged); // Um único setPrefs → todos os consumidores re-renderizam
+    setPrefs(merged);
     await supabase
       .from("user_preferences")
       .upsert({ user_id: user.id, ...merged }, { onConflict: "user_id" });

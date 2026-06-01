@@ -55,9 +55,13 @@ import { Filters, FlagImg } from "@/components/market/Filters";
 import { ForeignMarketTab } from "@/components/market/ForeignMarketTab";
 import { FreeAgentsTab } from "@/components/market/FreeAgentsTab";
 import { transfersService } from "@/services/transfers";
+import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 
 const Market = () => {
   const { user, loading, signInWithDiscord } = useAuth();
+  const { prefs } = useUserPreferences();
+  const hideForeign = prefs.hide_foreign_market;
+  const hideFree = prefs.hide_free_agents;
   const [players, setPlayers] = useState<any[]>([]);
   const [clubs, setClubs] = useState<Record<string, any>>({});
   const [myClubs, setMyClubs] = useState<any[]>([]);
@@ -652,12 +656,16 @@ const Market = () => {
             <TabsTrigger value="rumores">
               <Radio className="h-3.5 w-3.5 mr-1" /> Rumores
             </TabsTrigger>
-            <TabsTrigger value="estrangeiro">
-              <Globe2 className="h-3.5 w-3.5 mr-1" /> Mercado Estrangeiro
-            </TabsTrigger>
-            <TabsTrigger value="livres">
-              <ShieldUser className="h-3.5 w-3.5 mr-1" /> Passes Livres
-            </TabsTrigger>
+            {!hideForeign && (
+              <TabsTrigger value="estrangeiro">
+                <Globe2 className="h-3.5 w-3.5 mr-1" /> Mercado Estrangeiro
+              </TabsTrigger>
+            )}
+            {!hideFree && (
+              <TabsTrigger value="livres">
+                <ShieldUser className="h-3.5 w-3.5 mr-1" /> Passes Livres
+              </TabsTrigger>
+            )}
             <TabsTrigger value="temporada">
               <History className="h-3.5 w-3.5 mr-1" /> Transferências
             </TabsTrigger>
@@ -878,19 +886,23 @@ const Market = () => {
         </TabsContent>
 
         {/* ─── MERCADO ESTRANGEIRO ──────────────────────────────────────── */}
-        <TabsContent value="estrangeiro" className="mt-4">
-          <ForeignMarketTab activeClubId={activeClubId} hasClub={hasClub} onNegotiate={openProposal} />
-        </TabsContent>
+        {!hideForeign && (
+          <TabsContent value="estrangeiro" className="mt-4">
+            <ForeignMarketTab activeClubId={activeClubId} hasClub={hasClub} onNegotiate={openProposal} />
+          </TabsContent>
+        )}
 
         {/* ─── PASSES LIVRES ────────────────────────────────────────────── */}
-        <TabsContent value="livres" className="mt-4">
-          <FreeAgentsTab
-            activeClubId={activeClubId}
-            hasClub={hasClub}
-            onProfileOpen={setProfilePlayerId}
-            onNegotiate={openProposal}
-          />
-        </TabsContent>
+        {!hideFree && (
+          <TabsContent value="livres" className="mt-4">
+            <FreeAgentsTab
+              activeClubId={activeClubId}
+              hasClub={hasClub}
+              onProfileOpen={setProfilePlayerId}
+              onNegotiate={openProposal}
+            />
+          </TabsContent>
+        )}
 
         {/* ─── TRANSFERÊNCIAS DA TEMPORADA ─────────────────────────────── */}
         <TabsContent value="temporada" className="space-y-3 mt-4">
