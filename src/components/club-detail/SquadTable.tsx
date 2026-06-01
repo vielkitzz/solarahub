@@ -32,7 +32,7 @@ import {
 import { formatCurrency, POSITIONS, calcStars } from "@/lib/format";
 import { getFlagUrl } from "@/lib/countries";
 import { estimarPotencialOwn, type ScoutReport } from "@/lib/scout";
-import { SkillDisplay } from "@/components/SkillDisplay";
+import { SkillDisplay, HiddenPotential } from "@/components/SkillDisplay";
 
 // Cor individual por posição
 export const POSITION_COLORS: Record<string, { color: string; bg: string }> = {
