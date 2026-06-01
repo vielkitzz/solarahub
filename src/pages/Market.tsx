@@ -55,6 +55,7 @@ import { Filters, FlagImg } from "@/components/market/Filters";
 import { ForeignMarketTab } from "@/components/market/ForeignMarketTab";
 import { FreeAgentsTab } from "@/components/market/FreeAgentsTab";
 import { transfersService } from "@/services/transfers";
+import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 
 const Market = () => {
   const { user, loading, signInWithDiscord } = useAuth();
