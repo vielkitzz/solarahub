@@ -171,9 +171,9 @@ const StatCard = ({ icon: Icon, label, value }: { icon: any; label: string; valu
       <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
         <Icon className="h-5 w-5 text-primary" />
       </div>
-      <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
         <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
-        <div className="font-display font-bold text-lg truncate">{value}</div>
+        <div className="font-display font-bold text-lg break-words leading-tight">{value}</div>
       </div>
     </div>
   </Card>
