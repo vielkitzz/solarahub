@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { formatCurrency } from "@/lib/format";
-import { SkillDisplay } from "@/components/SkillDisplay";
+import { SkillDisplay, HiddenPotential } from "@/components/SkillDisplay";
 import { getFlagUrl } from "@/lib/countries";
 import {
   Bookmark,
