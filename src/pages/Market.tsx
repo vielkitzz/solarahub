@@ -656,12 +656,16 @@ const Market = () => {
             <TabsTrigger value="rumores">
               <Radio className="h-3.5 w-3.5 mr-1" /> Rumores
             </TabsTrigger>
-            <TabsTrigger value="estrangeiro">
-              <Globe2 className="h-3.5 w-3.5 mr-1" /> Mercado Estrangeiro
-            </TabsTrigger>
-            <TabsTrigger value="livres">
-              <ShieldUser className="h-3.5 w-3.5 mr-1" /> Passes Livres
-            </TabsTrigger>
+            {!hideForeign && (
+              <TabsTrigger value="estrangeiro">
+                <Globe2 className="h-3.5 w-3.5 mr-1" /> Mercado Estrangeiro
+              </TabsTrigger>
+            )}
+            {!hideFree && (
+              <TabsTrigger value="livres">
+                <ShieldUser className="h-3.5 w-3.5 mr-1" /> Passes Livres
+              </TabsTrigger>
+            )}
             <TabsTrigger value="temporada">
               <History className="h-3.5 w-3.5 mr-1" /> Transferências
             </TabsTrigger>
