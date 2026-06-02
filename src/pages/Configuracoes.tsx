@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Settings, Star, Hash, Eye, ShieldUser, Globe2 } from "lucide-react";
+import { Settings, Star, Hash } from "lucide-react";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -85,52 +85,6 @@ const Configuracoes = () => {
         <div className="text-[10px] text-muted-foreground border-t border-border/40 pt-3">
           Estas preferências afetam apenas suas próprias visualizações e não interferem no Painel de Admin.
         </div>
-      </Card>
-
-      <Card className="p-5 bg-gradient-card border-border/50 space-y-4">
-        <div className="flex items-center gap-2">
-          <Eye className="h-5 w-5 text-primary" />
-          <h2 className="font-display font-bold">Exibição do Mercado</h2>
-        </div>
-        <p className="text-xs text-muted-foreground -mt-2">
-          Oculte abas inteiras do mercado quando preferir focar apenas em negociações entre clubes.
-        </p>
-
-        {loading ? (
-          <Skeleton className="h-20 w-full" />
-        ) : (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-secondary/20">
-              <div className="space-y-0.5">
-                <Label className="text-sm font-semibold flex items-center gap-2">
-                  <ShieldUser className="h-3.5 w-3.5 text-primary" /> Ocultar Passes Livres
-                </Label>
-                <p className="text-[11px] text-muted-foreground">
-                  Esconde a aba de jogadores sem clube no Mercado.
-                </p>
-              </div>
-              <Switch
-                checked={prefs.hide_free_agents}
-                onCheckedChange={(v) => update({ hide_free_agents: v })}
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-secondary/20">
-              <div className="space-y-0.5">
-                <Label className="text-sm font-semibold flex items-center gap-2">
-                  <Globe2 className="h-3.5 w-3.5 text-primary" /> Ocultar Mercado Estrangeiro
-                </Label>
-                <p className="text-[11px] text-muted-foreground">
-                  Esconde a aba de jogadores de clubes estrangeiros no Mercado.
-                </p>
-              </div>
-              <Switch
-                checked={prefs.hide_foreign_market}
-                onCheckedChange={(v) => update({ hide_foreign_market: v })}
-              />
-            </div>
-          </div>
-        )}
       </Card>
 
     </div>

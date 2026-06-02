@@ -33,6 +33,7 @@ import { EmpresasManager } from "@/components/EmpresasManager";
 import { SeasonPreview } from "@/components/admin/SeasonPreview";
 import { EconomyParams } from "@/components/admin/EconomyParams";
 import { TransferWindowCard } from "@/components/admin/TransferWindowCard";
+import { MarketVisibilityCard } from "@/components/admin/MarketVisibilityCard";
 import { transfersService } from "@/services/transfers";
 import { BulkBudgetAdjuster } from "@/components/admin/BulkBudgetAdjuster";
 import { PlayerBulkActions } from "@/components/admin/PlayerBulkActions";
@@ -783,8 +784,8 @@ const Admin = () => {
           <ExternalClubsManager />
         </TabsContent>
 
-        <TabsContent value="config" className="mt-6">
-          <Card className="p-5 bg-gradient-card border-border/50 max-w-lg relative overflow-hidden">
+        <TabsContent value="config" className="mt-6 space-y-4 max-w-lg">
+          <Card className="p-5 bg-gradient-card border-border/50 relative overflow-hidden">
             <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-gold opacity-40" />
             <h3 className="font-display font-bold mb-4 flex items-center gap-2">
               <Settings className="h-4 w-4 text-primary" /> Variáveis do Sistema
@@ -808,6 +809,8 @@ const Admin = () => {
               </div>
             </div>
           </Card>
+
+          <MarketVisibilityCard />
         </TabsContent>
       </Tabs>
 
