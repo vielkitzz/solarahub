@@ -1597,6 +1597,16 @@ export type Database = {
           display_name: string
         }[]
       }
+      get_patrocinio_espaco: {
+        Args: { _club_id: string }
+        Returns: {
+          disponivel: number
+          reputacao: string
+          teto: number
+          usado: number
+        }[]
+      }
+      get_patrocinio_teto: { Args: { _club_id: string }; Returns: number }
       get_transfer_stats: {
         Args: { _club_id: string }
         Returns: {
