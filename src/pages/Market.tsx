@@ -55,13 +55,10 @@ import { Filters, FlagImg } from "@/components/market/Filters";
 import { ForeignMarketTab } from "@/components/market/ForeignMarketTab";
 import { FreeAgentsTab } from "@/components/market/FreeAgentsTab";
 import { transfersService } from "@/services/transfers";
-import { useUserPreferences } from "@/contexts/UserPreferencesContext";
-
 const Market = () => {
   const { user, loading, signInWithDiscord } = useAuth();
-  const { prefs } = useUserPreferences();
-  const hideForeign = prefs.hide_foreign_market;
-  const hideFree = prefs.hide_free_agents;
+  const [hideForeign, setHideForeign] = useState<boolean>(false);
+  const [hideFree, setHideFree] = useState<boolean>(false);
   const [players, setPlayers] = useState<any[]>([]);
   const [clubs, setClubs] = useState<Record<string, any>>({});
   const [myClubs, setMyClubs] = useState<any[]>([]);
@@ -111,6 +108,19 @@ const Market = () => {
 
   useEffect(() => {
     document.title = "Mercado — Solara Hub";
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("settings")
+        .select("key, value")
+        .in("key", ["market_show_free_agents", "market_show_foreign_market"]);
+      const byKey: Record<string, any> = {};
+      (data || []).forEach((r: any) => (byKey[r.key] = r.value));
+      setHideFree(byKey["market_show_free_agents"]?.visible === false);
+      setHideForeign(byKey["market_show_foreign_market"]?.visible === false);
+    })();
   }, []);
 
   const loadAll = async () => {
