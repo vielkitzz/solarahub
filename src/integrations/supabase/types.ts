@@ -510,7 +510,6 @@ export type Database = {
           club_origin: string | null
           created_at: string
           id: string
-          league_origin: string | null
           market_value: number
           name: string
           nationality: string | null
@@ -527,7 +526,6 @@ export type Database = {
           club_origin?: string | null
           created_at?: string
           id?: string
-          league_origin?: string | null
           market_value?: number
           name: string
           nationality?: string | null
@@ -544,7 +542,6 @@ export type Database = {
           club_origin?: string | null
           created_at?: string
           id?: string
-          league_origin?: string | null
           market_value?: number
           name?: string
           nationality?: string | null
@@ -767,57 +764,6 @@ export type Database = {
           tipo?: string
           titulo?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      player_retirements: {
-        Row: {
-          age: number | null
-          club_id: string | null
-          club_name: string | null
-          created_at: string
-          habilidade_final: number | null
-          id: string
-          motivo: string
-          nationality: string | null
-          observacoes: string | null
-          player_id: string | null
-          player_name: string
-          position: string | null
-          temporada: number
-          updated_at: string
-        }
-        Insert: {
-          age?: number | null
-          club_id?: string | null
-          club_name?: string | null
-          created_at?: string
-          habilidade_final?: number | null
-          id?: string
-          motivo?: string
-          nationality?: string | null
-          observacoes?: string | null
-          player_id?: string | null
-          player_name: string
-          position?: string | null
-          temporada: number
-          updated_at?: string
-        }
-        Update: {
-          age?: number | null
-          club_id?: string | null
-          club_name?: string | null
-          created_at?: string
-          habilidade_final?: number | null
-          id?: string
-          motivo?: string
-          nationality?: string | null
-          observacoes?: string | null
-          player_id?: string | null
-          player_name?: string
-          position?: string | null
-          temporada?: number
-          updated_at?: string
         }
         Relationships: []
       }
