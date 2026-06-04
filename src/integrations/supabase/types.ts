@@ -770,6 +770,57 @@ export type Database = {
         }
         Relationships: []
       }
+      player_retirements: {
+        Row: {
+          age: number | null
+          club_id: string | null
+          club_name: string | null
+          created_at: string
+          habilidade_final: number | null
+          id: string
+          motivo: string
+          nationality: string | null
+          observacoes: string | null
+          player_id: string | null
+          player_name: string
+          position: string | null
+          temporada: number
+          updated_at: string
+        }
+        Insert: {
+          age?: number | null
+          club_id?: string | null
+          club_name?: string | null
+          created_at?: string
+          habilidade_final?: number | null
+          id?: string
+          motivo?: string
+          nationality?: string | null
+          observacoes?: string | null
+          player_id?: string | null
+          player_name: string
+          position?: string | null
+          temporada: number
+          updated_at?: string
+        }
+        Update: {
+          age?: number | null
+          club_id?: string | null
+          club_name?: string | null
+          created_at?: string
+          habilidade_final?: number | null
+          id?: string
+          motivo?: string
+          nationality?: string | null
+          observacoes?: string | null
+          player_id?: string | null
+          player_name?: string
+          position?: string | null
+          temporada?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       player_trainings: {
         Row: {
           active: boolean
