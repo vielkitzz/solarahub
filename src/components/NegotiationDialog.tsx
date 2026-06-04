@@ -62,6 +62,9 @@ export const NegotiationDialog = ({ player, myClub, open, onOpenChange, onSent }
         .select("id, name, position, valor_base_calculado")
         .eq("club_id", myClub.id);
       setMyPlayers(mp || []);
+      const { data: cfg } = await supabase.from("settings").select("value").eq("key", "temporada_atual").maybeSingle();
+      const ano = Number((cfg?.value as any)?.ano);
+      if (ano) setTemporadaAtual(ano);
     })();
   }, [open, player?.id, myClub?.id]);
 
