@@ -218,6 +218,79 @@ export function RichEditor({
     content: content || "",
     editable,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    editorProps: {
+      handlePaste: (view, event) => {
+        const dt = (event as ClipboardEvent).clipboardData;
+        if (!dt) return false;
+
+        // 1) Arquivo de imagem colado
+        const files = Array.from(dt.files || []).filter((f) => f.type.startsWith("image/"));
+        if (files.length > 0) {
+          event.preventDefault();
+          (async () => {
+            for (const f of files) {
+              const url = await uploadWikiImage(f);
+              if (url) {
+                (editor as any)
+                  ?.chain()
+                  .focus()
+                  .insertContent({ type: "resizableImage", attrs: { src: url, width: 400 } })
+                  .run();
+              }
+            }
+          })();
+          return true;
+        }
+
+        // 2) HTML/texto contendo data:image (base64)
+        const html = dt.getData("text/html");
+        const text = dt.getData("text/plain");
+        const payload = html || text || "";
+        if (payload.includes("data:image")) {
+          event.preventDefault();
+          (async () => {
+            const matches = Array.from(payload.matchAll(/data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+/g));
+            for (const m of matches) {
+              const file = dataUrlToFile(m[0]);
+              if (!file) continue;
+              const url = await uploadWikiImage(file);
+              if (url) {
+                (editor as any)
+                  ?.chain()
+                  .focus()
+                  .insertContent({ type: "resizableImage", attrs: { src: url, width: 400 } })
+                  .run();
+              }
+            }
+            if (matches.length === 0) {
+              toast.error("Não foi possível extrair a imagem colada. Use o botão de upload.");
+            }
+          })();
+          return true;
+        }
+        return false;
+      },
+      handleDrop: (view, event) => {
+        const dt = (event as DragEvent).dataTransfer;
+        if (!dt) return false;
+        const files = Array.from(dt.files || []).filter((f) => f.type.startsWith("image/"));
+        if (files.length === 0) return false;
+        event.preventDefault();
+        (async () => {
+          for (const f of files) {
+            const url = await uploadWikiImage(f);
+            if (url) {
+              (editor as any)
+                ?.chain()
+                .focus()
+                .insertContent({ type: "resizableImage", attrs: { src: url, width: 400 } })
+                .run();
+            }
+          }
+        })();
+        return true;
+      },
+    },
   });
 
   if (!editor) return null;
