@@ -1801,6 +1801,7 @@ export type Database = {
         }
         Returns: string
       }
+      run_storage_maintenance: { Args: never; Returns: undefined }
       scout_academy_player: {
         Args: { _scouter_club_id: string; _target_player_id: string }
         Returns: Json
