@@ -87,8 +87,9 @@ export const NegotiationDialog = ({ player, myClub, open, onOpenChange, onSent }
 
   const submit = async () => {
     if (!player || !myClub || !user) return;
-    if (typeof player.age === "number" && player.age >= 33) {
-      return toast.error("Jogador próximo da aposentadoria — não aceita propostas");
+    const retSeason = Number(player.retirement_season) || 0;
+    if (retSeason > 0 && retSeason <= temporadaAtual) {
+      return toast.error("Jogador já está se aposentando — não aceita propostas");
     }
     if (fpError) return toast.error(fpError);
     if (caixaError) return toast.error(caixaError);
