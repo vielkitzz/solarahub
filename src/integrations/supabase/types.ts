@@ -28,6 +28,7 @@ export type Database = {
           position: string
           potential_max: number
           potential_min: number
+          retirement_season: number | null
           seasons_in_academy: number
           skill: number
         }
@@ -44,6 +45,7 @@ export type Database = {
           position: string
           potential_max: number
           potential_min: number
+          retirement_season?: number | null
           seasons_in_academy?: number
           skill?: number
         }
@@ -60,6 +62,7 @@ export type Database = {
           position?: string
           potential_max?: number
           potential_min?: number
+          retirement_season?: number | null
           seasons_in_academy?: number
           skill?: number
         }
@@ -510,6 +513,7 @@ export type Database = {
           club_origin: string | null
           created_at: string
           id: string
+          league_origin: string | null
           market_value: number
           name: string
           nationality: string | null
@@ -517,6 +521,7 @@ export type Database = {
           position: string
           potential_max: number | null
           potential_min: number | null
+          retirement_season: number | null
           salary_demand: number
           temporada: number | null
           updated_at: string
@@ -526,6 +531,7 @@ export type Database = {
           club_origin?: string | null
           created_at?: string
           id?: string
+          league_origin?: string | null
           market_value?: number
           name: string
           nationality?: string | null
@@ -533,6 +539,7 @@ export type Database = {
           position: string
           potential_max?: number | null
           potential_min?: number | null
+          retirement_season?: number | null
           salary_demand?: number
           temporada?: number | null
           updated_at?: string
@@ -542,6 +549,7 @@ export type Database = {
           club_origin?: string | null
           created_at?: string
           id?: string
+          league_origin?: string | null
           market_value?: number
           name?: string
           nationality?: string | null
@@ -549,6 +557,7 @@ export type Database = {
           position?: string
           potential_max?: number | null
           potential_min?: number | null
+          retirement_season?: number | null
           salary_demand?: number
           temporada?: number | null
           updated_at?: string
@@ -567,6 +576,7 @@ export type Database = {
           position: string
           potential_max: number | null
           potential_min: number | null
+          retirement_season: number | null
           salary_demand: number
           source_player_id: string | null
           temporada: number | null
@@ -583,6 +593,7 @@ export type Database = {
           position: string
           potential_max?: number | null
           potential_min?: number | null
+          retirement_season?: number | null
           salary_demand?: number
           source_player_id?: string | null
           temporada?: number | null
@@ -599,6 +610,7 @@ export type Database = {
           position?: string
           potential_max?: number | null
           potential_min?: number | null
+          retirement_season?: number | null
           salary_demand?: number
           source_player_id?: string | null
           temporada?: number | null
@@ -767,6 +779,57 @@ export type Database = {
         }
         Relationships: []
       }
+      player_retirements: {
+        Row: {
+          age: number | null
+          club_id: string | null
+          club_name: string | null
+          created_at: string
+          habilidade_final: number | null
+          id: string
+          motivo: string
+          nationality: string | null
+          observacoes: string | null
+          player_id: string | null
+          player_name: string
+          position: string | null
+          temporada: number
+          updated_at: string
+        }
+        Insert: {
+          age?: number | null
+          club_id?: string | null
+          club_name?: string | null
+          created_at?: string
+          habilidade_final?: number | null
+          id?: string
+          motivo?: string
+          nationality?: string | null
+          observacoes?: string | null
+          player_id?: string | null
+          player_name: string
+          position?: string | null
+          temporada: number
+          updated_at?: string
+        }
+        Update: {
+          age?: number | null
+          club_id?: string | null
+          club_name?: string | null
+          created_at?: string
+          habilidade_final?: number | null
+          id?: string
+          motivo?: string
+          nationality?: string | null
+          observacoes?: string | null
+          player_id?: string | null
+          player_name?: string
+          position?: string | null
+          temporada?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       player_trainings: {
         Row: {
           active: boolean
@@ -835,6 +898,7 @@ export type Database = {
           position: string
           potential_max: number | null
           potential_min: number | null
+          retirement_season: number | null
           salario_atual: number
           secondary_position: string | null
           shirt_number: number | null
@@ -863,6 +927,7 @@ export type Database = {
           position: string
           potential_max?: number | null
           potential_min?: number | null
+          retirement_season?: number | null
           salario_atual?: number
           secondary_position?: string | null
           shirt_number?: number | null
@@ -891,6 +956,7 @@ export type Database = {
           position?: string
           potential_max?: number | null
           potential_min?: number | null
+          retirement_season?: number | null
           salario_atual?: number
           secondary_position?: string | null
           shirt_number?: number | null
