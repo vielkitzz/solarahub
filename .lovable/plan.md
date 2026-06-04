@@ -1,69 +1,44 @@
-# Plano de execução
+## Diagnóstico do que está enchendo o banco
 
-## 1. Bugs de banco de dados
+| Origem | Tamanho | Causa |
+|---|---|---|
+| `clubs.wiki` (4 clubes) | ~7,4 MB | Imagens **base64** coladas direto no editor (3,9 MB + 2,1 MB + 880 KB + 400 KB) |
+| `net._http_response` | 19 MB | Logs de respostas do `pg_net` sem retenção |
+| `supabase_functions.hooks` | 5.019 linhas | Histórico de entregas de webhooks |
+| `notifications` | 2.492 lidas | Notificações antigas nunca apagadas |
+| `external_proposals` | 880 finalizadas | Propostas concluídas/recusadas mantidas |
+| `transferencias` | 719 finalizadas | Mesmas razões |
 
-### 1a. Renovação de contrato duplica contratos
-- Investigar `renovar_contrato_jogador` no Supabase.
-- Ajustar para que, ao renovar, qualquer contrato/registro anterior do jogador no clube seja substituído pelo novo (atualizar in-place em vez de inserir nova linha) — remover duplicações.
+O principal vilão é a colagem de imagens base64 no editor da wiki — cada imagem colada vira ~1 MB inflado dentro de `clubs.wiki`.
 
-### 1b. Passes livres contam como entrada e saída
-- Mesmo padrão do bug do mercado estrangeiro.
-- Investigar a função RPC usada pelo `FreeAgentsTab` (provavelmente `contratar_jogador_direto` ou função específica de free agents) e remover o registro de `entrada` indevido. Manter apenas a `saida` (custo da contratação).
+## O que vou fazer
 
-### 1c. Contratos de empréstimo não executam
-- Investigar a função/rotina que processa empréstimos (`loans` table) ao avançar temporada — verificar se o cron/trigger de cobrança das parcelas existe e se está sendo chamado.
-- Garantir que cada `installments_paid` é incrementado, gera transação `saida` e marca `status = 'paid'` ao final.
+### 1. Limpeza pontual (libera espaço agora)
+- Remover qualquer `<img src="data:image…">` do campo `wiki` de todos os clubes (mantém o texto, derruba a imagem inflada). Os 4 clubes afetados perderão essas imagens — eles podem reenviar via botão de upload (que já joga no Storage corretamente).
+- Truncar `net._http_response`.
+- Apagar entregas de webhook (`supabase_functions.hooks`) com mais de 7 dias.
+- Apagar notificações já lidas com mais de 30 dias.
+- Apagar `external_proposals` finalizadas (status ≠ pendente) com mais de 60 dias.
+- Apagar `transferencias` finalizadas com mais de 180 dias.
+- `VACUUM FULL` nas tabelas tratadas para devolver o espaço físico ao Postgres.
 
-## 2. Layout da wiki do clube
+### 2. Prevenção no editor (frontend)
+- No `RichEditor`, interceptar **paste** e **drop** de imagens: em vez de aceitar base64, fazer upload automático para o bucket `crests/wiki/` e inserir só a URL. Hoje só o botão "Enviar imagem" faz isso direito.
+- Bloquear também colagem de HTML que já contenha `data:image` (substitui ou remove antes de inserir).
 
-- Em `ClubDetail.tsx` (aba wiki), o infobox hoje fica ao lado e o texto não envolve.
-- Trocar layout de grid para `float: right` no infobox (ou usar shape-outside) para que o texto quebre e flua por baixo do infobox quando ultrapassar sua altura, ocupando toda a largura disponível.
+### 3. Prevenção no banco (defesa em profundidade)
+- Trigger em `clubs` que rejeita `INSERT/UPDATE` de `wiki` contendo `data:image` (mensagem clara para o usuário).
+- Habilitar `pg_cron` e agendar uma rotina semanal que repete a limpeza do item 1 (notificações lidas, hooks, http_response, propostas/transferências finalizadas antigas).
 
-## 3. Feature: Histórico de Camisas
+### Detalhes técnicos
 
-### 3a. Banco
-- Tabela `club_kits`:
-  - `club_id` (uuid)
-  - `ano` (int)
-  - `tipo` (enum: `titular | alternativo | terceiro | goleiro | especial`)
-  - `fabricante` (text)
-  - `descricao` (text, opcional)
-  - `image_url` (text)
-  - `created_at`, `updated_at`
-- RLS:
-  - SELECT público
-  - INSERT/UPDATE/DELETE: dono do clube ou admin
-- Bucket de Storage `club-kits` público com policies (upload restrito a autenticados; donos do clube enviam para pasta `<club_id>/`).
+- Limpeza do wiki via SQL com regex: `regexp_replace(wiki::text, '<img[^>]*src="data:image[^"]*"[^>]*>', '', 'g')`.
+- `truncate net._http_response` + reset de sequência.
+- Migração cria a extensão `pg_cron` e agenda 1 job único `maintenance_weekly` rodando aos domingos 03:00.
+- Trigger usa `position('data:image' in NEW.wiki::text) > 0` para vetar.
+- No `RichEditor`, adicionar `editorProps.handlePaste` e `handleDrop` que detectam `File` ou string base64, sobem via `supabase.storage.from('crests').upload('wiki/…')` e inserem o nó `resizableImage` com a URL pública.
 
-### 3b. Página global `/camisas`
-- Item no `AppSidebar` em "Conhecimento": "Histórico de Camisas".
-- Lista de clubes (cada um como cartão clicável que leva à página do clube → aba camisas).
-- Visual estilo Football Kit Archive: fundo neutro, imagens grandes, badges por tipo.
-
-### 3c. Aba "Camisas" no `ClubDetail.tsx`
-- Galeria agrupada por ano (mais recente → mais antigo).
-- Cada kit: imagem grande, badge colorido por tipo, fabricante, descrição.
-- Para o dono: botões de adicionar / editar / remover (dialog com upload de imagem, ano, tipo, fabricante, descrição).
-
-### 3d. Componentes novos
-- `src/components/KitsManager.tsx` — gerenciamento (dialog CRUD).
-- `src/components/KitsGallery.tsx` — visualização agrupada por ano.
-- `src/pages/HistoricoCamisas.tsx` — página global.
-
-## Detalhes técnicos
-
-- Paleta dos badges por tipo:
-  - titular → primary
-  - alternativo → secondary
-  - terceiro → accent
-  - goleiro → green
-  - especial → gold
-- Reaproveitar `ImageUpload` existente para envio.
-- React Query para cache (`['club-kits', clubId]`).
-- Rotas: adicionar `/camisas` em `App.tsx` (lazy).
-
-## Ordem de execução
-
-1. Migration: tabela `club_kits` + bucket + RLS + correções nas funções RPC dos bugs 1a, 1b, 1c.
-2. Frontend: ajuste do layout da wiki.
-3. Frontend: componentes de Kits + página global + aba no ClubDetail + item no sidebar.
+### O que NÃO vou mexer
+- Estrutura de tabelas de domínio (clubes, jogadores, contratos) permanece igual.
+- Lógica de negócio (temporadas, finanças, treinos) intocada.
+- Imagens já hospedadas no Storage continuam onde estão.

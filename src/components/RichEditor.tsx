@@ -32,6 +32,51 @@ import {
   Palette,
 } from "lucide-react";
 import { useState, useRef, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import imageCompression from "browser-image-compression";
+
+// Faz upload de um File para o Storage e retorna a URL pública.
+async function uploadWikiImage(file: File): Promise<string | null> {
+  try {
+    let toUpload: File = file;
+    try {
+      toUpload = await imageCompression(file, {
+        maxSizeMB: 0.3,
+        maxWidthOrHeight: 1000,
+        useWebWorker: true,
+      });
+    } catch {}
+    const ext = (file.name.split(".").pop() || "png").toLowerCase();
+    const path = `wiki/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage
+      .from("crests")
+      .upload(path, toUpload, { upsert: false, contentType: file.type || "image/png" });
+    if (error) {
+      toast.error("Falha ao enviar imagem: " + error.message);
+      return null;
+    }
+    return supabase.storage.from("crests").getPublicUrl(path).data.publicUrl;
+  } catch (e: any) {
+    toast.error("Erro no upload: " + (e?.message ?? e));
+    return null;
+  }
+}
+
+// Converte data:URL base64 em File para reuso da rotina de upload.
+function dataUrlToFile(dataUrl: string, filename = "pasted.png"): File | null {
+  try {
+    const [meta, b64] = dataUrl.split(",");
+    if (!b64) return null;
+    const mime = /data:(.*?);base64/.exec(meta)?.[1] || "image/png";
+    const bin = atob(b64);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new File([arr], filename, { type: mime });
+  } catch {
+    return null;
+  }
+}
 
 interface RichEditorProps {
   content: string;
@@ -173,6 +218,79 @@ export function RichEditor({
     content: content || "",
     editable,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    editorProps: {
+      handlePaste: (view, event) => {
+        const dt = (event as ClipboardEvent).clipboardData;
+        if (!dt) return false;
+
+        // 1) Arquivo de imagem colado
+        const files = Array.from(dt.files || []).filter((f) => f.type.startsWith("image/"));
+        if (files.length > 0) {
+          event.preventDefault();
+          (async () => {
+            for (const f of files) {
+              const url = await uploadWikiImage(f);
+              if (url) {
+                (editor as any)
+                  ?.chain()
+                  .focus()
+                  .insertContent({ type: "resizableImage", attrs: { src: url, width: 400 } })
+                  .run();
+              }
+            }
+          })();
+          return true;
+        }
+
+        // 2) HTML/texto contendo data:image (base64)
+        const html = dt.getData("text/html");
+        const text = dt.getData("text/plain");
+        const payload = html || text || "";
+        if (payload.includes("data:image")) {
+          event.preventDefault();
+          (async () => {
+            const matches = Array.from(payload.matchAll(/data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+/g));
+            for (const m of matches) {
+              const file = dataUrlToFile(m[0]);
+              if (!file) continue;
+              const url = await uploadWikiImage(file);
+              if (url) {
+                (editor as any)
+                  ?.chain()
+                  .focus()
+                  .insertContent({ type: "resizableImage", attrs: { src: url, width: 400 } })
+                  .run();
+              }
+            }
+            if (matches.length === 0) {
+              toast.error("Não foi possível extrair a imagem colada. Use o botão de upload.");
+            }
+          })();
+          return true;
+        }
+        return false;
+      },
+      handleDrop: (view, event) => {
+        const dt = (event as DragEvent).dataTransfer;
+        if (!dt) return false;
+        const files = Array.from(dt.files || []).filter((f) => f.type.startsWith("image/"));
+        if (files.length === 0) return false;
+        event.preventDefault();
+        (async () => {
+          for (const f of files) {
+            const url = await uploadWikiImage(f);
+            if (url) {
+              (editor as any)
+                ?.chain()
+                .focus()
+                .insertContent({ type: "resizableImage", attrs: { src: url, width: 400 } })
+                .run();
+            }
+          }
+        })();
+        return true;
+      },
+    },
   });
 
   if (!editor) return null;
