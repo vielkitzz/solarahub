@@ -95,6 +95,7 @@ export const ForeignMarketTab = ({ activeClubId, hasClub, onNegotiate }: Foreign
     overall: Number(r.overall) || 70,
     club_id: null,
     club_origin: r.club_origin,
+    retirement_season: r.retirement_season ?? null,
     a_venda: true,
     _isForeign: true,
   });

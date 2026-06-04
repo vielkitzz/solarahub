@@ -34,6 +34,7 @@ export const NegotiationDialog = ({ player, myClub, open, onOpenChange, onSent }
   const [jogadorTrocado, setJogadorTrocado] = useState<string>("");
   const [myPlayers, setMyPlayers] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [temporadaAtual, setTemporadaAtual] = useState<number>(new Date().getFullYear());
 
   const base = Number(player?.valor_base_calculado) || Number(player?.market_value) || 0;
   const caixa = Number(myClub?.budget || 0);
@@ -61,6 +62,9 @@ export const NegotiationDialog = ({ player, myClub, open, onOpenChange, onSent }
         .select("id, name, position, valor_base_calculado")
         .eq("club_id", myClub.id);
       setMyPlayers(mp || []);
+      const { data: cfg } = await supabase.from("settings").select("value").eq("key", "temporada_atual").maybeSingle();
+      const ano = Number((cfg?.value as any)?.ano);
+      if (ano) setTemporadaAtual(ano);
     })();
   }, [open, player?.id, myClub?.id]);
 
@@ -83,8 +87,9 @@ export const NegotiationDialog = ({ player, myClub, open, onOpenChange, onSent }
 
   const submit = async () => {
     if (!player || !myClub || !user) return;
-    if (typeof player.age === "number" && player.age >= 33) {
-      return toast.error("Jogador próximo da aposentadoria — não aceita propostas");
+    const retSeason = Number(player.retirement_season) || 0;
+    if (retSeason > 0 && retSeason <= temporadaAtual) {
+      return toast.error("Jogador já está se aposentando — não aceita propostas");
     }
     if (fpError) return toast.error(fpError);
     if (caixaError) return toast.error(caixaError);
