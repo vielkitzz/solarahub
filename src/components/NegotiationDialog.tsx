@@ -34,6 +34,7 @@ export const NegotiationDialog = ({ player, myClub, open, onOpenChange, onSent }
   const [jogadorTrocado, setJogadorTrocado] = useState<string>("");
   const [myPlayers, setMyPlayers] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [temporadaAtual, setTemporadaAtual] = useState<number>(new Date().getFullYear());
 
   const base = Number(player?.valor_base_calculado) || Number(player?.market_value) || 0;
   const caixa = Number(myClub?.budget || 0);
