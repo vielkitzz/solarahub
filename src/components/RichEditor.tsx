@@ -32,6 +32,51 @@ import {
   Palette,
 } from "lucide-react";
 import { useState, useRef, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import imageCompression from "browser-image-compression";
+
+// Faz upload de um File para o Storage e retorna a URL pública.
+async function uploadWikiImage(file: File): Promise<string | null> {
+  try {
+    let toUpload: File = file;
+    try {
+      toUpload = await imageCompression(file, {
+        maxSizeMB: 0.3,
+        maxWidthOrHeight: 1000,
+        useWebWorker: true,
+      });
+    } catch {}
+    const ext = (file.name.split(".").pop() || "png").toLowerCase();
+    const path = `wiki/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage
+      .from("crests")
+      .upload(path, toUpload, { upsert: false, contentType: file.type || "image/png" });
+    if (error) {
+      toast.error("Falha ao enviar imagem: " + error.message);
+      return null;
+    }
+    return supabase.storage.from("crests").getPublicUrl(path).data.publicUrl;
+  } catch (e: any) {
+    toast.error("Erro no upload: " + (e?.message ?? e));
+    return null;
+  }
+}
+
+// Converte data:URL base64 em File para reuso da rotina de upload.
+function dataUrlToFile(dataUrl: string, filename = "pasted.png"): File | null {
+  try {
+    const [meta, b64] = dataUrl.split(",");
+    if (!b64) return null;
+    const mime = /data:(.*?);base64/.exec(meta)?.[1] || "image/png";
+    const bin = atob(b64);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new File([arr], filename, { type: mime });
+  } catch {
+    return null;
+  }
+}
 
 interface RichEditorProps {
   content: string;
