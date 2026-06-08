@@ -475,7 +475,7 @@ export const AcademyManager = ({ club, canEdit, onChange, myClub }: Props) => {
 
   const peneirasUsadas = club.academy_scouting_count ?? 0;
   const peneirasRestantes = Math.max(0, 2 - peneirasUsadas);
-  const baseCheia = players.length >= 20;
+  const baseCheia = players.length >= 9;
   const pesquisasRestantes = Math.max(0, 10 - searchesUsed);
 
   const load = async () => {
