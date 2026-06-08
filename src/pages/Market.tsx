@@ -332,10 +332,6 @@ const Market = () => {
 
   const submit = async () => {
     if (!target || !activeClubId || !user) return;
-    const retSeason = Number(target.retirement_season) || 0;
-    if (retSeason > 0 && retSeason <= temporadaAtual && !target._isFreeAgent) {
-      return toast.error("Jogador já está se aposentando — não aceita propostas");
-    }
     if (fpError) return toast.error(fpError);
     if (caixaError) return toast.error(caixaError);
     if (trocaError) return toast.error(trocaError);
