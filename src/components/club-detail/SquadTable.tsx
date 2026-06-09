@@ -514,6 +514,19 @@ export function SquadTable({
                     {canEdit && (
                       <TableCell className="py-2 text-center">
                         <Switch
+                          checked={!!p.a_emprestimo}
+                          disabled={isLoanedIn}
+                          onCheckedChange={(v) => {
+                            if (v === !!p.a_emprestimo) return;
+                            if (isLoanedIn) return;
+                            setConfirmDialog({ kind: "loan", player: p, nextValue: v });
+                          }}
+                        />
+                      </TableCell>
+                    )}
+                    {canEdit && (
+                      <TableCell className="py-2 text-center">
+                        <Switch
                           checked={!!p.bloquear_propostas}
                           disabled={isLoanedIn}
                           onCheckedChange={(v) => {
