@@ -338,6 +338,9 @@ const ClubDetail = () => {
     if (error) return toast.error(error.message);
     setPlayers((prev) => prev.map((p) => (p.id === playerId ? { ...p, a_emprestimo: value } : p)));
     toast.success(value ? "Jogador listado para empréstimo" : "Jogador removido da vitrine de empréstimos");
+  };
+
+
 
   const toggleBlockProposals = async (playerId: string, value: boolean) => {
     const { error } = await supabase
