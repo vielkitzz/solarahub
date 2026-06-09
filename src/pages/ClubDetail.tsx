@@ -623,6 +623,7 @@ const ClubDetail = () => {
               isAdmin={isAdmin}
               temporadaAtual={temporadaAtual}
               toggleSale={toggleSale}
+              toggleLoan={toggleLoan}
               toggleBlockProposals={toggleBlockProposals}
               setRenewPlayer={setRenewPlayer}
               setShirtPlayer={setShirtPlayer}
