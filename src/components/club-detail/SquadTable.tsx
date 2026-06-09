@@ -367,6 +367,9 @@ export function SquadTable({
                 <TableHead className="text-center w-14 text-[10px] uppercase tracking-wider">Venda</TableHead>
               )}
               {canEdit && (
+                <TableHead className="text-center w-16 text-[10px] uppercase tracking-wider">Empréstimo</TableHead>
+              )}
+              {canEdit && (
                 <TableHead className="text-center w-16 text-[10px] uppercase tracking-wider">Bloquear</TableHead>
               )}
               {canEdit && <TableHead className="w-10" />}
