@@ -134,7 +134,7 @@ export function SquadTable({
   const [positionFilter, setPositionFilter] = useState("todas");
   const [statusFilter, setStatusFilter] = useState("todos");
   const [confirmDialog, setConfirmDialog] = useState<{
-    kind: "sale" | "block";
+    kind: "sale" | "loan" | "block";
     player: any;
     nextValue: boolean;
   } | null>(null);
