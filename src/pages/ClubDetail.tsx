@@ -330,6 +330,18 @@ const ClubDetail = () => {
     toast.success(value ? "Jogador colocado à venda" : "Jogador removido da vitrine");
   };
 
+  const toggleLoan = async (playerId: string, value: boolean) => {
+    const { error } = await supabase
+      .from("players")
+      .update({ a_emprestimo: value } as any)
+      .eq("id", playerId);
+    if (error) return toast.error(error.message);
+    setPlayers((prev) => prev.map((p) => (p.id === playerId ? { ...p, a_emprestimo: value } : p)));
+    toast.success(value ? "Jogador listado para empréstimo" : "Jogador removido da vitrine de empréstimos");
+  };
+
+
+
   const toggleBlockProposals = async (playerId: string, value: boolean) => {
     const { error } = await supabase
       .from("players")
@@ -611,6 +623,7 @@ const ClubDetail = () => {
               isAdmin={isAdmin}
               temporadaAtual={temporadaAtual}
               toggleSale={toggleSale}
+              toggleLoan={toggleLoan}
               toggleBlockProposals={toggleBlockProposals}
               setRenewPlayer={setRenewPlayer}
               setShirtPlayer={setShirtPlayer}

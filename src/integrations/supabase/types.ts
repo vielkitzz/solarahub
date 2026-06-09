@@ -877,6 +877,7 @@ export type Database = {
       }
       players: {
         Row: {
+          a_emprestimo: boolean
           a_venda: boolean
           age: number | null
           attributes: Json
@@ -906,6 +907,7 @@ export type Database = {
           valor_base_calculado: number
         }
         Insert: {
+          a_emprestimo?: boolean
           a_venda?: boolean
           age?: number | null
           attributes?: Json
@@ -935,6 +937,7 @@ export type Database = {
           valor_base_calculado?: number
         }
         Update: {
+          a_emprestimo?: boolean
           a_venda?: boolean
           age?: number | null
           attributes?: Json

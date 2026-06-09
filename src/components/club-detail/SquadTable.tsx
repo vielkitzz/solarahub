@@ -101,6 +101,7 @@ export function SquadTable({
   isAdmin,
   temporadaAtual,
   toggleSale,
+  toggleLoan,
   toggleBlockProposals,
   setRenewPlayer,
   setShirtPlayer,
@@ -116,6 +117,7 @@ export function SquadTable({
   isAdmin: boolean;
   temporadaAtual: number;
   toggleSale: (id: string, v: boolean) => void;
+  toggleLoan?: (id: string, v: boolean) => void;
   toggleBlockProposals?: (id: string, v: boolean) => void;
   setRenewPlayer: (p: any) => void;
   setShirtPlayer: (p: any) => void;
@@ -132,7 +134,7 @@ export function SquadTable({
   const [positionFilter, setPositionFilter] = useState("todas");
   const [statusFilter, setStatusFilter] = useState("todos");
   const [confirmDialog, setConfirmDialog] = useState<{
-    kind: "sale" | "block";
+    kind: "sale" | "loan" | "block";
     player: any;
     nextValue: boolean;
   } | null>(null);
@@ -365,6 +367,9 @@ export function SquadTable({
                 <TableHead className="text-center w-14 text-[10px] uppercase tracking-wider">Venda</TableHead>
               )}
               {canEdit && (
+                <TableHead className="text-center w-16 text-[10px] uppercase tracking-wider">Empréstimo</TableHead>
+              )}
+              {canEdit && (
                 <TableHead className="text-center w-16 text-[10px] uppercase tracking-wider">Bloquear</TableHead>
               )}
               {canEdit && <TableHead className="w-10" />}
@@ -373,7 +378,7 @@ export function SquadTable({
           <TableBody>
             {filteredAndSorted.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={canEdit ? 13 : 10} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={canEdit ? 14 : 10} className="text-center py-8 text-muted-foreground">
                   Nenhum jogador encontrado.
                 </TableCell>
               </TableRow>
@@ -509,6 +514,19 @@ export function SquadTable({
                     {canEdit && (
                       <TableCell className="py-2 text-center">
                         <Switch
+                          checked={!!p.a_emprestimo}
+                          disabled={isLoanedIn}
+                          onCheckedChange={(v) => {
+                            if (v === !!p.a_emprestimo) return;
+                            if (isLoanedIn) return;
+                            setConfirmDialog({ kind: "loan", player: p, nextValue: v });
+                          }}
+                        />
+                      </TableCell>
+                    )}
+                    {canEdit && (
+                      <TableCell className="py-2 text-center">
+                        <Switch
                           checked={!!p.bloquear_propostas}
                           disabled={isLoanedIn}
                           onCheckedChange={(v) => {
@@ -585,18 +603,26 @@ export function SquadTable({
                 ? confirmDialog?.nextValue
                   ? "Colocar à venda?"
                   : "Remover da vitrine?"
-                : confirmDialog?.nextValue
-                  ? "Bloquear propostas?"
-                  : "Liberar propostas?"}
+                : confirmDialog?.kind === "loan"
+                  ? confirmDialog?.nextValue
+                    ? "Listar para empréstimo?"
+                    : "Remover do empréstimo?"
+                  : confirmDialog?.nextValue
+                    ? "Bloquear propostas?"
+                    : "Liberar propostas?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {confirmDialog?.kind === "sale"
                 ? confirmDialog?.nextValue
                   ? `${confirmDialog?.player?.name} ficará disponível no mercado para receber propostas destacadas.`
                   : `${confirmDialog?.player?.name} sairá da vitrine de vendas.`
-                : confirmDialog?.nextValue
-                  ? `Nenhum clube poderá enviar propostas por ${confirmDialog?.player?.name} enquanto o bloqueio estiver ativo.`
-                  : `Os clubes voltarão a poder enviar propostas por ${confirmDialog?.player?.name}.`}
+                : confirmDialog?.kind === "loan"
+                  ? confirmDialog?.nextValue
+                    ? `${confirmDialog?.player?.name} ficará disponível no mercado para receber propostas de empréstimo.`
+                    : `${confirmDialog?.player?.name} sairá da vitrine de empréstimos.`
+                  : confirmDialog?.nextValue
+                    ? `Nenhum clube poderá enviar propostas por ${confirmDialog?.player?.name} enquanto o bloqueio estiver ativo.`
+                    : `Os clubes voltarão a poder enviar propostas por ${confirmDialog?.player?.name}.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -606,6 +632,8 @@ export function SquadTable({
                 if (!confirmDialog) return;
                 if (confirmDialog.kind === "sale") {
                   toggleSale(confirmDialog.player.id, confirmDialog.nextValue);
+                } else if (confirmDialog.kind === "loan") {
+                  toggleLoan?.(confirmDialog.player.id, confirmDialog.nextValue);
                 } else {
                   toggleBlockProposals?.(confirmDialog.player.id, confirmDialog.nextValue);
                 }

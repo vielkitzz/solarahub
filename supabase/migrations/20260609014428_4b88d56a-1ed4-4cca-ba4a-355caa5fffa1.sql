@@ -1,0 +1,1 @@
+ALTER TABLE public.players ADD COLUMN IF NOT EXISTS a_emprestimo boolean NOT NULL DEFAULT false;
