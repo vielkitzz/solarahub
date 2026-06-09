@@ -364,13 +364,13 @@ export function SquadTable({
               </TableHead>
 
               {canEdit && (
-                <TableHead className="text-center w-14 text-[10px] uppercase tracking-wider">Venda</TableHead>
+                <TableHead className="text-center w-14 px-1 text-[10px] uppercase tracking-wider">Venda</TableHead>
               )}
               {canEdit && (
-                <TableHead className="text-center w-16 text-[10px] uppercase tracking-wider">Empréstimo</TableHead>
+                <TableHead className="text-center w-14 px-1 text-[10px] uppercase tracking-wider">Empr.</TableHead>
               )}
               {canEdit && (
-                <TableHead className="text-center w-16 text-[10px] uppercase tracking-wider">Bloquear</TableHead>
+                <TableHead className="text-center w-14 px-1 text-[10px] uppercase tracking-wider">Bloq.</TableHead>
               )}
               {canEdit && <TableHead className="w-10" />}
             </TableRow>
