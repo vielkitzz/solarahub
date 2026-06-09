@@ -603,18 +603,26 @@ export function SquadTable({
                 ? confirmDialog?.nextValue
                   ? "Colocar à venda?"
                   : "Remover da vitrine?"
-                : confirmDialog?.nextValue
-                  ? "Bloquear propostas?"
-                  : "Liberar propostas?"}
+                : confirmDialog?.kind === "loan"
+                  ? confirmDialog?.nextValue
+                    ? "Listar para empréstimo?"
+                    : "Remover do empréstimo?"
+                  : confirmDialog?.nextValue
+                    ? "Bloquear propostas?"
+                    : "Liberar propostas?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {confirmDialog?.kind === "sale"
                 ? confirmDialog?.nextValue
                   ? `${confirmDialog?.player?.name} ficará disponível no mercado para receber propostas destacadas.`
                   : `${confirmDialog?.player?.name} sairá da vitrine de vendas.`
-                : confirmDialog?.nextValue
-                  ? `Nenhum clube poderá enviar propostas por ${confirmDialog?.player?.name} enquanto o bloqueio estiver ativo.`
-                  : `Os clubes voltarão a poder enviar propostas por ${confirmDialog?.player?.name}.`}
+                : confirmDialog?.kind === "loan"
+                  ? confirmDialog?.nextValue
+                    ? `${confirmDialog?.player?.name} ficará disponível no mercado para receber propostas de empréstimo.`
+                    : `${confirmDialog?.player?.name} sairá da vitrine de empréstimos.`
+                  : confirmDialog?.nextValue
+                    ? `Nenhum clube poderá enviar propostas por ${confirmDialog?.player?.name} enquanto o bloqueio estiver ativo.`
+                    : `Os clubes voltarão a poder enviar propostas por ${confirmDialog?.player?.name}.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -624,6 +632,8 @@ export function SquadTable({
                 if (!confirmDialog) return;
                 if (confirmDialog.kind === "sale") {
                   toggleSale(confirmDialog.player.id, confirmDialog.nextValue);
+                } else if (confirmDialog.kind === "loan") {
+                  toggleLoan?.(confirmDialog.player.id, confirmDialog.nextValue);
                 } else {
                   toggleBlockProposals?.(confirmDialog.player.id, confirmDialog.nextValue);
                 }
