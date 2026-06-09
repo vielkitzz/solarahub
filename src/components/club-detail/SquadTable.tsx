@@ -101,6 +101,7 @@ export function SquadTable({
   isAdmin,
   temporadaAtual,
   toggleSale,
+  toggleLoan,
   toggleBlockProposals,
   setRenewPlayer,
   setShirtPlayer,
@@ -116,6 +117,7 @@ export function SquadTable({
   isAdmin: boolean;
   temporadaAtual: number;
   toggleSale: (id: string, v: boolean) => void;
+  toggleLoan?: (id: string, v: boolean) => void;
   toggleBlockProposals?: (id: string, v: boolean) => void;
   setRenewPlayer: (p: any) => void;
   setShirtPlayer: (p: any) => void;
