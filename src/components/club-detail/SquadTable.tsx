@@ -497,10 +497,10 @@ export function SquadTable({
                       <TableCell className="py-2 text-center">
                         <Switch
                           checked={!!p.a_venda}
-                          disabled={isLoanedIn || retiringSoon}
+                          disabled={isLoanedIn}
                           onCheckedChange={(v) => {
                             if (v === !!p.a_venda) return;
-                            if (isLoanedIn || retiringSoon) return;
+                            if (isLoanedIn) return;
                             setConfirmDialog({ kind: "sale", player: p, nextValue: v });
                           }}
                         />
