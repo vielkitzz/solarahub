@@ -74,6 +74,7 @@ const Market = () => {
   const [temp, setTemp] = useState<string>("all");
   const [q, setQ] = useState<string>("");
   const [onlyForSale, setOnlyForSale] = useState<boolean>(false);
+  const [onlyForLoan, setOnlyForLoan] = useState<boolean>(false);
 
   // proposta modal
   const [target, setTarget] = useState<any>(null);
@@ -234,13 +235,16 @@ const Market = () => {
     return players
       .filter((p) => p.club_id && p.club_id !== activeClubId)
       .filter((p) => !onlyForSale || p.a_venda)
+      .filter((p) => !onlyForLoan || (p as any).a_emprestimo)
       .filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))
       .filter((p) => pos === "all" || p.position === pos)
       .sort((a, b) => {
         if (a.a_venda !== b.a_venda) return a.a_venda ? -1 : 1;
+        const al = !!(a as any).a_emprestimo, bl = !!(b as any).a_emprestimo;
+        if (al !== bl) return al ? -1 : 1;
         return Number(b.valor_base_calculado || 0) - Number(a.valor_base_calculado || 0);
       });
-  }, [players, activeClubId, q, pos, onlyForSale]);
+  }, [players, activeClubId, q, pos, onlyForSale, onlyForLoan]);
 
   const myPlayers = useMemo(() => players.filter((p) => p.club_id === activeClubId), [players, activeClubId]);
 
@@ -710,6 +714,8 @@ const Market = () => {
               setPos={setPos}
               onlyForSale={onlyForSale}
               setOnlyForSale={setOnlyForSale}
+              onlyForLoan={onlyForLoan}
+              setOnlyForLoan={setOnlyForLoan}
             />
             <Card className="bg-gradient-card border-border/50 overflow-hidden">
               <Table>
@@ -728,7 +734,7 @@ const Market = () => {
                   {filteredNegociar.map((p) => {
                     const club = clubs[p.club_id];
                     return (
-                      <TableRow key={p.id} className={p.a_venda ? "bg-primary/5" : ""}>
+                      <TableRow key={p.id} className={p.a_venda ? "bg-primary/5" : (p as any).a_emprestimo ? "bg-sky-500/5" : ""}>
                         <TableCell>
                           <Badge variant="outline" className="border-primary/40 text-primary">
                             {p.position}
@@ -745,6 +751,11 @@ const Market = () => {
                             {p.a_venda && (
                               <Badge className="bg-primary/20 text-primary border-primary/40 text-[10px] px-1.5 py-0">
                                 <Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA
+                              </Badge>
+                            )}
+                            {(p as any).a_emprestimo && (
+                              <Badge className="bg-sky-500/20 text-sky-300 border-sky-500/40 text-[10px] px-1.5 py-0">
+                                <ArrowRightLeft className="h-2.5 w-2.5 mr-0.5" />EMPRÉSTIMO
                               </Badge>
                             )}
                           </div>
@@ -1318,6 +1329,11 @@ const Market = () => {
                     {p.a_venda && (
                       <Badge className="bg-primary/20 text-primary border-primary/40 text-[10px]">
                         <Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA
+                      </Badge>
+                    )}
+                    {(p as any).a_emprestimo && (
+                      <Badge className="bg-sky-500/20 text-sky-300 border-sky-500/40 text-[10px]">
+                        <ArrowRightLeft className="h-2.5 w-2.5 mr-0.5" />EMPRÉSTIMO
                       </Badge>
                     )}
                     {c && (
