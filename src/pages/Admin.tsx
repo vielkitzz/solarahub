@@ -8,7 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Settings,
   Plus,
@@ -84,7 +91,7 @@ const Admin = () => {
   const load = async () => {
     const [{ data: cs }, { data: ps }] = await Promise.all([
       supabase.from("clubs").select("*").order("name"),
-      supabase.from("players").select("*, clubs(name)").order("name"),
+      supabase.from("players").select("*, clubs!players_club_id_fkey(name)").order("name"),
     ]);
     setClubs(cs || []);
     setPlayers(ps || []);
@@ -1008,9 +1015,7 @@ const Admin = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Informações do Jogador</DialogTitle>
-            <DialogDescription>
-              Ajuste os dados básicos do jogador selecionado.
-            </DialogDescription>
+            <DialogDescription>Ajuste os dados básicos do jogador selecionado.</DialogDescription>
           </DialogHeader>
           {editPlayer && (
             <div className="grid grid-cols-2 gap-3 mt-2">
