@@ -74,6 +74,7 @@ const Market = () => {
   const [temp, setTemp] = useState<string>("all");
   const [q, setQ] = useState<string>("");
   const [onlyForSale, setOnlyForSale] = useState<boolean>(false);
+  const [onlyForLoan, setOnlyForLoan] = useState<boolean>(false);
 
   // proposta modal
   const [target, setTarget] = useState<any>(null);
