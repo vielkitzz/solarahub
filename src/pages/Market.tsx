@@ -1331,6 +1331,11 @@ const Market = () => {
                         <Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA
                       </Badge>
                     )}
+                    {(p as any).a_emprestimo && (
+                      <Badge className="bg-sky-500/20 text-sky-300 border-sky-500/40 text-[10px]">
+                        <ArrowRightLeft className="h-2.5 w-2.5 mr-0.5" />EMPRÉSTIMO
+                      </Badge>
+                    )}
                     {c && (
                       <Link to={`/clubes/${c.id}`} className="flex items-center gap-1.5 hover:text-primary text-xs">
                         <div className="h-6 w-6">
