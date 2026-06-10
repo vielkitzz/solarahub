@@ -472,7 +472,7 @@ export function SquadTable({
                         <SkillDisplay value={p.habilidade} rate={club.rate} kind="skill" />
                       </div>
                     </TableCell>
-                    <TableCell className="py-2 text-center">
+                    <TableCell className="py-2 text-center whitespace-nowrap">
                       {potDisplay ? (
                         <div className="flex items-center justify-center gap-0.5.5" title={potDisplay.tooltip}>
                           <SkillDisplay
@@ -489,10 +489,10 @@ export function SquadTable({
                         </div>
                       )}
                     </TableCell>
-                    <TableCell className="py-2 text-center text-xs font-semibold text-primary tabular-nums">
+                    <TableCell className="py-2 text-center text-xs font-semibold text-primary tabular-nums whitespace-nowrap">
                       {formatCurrency(Number(p.market_value))}
                     </TableCell>
-                    <TableCell className="py-2 text-center text-xs text-muted-foreground tabular-nums hidden lg:table-cell">
+                    <TableCell className="py-2 text-center text-xs text-muted-foreground tabular-nums whitespace-nowrap hidden lg:table-cell">
                       {formatCurrency(Number(p.salario_atual || 0))}
                     </TableCell>
                     <TableCell className="py-2 text-center">
