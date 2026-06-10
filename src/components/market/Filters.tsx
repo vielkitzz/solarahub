@@ -1,4 +1,4 @@
-import { Search, Tag } from "lucide-react";
+import { Search, Tag, ArrowLeftRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,15 +26,17 @@ interface FiltersProps {
   setPos: (s: string) => void;
   onlyForSale: boolean;
   setOnlyForSale: (v: boolean | ((p: boolean) => boolean)) => void;
+  onlyForLoan?: boolean;
+  setOnlyForLoan?: (v: boolean | ((p: boolean) => boolean)) => void;
 }
 
-export const Filters = ({ q, setQ, pos, setPos, onlyForSale, setOnlyForSale }: FiltersProps) => (
+export const Filters = ({ q, setQ, pos, setPos, onlyForSale, setOnlyForSale, onlyForLoan, setOnlyForLoan }: FiltersProps) => (
   <div className="flex flex-col sm:flex-row gap-3">
     <div className="relative flex-1">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
       <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar jogador..." className="pl-10" />
     </div>
-    <div className="flex gap-3">
+    <div className="flex gap-3 flex-wrap">
       <Select value={pos} onValueChange={setPos}>
         <SelectTrigger className="flex-1 sm:w-48">
           <SelectValue placeholder="Posição" />
@@ -56,6 +58,16 @@ export const Filters = ({ q, setQ, pos, setPos, onlyForSale, setOnlyForSale }: F
         <Tag className="h-4 w-4" />
         <span className="hidden sm:inline">{onlyForSale ? "Mostrando à venda" : "Só à venda"}</span>
       </Button>
+      {setOnlyForLoan && (
+        <Button
+          variant={onlyForLoan ? "default" : "outline"}
+          onClick={() => setOnlyForLoan((v) => !v)}
+          className={onlyForLoan ? "bg-sky-500 text-white hover:bg-sky-500/90 shrink-0" : "shrink-0"}
+        >
+          <ArrowLeftRight className="h-4 w-4" />
+          <span className="hidden sm:inline">{onlyForLoan ? "Mostrando empréstimo" : "Só empréstimo"}</span>
+        </Button>
+      )}
     </div>
   </div>
 );
