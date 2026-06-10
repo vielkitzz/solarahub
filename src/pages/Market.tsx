@@ -714,6 +714,8 @@ const Market = () => {
               setPos={setPos}
               onlyForSale={onlyForSale}
               setOnlyForSale={setOnlyForSale}
+              onlyForLoan={onlyForLoan}
+              setOnlyForLoan={setOnlyForLoan}
             />
             <Card className="bg-gradient-card border-border/50 overflow-hidden">
               <Table>
