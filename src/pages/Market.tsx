@@ -734,7 +734,7 @@ const Market = () => {
                   {filteredNegociar.map((p) => {
                     const club = clubs[p.club_id];
                     return (
-                      <TableRow key={p.id} className={p.a_venda ? "bg-primary/5" : ""}>
+                      <TableRow key={p.id} className={p.a_venda ? "bg-primary/5" : (p as any).a_emprestimo ? "bg-sky-500/5" : ""}>
                         <TableCell>
                           <Badge variant="outline" className="border-primary/40 text-primary">
                             {p.position}
@@ -751,6 +751,11 @@ const Market = () => {
                             {p.a_venda && (
                               <Badge className="bg-primary/20 text-primary border-primary/40 text-[10px] px-1.5 py-0">
                                 <Tag className="h-2.5 w-2.5 mr-0.5" />À VENDA
+                              </Badge>
+                            )}
+                            {(p as any).a_emprestimo && (
+                              <Badge className="bg-sky-500/20 text-sky-300 border-sky-500/40 text-[10px] px-1.5 py-0">
+                                <ArrowRightLeft className="h-2.5 w-2.5 mr-0.5" />EMPRÉSTIMO
                               </Badge>
                             )}
                           </div>
