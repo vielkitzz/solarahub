@@ -235,13 +235,16 @@ const Market = () => {
     return players
       .filter((p) => p.club_id && p.club_id !== activeClubId)
       .filter((p) => !onlyForSale || p.a_venda)
+      .filter((p) => !onlyForLoan || (p as any).a_emprestimo)
       .filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))
       .filter((p) => pos === "all" || p.position === pos)
       .sort((a, b) => {
         if (a.a_venda !== b.a_venda) return a.a_venda ? -1 : 1;
+        const al = !!(a as any).a_emprestimo, bl = !!(b as any).a_emprestimo;
+        if (al !== bl) return al ? -1 : 1;
         return Number(b.valor_base_calculado || 0) - Number(a.valor_base_calculado || 0);
       });
-  }, [players, activeClubId, q, pos, onlyForSale]);
+  }, [players, activeClubId, q, pos, onlyForSale, onlyForLoan]);
 
   const myPlayers = useMemo(() => players.filter((p) => p.club_id === activeClubId), [players, activeClubId]);
 
