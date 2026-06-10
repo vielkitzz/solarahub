@@ -52,14 +52,16 @@ export const PlayerBulkActions = ({ onChanged }: Props) => {
     try {
       const ids = all
         ? clubs.map((c) => c.id)
-        : Object.entries(selected).filter(([, v]) => v).map(([k]) => k);
+        : Object.entries(selected)
+            .filter(([, v]) => v)
+            .map(([k]) => k);
       if (ids.length === 0) {
         toast.error("Selecione ao menos um clube ou marque 'Todos'");
         return;
       }
       const { data: players, error } = await supabase
         .from("players")
-        .select("*, clubs(id, name)")
+        .select("*, clubs!players_club_id_fkey(id, name)")
         .in("club_id", ids);
       if (error) throw error;
 
@@ -108,21 +110,11 @@ export const PlayerBulkActions = ({ onChanged }: Props) => {
       </h3>
 
       <div className="grid sm:grid-cols-2 gap-3">
-        <Button
-          onClick={ageAll}
-          disabled={loadingAge}
-          variant="outline"
-          className="justify-start"
-        >
+        <Button onClick={ageAll} disabled={loadingAge} variant="outline" className="justify-start">
           {loadingAge ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarPlus className="h-4 w-4" />}
           Idade +1 (todos)
         </Button>
-        <Button
-          onClick={generatePot}
-          disabled={loadingPot}
-          variant="outline"
-          className="justify-start"
-        >
+        <Button onClick={generatePot} disabled={loadingPot} variant="outline" className="justify-start">
           {loadingPot ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
           Gerar potenciais
         </Button>
@@ -140,7 +132,10 @@ export const PlayerBulkActions = ({ onChanged }: Props) => {
         {!all && (
           <div className="max-h-40 overflow-y-auto space-y-1 border border-border/50 rounded-lg p-2 scrollbar-thin">
             {clubs.map((c) => (
-              <label key={c.id} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-secondary/40 rounded px-2 py-1">
+              <label
+                key={c.id}
+                className="flex items-center gap-2 text-xs cursor-pointer hover:bg-secondary/40 rounded px-2 py-1"
+              >
                 <Checkbox
                   checked={!!selected[c.id]}
                   onCheckedChange={(v) => setSelected((s) => ({ ...s, [c.id]: !!v }))}
@@ -151,11 +146,7 @@ export const PlayerBulkActions = ({ onChanged }: Props) => {
           </div>
         )}
 
-        <Button
-          onClick={exportSquads}
-          disabled={exporting}
-          className="w-full bg-gradient-gold text-primary-foreground"
-        >
+        <Button onClick={exportSquads} disabled={exporting} className="w-full bg-gradient-gold text-primary-foreground">
           {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
           Baixar JSON
         </Button>
