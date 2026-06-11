@@ -1600,6 +1600,13 @@ export type Database = {
         Args: { _transfer_id: string }
         Returns: undefined
       }
+      club_transfer_counts: {
+        Args: { _club_id: string }
+        Returns: {
+          compras: number
+          vendas: number
+        }[]
+      }
       confirmar_contratacao: {
         Args: { _transfer_id: string }
         Returns: undefined
