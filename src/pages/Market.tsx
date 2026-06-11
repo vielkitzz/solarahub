@@ -125,16 +125,33 @@ const Market = () => {
   }, []);
 
   const loadAll = async () => {
-    const [{ data: cs }, { data: ps }] = await Promise.all([
-      supabase.from("clubs").select("id, name, crest_url, owner_id, rate").order("name"),
-      supabase.from("players").select("*"),
-    ]);
+    const { data: cs } = await supabase
+      .from("clubs")
+      .select("id, name, crest_url, owner_id, rate")
+      .order("name");
     const map: Record<string, any> = {};
     (cs || []).forEach((c) => {
       map[c.id] = c;
     });
     setClubs(map);
-    setPlayers(ps || []);
+
+    // Pagina os jogadores para evitar o limite padrão de 1000 linhas do PostgREST
+    const pageSize = 1000;
+    let from = 0;
+    const all: any[] = [];
+    // Loop até trazer todas as páginas
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { data, error } = await supabase
+        .from("players")
+        .select("*")
+        .range(from, from + pageSize - 1);
+      if (error || !data || data.length === 0) break;
+      all.push(...data);
+      if (data.length < pageSize) break;
+      from += pageSize;
+    }
+    setPlayers(all);
   };
 
   const loadMine = async () => {
