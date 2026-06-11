@@ -145,7 +145,7 @@ export const PlayerProfileDialog = ({ playerId, open, onOpenChange, onNegotiate 
 
       // 3. Busca dados do usuário logado e relatórios
       if (user) {
-        const { data: c } = await supabase.from("clubs").select("*").eq("owner_id", user.id).maybeSingle();
+        const { data: c } = await supabase.from("clubs").select("id, nivel_base, budget").eq("owner_id", user.id).maybeSingle();
         setMyClub(c);
 
         if (c && p && c.id !== p.club_id) {

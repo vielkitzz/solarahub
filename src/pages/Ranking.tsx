@@ -65,7 +65,11 @@ const Ranking = () => {
     document.title = "Ranking — Solara Hub";
     const load = async () => {
       const [{ data: clubsData }, { data: playersData }, { data: contratos }] = await Promise.all([
-        supabase.from("clubs").select("*"),
+        supabase
+          .from("clubs")
+          .select(
+            "id, name, crest_url, budget, stadium_capacity, city, rate, reputacao, nivel_estadio, nivel_base, posicao_ultima_temporada",
+          ),
         supabase.from("players").select("club_id, salario_atual, valor_base_calculado, habilidade, age"),
         supabase.from("contratos_clube").select("club_id, valor_anual, ativo"),
       ]);
