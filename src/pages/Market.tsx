@@ -135,7 +135,12 @@ const Market = () => {
     });
     setClubs(map);
 
-    // Pagina os jogadores para evitar o limite padrão de 1000 linhas do PostgREST
+    // Egress: lista todas as colunas necessárias, mas exclui `attributes` (~160KB).
+    const PLAYER_COLS =
+      "id, name, position, secondary_position, club_id, external_club_id, age, nationality, " +
+      "a_venda, a_emprestimo, bloquear_propostas, interesse_renovacao, valor_base_calculado, " +
+      "market_value, salario_atual, habilidade, habilidade_anterior, potential_min, potential_max, " +
+      "contrato_ate, shirt_number, retirement_season, percentual_revenda, clube_revenda_id, master_player_id";
     const pageSize = 1000;
     let from = 0;
     const all: any[] = [];
@@ -144,7 +149,7 @@ const Market = () => {
     while (true) {
       const { data, error } = await supabase
         .from("players")
-        .select("*")
+        .select(PLAYER_COLS)
         .range(from, from + pageSize - 1);
       if (error || !data || data.length === 0) break;
       all.push(...data);
@@ -156,7 +161,7 @@ const Market = () => {
 
   const loadMine = async () => {
     if (!user) return;
-    const { data } = await supabase.from("clubs").select("*").eq("owner_id", user.id);
+    const { data } = await supabase.from("clubs").select("id, name, crest_url, budget, owner_id").eq("owner_id", user.id);
     setMyClubs(data || []);
     if (data && data.length && !activeClubId) setActiveClubId(data[0].id);
   };
