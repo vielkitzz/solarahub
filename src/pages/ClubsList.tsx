@@ -12,7 +12,12 @@ const ClubsList = () => {
 
   useEffect(() => {
     document.title = "Clubes — Solara Hub";
-    supabase.from("clubs").select("*").order("name").then(({ data }) => setClubs(data || []));
+    // Egress: lista o suficiente para os cards (evita carregar wiki/lineup/etc.)
+    supabase
+      .from("clubs")
+      .select("id, name, crest_url, city, budget, stadium_capacity, rate")
+      .order("name")
+      .then(({ data }) => setClubs(data || []));
   }, []);
 
   const filtered = clubs.filter((c) => c.name.toLowerCase().includes(q.toLowerCase()) || (c.city || "").toLowerCase().includes(q.toLowerCase()));

@@ -256,7 +256,7 @@ const ClubDetail = () => {
         setScoutReports({});
         return;
       }
-      const { data: mine } = await supabase.from("clubs").select("*").eq("owner_id", user.id).maybeSingle();
+      const { data: mine } = await supabase.from("clubs").select("id").eq("owner_id", user.id).maybeSingle();
       setMyClub(mine || null);
       if (mine) {
         const { data: reps } = await supabase

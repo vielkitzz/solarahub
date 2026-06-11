@@ -15,10 +15,14 @@ const MyClub = () => {
   useEffect(() => {
     document.title = "Meu Clube — Solara Hub";
     if (!user) { setFetching(false); return; }
-    supabase.from("clubs").select("*").eq("owner_id", user.id).then(({ data }) => {
-      setClubs(data || []);
-      setFetching(false);
-    });
+    supabase
+      .from("clubs")
+      .select("id, name, crest_url, city, budget")
+      .eq("owner_id", user.id)
+      .then(({ data }) => {
+        setClubs(data || []);
+        setFetching(false);
+      });
   }, [user]);
 
   if (loading) return null;
