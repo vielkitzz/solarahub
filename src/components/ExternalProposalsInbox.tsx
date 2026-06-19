@@ -101,22 +101,18 @@ export const ExternalProposalsInbox = ({ clubId }: Props) => {
     const salario = Number(cSalario);
     if (!valor || !salario) return toast.error("Informe valor e salário");
     setBusy(true);
-    const { data: nova, error } = await supabase.rpc("responder_proposta_externa", {
+    const { error } = await supabase.rpc("responder_proposta_externa", {
       _id: counter.id,
       _acao: "contraproposta",
       _novo_valor: valor,
       _novo_salario: salario,
     });
-    if (error) {
-      setBusy(false);
-      return toast.error(error.message);
-    }
-    await supabase.functions.invoke("external-ai-respond", { body: { proposal_id: nova } });
     setBusy(false);
+    if (error) return toast.error(error.message);
     setCounter(null);
     setCValor("");
     setCSalario("");
-    toast.success("Contraproposta enviada — aguardando resposta da IA");
+    toast.success("Resposta do clube comprador recebida");
     load();
   };
 
