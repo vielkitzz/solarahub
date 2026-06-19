@@ -582,8 +582,8 @@ const ClubDetail = () => {
                 </span>
               )}
               <span className="flex items-center gap-1">
-                <Users className="h-3 w-3 shrink-0 text-primary" /> {players.length}/35 jogadores ·{" "}
-                {players.filter((p: any) => (p.nationality || "") !== "Solara").length}/10 estrangeiros
+                <Users className="h-3 w-3 shrink-0 text-primary" /> {ownedPlayers.length}/35 jogadores ·{" "}
+                {ownedPlayers.filter((p: any) => (p.nationality || "") !== "Solara").length}/10 estrangeiros
               </span>
             </div>
           </div>
