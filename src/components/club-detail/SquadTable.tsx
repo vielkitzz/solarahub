@@ -513,11 +513,11 @@ export function SquadTable({
                     {canEdit && (
                       <TableCell className="py-2 text-center">
                         <Switch
-                          checked={!!p.a_venda}
-                          disabled={isLoanedIn}
+                          checked={!!p.a_venda && !isLoanedOut}
+                          disabled={locked}
                           onCheckedChange={(v) => {
                             if (v === !!p.a_venda) return;
-                            if (isLoanedIn) return;
+                            if (locked) return;
                             setConfirmDialog({ kind: "sale", player: p, nextValue: v });
                           }}
                         />
@@ -526,11 +526,11 @@ export function SquadTable({
                     {canEdit && (
                       <TableCell className="py-2 text-center">
                         <Switch
-                          checked={!!p.a_emprestimo}
-                          disabled={isLoanedIn}
+                          checked={!!p.a_emprestimo && !isLoanedOut}
+                          disabled={locked}
                           onCheckedChange={(v) => {
                             if (v === !!p.a_emprestimo) return;
-                            if (isLoanedIn) return;
+                            if (locked) return;
                             setConfirmDialog({ kind: "loan", player: p, nextValue: v });
                           }}
                         />
@@ -539,11 +539,11 @@ export function SquadTable({
                     {canEdit && (
                       <TableCell className="py-2 text-center">
                         <Switch
-                          checked={!!p.bloquear_propostas}
-                          disabled={isLoanedIn}
+                          checked={!!p.bloquear_propostas && !isLoanedOut}
+                          disabled={locked}
                           onCheckedChange={(v) => {
                             if (v === !!p.bloquear_propostas) return;
-                            if (isLoanedIn) return;
+                            if (locked) return;
                             setConfirmDialog({ kind: "block", player: p, nextValue: v });
                           }}
                         />
@@ -556,10 +556,14 @@ export function SquadTable({
                             variant="ghost"
                             size="icon"
                             title={
-                              isLoanedIn ? "Jogador emprestado — clube de origem detém o contrato" : "Renovar contrato"
+                              isLoanedIn
+                                ? "Jogador emprestado — clube de origem detém o contrato"
+                                : isLoanedOut
+                                  ? "Jogador emprestado a outro clube"
+                                  : "Renovar contrato"
                             }
-                            disabled={isLoanedIn}
-                            onClick={() => !isLoanedIn && setRenewPlayer(p)}
+                            disabled={locked}
+                            onClick={() => !locked && setRenewPlayer(p)}
                             className="h-7 w-7"
                           >
                             <FileSignature className="h-3.5 w-3.5 text-primary" />
@@ -570,10 +574,12 @@ export function SquadTable({
                             title={
                               isLoanedIn
                                 ? "Jogador emprestado — clube de origem detém o contrato"
-                                : "Pagar multa rescisória (liberar)"
+                                : isLoanedOut
+                                  ? "Jogador emprestado a outro clube"
+                                  : "Pagar multa rescisória (liberar)"
                             }
-                            disabled={isLoanedIn}
-                            onClick={() => !isLoanedIn && setMultaPlayer(p)}
+                            disabled={locked}
+                            onClick={() => !locked && setMultaPlayer(p)}
                             className="h-7 w-7"
                           >
                             <FileXCorner className="h-3.5 w-3.5 text-amber-400" />
@@ -581,6 +587,7 @@ export function SquadTable({
                         </div>
                       </TableCell>
                     )}
+
                     {!canEdit && isAdmin && (
                       <TableCell className="py-2 text-center">
                         <Button
