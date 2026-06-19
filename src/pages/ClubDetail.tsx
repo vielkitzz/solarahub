@@ -163,7 +163,6 @@ const ClubDetail = () => {
     setClub(c);
     setMasterSponsor((masterContract as any)?.empresa?.nome ?? null);
     setKitSupplier((kitContract as any)?.empresa?.nome ?? null);
-    setPlayers(p || []);
     setContratosTotal((ct || []).reduce((s, r: any) => s + Number(r.valor_anual || 0), 0));
 
     // Detecta jogadores emprestados PARA este clube (loan-in) — bloqueia renovação/venda
@@ -174,6 +173,33 @@ const ClubDetail = () => {
       .eq("tipo", "emprestimo")
       .eq("status", "aceita");
     setLoanedInIds(new Set((loansIn || []).map((l: any) => l.jogador_id)));
+
+    // Jogadores emprestados POR este clube — ainda nos pertencem mas estão em outro clube
+    const { data: loansOut } = await supabase
+      .from("transferencias")
+      .select("jogador_id, clube_comprador_id")
+      .eq("clube_vendedor_id", id)
+      .eq("tipo", "emprestimo")
+      .eq("status", "aceita");
+    const outIds = (loansOut || []).map((l: any) => l.jogador_id);
+    if (outIds.length > 0) {
+      const compIds = [...new Set((loansOut || []).map((l: any) => l.clube_comprador_id))];
+      const [{ data: outPlayers }, { data: compClubs }] = await Promise.all([
+        supabase.from("players").select("*").in("id", outIds),
+        supabase.from("clubs").select("id, name").in("id", compIds),
+      ]);
+      const compMap = new Map((compClubs || []).map((c: any) => [c.id, c.name]));
+      const loanMap = new Map((loansOut || []).map((l: any) => [l.jogador_id, l.clube_comprador_id]));
+      const extras = (outPlayers || []).map((pl: any) => ({
+        ...pl,
+        __isLoanedOut: true,
+        __loanedToClubName: compMap.get(loanMap.get(pl.id)) ?? "—",
+      }));
+      setPlayers([...(p || []), ...extras]);
+    } else {
+      setPlayers(p || []);
+    }
+
 
     (settings || []).forEach((s: any) => {
       if (s.key === "temporada_atual" && typeof s.value?.ano === "number") setTemporadaAtual(s.value.ano);
@@ -343,6 +369,13 @@ const ClubDetail = () => {
 
 
   const toggleBlockProposals = async (playerId: string, value: boolean) => {
+    if (value) {
+      const atual = players.filter((p) => !p.__isLoanedOut && !!p.bloquear_propostas).length;
+      if (atual >= 5) {
+        toast.error("Limite de 5 jogadores bloqueados atingido. Desbloqueie outro para bloquear este.");
+        return;
+      }
+    }
     const { error } = await supabase
       .from("players")
       .update({ bloquear_propostas: value } as any)
@@ -432,8 +465,9 @@ const ClubDetail = () => {
 
   if (!club) return <div className="text-center py-20 text-muted-foreground">Clube não encontrado.</div>;
 
-  const folhaSalarial = players.reduce((s, p) => s + Number(p.salario_atual || 0), 0);
-  const valorBaseFolha = players.reduce((s, p) => s + Number(p.valor_base_calculado || 0), 0);
+  const ownedPlayers = players.filter((p: any) => !p.__isLoanedOut);
+  const folhaSalarial = ownedPlayers.reduce((s, p) => s + Number(p.salario_atual || 0), 0);
+  const valorBaseFolha = ownedPlayers.reduce((s, p) => s + Number(p.valor_base_calculado || 0), 0);
   const premiacaoPorPosicao = (pos: number | null | undefined) => {
     if (!pos) return 0;
     if (pos === 1) return 20_000_000;
@@ -548,8 +582,8 @@ const ClubDetail = () => {
                 </span>
               )}
               <span className="flex items-center gap-1">
-                <Users className="h-3 w-3 shrink-0 text-primary" /> {players.length}/35 jogadores ·{" "}
-                {players.filter((p: any) => (p.nationality || "") !== "Solara").length}/10 estrangeiros
+                <Users className="h-3 w-3 shrink-0 text-primary" /> {ownedPlayers.length}/35 jogadores ·{" "}
+                {ownedPlayers.filter((p: any) => (p.nationality || "") !== "Solara").length}/10 estrangeiros
               </span>
             </div>
           </div>
@@ -638,7 +672,7 @@ const ClubDetail = () => {
 
         <TabsContent value="escalacao" className="mt-4">
           <LineupManager
-            players={players}
+            players={ownedPlayers}
             club={club}
             canEdit={canEdit}
             initialLineup={

@@ -401,16 +401,18 @@ export function SquadTable({
                 const expirando =
                   p.contrato_ate !== null && p.contrato_ate !== undefined && p.contrato_ate - temporadaAtual <= 1;
                 const isLoanedIn = _loanedInIds.has(p.id);
+                const isLoanedOut = !!p.__isLoanedOut;
+                const locked = isLoanedIn || isLoanedOut;
                 const retiringSoon = typeof p.age === "number" && p.age >= 33;
                 const ps = getPositionStyle(p.position);
 
                 return (
                   <TableRow
                     key={p.id}
-                    className={`border-border/30 hover:bg-primary/5 transition-colors text-sm ${p.a_venda ? "bg-primary/5" : ""}`}
+                    className={`border-border/30 hover:bg-primary/5 transition-colors text-sm ${p.a_venda ? "bg-primary/5" : ""} ${isLoanedOut ? "opacity-80" : ""}`}
                   >
                     <TableCell className="text-[11px] text-center text-muted-foreground/60 py-2">
-                      {canEdit ? (
+                      {canEdit && !locked ? (
                         <button
                           onClick={() => setShirtPlayer(p)}
                           className="hover:text-primary transition-colors font-semibold"
@@ -437,17 +439,17 @@ export function SquadTable({
                         >
                           {p.name}
                         </button>
-                        {p.a_venda && (
+                        {p.a_venda && !isLoanedOut && (
                           <span title="À venda">
                             <Tag className="h-3 w-3 text-primary/70 shrink-0" />
                           </span>
                         )}
-                        {expirando && (
+                        {expirando && !isLoanedOut && (
                           <span title="Contrato expirando">
                             <AlertTriangle className="h-3 w-3 text-amber-400 shrink-0" />
                           </span>
                         )}
-                        {retiringSoon && (
+                        {retiringSoon && !isLoanedOut && (
                           <span title="Próximo da aposentadoria">
                             <Clock className="h-3 w-3 text-orange-400 shrink-0" />
                           </span>
@@ -457,8 +459,18 @@ export function SquadTable({
                             <RefreshCcw className="h-3 w-3 text-sky-400 shrink-0" />
                           </span>
                         )}
+                        {isLoanedOut && (
+                          <span
+                            className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border border-sky-400/50 text-sky-300 bg-sky-500/10"
+                            title={`Emprestado para ${p.__loanedToClubName}`}
+                          >
+                            <RefreshCcw className="h-2.5 w-2.5" />
+                            Emprestado → {p.__loanedToClubName}
+                          </span>
+                        )}
                       </div>
                     </TableCell>
+
                     <TableCell className="py-2 hidden text-center sm:table-cell">
                       <div className="flex justify-center">
                         <FlagImg nationality={p.nationality || ""} />
@@ -501,11 +513,11 @@ export function SquadTable({
                     {canEdit && (
                       <TableCell className="py-2 text-center">
                         <Switch
-                          checked={!!p.a_venda}
-                          disabled={isLoanedIn}
+                          checked={!!p.a_venda && !isLoanedOut}
+                          disabled={locked}
                           onCheckedChange={(v) => {
                             if (v === !!p.a_venda) return;
-                            if (isLoanedIn) return;
+                            if (locked) return;
                             setConfirmDialog({ kind: "sale", player: p, nextValue: v });
                           }}
                         />
@@ -514,11 +526,11 @@ export function SquadTable({
                     {canEdit && (
                       <TableCell className="py-2 text-center">
                         <Switch
-                          checked={!!p.a_emprestimo}
-                          disabled={isLoanedIn}
+                          checked={!!p.a_emprestimo && !isLoanedOut}
+                          disabled={locked}
                           onCheckedChange={(v) => {
                             if (v === !!p.a_emprestimo) return;
-                            if (isLoanedIn) return;
+                            if (locked) return;
                             setConfirmDialog({ kind: "loan", player: p, nextValue: v });
                           }}
                         />
@@ -527,11 +539,11 @@ export function SquadTable({
                     {canEdit && (
                       <TableCell className="py-2 text-center">
                         <Switch
-                          checked={!!p.bloquear_propostas}
-                          disabled={isLoanedIn}
+                          checked={!!p.bloquear_propostas && !isLoanedOut}
+                          disabled={locked}
                           onCheckedChange={(v) => {
                             if (v === !!p.bloquear_propostas) return;
-                            if (isLoanedIn) return;
+                            if (locked) return;
                             setConfirmDialog({ kind: "block", player: p, nextValue: v });
                           }}
                         />
@@ -544,10 +556,14 @@ export function SquadTable({
                             variant="ghost"
                             size="icon"
                             title={
-                              isLoanedIn ? "Jogador emprestado — clube de origem detém o contrato" : "Renovar contrato"
+                              isLoanedIn
+                                ? "Jogador emprestado — clube de origem detém o contrato"
+                                : isLoanedOut
+                                  ? "Jogador emprestado a outro clube"
+                                  : "Renovar contrato"
                             }
-                            disabled={isLoanedIn}
-                            onClick={() => !isLoanedIn && setRenewPlayer(p)}
+                            disabled={locked}
+                            onClick={() => !locked && setRenewPlayer(p)}
                             className="h-7 w-7"
                           >
                             <FileSignature className="h-3.5 w-3.5 text-primary" />
@@ -558,10 +574,12 @@ export function SquadTable({
                             title={
                               isLoanedIn
                                 ? "Jogador emprestado — clube de origem detém o contrato"
-                                : "Pagar multa rescisória (liberar)"
+                                : isLoanedOut
+                                  ? "Jogador emprestado a outro clube"
+                                  : "Pagar multa rescisória (liberar)"
                             }
-                            disabled={isLoanedIn}
-                            onClick={() => !isLoanedIn && setMultaPlayer(p)}
+                            disabled={locked}
+                            onClick={() => !locked && setMultaPlayer(p)}
                             className="h-7 w-7"
                           >
                             <FileXCorner className="h-3.5 w-3.5 text-amber-400" />
@@ -569,6 +587,7 @@ export function SquadTable({
                         </div>
                       </TableCell>
                     )}
+
                     {!canEdit && isAdmin && (
                       <TableCell className="py-2 text-center">
                         <Button

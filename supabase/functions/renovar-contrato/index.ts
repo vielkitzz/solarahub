@@ -111,7 +111,6 @@ Decida.`;
                   },
                 },
                 required: ["aceita", "justificativa"],
-                additionalProperties: false,
               },
             },
           },
@@ -126,14 +125,26 @@ Decida.`;
     if (!aiResp.ok) {
       const t = await aiResp.text();
       console.error("AI error:", aiResp.status, t);
-      return json({ error: "Erro na IA" }, 500);
+      return json({ error: "Erro na IA: " + t.substring(0, 200) }, 500);
     }
 
     const aiData = await aiResp.json();
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) return json({ error: "IA não retornou decisão" }, 500);
+    const msg = aiData.choices?.[0]?.message;
+    const toolCall = msg?.tool_calls?.[0];
+    let decision: any = null;
+    if (toolCall?.function?.arguments) {
+      try { decision = JSON.parse(toolCall.function.arguments); }
+      catch (e) { console.error("tool_call parse error", e); }
+    }
+    if (!decision && typeof msg?.content === "string") {
+      const m = msg.content.match(/\{[\s\S]*\}/);
+      if (m) { try { decision = JSON.parse(m[0]); } catch {} }
+    }
+    if (!decision) {
+      console.error("AI sem decisão:", JSON.stringify(aiData).substring(0, 500));
+      return json({ error: "IA não retornou decisão válida" }, 500);
+    }
 
-    const decision = JSON.parse(toolCall.function.arguments);
 
     // Se aceita, aplica via RPC
     if (decision.aceita) {
