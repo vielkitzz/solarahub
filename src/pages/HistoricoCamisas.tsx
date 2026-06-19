@@ -55,29 +55,42 @@ const HistoricoCamisas = () => {
         ratingsMap[r.kit_id].n += 1;
       });
       const clubMap = new Map((clubs || []).map((c: any) => [c.id, c]));
-      const rank: KitRankRow[] = ((kits as any) || [])
-        .map((k: any) => {
-          const r = ratingsMap[k.id];
-          const club = clubMap.get(k.club_id) as any;
-          return {
-            kit_id: k.id,
-            club_id: k.club_id,
-            club_name: club?.name ?? "—",
-            club_crest: club?.crest_url ?? null,
-            image_url: k.image_url,
-            ano: k.ano,
-            tipo: k.tipo,
-            fabricante: k.fabricante,
-            avg_rating: r ? r.sum / r.n : 0,
-            votes: r?.n ?? 0,
-          };
-        })
-        .filter((k) => k.votes > 0)
+      const allKits = ((kits as any) || []).map((k: any) => {
+        const r = ratingsMap[k.id];
+        const club = clubMap.get(k.club_id) as any;
+        return {
+          kit_id: k.id,
+          club_id: k.club_id,
+          club_name: club?.name ?? "—",
+          club_crest: club?.crest_url ?? null,
+          image_url: k.image_url,
+          ano: k.ano,
+          tipo: k.tipo,
+          fabricante: k.fabricante,
+          avg_rating: r ? r.sum / r.n : 0,
+          votes: r?.n ?? 0,
+        };
+      });
+
+      // Média bayesiana: pondera pelo total de votos para que camisas
+      // com muitos votos tenham peso real no ranking geral.
+      const rated = allKits.filter((k) => k.votes > 0);
+      const totalVotes = rated.reduce((s, k) => s + k.votes, 0);
+      const totalSum = rated.reduce((s, k) => s + k.avg_rating * k.votes, 0);
+      const globalMean = totalVotes > 0 ? totalSum / totalVotes : 0;
+      const C = Math.max(5, totalVotes / Math.max(1, rated.length)); // peso prior = média de votos por camisa (mín 5)
+      const rank: KitRankRow[] = rated
+        .map((k) => ({
+          ...k,
+          score: (k.avg_rating * k.votes + globalMean * C) / (k.votes + C),
+        }))
         .sort((a, b) => {
-          if (b.avg_rating !== a.avg_rating) return b.avg_rating - a.avg_rating;
-          return b.votes - a.votes;
+          if (b.score !== a.score) return b.score - a.score;
+          if (b.votes !== a.votes) return b.votes - a.votes;
+          return b.avg_rating - a.avg_rating;
         })
         .slice(0, 50);
+
       setRanking(rank);
 
       setLoading(false);
