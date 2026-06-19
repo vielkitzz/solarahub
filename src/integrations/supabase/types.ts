@@ -1878,6 +1878,7 @@ export type Database = {
         | "contraproposta"
         | "cancelada"
         | "aguardando_confirmacao"
+        | "finalizada"
       transfer_type: "compra" | "emprestimo" | "troca"
     }
     CompositeTypes: {
@@ -2048,6 +2049,7 @@ export const Constants = {
         "contraproposta",
         "cancelada",
         "aguardando_confirmacao",
+        "finalizada",
       ],
       transfer_type: ["compra", "emprestimo", "troca"],
     },
