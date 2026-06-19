@@ -672,7 +672,7 @@ const ClubDetail = () => {
 
         <TabsContent value="escalacao" className="mt-4">
           <LineupManager
-            players={players}
+            players={ownedPlayers}
             club={club}
             canEdit={canEdit}
             initialLineup={
