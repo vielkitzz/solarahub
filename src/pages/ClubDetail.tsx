@@ -163,7 +163,6 @@ const ClubDetail = () => {
     setClub(c);
     setMasterSponsor((masterContract as any)?.empresa?.nome ?? null);
     setKitSupplier((kitContract as any)?.empresa?.nome ?? null);
-    setPlayers(p || []);
     setContratosTotal((ct || []).reduce((s, r: any) => s + Number(r.valor_anual || 0), 0));
 
     // Detecta jogadores emprestados PARA este clube (loan-in) — bloqueia renovação/venda
@@ -174,6 +173,33 @@ const ClubDetail = () => {
       .eq("tipo", "emprestimo")
       .eq("status", "aceita");
     setLoanedInIds(new Set((loansIn || []).map((l: any) => l.jogador_id)));
+
+    // Jogadores emprestados POR este clube — ainda nos pertencem mas estão em outro clube
+    const { data: loansOut } = await supabase
+      .from("transferencias")
+      .select("jogador_id, clube_comprador_id")
+      .eq("clube_vendedor_id", id)
+      .eq("tipo", "emprestimo")
+      .eq("status", "aceita");
+    const outIds = (loansOut || []).map((l: any) => l.jogador_id);
+    if (outIds.length > 0) {
+      const compIds = [...new Set((loansOut || []).map((l: any) => l.clube_comprador_id))];
+      const [{ data: outPlayers }, { data: compClubs }] = await Promise.all([
+        supabase.from("players").select("*").in("id", outIds),
+        supabase.from("clubs").select("id, name").in("id", compIds),
+      ]);
+      const compMap = new Map((compClubs || []).map((c: any) => [c.id, c.name]));
+      const loanMap = new Map((loansOut || []).map((l: any) => [l.jogador_id, l.clube_comprador_id]));
+      const extras = (outPlayers || []).map((pl: any) => ({
+        ...pl,
+        __isLoanedOut: true,
+        __loanedToClubName: compMap.get(loanMap.get(pl.id)) ?? "—",
+      }));
+      setPlayers([...(p || []), ...extras]);
+    } else {
+      setPlayers(p || []);
+    }
+
 
     (settings || []).forEach((s: any) => {
       if (s.key === "temporada_atual" && typeof s.value?.ano === "number") setTemporadaAtual(s.value.ano);
