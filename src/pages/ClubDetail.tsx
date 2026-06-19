@@ -465,8 +465,9 @@ const ClubDetail = () => {
 
   if (!club) return <div className="text-center py-20 text-muted-foreground">Clube não encontrado.</div>;
 
-  const folhaSalarial = players.reduce((s, p) => s + Number(p.salario_atual || 0), 0);
-  const valorBaseFolha = players.reduce((s, p) => s + Number(p.valor_base_calculado || 0), 0);
+  const ownedPlayers = players.filter((p: any) => !p.__isLoanedOut);
+  const folhaSalarial = ownedPlayers.reduce((s, p) => s + Number(p.salario_atual || 0), 0);
+  const valorBaseFolha = ownedPlayers.reduce((s, p) => s + Number(p.valor_base_calculado || 0), 0);
   const premiacaoPorPosicao = (pos: number | null | undefined) => {
     if (!pos) return 0;
     if (pos === 1) return 20_000_000;
