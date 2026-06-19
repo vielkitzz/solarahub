@@ -369,6 +369,13 @@ const ClubDetail = () => {
 
 
   const toggleBlockProposals = async (playerId: string, value: boolean) => {
+    if (value) {
+      const atual = players.filter((p) => !p.__isLoanedOut && !!p.bloquear_propostas).length;
+      if (atual >= 5) {
+        toast.error("Limite de 5 jogadores bloqueados atingido. Desbloqueie outro para bloquear este.");
+        return;
+      }
+    }
     const { error } = await supabase
       .from("players")
       .update({ bloquear_propostas: value } as any)
