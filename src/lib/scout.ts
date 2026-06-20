@@ -8,10 +8,11 @@ export type ScoutReport = {
   margem_aplicada: number;
 };
 
-// Margem por nível da base (1 -> 12, 5 -> 2). Mesma fórmula da função SQL scout_player.
+// Margem por nível da base, proporcional: 1->12, 2->9, 3->6, 4->3, 5->1.
+// Mesma fórmula da função SQL scout_player.
 export const margemPorNivelBase = (nivelBase: number | null | undefined): number => {
   const n = Math.max(1, Math.min(5, Number(nivelBase || 1)));
-  return Math.max(2, Math.round(12 - (n - 1) * 2.5));
+  return [12, 9, 6, 3, 1][n - 1];
 };
 
 // Hash determinístico simples (string -> [0,1)).
