@@ -1866,6 +1866,7 @@ export type Database = {
         | "recusada"
         | "contraproposta"
         | "expirada"
+        | "aguardando_ia"
       external_region:
         | "america_sul"
         | "america_norte_central"
@@ -2035,6 +2036,7 @@ export const Constants = {
         "recusada",
         "contraproposta",
         "expirada",
+        "aguardando_ia",
       ],
       external_region: [
         "america_sul",
