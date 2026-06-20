@@ -721,6 +721,7 @@ export type Database = {
       }
       marcas_bloqueadas: {
         Row: {
+          bloqueada_ate_temporada: number | null
           club_id: string
           created_at: string
           empresa_nome: string
@@ -728,6 +729,7 @@ export type Database = {
           motivo: string | null
         }
         Insert: {
+          bloqueada_ate_temporada?: number | null
           club_id: string
           created_at?: string
           empresa_nome: string
@@ -735,6 +737,7 @@ export type Database = {
           motivo?: string | null
         }
         Update: {
+          bloqueada_ate_temporada?: number | null
           club_id?: string
           created_at?: string
           empresa_nome?: string
