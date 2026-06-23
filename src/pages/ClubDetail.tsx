@@ -1049,6 +1049,10 @@ const ClubDetail = () => {
           <KitsGallery clubId={id!} canEdit={canEdit} />
         </TabsContent>
 
+        <TabsContent value="escudos" className="mt-4">
+          <CrestsGallery clubId={id!} canEdit={canEdit} />
+        </TabsContent>
+
         {canEdit && (
           <TabsContent value="config" className="mt-4">
             <Card className="p-5 bg-gradient-card border-border/50 space-y-3">
