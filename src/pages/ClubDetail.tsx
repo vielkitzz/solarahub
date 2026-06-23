@@ -59,6 +59,7 @@ import { StatCard, Row, EvolutionTable } from "@/components/club-detail/Evolutio
 import { transfersService } from "@/services/transfers";
 import { LineupManager } from "@/components/club-detail/LineupManager";
 import { KitsGallery } from "@/components/KitsGallery";
+import { CrestsGallery } from "@/components/CrestsGallery";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import {
   ResponsiveContainer,
