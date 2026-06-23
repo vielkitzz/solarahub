@@ -60,7 +60,14 @@ import { transfersService } from "@/services/transfers";
 import { LineupManager } from "@/components/club-detail/LineupManager";
 import { KitsGallery } from "@/components/KitsGallery";
 import { CrestsGallery } from "@/components/CrestsGallery";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   ResponsiveContainer,
   LineChart as RLineChart,
@@ -201,7 +208,6 @@ const ClubDetail = () => {
       setPlayers(p || []);
     }
 
-
     (settings || []).forEach((s: any) => {
       if (s.key === "temporada_atual" && typeof s.value?.ano === "number") setTemporadaAtual(s.value.ano);
       if (s.key === "direitos_imagem")
@@ -283,7 +289,11 @@ const ClubDetail = () => {
         setScoutReports({});
         return;
       }
-      const { data: mine } = await supabase.from("clubs").select("id").eq("owner_id", user.id).maybeSingle();
+      const { data: mine } = await supabase
+        .from("clubs")
+        .select("id, nivel_base")
+        .eq("owner_id", user.id)
+        .maybeSingle();
       setMyClub(mine || null);
       if (mine) {
         const { data: reps } = await supabase
@@ -366,8 +376,6 @@ const ClubDetail = () => {
     setPlayers((prev) => prev.map((p) => (p.id === playerId ? { ...p, a_emprestimo: value } : p)));
     toast.success(value ? "Jogador listado para empréstimo" : "Jogador removido da vitrine de empréstimos");
   };
-
-
 
   const toggleBlockProposals = async (playerId: string, value: boolean) => {
     if (value) {
@@ -1147,9 +1155,7 @@ const ClubDetail = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Infobox do Clube</DialogTitle>
-            <DialogDescription>
-              Atualize as informações públicas exibidas no perfil do clube.
-            </DialogDescription>
+            <DialogDescription>Atualize as informações públicas exibidas no perfil do clube.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
