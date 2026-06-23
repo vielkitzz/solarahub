@@ -59,6 +59,7 @@ import { StatCard, Row, EvolutionTable } from "@/components/club-detail/Evolutio
 import { transfersService } from "@/services/transfers";
 import { LineupManager } from "@/components/club-detail/LineupManager";
 import { KitsGallery } from "@/components/KitsGallery";
+import { CrestsGallery } from "@/components/CrestsGallery";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import {
   ResponsiveContainer,
@@ -639,6 +640,7 @@ const ClubDetail = () => {
             {canEdit && <TabsTrigger value="olheiros">Olheiros</TabsTrigger>}
             <TabsTrigger value="estadio">Estádio</TabsTrigger>
             <TabsTrigger value="camisas">Camisas</TabsTrigger>
+            <TabsTrigger value="escudos">Escudos</TabsTrigger>
             <TabsTrigger value="wiki">Wiki</TabsTrigger>
             {canEdit && <TabsTrigger value="config">Configurações</TabsTrigger>}
           </TabsList>
@@ -1046,6 +1048,10 @@ const ClubDetail = () => {
 
         <TabsContent value="camisas" className="mt-4">
           <KitsGallery clubId={id!} canEdit={canEdit} />
+        </TabsContent>
+
+        <TabsContent value="escudos" className="mt-4">
+          <CrestsGallery clubId={id!} canEdit={canEdit} />
         </TabsContent>
 
         {canEdit && (

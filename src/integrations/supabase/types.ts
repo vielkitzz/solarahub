@@ -164,6 +164,51 @@ export type Database = {
           },
         ]
       }
+      club_crests: {
+        Row: {
+          ano: number
+          club_id: string
+          created_at: string
+          descricao: string | null
+          id: string
+          image_url: string
+          updated_at: string
+        }
+        Insert: {
+          ano: number
+          club_id: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          image_url: string
+          updated_at?: string
+        }
+        Update: {
+          ano?: number
+          club_id?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          image_url?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_crests_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_crests_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       club_kits: {
         Row: {
           ano: number
