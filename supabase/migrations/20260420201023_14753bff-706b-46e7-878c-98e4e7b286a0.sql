@@ -21,8 +21,8 @@ CREATE TABLE public.admin_discord_ids (
 INSERT INTO public.admin_discord_ids (discord_id, note) VALUES
   ('858559322370998343', 'Admin fundador'),
   ('779433269951201301', 'Admin fundador'),
-  ('825465500892004404', 'Admin fundador');
-  ('852578883571810304', 'Admin fundador')
+  ('852578883571810304', 'Admin fundador');
+  ('825465500892004404', 'Admin fundador')
 
 -- Função security definer para checar role (evita recursão RLS)
 CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role app_role)
