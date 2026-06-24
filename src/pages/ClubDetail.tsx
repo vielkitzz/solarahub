@@ -704,7 +704,7 @@ const ClubDetail = () => {
             }
             return (
               <SquadTable
-                players={loanedIn}
+                players={combined}
                 club={club}
                 canEdit={canEdit}
                 isAdmin={isAdmin}
