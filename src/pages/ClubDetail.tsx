@@ -649,9 +649,11 @@ const ClubDetail = () => {
             <TabsTrigger value="estadio">Estádio</TabsTrigger>
             <TabsTrigger value="camisas">Camisas</TabsTrigger>
             <TabsTrigger value="escudos">Escudos</TabsTrigger>
+            <TabsTrigger value="emprestados">Emprestados</TabsTrigger>
             <TabsTrigger value="wiki">Wiki</TabsTrigger>
             {canEdit && <TabsTrigger value="config">Configurações</TabsTrigger>}
           </TabsList>
+
         </div>
 
         <TabsContent value="elenco" className="mt-4">
@@ -679,6 +681,39 @@ const ClubDetail = () => {
             />
           )}
         </TabsContent>
+
+        <TabsContent value="emprestados" className="mt-4">
+          {(() => {
+            const loanedIn = players.filter((p: any) => loanedInIds.has(p.id));
+            if (loanedIn.length === 0) {
+              return (
+                <Card className="p-8 text-center bg-gradient-card border-border/50 text-muted-foreground">
+                  Nenhum jogador emprestado de outros clubes no momento.
+                </Card>
+              );
+            }
+            return (
+              <SquadTable
+                players={loanedIn}
+                club={club}
+                canEdit={canEdit}
+                isAdmin={isAdmin}
+                temporadaAtual={temporadaAtual}
+                toggleSale={toggleSale}
+                toggleLoan={toggleLoan}
+                toggleBlockProposals={toggleBlockProposals}
+                setRenewPlayer={setRenewPlayer}
+                setShirtPlayer={setShirtPlayer}
+                setMultaPlayer={setMultaPlayer}
+                myClub={myClub}
+                scoutReports={scoutReports}
+                loanedInIds={loanedInIds}
+                onOpenProfile={(id) => setProfilePlayerId(id)}
+              />
+            );
+          })()}
+        </TabsContent>
+
 
         <TabsContent value="escalacao" className="mt-4">
           <LineupManager
