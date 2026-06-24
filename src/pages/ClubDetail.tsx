@@ -691,8 +691,11 @@ const ClubDetail = () => {
 
         <TabsContent value="emprestados" className="mt-4">
           {(() => {
-            const loanedIn = players.filter((p: any) => loanedInIds.has(p.id));
-            if (loanedIn.length === 0) {
+            const loanedIn = players.filter((p: any) => loanedInIds.has(p.id) && !p.__isLoanedOut);
+            const loanedOut = players.filter((p: any) => p.__isLoanedOut);
+            const combined = [...loanedIn, ...loanedOut];
+            if (combined.length === 0) {
+
               return (
                 <Card className="p-8 text-center bg-gradient-card border-border/50 text-muted-foreground">
                   Nenhum jogador emprestado de outros clubes no momento.
