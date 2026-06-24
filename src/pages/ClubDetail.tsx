@@ -657,35 +657,45 @@ const ClubDetail = () => {
         </div>
 
         <TabsContent value="elenco" className="mt-4">
-          {players.length === 0 ? (
-            <Card className="p-8 text-center bg-gradient-card border-border/50 text-muted-foreground">
-              Sem jogadores no elenco.
-            </Card>
-          ) : (
-            <SquadTable
-              players={players}
-              club={club}
-              canEdit={canEdit}
-              isAdmin={isAdmin}
-              temporadaAtual={temporadaAtual}
-              toggleSale={toggleSale}
-              toggleLoan={toggleLoan}
-              toggleBlockProposals={toggleBlockProposals}
-              setRenewPlayer={setRenewPlayer}
-              setShirtPlayer={setShirtPlayer}
-              setMultaPlayer={setMultaPlayer}
-              myClub={myClub}
-              scoutReports={scoutReports}
-              loanedInIds={loanedInIds}
-              onOpenProfile={(id) => setProfilePlayerId(id)}
-            />
-          )}
+          {(() => {
+            const elencoPlayers = players.filter((p: any) => !p.__isLoanedOut);
+            if (elencoPlayers.length === 0) {
+              return (
+                <Card className="p-8 text-center bg-gradient-card border-border/50 text-muted-foreground">
+                  Sem jogadores no elenco.
+                </Card>
+              );
+            }
+            return (
+              <SquadTable
+                players={elencoPlayers}
+                club={club}
+                canEdit={canEdit}
+                isAdmin={isAdmin}
+                temporadaAtual={temporadaAtual}
+                toggleSale={toggleSale}
+                toggleLoan={toggleLoan}
+                toggleBlockProposals={toggleBlockProposals}
+                setRenewPlayer={setRenewPlayer}
+                setShirtPlayer={setShirtPlayer}
+                setMultaPlayer={setMultaPlayer}
+                myClub={myClub}
+                scoutReports={scoutReports}
+                loanedInIds={loanedInIds}
+                onOpenProfile={(id) => setProfilePlayerId(id)}
+              />
+            );
+          })()}
+
         </TabsContent>
 
         <TabsContent value="emprestados" className="mt-4">
           {(() => {
-            const loanedIn = players.filter((p: any) => loanedInIds.has(p.id));
-            if (loanedIn.length === 0) {
+            const loanedIn = players.filter((p: any) => loanedInIds.has(p.id) && !p.__isLoanedOut);
+            const loanedOut = players.filter((p: any) => p.__isLoanedOut);
+            const combined = [...loanedIn, ...loanedOut];
+            if (combined.length === 0) {
+
               return (
                 <Card className="p-8 text-center bg-gradient-card border-border/50 text-muted-foreground">
                   Nenhum jogador emprestado de outros clubes no momento.
@@ -694,7 +704,7 @@ const ClubDetail = () => {
             }
             return (
               <SquadTable
-                players={loanedIn}
+                players={combined}
                 club={club}
                 canEdit={canEdit}
                 isAdmin={isAdmin}
