@@ -649,9 +649,11 @@ const ClubDetail = () => {
             <TabsTrigger value="estadio">Estádio</TabsTrigger>
             <TabsTrigger value="camisas">Camisas</TabsTrigger>
             <TabsTrigger value="escudos">Escudos</TabsTrigger>
+            <TabsTrigger value="emprestados">Emprestados</TabsTrigger>
             <TabsTrigger value="wiki">Wiki</TabsTrigger>
             {canEdit && <TabsTrigger value="config">Configurações</TabsTrigger>}
           </TabsList>
+
         </div>
 
         <TabsContent value="elenco" className="mt-4">
